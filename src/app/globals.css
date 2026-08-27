@@ -31,8 +31,47 @@ body::after {
   color: var(--color-cream);
 }
 
+/* Hero: ken-burns settle 1.08 → 1 over 6s, once. Transform-only. */
+.hero-kenburns {
+  animation: hero-kenburns 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes hero-kenburns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Hero: scroll cue line draws downward and fades, looping. */
+.hero-scrollcue {
+  animation: hero-scrollcue 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  transform-origin: top;
+}
+
+@keyframes hero-scrollcue {
+  0% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .hero-kenburns,
+  .hero-scrollcue {
+    animation: none;
   }
 }
