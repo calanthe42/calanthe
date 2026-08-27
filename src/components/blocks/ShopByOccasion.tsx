@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Parallax } from "@/components/motion/Parallax";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { occasions } from "@/lib/data";
 import { cn } from "@/lib/cn";
@@ -42,9 +42,9 @@ export function ShopByOccasion() {
                 className="group relative block h-full w-full overflow-hidden rounded-media shadow-soft"
               >
                 <Parallax speed={parallaxSpeeds[i] ?? 1} className="absolute inset-[-8%]">
-                  <BotanicalPlaceholder
-                    seed={occasion.image.placeholder.seed}
-                    palette={occasion.image.placeholder.palette}
+                  <FloralImage
+                    image={occasion.image}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </Parallax>
                 <span className="absolute inset-0 bg-olive/35 transition-colors duration-300 ease-bloom group-hover:bg-olive/55" />

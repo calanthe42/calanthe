@@ -4,8 +4,8 @@ import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Reveal } from "@/components/motion/Reveal";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { Button } from "@/components/ui/Button";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
 import {
@@ -20,11 +20,13 @@ import { useToast } from "@/lib/toast";
 import {
   addons,
   formatAed,
+  PHOTOS,
   sizes,
   timeSlots,
   type AddonId,
   type PlaceholderPalette,
   type Product,
+  type ProductImage,
   type SizeId,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
@@ -40,22 +42,38 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const { toast } = useToast();
   const reduced = useReducedMotion();
 
-  /* Gallery: the two real views plus two derived atelier views. */
-  const views = useMemo(
-    () => [
-      product.images[0].placeholder,
-      product.images[1].placeholder,
+  /* Gallery: the product's two views plus two atelier shots that are
+     not already in this product's pair. */
+  const views = useMemo<ProductImage[]>(() => {
+    const pool = [
+      PHOTOS.stargazer,
+      PHOTOS.whiteRoseWood,
+      PHOTOS.pinkTulip,
+      PHOTOS.roseMauveWall,
+      PHOTOS.peachRoses,
+      PHOTOS.poppyMeadow,
+    ].filter((src) => src !== product.images[0].src && src !== product.images[1].src);
+    return [
+      product.images[0],
+      product.images[1],
       {
-        seed: `${product.images[0].placeholder.seed}-detail`,
-        palette: "warm" as PlaceholderPalette,
+        alt: `${product.name}, atelier detail`,
+        src: pool[0],
+        placeholder: {
+          seed: `${product.images[0].placeholder.seed}-detail`,
+          palette: "warm" as PlaceholderPalette,
+        },
       },
       {
-        seed: `${product.images[1].placeholder.seed}-scale`,
-        palette: product.images[0].placeholder.palette,
+        alt: `${product.name}, in the atelier`,
+        src: pool[1],
+        placeholder: {
+          seed: `${product.images[1].placeholder.seed}-scale`,
+          palette: product.images[0].placeholder.palette,
+        },
       },
-    ],
-    [product],
-  );
+    ];
+  }, [product]);
   const [view, setView] = useState(0);
   const [zoom, setZoom] = useState(false);
   const mainImageRef = useRef<HTMLDivElement>(null);
@@ -122,7 +140,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
       productId: product.id,
       slug: product.slug,
       name: product.name,
-      image: product.images[0].placeholder,
+      image: product.images[0],
       basePriceAed: product.priceAed,
       sizeId,
       addonIds,
@@ -170,9 +188,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     transform: zoom && !reduced ? "scale(1.8)" : "scale(1)",
                   }}
                 >
-                  <BotanicalPlaceholder
-                    seed={views[view]?.seed ?? product.images[0].placeholder.seed}
-                    palette={views[view]?.palette ?? "warm"}
+                  <FloralImage
+                    image={views[view] ?? product.images[0]}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
               </motion.div>
@@ -182,7 +200,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <div className="mt-3 flex gap-3">
             {views.map((v, i) => (
               <button
-                key={v.seed + GALLERY_SUFFIXES[i]}
+                key={v.placeholder.seed + GALLERY_SUFFIXES[i]}
                 type="button"
                 aria-label={`View ${i + 1}`}
                 aria-current={view === i}
@@ -194,7 +212,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     : "border-transparent opacity-70 hover:opacity-100",
                 )}
               >
-                <BotanicalPlaceholder seed={v.seed} palette={v.palette} />
+                <FloralImage image={v} sizes="80px" />
               </button>
             ))}
           </div>

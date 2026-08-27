@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { ButtonLink } from "@/components/ui/Button";
+import { FloralImage } from "@/components/ui/FloralImage";
+import { PHOTOS } from "@/lib/data";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -102,7 +103,14 @@ export function BuildYourOwnBanner() {
         className="byo-photo io-reveal absolute inset-0 opacity-45 lg:left-auto lg:right-0 lg:w-1/2 lg:opacity-100"
       >
         <div className="byo-photo-inner h-full w-full">
-          <BotanicalPlaceholder seed="byo-editorial" palette="burgundy" />
+          <FloralImage
+            image={{
+              alt: "A moody editorial arrangement in deep reds",
+              src: PHOTOS.moodyProtea,
+              placeholder: { seed: "byo-editorial", palette: "burgundy" },
+            }}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
         </div>
         <div className="absolute inset-0 bg-burgundy/40 lg:bg-burgundy/20" />
       </div>

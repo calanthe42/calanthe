@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AddonId, PlaceholderPalette, SizeId } from "@/lib/data";
+import type { AddonId, ProductImage, SizeId } from "@/lib/data";
 import { addons, products, sizes, timeSlots } from "@/lib/data";
 
 export type CartItem = {
@@ -19,7 +19,7 @@ export type CartItem = {
   productId: string;
   slug: string;
   name: string;
-  image: { seed: string; palette: PlaceholderPalette };
+  image: ProductImage;
   basePriceAed: number;
   sizeId: SizeId;
   addonIds: readonly AddonId[];
@@ -92,7 +92,7 @@ function sanitizeStoredItems(parsed: unknown): CartItem[] {
       productId: product.id,
       slug: product.slug,
       name: product.name,
-      image: product.images[0].placeholder,
+      image: product.images[0],
       basePriceAed: product.priceAed,
       sizeId,
       addonIds,

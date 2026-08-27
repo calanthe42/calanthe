@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Monogram } from "@/components/ui/Monogram";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { buttonClasses } from "@/components/ui/Button";
 import {
   describeCartItem,
@@ -47,7 +47,7 @@ function CartLine({ item }: { item: CartItemType }) {
   return (
     <li className="flex gap-4 py-5">
       <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-media-sm">
-        <BotanicalPlaceholder seed={item.image.seed} palette={item.image.palette} />
+        <FloralImage image={item.image} sizes="80px" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-baseline justify-between gap-3">

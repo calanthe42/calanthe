@@ -2,9 +2,9 @@ import { Parallax } from "@/components/motion/Parallax";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ProductCard } from "@/components/commerce/ProductCard";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { getBestSellers } from "@/lib/data";
+import { getBestSellers, PHOTOS } from "@/lib/data";
 
 /** Same grammar as New Arrivals; the first tile is a 2x editorial moment. */
 export function BestSellers() {
@@ -26,7 +26,14 @@ export function BestSellers() {
         <StaggerItem className="w-[92%] shrink-0 snap-start sm:w-[46%] lg:col-span-2 lg:row-span-2 lg:w-auto">
           <div className="relative h-full min-h-[24rem] overflow-hidden rounded-media shadow-soft lg:min-h-0">
             <Parallax speed={0.92} className="absolute inset-[-8%]">
-              <BotanicalPlaceholder seed="bestseller-editorial" palette="olive" />
+              <FloralImage
+                image={{
+                  alt: "A single rose against a warm plaster wall",
+                  src: PHOTOS.roseMauveWall,
+                  placeholder: { seed: "bestseller-editorial", palette: "olive" },
+                }}
+                sizes="(max-width: 1024px) 92vw, 50vw"
+              />
             </Parallax>
             <div className="absolute inset-0 bg-olive/45" />
             <figure className="absolute inset-x-0 bottom-0 p-6 lg:p-10">

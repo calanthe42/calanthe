@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { occasions } from "@/lib/data";
 
@@ -28,9 +28,9 @@ export default function OccasionsPage() {
               href={`/occasions/${occasion.slug}`}
               className="group relative block aspect-[4/3] overflow-hidden rounded-media shadow-soft"
             >
-              <BotanicalPlaceholder
-                seed={occasion.image.placeholder.seed}
-                palette={occasion.image.placeholder.palette}
+              <FloralImage
+                image={occasion.image}
+                sizes="(max-width: 1024px) 100vw, 33vw"
               />
               <span className="absolute inset-0 bg-olive/35 transition-colors duration-300 ease-bloom group-hover:bg-olive/55" />
               <span className="absolute inset-0 flex items-center justify-center">

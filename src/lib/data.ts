@@ -11,8 +11,33 @@ export type PlaceholderPalette = "warm" | "olive" | "burgundy";
 
 export type ProductImage = {
   alt: string;
+  /** Curated placeholder photograph — the client's real photography
+   *  replaces these URLs later (see PROJECT-BRAIN.md). */
+  src?: string;
   placeholder: { seed: string; palette: PlaceholderPalette };
 };
+
+/** Curated, palette-matched Unsplash photography (placeholder until the
+ *  client's own shoots arrive). */
+const photo = (id: string, w = 1600) =>
+  `https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=format&fit=crop`;
+
+export const PHOTOS = {
+  heroBouquet: photo("1487530811176-3780de880c2d", 2400),
+  terracotta: photo("1533616688419-b7a585564566"),
+  dahliaDark: photo("1444021465936-c6ca81d39b84"),
+  blushKraft: photo("1563241527-3004b7be0ffd"),
+  redRoses: photo("1494972308805-463bc619d34e"),
+  poppyMeadow: photo("1465146344425-f00d5f5c8f07"),
+  peachRoses: photo("1591886960571-74d43a9d4166"),
+  moodyProtea: photo("1457089328109-e5d9bd499191"),
+  whiteOrchid: photo("1454262041357-5d96f50a2f27"),
+  roseMauveWall: photo("1518895949257-7621c3c786d7"),
+  callaLilies: photo("1469259943454-aa100abba749"),
+  whiteRoseWood: photo("1495231916356-a86217efff12"),
+  stargazer: photo("1502977249166-824b3a8a4d6d"),
+  pinkTulip: photo("1520763185298-1b434c919102"),
+} as const;
 
 export type Product = {
   id: string;
@@ -34,35 +59,45 @@ export type Occasion = {
   image: ProductImage;
 };
 
-function img(seed: string, palette: PlaceholderPalette, alt: string): ProductImage {
-  return { alt, placeholder: { seed, palette } };
+function img(
+  seed: string,
+  palette: PlaceholderPalette,
+  alt: string,
+  src?: string,
+): ProductImage {
+  return { alt, src, placeholder: { seed, palette } };
 }
 
 export const occasions: readonly Occasion[] = [
   {
     slug: "birthday",
     name: "Birthday",
-    image: img("occ-birthday", "warm", "Birthday arrangements"),
+    image: img("occ-birthday", "warm", "Birthday arrangements", PHOTOS.peachRoses),
   },
   {
     slug: "congratulations",
     name: "Congratulations",
-    image: img("occ-congrats", "olive", "Congratulations arrangements"),
+    image: img(
+      "occ-congrats",
+      "olive",
+      "Congratulations arrangements",
+      PHOTOS.terracotta,
+    ),
   },
   {
     slug: "new-baby",
     name: "New Baby",
-    image: img("occ-baby", "warm", "New baby arrangements"),
+    image: img("occ-baby", "warm", "New baby arrangements", PHOTOS.whiteOrchid),
   },
   {
     slug: "love",
     name: "Love",
-    image: img("occ-love", "burgundy", "Love arrangements"),
+    image: img("occ-love", "burgundy", "Love arrangements", PHOTOS.redRoses),
   },
   {
     slug: "just-because",
     name: "Just Because",
-    image: img("occ-because", "olive", "Just because arrangements"),
+    image: img("occ-because", "olive", "Just because arrangements", PHOTOS.poppyMeadow),
   },
 ] as const;
 
@@ -73,8 +108,8 @@ export const products: readonly Product[] = [
     name: "Amber Hour",
     priceAed: 480,
     images: [
-      img("amber-hour-a", "warm", "Amber Hour arrangement"),
-      img("amber-hour-b", "olive", "Amber Hour arrangement, detail"),
+      img("amber-hour-a", "warm", "Amber Hour arrangement", PHOTOS.terracotta),
+      img("amber-hour-b", "olive", "Amber Hour arrangement, detail", PHOTOS.peachRoses),
     ],
     occasions: ["birthday", "just-because"],
     featured: true,
@@ -86,8 +121,18 @@ export const products: readonly Product[] = [
     name: "Quiet Devotion",
     priceAed: 650,
     images: [
-      img("quiet-devotion-a", "burgundy", "Quiet Devotion arrangement"),
-      img("quiet-devotion-b", "warm", "Quiet Devotion arrangement, detail"),
+      img(
+        "quiet-devotion-a",
+        "burgundy",
+        "Quiet Devotion arrangement",
+        PHOTOS.dahliaDark,
+      ),
+      img(
+        "quiet-devotion-b",
+        "warm",
+        "Quiet Devotion arrangement, detail",
+        PHOTOS.redRoses,
+      ),
     ],
     occasions: ["love"],
     featured: true,
@@ -99,8 +144,13 @@ export const products: readonly Product[] = [
     name: "The First Letter",
     priceAed: 420,
     images: [
-      img("first-letter-a", "warm", "The First Letter arrangement"),
-      img("first-letter-b", "olive", "The First Letter arrangement, detail"),
+      img("first-letter-a", "warm", "The First Letter arrangement", PHOTOS.blushKraft),
+      img(
+        "first-letter-b",
+        "olive",
+        "The First Letter arrangement, detail",
+        PHOTOS.pinkTulip,
+      ),
     ],
     occasions: ["new-baby", "congratulations"],
     featured: false,
@@ -112,8 +162,18 @@ export const products: readonly Product[] = [
     name: "Bordeaux Whisper",
     priceAed: 720,
     images: [
-      img("bordeaux-whisper-a", "burgundy", "Bordeaux Whisper arrangement"),
-      img("bordeaux-whisper-b", "warm", "Bordeaux Whisper arrangement, detail"),
+      img(
+        "bordeaux-whisper-a",
+        "burgundy",
+        "Bordeaux Whisper arrangement",
+        PHOTOS.redRoses,
+      ),
+      img(
+        "bordeaux-whisper-b",
+        "warm",
+        "Bordeaux Whisper arrangement, detail",
+        PHOTOS.moodyProtea,
+      ),
     ],
     occasions: ["love", "just-because"],
     featured: true,
@@ -125,8 +185,13 @@ export const products: readonly Product[] = [
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
-      img("sage-cinder-a", "olive", "Sage & Cinder arrangement"),
-      img("sage-cinder-b", "warm", "Sage & Cinder arrangement, detail"),
+      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PHOTOS.poppyMeadow),
+      img(
+        "sage-cinder-b",
+        "warm",
+        "Sage & Cinder arrangement, detail",
+        PHOTOS.whiteRoseWood,
+      ),
     ],
     occasions: ["just-because"],
     featured: false,
@@ -138,8 +203,13 @@ export const products: readonly Product[] = [
     name: "Dawn Procession",
     priceAed: 850,
     images: [
-      img("dawn-procession-a", "warm", "Dawn Procession arrangement"),
-      img("dawn-procession-b", "olive", "Dawn Procession arrangement, detail"),
+      img("dawn-procession-a", "warm", "Dawn Procession arrangement", PHOTOS.peachRoses),
+      img(
+        "dawn-procession-b",
+        "olive",
+        "Dawn Procession arrangement, detail",
+        PHOTOS.blushKraft,
+      ),
     ],
     occasions: ["congratulations", "birthday"],
     featured: true,
@@ -151,8 +221,8 @@ export const products: readonly Product[] = [
     name: "Velvet Hour",
     priceAed: 950,
     images: [
-      img("velvet-hour-a", "burgundy", "Velvet Hour arrangement"),
-      img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail"),
+      img("velvet-hour-a", "burgundy", "Velvet Hour arrangement", PHOTOS.moodyProtea),
+      img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail", PHOTOS.dahliaDark),
     ],
     occasions: ["love"],
     featured: true,
@@ -164,8 +234,13 @@ export const products: readonly Product[] = [
     name: "A Soft Reply",
     priceAed: 350,
     images: [
-      img("soft-reply-a", "warm", "A Soft Reply arrangement"),
-      img("soft-reply-b", "warm", "A Soft Reply arrangement, detail"),
+      img("soft-reply-a", "warm", "A Soft Reply arrangement", PHOTOS.whiteOrchid),
+      img(
+        "soft-reply-b",
+        "warm",
+        "A Soft Reply arrangement, detail",
+        PHOTOS.whiteRoseWood,
+      ),
     ],
     occasions: ["just-because", "new-baby"],
     featured: false,
@@ -177,8 +252,13 @@ export const products: readonly Product[] = [
     name: "The Long Stem",
     priceAed: 540,
     images: [
-      img("long-stem-a", "olive", "The Long Stem arrangement"),
-      img("long-stem-b", "burgundy", "The Long Stem arrangement, detail"),
+      img("long-stem-a", "olive", "The Long Stem arrangement", PHOTOS.roseMauveWall),
+      img(
+        "long-stem-b",
+        "burgundy",
+        "The Long Stem arrangement, detail",
+        PHOTOS.stargazer,
+      ),
     ],
     occasions: ["congratulations"],
     featured: false,
@@ -190,8 +270,13 @@ export const products: readonly Product[] = [
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [
-      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement"),
-      img("meadow-dusk-b", "warm", "Meadow at Dusk arrangement, detail"),
+      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PHOTOS.callaLilies),
+      img(
+        "meadow-dusk-b",
+        "warm",
+        "Meadow at Dusk arrangement, detail",
+        PHOTOS.poppyMeadow,
+      ),
     ],
     occasions: ["birthday", "just-because"],
     featured: true,
@@ -468,18 +553,18 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
 /* ------------------------------------------------------------------ */
 
 export const instagramTiles: readonly ProductImage[] = [
-  img("ig-1", "warm", "Calanthe on Instagram"),
-  img("ig-2", "olive", "Calanthe on Instagram"),
-  img("ig-3", "burgundy", "Calanthe on Instagram"),
-  img("ig-4", "warm", "Calanthe on Instagram"),
-  img("ig-5", "olive", "Calanthe on Instagram"),
-  img("ig-6", "warm", "Calanthe on Instagram"),
-  img("ig-7", "olive", "Calanthe on Instagram"),
-  img("ig-8", "warm", "Calanthe on Instagram"),
-  img("ig-9", "burgundy", "Calanthe on Instagram"),
-  img("ig-10", "olive", "Calanthe on Instagram"),
-  img("ig-11", "warm", "Calanthe on Instagram"),
-  img("ig-12", "olive", "Calanthe on Instagram"),
+  img("ig-1", "warm", "Calanthe on Instagram", PHOTOS.terracotta),
+  img("ig-2", "olive", "Calanthe on Instagram", PHOTOS.peachRoses),
+  img("ig-3", "burgundy", "Calanthe on Instagram", PHOTOS.moodyProtea),
+  img("ig-4", "warm", "Calanthe on Instagram", PHOTOS.blushKraft),
+  img("ig-5", "olive", "Calanthe on Instagram", PHOTOS.roseMauveWall),
+  img("ig-6", "warm", "Calanthe on Instagram", PHOTOS.poppyMeadow),
+  img("ig-7", "olive", "Calanthe on Instagram", PHOTOS.dahliaDark),
+  img("ig-8", "warm", "Calanthe on Instagram", PHOTOS.whiteOrchid),
+  img("ig-9", "burgundy", "Calanthe on Instagram", PHOTOS.callaLilies),
+  img("ig-10", "olive", "Calanthe on Instagram", PHOTOS.stargazer),
+  img("ig-11", "warm", "Calanthe on Instagram", PHOTOS.whiteRoseWood),
+  img("ig-12", "olive", "Calanthe on Instagram", PHOTOS.pinkTulip),
 ] as const;
 
 /* ------------------------------------------------------------------ */

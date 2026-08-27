@@ -1,4 +1,4 @@
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { instagramTiles, CONTACT } from "@/lib/data";
 import { cn } from "@/lib/cn";
 
@@ -28,10 +28,7 @@ function MarqueeRow({
             className="aspect-square w-36 shrink-0 overflow-hidden rounded-media lg:w-44"
             aria-hidden={i >= tiles.length}
           >
-            <BotanicalPlaceholder
-              seed={tile.placeholder.seed}
-              palette={tile.placeholder.palette}
-            />
+            <FloralImage image={tile} sizes="176px" />
           </div>
         ))}
       </div>

@@ -1,7 +1,7 @@
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { WishlistButton } from "@/components/commerce/WishlistButton";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { cn } from "@/lib/cn";
 import { formatAed, type Product } from "@/lib/data";
 
@@ -34,15 +34,9 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
           )}
         >
           <div data-vt-hero className="relative h-full w-full">
-            <BotanicalPlaceholder
-              seed={front.placeholder.seed}
-              palette={front.placeholder.palette}
-            />
+            <FloralImage image={front} sizes="(max-width: 1024px) 92vw, 25vw" />
             <div className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-bloom group-hover:opacity-100">
-              <BotanicalPlaceholder
-                seed={back.placeholder.seed}
-                palette={back.placeholder.palette}
-              />
+              <FloralImage image={back} sizes="(max-width: 1024px) 92vw, 25vw" />
             </div>
           </div>
         </ClipReveal>

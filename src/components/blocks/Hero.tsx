@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitLines } from "@/components/motion/SplitLines";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { ButtonLink } from "@/components/ui/Button";
+import { FloralImage } from "@/components/ui/FloralImage";
+import { PHOTOS } from "@/lib/data";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -61,7 +62,17 @@ export function Hero({ media }: HeroProps) {
       {/* Full-bleed imagery — swappable for real photography */}
       <div ref={bgRef} className="absolute inset-[-8%] will-change-transform">
         <div className="hero-kenburns h-full w-full">
-          {media ?? <BotanicalPlaceholder seed="calanthe-hero-bouquet" palette="warm" />}
+          {media ?? (
+            <FloralImage
+              image={{
+                alt: "A hand-composed Calanthe arrangement in warm petal tones",
+                src: PHOTOS.heroBouquet,
+                placeholder: { seed: "calanthe-hero-bouquet", palette: "warm" },
+              }}
+              sizes="100vw"
+              priority
+            />
+          )}
         </div>
       </div>
 
@@ -71,7 +82,7 @@ export function Hero({ media }: HeroProps) {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(43,47,27,0.42) 0%, rgba(43,47,27,0.06) 32%, rgba(43,47,27,0.10) 52%, rgba(43,47,27,0.82) 100%)",
+            "linear-gradient(to bottom, rgba(43,47,27,0.45) 0%, rgba(43,47,27,0.12) 32%, rgba(43,47,27,0.26) 55%, rgba(43,47,27,0.85) 100%)",
         }}
       />
       {/* Scroll-away darken layer, driven by GSAP scrub */}

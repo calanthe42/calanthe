@@ -4,7 +4,7 @@ import { memo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
-import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import {
   chipClasses,
@@ -48,7 +48,7 @@ const OrderSummary = memo(function OrderSummary({
         {items.map((item) => (
           <li key={item.key} className="flex gap-3">
             <div className="aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-media-sm">
-              <BotanicalPlaceholder seed={item.image.seed} palette={item.image.palette} />
+              <FloralImage image={item.image} sizes="56px" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
