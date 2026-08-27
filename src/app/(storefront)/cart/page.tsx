@@ -1,7 +1,6 @@
-﻿import { StubPage } from "@/components/blocks/StubPage";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Cart" };
-
-export default function Page() {
-  return <StubPage eyebrow="Cart" title="Your arrangement awaits." />;
+/** The cart lives in the slide-in drawer; direct visits go to checkout. */
+export default function CartPage() {
+  redirect("/checkout");
 }
