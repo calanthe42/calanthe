@@ -119,8 +119,8 @@ body::after {
 
 .io-reveal {
   transition:
-    opacity 0.7s var(--ease-bloom),
-    transform 0.7s var(--ease-bloom);
+    opacity 0.85s var(--ease-bloom),
+    transform 0.85s var(--ease-bloom);
 }
 .js .io-reveal:not(.io-in) {
   opacity: 0;
@@ -130,48 +130,48 @@ body::after {
 /* Stagger: parent gets io-in; children cascade 80ms apart. */
 .io-stagger > * {
   transition:
-    opacity 0.7s var(--ease-bloom),
-    transform 0.7s var(--ease-bloom);
+    opacity 0.85s var(--ease-bloom),
+    transform 0.85s var(--ease-bloom);
 }
 .js .io-stagger:not(.io-in) > * {
   opacity: 0;
   transform: translateY(24px);
 }
 .io-stagger > *:nth-child(2) {
-  transition-delay: 80ms;
+  transition-delay: 120ms;
 }
 .io-stagger > *:nth-child(3) {
-  transition-delay: 160ms;
-}
-.io-stagger > *:nth-child(4) {
   transition-delay: 240ms;
 }
+.io-stagger > *:nth-child(4) {
+  transition-delay: 360ms;
+}
 .io-stagger > *:nth-child(5) {
-  transition-delay: 320ms;
-}
-.io-stagger > *:nth-child(6) {
-  transition-delay: 400ms;
-}
-.io-stagger > *:nth-child(7) {
   transition-delay: 480ms;
 }
+.io-stagger > *:nth-child(6) {
+  transition-delay: 600ms;
+}
+.io-stagger > *:nth-child(7) {
+  transition-delay: 720ms;
+}
 .io-stagger > *:nth-child(8) {
-  transition-delay: 560ms;
+  transition-delay: 840ms;
 }
 .io-stagger > *:nth-child(n + 9) {
-  transition-delay: 640ms;
+  transition-delay: 960ms;
 }
 
 /* ClipReveal: tissue-paper uncover + settle. */
 .io-clip {
-  transition: clip-path 0.9s var(--ease-bloom);
+  transition: clip-path 1.05s var(--ease-bloom);
   clip-path: inset(0 0 0 0);
 }
 .js .io-clip:not(.io-in) {
   clip-path: inset(100% 0 0 0);
 }
 .io-clip-inner {
-  transition: transform 0.9s var(--ease-bloom);
+  transition: transform 1.05s var(--ease-bloom);
 }
 .js .io-clip:not(.io-in) .io-clip-inner {
   transform: scale(1.1);
@@ -179,25 +179,25 @@ body::after {
 
 /* SplitLines (scroll mode): lines rise out of masks, 80ms apart. */
 .io-lines .io-line {
-  transition: transform 0.7s var(--ease-bloom);
+  transition: transform 0.85s var(--ease-bloom);
 }
 .js .io-lines:not(.io-in) .io-line {
   transform: translateY(110%);
 }
 .io-lines > *:nth-child(3) .io-line {
-  transition-delay: 80ms;
+  transition-delay: 120ms;
 }
 .io-lines > *:nth-child(4) .io-line {
-  transition-delay: 160ms;
+  transition-delay: 240ms;
 }
 .io-lines > *:nth-child(n + 5) .io-line {
-  transition-delay: 240ms;
+  transition-delay: 360ms;
 }
 
 /* Hairline drawing itself. */
 .io-hairline {
   transform-origin: left;
-  transition: transform 0.7s var(--ease-bloom);
+  transition: transform 0.85s var(--ease-bloom);
 }
 .js .io-hairline:not(.io-in) {
   transform: scaleX(0);
@@ -240,6 +240,23 @@ body::after {
 }
 .io-mono path:nth-child(7) {
   transition-delay: 0.72s, 1.38s, 1.4s;
+}
+
+/* BYO banner: io reveals drive MOBILE only — on desktop the GSAP
+   pinned timeline owns these elements (one motion per moment). */
+@media (min-width: 1024px) {
+  .js .byo-photo.io-reveal:not(.io-in),
+  .js .byo-eyebrow.io-reveal:not(.io-in),
+  .js .byo-copy.io-reveal:not(.io-in),
+  .js .byo-cta.io-reveal:not(.io-in) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .js .io-lines:not(.io-in) .byo-line {
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Toast entrance. */
