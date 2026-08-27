@@ -148,6 +148,7 @@ export function Header() {
           </Link>
           <button
             type="button"
+            id="header-cart"
             aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
             onClick={openCart}
             className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"

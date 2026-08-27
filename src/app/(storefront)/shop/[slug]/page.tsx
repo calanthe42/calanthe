@@ -1,25 +1,16 @@
-import { notFound } from "next/navigation";
-import { StubPage } from "@/components/blocks/StubPage";
+import { redirect } from "next/navigation";
 import { products } from "@/lib/data";
 
 export function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
-export default async function ProductPage({
+/** Canonical product URLs live at /product/[slug]. */
+export default async function LegacyProductPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = products.find((p) => p.slug === slug);
-  if (!product) notFound();
-
-  return (
-    <StubPage
-      eyebrow="The Collection"
-      title={product.name}
-      note={`AED ${product.priceAed} — the full product page is being arranged.`}
-    />
-  );
+  redirect(`/product/${slug}`);
 }
