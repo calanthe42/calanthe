@@ -15,11 +15,6 @@
   --color-transparent: transparent;
   --color-current: currentColor;
 
-  /* ---- Type ---- */
-  --font-brand: var(--font-cinzel), serif; /* wordmark / nav / eyebrows / buttons */
-  --font-display: var(--font-cormorant), serif; /* editorial headlines */
-  --font-sans: var(--font-instrument), sans-serif; /* body / UI / prices */
-
   --tracking-brand: 0.18em;
 
   /* ---- Shape: luxury is almost square ---- */
@@ -29,4 +24,15 @@
 
   /* ---- Motion: everything blooms, nothing bounces ---- */
   --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * Fonts must be `inline`: next/font defines --font-cinzel etc. on <body>,
+ * so the utilities must carry the var() reference to the element itself
+ * instead of resolving it at :root (where it does not exist).
+ */
+@theme inline {
+  --font-brand: var(--font-cinzel), serif; /* wordmark / nav / eyebrows / buttons */
+  --font-display: var(--font-cormorant), serif; /* editorial headlines */
+  --font-sans: var(--font-instrument), sans-serif; /* body / UI / prices */
 }

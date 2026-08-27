@@ -8,7 +8,7 @@ html {
 body {
   background: var(--color-canvas);
   color: var(--color-olive);
-  font-family: var(--font-sans);
+  font-family: var(--font-instrument), sans-serif;
   min-height: 100svh;
   -webkit-font-smoothing: antialiased;
 }
