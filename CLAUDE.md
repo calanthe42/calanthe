@@ -1,5 +1,9 @@
 # CALANTHE — Project Rules
 
+Homepage section order and copy are client-approved — see
+brand/client-vision.md. Never change order or wording without an
+explicit instruction.
+
 MOBILE FIRST IS LAW: customers are phone users. Design every component
 at 390px first, then adapt up. 100svh not 100vh. Safe-area insets on
 sticky bars. Tap targets ≥44px. Primary CTAs in thumb zone. Mobile
