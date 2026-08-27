@@ -85,6 +85,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [sizeId, setSizeId] = useState<SizeId>("standard");
   const [addonIds, setAddonIds] = useState<readonly AddonId[]>([]);
   const [giftMessage, setGiftMessage] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const { now, days, selectedDay, setDay, slot, setSlot, countdown } =
     useDeliverySchedule();
 
@@ -148,6 +150,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
       giftMessage: giftMessage.trim() || undefined,
       preferredDay: selectedDay ?? undefined,
       preferredSlot: slot,
+      recipientName: recipientName.trim() || undefined,
+      recipientPhone: recipientPhone.trim() || undefined,
     });
     toast(`${product.name} added to your cart`);
   }
@@ -272,12 +276,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </div>
           </Reveal>
 
-          {/* Add-ons */}
+          {/* Add-ons — image tiles (flowers.ae "a little something extra") */}
           <Reveal delay={0.12}>
             <h2 className="mb-3 font-brand text-xs font-medium uppercase tracking-brand text-sage">
-              Add a little more
+              Add a little something extra
             </h2>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {addons.map((addon) => {
                 const on = addonIds.includes(addon.id);
                 return (
@@ -291,19 +295,51 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       )
                     }
                     className={cn(
-                      chipBase,
-                      "gap-2",
+                      "flex flex-col overflow-hidden rounded-media-sm border text-left transition-colors duration-200 ease-bloom",
                       on ? "border-olive bg-cream" : "border-hairline hover:border-sage",
                     )}
                   >
-                    <span className="text-sm text-olive">{addon.name}</span>
-                    <span className="text-xs text-sage">
+                    <span className="block aspect-square w-full overflow-hidden">
+                      <FloralImage image={addon.image} sizes="140px" />
+                    </span>
+                    <span className="px-2.5 pt-2 text-sm leading-tight text-olive">
+                      {addon.name}
+                    </span>
+                    <span className="px-2.5 pb-2.5 pt-0.5 text-xs text-sage">
                       +{formatAed(addon.priceAed)}
                     </span>
                   </button>
                 );
               })}
             </div>
+          </Reveal>
+
+          {/* Recipient — captured here, pre-fills checkout */}
+          <Reveal delay={0.14}>
+            <h2 className="mb-3 font-brand text-xs font-medium uppercase tracking-brand text-sage">
+              Who is receiving it?
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <input
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Recipient name (optional)"
+                aria-label="Recipient name"
+                className={fieldClasses}
+              />
+              <input
+                value={recipientPhone}
+                onChange={(e) => setRecipientPhone(e.target.value)}
+                placeholder="Recipient phone (optional)"
+                aria-label="Recipient phone"
+                inputMode="tel"
+                className={fieldClasses}
+              />
+            </div>
+            <p className="mt-2 text-xs text-sage">
+              We only use this to coordinate delivery. The price is never shown
+              to the recipient.
+            </p>
           </Reveal>
 
           {/* Gift message + live preview */}
@@ -376,6 +412,23 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 </button>
               ))}
             </div>
+          </Reveal>
+
+          {/* Trust — video approval + guarantees near add-to-cart */}
+          <Reveal delay={0.22}>
+            <div className="rounded-media-sm border border-hairline bg-cream/60 px-4 py-3.5">
+              <p className="text-sm leading-relaxed text-olive">
+                <span className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-burnt-orange">
+                  Video approval
+                </span>
+                <br />
+                We&apos;ll send you a photo or video of your finished arrangement
+                on WhatsApp before it&apos;s delivered.
+              </p>
+            </div>
+            <p className="mt-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+              Same-day delivery · Freshness guarantee · All seven Emirates
+            </p>
           </Reveal>
 
           {/* Desktop add-to-cart */}

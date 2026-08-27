@@ -96,8 +96,9 @@ export function CheckoutForm() {
   const { items, subtotalAed, clear } = useCart();
   const { toast } = useToast();
 
-  /* Pre-fill from the day/slot chosen on the product page, if any. */
+  /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
+  const withRecipient = items.find((i) => i.recipientName);
   const { days, selectedDay, setDay, slot, setSlot } = useDeliverySchedule({
     day: preferred?.preferredDay,
     slot: preferred?.preferredSlot,
@@ -108,8 +109,11 @@ export function CheckoutForm() {
   const [zoneId, setZoneId] = useState<string>("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientPhone, setRecipientPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [recipientName, setRecipientName] = useState(withRecipient?.recipientName ?? "");
+  const [recipientPhone, setRecipientPhone] = useState(
+    withRecipient?.recipientPhone ?? "",
+  );
   const [address, setAddress] = useState("");
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [placed, setPlaced] = useState<string | null>(null);
@@ -150,8 +154,9 @@ export function CheckoutForm() {
           Thank you — your flowers are in our hands.
         </h1>
         <p className="max-w-sm text-base leading-relaxed text-sage">
-          Order {placed}. We&apos;ll confirm on WhatsApp shortly. (UI preview — no payment
-          was taken.)
+          Order {placed}. Before delivery, your florist will send you a photo
+          or video of the finished arrangement on WhatsApp for your approval.
+          (UI preview — no payment was taken.)
         </p>
         <Link href="/account" className={buttonClasses("secondary")}>
           View Your Orders
@@ -346,6 +351,20 @@ export function CheckoutForm() {
               autoComplete="tel"
             />
           </div>
+          <div>
+            <label className={labelClasses} htmlFor="email">
+              Email (order updates)
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClasses}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+          </div>
           <div className="sm:col-span-2">
             <label className={labelClasses} htmlFor="address">
               Delivery address
@@ -383,6 +402,12 @@ export function CheckoutForm() {
             <p className="text-sm text-sage">
               or 4 interest-free payments of AED {tabbyInstalment}
             </p>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-sm border border-dashed border-hairline p-5 opacity-70">
+            <p className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+              Apple Pay · Google Pay
+            </p>
+            <p className="text-xs text-sage">arrives with the payments phase</p>
           </div>
         </section>
 

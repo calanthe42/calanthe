@@ -28,6 +28,8 @@ export type CartItem = {
   /** Chosen on the product page; pre-fills checkout. */
   preferredDay?: string;
   preferredSlot?: string;
+  recipientName?: string;
+  recipientPhone?: string;
 };
 
 export function itemUnitPrice(
@@ -102,6 +104,10 @@ function sanitizeStoredItems(parsed: unknown): CartItem[] {
           ? r.giftMessage.slice(0, 220)
           : undefined,
       preferredDay: typeof r.preferredDay === "string" ? r.preferredDay : undefined,
+      recipientName:
+        typeof r.recipientName === "string" ? r.recipientName.slice(0, 80) : undefined,
+      recipientPhone:
+        typeof r.recipientPhone === "string" ? r.recipientPhone.slice(0, 24) : undefined,
       preferredSlot:
         typeof r.preferredSlot === "string" &&
         (timeSlots as readonly string[]).includes(r.preferredSlot)
