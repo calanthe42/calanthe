@@ -1,4 +1,11 @@
 import type { Metadata } from "next";
+import { ClipReveal } from "@/components/motion/ClipReveal";
+import { MonogramBloom } from "@/components/motion/MonogramBloom";
+import { Parallax } from "@/components/motion/Parallax";
+import { Reveal } from "@/components/motion/Reveal";
+import { SplitLines } from "@/components/motion/SplitLines";
+import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Logotype } from "@/components/ui/Logotype";
@@ -125,6 +132,71 @@ export default function StyleCheckPage() {
             For the words you cannot say out loud.
           </p>
         </div>
+      </section>
+
+      <Hairline />
+
+      {/* ---- Motion lab: one full-screen block per primitive ---- */}
+      <section className="flex min-h-svh flex-col justify-center gap-6">
+        <Eyebrow>04 — Motion · Reveal</Eyebrow>
+        <Reveal>
+          <p className="max-w-prose font-display text-3xl font-light text-olive">
+            The default entrance — a quiet fade as the content rises 24 pixels, like a
+            stem straightening.
+          </p>
+        </Reveal>
+      </section>
+
+      <section className="flex min-h-svh flex-col justify-center gap-6">
+        <Eyebrow>05 — Motion · ClipReveal</Eyebrow>
+        <ClipReveal className="aspect-[4/5] w-full max-w-sm rounded-sm">
+          <BotanicalPlaceholder seed="clip-demo" palette="warm" />
+        </ClipReveal>
+      </section>
+
+      <section className="flex min-h-svh flex-col justify-center gap-6">
+        <Eyebrow>06 — Motion · Stagger</Eyebrow>
+        <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {["One", "Two", "Three"].map((label, i) => (
+            <StaggerItem key={label}>
+              <div className="flex aspect-[4/3] items-center justify-center rounded-sm bg-cream">
+                <span className="font-brand text-xs uppercase tracking-brand text-sage">
+                  {label} · {(i + 1) * 80}ms
+                </span>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+      </section>
+
+      <section className="flex min-h-svh flex-col justify-center gap-6">
+        <Eyebrow>07 — Motion · SplitLines</Eyebrow>
+        <SplitLines
+          lines={["Lines that rise", "out of the page,", "one breath apart."]}
+          className="font-display text-5xl font-light leading-[1.08] text-olive"
+        />
+      </section>
+
+      <section className="flex min-h-svh flex-col justify-center gap-6">
+        <Eyebrow>08 — Motion · Parallax</Eyebrow>
+        <div className="grid grid-cols-3 gap-3">
+          <Parallax speed={0.9} className="aspect-[4/5] overflow-hidden rounded-sm">
+            <BotanicalPlaceholder seed="par-a" palette="olive" />
+          </Parallax>
+          <Parallax speed={1} className="mt-10 aspect-[4/5] overflow-hidden rounded-sm">
+            <BotanicalPlaceholder seed="par-b" palette="warm" />
+          </Parallax>
+          <Parallax speed={1.1} className="aspect-[4/5] overflow-hidden rounded-sm">
+            <BotanicalPlaceholder seed="par-c" palette="burgundy" />
+          </Parallax>
+        </div>
+        <p className="text-sm text-sage">Speeds 0.9 · 1.0 · 1.1 — scroll slowly.</p>
+      </section>
+
+      <section className="flex min-h-svh flex-col items-center justify-center gap-6">
+        <Eyebrow>09 — Motion · MonogramBloom</Eyebrow>
+        <MonogramBloom className="w-40 text-olive" title="Calanthe monogram" />
+        <p className="text-sm text-sage">The true vector mark, drawing on.</p>
       </section>
 
       <Hairline />
