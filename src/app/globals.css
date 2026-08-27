@@ -59,6 +59,216 @@ body::after {
   }
 }
 
+/* Above-the-fold headline entrance: pure CSS so the LCP text paints and
+   animates before any JavaScript arrives. Transform-only, NO clipping
+   mask — clipped text defers LCP until the animation ends. */
+.splitline-rise {
+  display: block;
+  animation: splitline-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes splitline-rise {
+  from {
+    transform: translateY(24px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Scroll reveals — server-rendered markup + one IntersectionObserver.
+   Hidden states are gated on html.js so nothing hides without JS.
+   Everything blooms via transform/opacity/clip-path only.              */
+/* ------------------------------------------------------------------ */
+
+.io-reveal {
+  transition:
+    opacity 0.7s var(--ease-bloom),
+    transform 0.7s var(--ease-bloom);
+}
+.js .io-reveal:not(.io-in) {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+/* Stagger: parent gets io-in; children cascade 80ms apart. */
+.io-stagger > * {
+  transition:
+    opacity 0.7s var(--ease-bloom),
+    transform 0.7s var(--ease-bloom);
+}
+.js .io-stagger:not(.io-in) > * {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.io-stagger > *:nth-child(2) {
+  transition-delay: 80ms;
+}
+.io-stagger > *:nth-child(3) {
+  transition-delay: 160ms;
+}
+.io-stagger > *:nth-child(4) {
+  transition-delay: 240ms;
+}
+.io-stagger > *:nth-child(5) {
+  transition-delay: 320ms;
+}
+.io-stagger > *:nth-child(6) {
+  transition-delay: 400ms;
+}
+.io-stagger > *:nth-child(7) {
+  transition-delay: 480ms;
+}
+.io-stagger > *:nth-child(8) {
+  transition-delay: 560ms;
+}
+.io-stagger > *:nth-child(n + 9) {
+  transition-delay: 640ms;
+}
+
+/* ClipReveal: tissue-paper uncover + settle. */
+.io-clip {
+  transition: clip-path 0.9s var(--ease-bloom);
+  clip-path: inset(0 0 0 0);
+}
+.js .io-clip:not(.io-in) {
+  clip-path: inset(100% 0 0 0);
+}
+.io-clip-inner {
+  transition: transform 0.9s var(--ease-bloom);
+}
+.js .io-clip:not(.io-in) .io-clip-inner {
+  transform: scale(1.1);
+}
+
+/* SplitLines (scroll mode): lines rise out of masks, 80ms apart. */
+.io-lines .io-line {
+  transition: transform 0.7s var(--ease-bloom);
+}
+.js .io-lines:not(.io-in) .io-line {
+  transform: translateY(110%);
+}
+.io-lines > *:nth-child(3) .io-line {
+  transition-delay: 80ms;
+}
+.io-lines > *:nth-child(4) .io-line {
+  transition-delay: 160ms;
+}
+.io-lines > *:nth-child(n + 5) .io-line {
+  transition-delay: 240ms;
+}
+
+/* Hairline drawing itself. */
+.io-hairline {
+  transform-origin: left;
+  transition: transform 0.7s var(--ease-bloom);
+}
+.js .io-hairline:not(.io-in) {
+  transform: scaleX(0);
+}
+
+/* Monogram bloom: stroke draws per quarter, then the fill breathes in.
+   Paths carry pathLength="1" so dasharray maths is unit-based. */
+.io-mono path {
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-dasharray: 1;
+  transition:
+    stroke-dashoffset 1.1s var(--ease-bloom),
+    fill-opacity 0.6s var(--ease-bloom) 0.9s,
+    stroke-opacity 0.5s var(--ease-bloom) 1.4s;
+  stroke-dashoffset: 0;
+  fill-opacity: 1;
+  stroke-opacity: 0;
+}
+.js .io-mono:not(.io-in) path {
+  stroke-dashoffset: 1;
+  fill-opacity: 0;
+  stroke-opacity: 1;
+  transition: none;
+}
+.io-mono path:nth-child(2) {
+  transition-delay: 0.12s, 0.98s, 1.4s;
+}
+.io-mono path:nth-child(3) {
+  transition-delay: 0.24s, 1.06s, 1.4s;
+}
+.io-mono path:nth-child(4) {
+  transition-delay: 0.36s, 1.14s, 1.4s;
+}
+.io-mono path:nth-child(5) {
+  transition-delay: 0.48s, 1.22s, 1.4s;
+}
+.io-mono path:nth-child(6) {
+  transition-delay: 0.6s, 1.3s, 1.4s;
+}
+.io-mono path:nth-child(7) {
+  transition-delay: 0.72s, 1.38s, 1.4s;
+}
+
+/* Toast entrance. */
+.toast-in {
+  animation: toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile menu — CSS enter/exit (framer-free critical path). */
+.menu-in {
+  animation: menu-fade 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.menu-out {
+  animation: menu-fade 0.3s cubic-bezier(0.22, 1, 0.36, 1) reverse both;
+}
+.menu-in .menu-links > li {
+  animation: menu-link 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.menu-in .menu-links > li:nth-child(1) {
+  animation-delay: 0.15s;
+}
+.menu-in .menu-links > li:nth-child(2) {
+  animation-delay: 0.23s;
+}
+.menu-in .menu-links > li:nth-child(3) {
+  animation-delay: 0.31s;
+}
+.menu-in .menu-links > li:nth-child(4) {
+  animation-delay: 0.39s;
+}
+.menu-in .menu-footnote {
+  animation: menu-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes menu-link {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Loading monogram — a quiet breathing pulse. */
 .monogram-pulse {
   animation: monogram-pulse 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
@@ -130,7 +340,47 @@ body::after {
   .hero-scrollcue,
   .marquee-track,
   .monogram-rotate,
-  .monogram-pulse {
+  .monogram-pulse,
+  .splitline-rise,
+  .menu-in .menu-links > li {
     animation: none;
+  }
+  .toast-in {
+    animation-name: menu-fade;
+  }
+  /* Reveals collapse to a simple fade. */
+  .io-reveal,
+  .io-stagger > *,
+  .io-clip,
+  .io-clip-inner,
+  .io-lines .io-line,
+  .io-hairline,
+  .io-mono path {
+    transition-property: opacity;
+    transition-duration: 0.5s;
+    transition-delay: 0s;
+  }
+  .js .io-reveal:not(.io-in),
+  .js .io-stagger:not(.io-in) > * {
+    transform: none;
+  }
+  .js .io-clip:not(.io-in) {
+    clip-path: inset(0 0 0 0);
+    opacity: 0;
+  }
+  .js .io-clip:not(.io-in) .io-clip-inner {
+    transform: none;
+  }
+  .js .io-lines:not(.io-in) .io-line {
+    transform: none;
+    opacity: 0;
+  }
+  .js .io-hairline:not(.io-in) {
+    transform: none;
+    opacity: 0;
+  }
+  .js .io-mono:not(.io-in) path {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0;
   }
 }

@@ -1,19 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-} from "motion/react";
 import { useCart } from "@/lib/cart";
 import { primaryNavLinks } from "@/lib/data";
 import { useScrollLock } from "@/lib/useScrollLock";
-import { EASE_BLOOM } from "@/components/motion/constants";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { Logotype } from "@/components/ui/Logotype";
@@ -28,12 +20,49 @@ export function Header() {
   const pathname = usePathname();
   const overlay = OVERLAY_ROUTES.has(pathname);
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { scrollY } = useScroll();
+  const [menuState, setMenuState] = useState<"closed" | "open" | "closing">("closed");
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { count, openCart } = useCart();
 
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 40);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  const menuOpen = menuState === "open";
   useScrollLock(menuOpen);
+
+  function toggleMenu() {
+    if (menuOpen) {
+      setMenuState("closing");
+      closeTimer.current = setTimeout(() => setMenuState("closed"), 320);
+    } else {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      setMenuState("open");
+    }
+  }
+
+  function closeMenu() {
+    if (menuState !== "open") return;
+    setMenuState("closing");
+    closeTimer.current = setTimeout(() => setMenuState("closed"), 320);
+  }
 
   const onDark = (overlay && !scrolled) || menuOpen;
 
@@ -52,7 +81,7 @@ export function Header() {
           type="button"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((v) => !v)}
+          onClick={toggleMenu}
           className={cn(
             "relative z-50 -ml-2 flex h-11 w-11 items-center justify-center lg:hidden",
             onDark ? "text-cream" : "text-olive",
@@ -145,70 +174,37 @@ export function Header() {
         </div>
       </div>
 
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-    </header>
-  );
-}
-
-function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const reduced = useReducedMotion();
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-40 flex flex-col bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.3, ease: EASE_BLOOM } }}
-          transition={{ duration: 0.4, ease: EASE_BLOOM }}
+      {/* Full-screen mobile menu — CSS-animated in and out */}
+      {menuState !== "closed" && (
+        <div
+          className={cn(
+            "fixed inset-0 z-40 flex flex-col bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden",
+            menuState === "closing" ? "menu-out" : "menu-in",
+          )}
         >
           <MonogramBloom className="mx-auto w-16 text-cream" />
 
           <nav aria-label="Mobile" className="mt-10 flex-1">
-            <ul className="flex flex-col gap-2">
-              {NAV_LINKS.map((link, i) => (
-                <motion.li
-                  key={link.href}
-                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{
-                    opacity: 0,
-                    transition: {
-                      duration: 0.2,
-                      ease: EASE_BLOOM,
-                      delay: (NAV_LINKS.length - 1 - i) * 0.05,
-                    },
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    ease: EASE_BLOOM,
-                    delay: 0.15 + i * 0.08,
-                  }}
-                >
+            <ul className="menu-links flex flex-col gap-2">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
                   <Link
                     href={link.href}
-                    onClick={onClose}
+                    onClick={closeMenu}
                     className="block py-3 font-brand text-2xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                   >
                     {link.label}
                   </Link>
-                </motion.li>
+                </li>
               ))}
             </ul>
           </nav>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE_BLOOM, delay: 0.5 }}
-            className="font-brand text-[0.625rem] uppercase tracking-brand text-sage"
-          >
+          <p className="menu-footnote font-brand text-[0.625rem] uppercase tracking-brand text-sage">
             Flower Atelier — UAE
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
       )}
-    </AnimatePresence>
+    </header>
   );
 }

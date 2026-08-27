@@ -3,7 +3,7 @@ import { Footer } from "@/components/blocks/Footer";
 import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
 import { WhatsAppButton } from "@/components/blocks/WhatsAppButton";
-import { CartDrawer } from "@/components/commerce/CartDrawer";
+import { LazyCartDrawer } from "@/components/commerce/LazyCartDrawer";
 
 export default function StorefrontLayout({
   children,
@@ -14,7 +14,7 @@ export default function StorefrontLayout({
       <Header />
       {children}
       <Footer />
-      <CartDrawer />
+      <LazyCartDrawer />
       <WhatsAppButton />
     </Providers>
   );

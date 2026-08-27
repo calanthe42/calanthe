@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
@@ -19,7 +19,7 @@ const GHOST_WORDS = ["Budget", "Colours", "Details"] as const;
  */
 export function BuildYourOwnBanner() {
   const sectionRef = useRef<HTMLElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionPref();
 
   useEffect(() => {
     const section = sectionRef.current;

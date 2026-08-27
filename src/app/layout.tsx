@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
+import { MotionObserver } from "@/components/motion/MotionObserver";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
+        <MotionObserver />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -20,7 +20,7 @@ type ParallaxProps = {
 /** GSAP scrub-linked vertical drift while the element traverses the viewport. */
 export function Parallax({ children, className, speed = 0.9 }: ParallaxProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionPref();
 
   useEffect(() => {
     const el = ref.current;

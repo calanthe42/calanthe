@@ -1,30 +1,19 @@
-"use client";
-
-import { motion, useReducedMotion, type Variants } from "motion/react";
-import { DUR_REVEAL, EASE_BLOOM, STAGGER_STEP, VIEWPORT_ONCE } from "./constants";
-
-const groupVariants: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: STAGGER_STEP } },
-};
+import { cn } from "@/lib/cn";
 
 type StaggerProps = {
   children: React.ReactNode;
   className?: string;
 };
 
-/** Group whose <StaggerItem> children reveal 80ms apart. */
+/**
+ * Group whose direct children reveal 80ms apart (CSS nth-child delays).
+ * Server component — triggered once by MotionObserver.
+ */
 export function Stagger({ children, className }: StaggerProps) {
   return (
-    <motion.div
-      className={className}
-      variants={groupVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={VIEWPORT_ONCE}
-    >
+    <div data-io className={cn("io-stagger", className)}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -33,21 +22,7 @@ type StaggerItemProps = {
   className?: string;
 };
 
+/** Direct child of <Stagger> — kept as a named component for call-site clarity. */
 export function StaggerItem({ children, className }: StaggerItemProps) {
-  const reduced = useReducedMotion();
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: reduced ? 0 : 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: DUR_REVEAL, ease: EASE_BLOOM },
-    },
-  };
-
-  return (
-    <motion.div className={className} variants={itemVariants}>
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }

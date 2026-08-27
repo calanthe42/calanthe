@@ -1,11 +1,13 @@
 import { BestSellers } from "@/components/blocks/BestSellers";
-import { BuildYourOwnBanner } from "@/components/blocks/BuildYourOwnBanner";
 import { CalantheTouch } from "@/components/blocks/CalantheTouch";
 import { Hero } from "@/components/blocks/Hero";
 import { InstagramMarquee } from "@/components/blocks/InstagramMarquee";
+import {
+  LazyBuildYourOwnBanner,
+  LazyWeeklyRitual,
+} from "@/components/blocks/LazyHomeSections";
 import { NewArrivals } from "@/components/blocks/NewArrivals";
 import { ShopByOccasion } from "@/components/blocks/ShopByOccasion";
-import { WeeklyRitual } from "@/components/blocks/WeeklyRitual";
 
 export default function HomePage() {
   return (
@@ -13,10 +15,10 @@ export default function HomePage() {
       <Hero />
       <NewArrivals />
       <ShopByOccasion />
-      <BuildYourOwnBanner />
+      <LazyBuildYourOwnBanner />
       <BestSellers />
       <CalantheTouch />
-      <WeeklyRitual />
+      <LazyWeeklyRitual />
       <InstagramMarquee />
     </main>
   );

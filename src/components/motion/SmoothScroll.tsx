@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ReactLenis, type LenisRef } from "lenis/react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -14,7 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
  * prefers-reduced-motion → native scrolling, no smoothing at all.
  */
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotionPref();
   const lenisRef = useRef<LenisRef>(null);
 
   useEffect(() => {

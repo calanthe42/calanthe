@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Reveal } from "@/components/motion/Reveal";
@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 export function WeeklyRitual() {
   const sectionRef = useRef<HTMLElement>(null);
   const oliveRef = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionPref();
 
   useEffect(() => {
     const section = sectionRef.current;

@@ -1,6 +1,3 @@
-"use client";
-
-import { useRef } from "react";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { WishlistButton } from "@/components/commerce/WishlistButton";
@@ -16,12 +13,12 @@ type ProductCardProps = {
 };
 
 /**
- * 4:5 image with ClipReveal entrance; on devices with hover the second
- * image crossfades in. Wishlist heart is a 44px target.
+ * Server component: 4:5 ClipReveal image with hover crossfade; the
+ * [data-vt-hero] container is named for the view-transition morph by
+ * TransitionLink at click time. Wishlist heart is a 44px target.
  */
 export function ProductCard({ product, className, editorial = false }: ProductCardProps) {
   const [front, back] = product.images;
-  const imageRef = useRef<HTMLDivElement>(null);
 
   return (
     <article className={cn("group relative", className)}>
@@ -29,14 +26,6 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
         href={`/product/${product.slug}`}
         aria-label={product.name}
         className="block"
-        onClick={() => {
-          /* Only the clicked card carries the morph name — products can
-             appear in several sections, and duplicate names abort the
-             view transition. */
-          if (imageRef.current) {
-            imageRef.current.style.viewTransitionName = "product-hero";
-          }
-        }}
       >
         <ClipReveal
           className={cn(
@@ -44,7 +33,7 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
             editorial ? "aspect-[4/3] lg:aspect-[8/5]" : "aspect-[4/5]",
           )}
         >
-          <div ref={imageRef} className="relative h-full w-full">
+          <div data-vt-hero className="relative h-full w-full">
             <BotanicalPlaceholder
               seed={front.placeholder.seed}
               palette={front.placeholder.palette}

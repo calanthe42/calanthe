@@ -1,8 +1,4 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/cn";
-import { DUR_REVEAL, EASE_BLOOM, VIEWPORT_ONCE } from "./constants";
 
 type SplitLinesProps = {
   /** Art-directed line breaks — one string per line. */
@@ -10,17 +6,18 @@ type SplitLinesProps = {
   as?: "h1" | "h2" | "h3" | "p";
   className?: string;
   /**
-   * Play on mount instead of on scroll — for above-the-fold headlines.
-   * Keeps the text painted (opacity stays 1); entrance is transform-only.
+   * Play on mount instead of on scroll — for above-the-fold (LCP)
+   * headlines. Runs as a maskless CSS animation from first paint, so
+   * the text is painted (and counted as LCP) immediately.
    */
   immediate?: boolean;
   delay?: number;
 };
 
 /**
- * Editorial headline reveal: each line rises out of an overflow mask.
- * Transform-only — safe for LCP elements (text is never opacity 0
- * unless reduced-motion swaps to a quick fade).
+ * Editorial headline reveal. Scroll mode: lines rise out of overflow
+ * masks once at 80% viewport. Immediate mode: a gentle maskless rise
+ * that starts before hydration. Server component in both modes.
  */
 export function SplitLines({
   lines,
@@ -29,36 +26,36 @@ export function SplitLines({
   immediate = false,
   delay = 0,
 }: SplitLinesProps) {
-  const reduced = useReducedMotion();
+  if (immediate) {
+    return (
+      <Tag className={className}>
+        <span className="sr-only">{lines.join(" ")}</span>
+        {lines.map((line, i) => (
+          <span
+            key={i}
+            aria-hidden
+            className="splitline-rise"
+            style={{ animationDelay: `${delay + i * 0.08}s` }}
+          >
+            {line}
+          </span>
+        ))}
+      </Tag>
+    );
+  }
 
   return (
-    <Tag className={className}>
+    <Tag
+      data-io
+      className={cn("io-lines", className)}
+      style={delay > 0 ? { transitionDelay: `${delay}s` } : undefined}
+    >
       <span className="sr-only">{lines.join(" ")}</span>
       {lines.map((line, i) => (
         <span key={i} aria-hidden className="block overflow-hidden">
-          <motion.span
-            className="block will-change-transform"
-            initial={reduced ? { opacity: 0, y: 0 } : { opacity: 1, y: "110%" }}
-            {...(immediate
-              ? { animate: { opacity: 1, y: 0 } }
-              : {
-                  whileInView: { opacity: 1, y: 0 },
-                  viewport: VIEWPORT_ONCE,
-                })}
-            transition={{
-              duration: DUR_REVEAL,
-              ease: EASE_BLOOM,
-              delay: delay + i * 0.08,
-            }}
-          >
-            {line}
-          </motion.span>
+          <span className="io-line block">{line}</span>
         </span>
       ))}
     </Tag>
   );
-}
-
-export function splitLinesClassName(className?: string): string {
-  return cn(className);
 }

@@ -9,8 +9,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { EASE_BLOOM } from "@/components/motion/constants";
 
 type Toast = { id: number; message: string };
 
@@ -49,20 +47,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         aria-live="polite"
         className="pointer-events-none fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),1rem)] z-[70] flex flex-col items-center gap-2 px-6"
       >
-        <AnimatePresence>
-          {toasts.map((t) => (
-            <motion.p
-              key={t.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: EASE_BLOOM }}
-              className="rounded-sm border border-hairline bg-cream px-5 py-3 text-center text-sm text-olive shadow-[0_4px_24px_rgba(43,47,27,0.18)]"
-            >
-              {t.message}
-            </motion.p>
-          ))}
-        </AnimatePresence>
+        {toasts.map((t) => (
+          <p
+            key={t.id}
+            className="toast-in rounded-sm border border-hairline bg-cream px-5 py-3 text-center text-sm text-olive shadow-[0_4px_24px_rgba(43,47,27,0.18)]"
+          >
+            {t.message}
+          </p>
+        ))}
       </div>
     </ToastContext.Provider>
   );

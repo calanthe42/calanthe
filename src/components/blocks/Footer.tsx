@@ -6,7 +6,7 @@ const shopLinks = primaryNavLinks;
 const helpLinks = helpNavLinks;
 
 const linkClass =
-  "text-sm text-sage transition-colors duration-200 ease-bloom hover:text-cream";
+  "text-sm text-cream/75 transition-colors duration-200 ease-bloom hover:text-cream";
 
 export function Footer() {
   return (
@@ -18,7 +18,7 @@ export function Footer() {
           <p className="font-brand text-2xl font-medium uppercase tracking-[0.22em] text-cream">
             Calanthe
           </p>
-          <p className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+          <p className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream/70">
             Flower Atelier — UAE
           </p>
         </div>
@@ -95,7 +95,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="flex items-center justify-between pb-2">
-          <p className="text-sm text-sage">© 2026 Calanthe</p>
+          <p className="text-sm text-cream/70">© 2026 Calanthe</p>
           <Monogram className="monogram-rotate w-8 text-sage" />
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitLines } from "@/components/motion/SplitLines";
@@ -14,7 +14,7 @@ export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const darkenRef = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionPref();
 
   /* Scrub: background drifts slower than the page (0.85) and the scene
      darkens slightly as it scrolls away. */

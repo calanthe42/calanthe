@@ -52,7 +52,7 @@ type Shape = {
   opacity: number;
 };
 
-/* Compositions are pure functions of (seed, palette) — cache them so
+/* Compositions are pure functions of (seed, palette) — cached so
    re-renders never re-run the PRNG. Works on server and client. */
 const shapeCache = new Map<string, Shape[]>();
 
@@ -66,11 +66,11 @@ function shapesFor(seed: string, palette: Palette): Shape[] {
   const shapes = Array.from({ length: 7 }, (_, i) => {
     const cx = 12 + rand() * 76;
     const cy = 10 + rand() * 80;
-    const rx = 14 + rand() * 26;
+    const rx = 18 + rand() * 30;
     const ry = rx * (0.7 + rand() * 0.6);
     const rot = Math.floor(rand() * 180);
     const fill = blobs[i % blobs.length] ?? base;
-    const opacity = 0.35 + rand() * 0.4;
+    const opacity = 0.4 + rand() * 0.4;
     return { cx, cy, rx, ry, rot, fill, opacity };
   });
   shapeCache.set(cacheKey, shapes);
@@ -79,8 +79,10 @@ function shapesFor(seed: string, palette: Palette): Shape[] {
 
 /**
  * Soft-focus botanical abstraction in the brand palette — blurred
- * organic forms, like flowers seen through frosted glass. Deterministic
- * per seed. Replace with real photography when the client provides it.
+ * organic forms, like flowers seen through frosted glass. The softness
+ * comes from radial-gradient falloff, not filters: feGaussianBlur cost
+ * Lighthouse ~2s of Style/Layout across a page of these.
+ * Deterministic per seed. Replace with real photography when available.
  */
 export function BotanicalPlaceholder({
   seed,
@@ -88,7 +90,7 @@ export function BotanicalPlaceholder({
   className,
 }: BotanicalPlaceholderProps) {
   const { base } = palettes[palette];
-  const id = `bp-${seed.replace(/[^a-zA-Z0-9-]/g, "")}`;
+  const id = `bp-${palette}-${seed.replace(/[^a-zA-Z0-9-]/g, "")}`;
   const shapes = shapesFor(seed, palette);
 
   return (
@@ -99,29 +101,30 @@ export function BotanicalPlaceholder({
       aria-hidden
     >
       <defs>
-        <filter id={id} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="9" />
-        </filter>
+        {shapes.map((s, i) => (
+          <radialGradient key={i} id={`${id}-g${i}`}>
+            <stop offset="0%" stopColor={s.fill} stopOpacity={s.opacity} />
+            <stop offset="55%" stopColor={s.fill} stopOpacity={s.opacity * 0.7} />
+            <stop offset="100%" stopColor={s.fill} stopOpacity="0" />
+          </radialGradient>
+        ))}
         <radialGradient id={`${id}-v`} cx="50%" cy="42%" r="75%">
           <stop offset="0%" stopColor={base} stopOpacity="0" />
           <stop offset="100%" stopColor="#1c1f10" stopOpacity="0.28" />
         </radialGradient>
       </defs>
       <rect width="100" height="125" fill={base} />
-      <g filter={`url(#${id})`}>
-        {shapes.map((s, i) => (
-          <ellipse
-            key={i}
-            cx={s.cx}
-            cy={s.cy}
-            rx={s.rx}
-            ry={s.ry}
-            fill={s.fill}
-            opacity={s.opacity}
-            transform={`rotate(${s.rot} ${s.cx} ${s.cy})`}
-          />
-        ))}
-      </g>
+      {shapes.map((s, i) => (
+        <ellipse
+          key={i}
+          cx={s.cx}
+          cy={s.cy}
+          rx={s.rx * 1.25}
+          ry={s.ry * 1.25}
+          fill={`url(#${id}-g${i})`}
+          transform={`rotate(${s.rot} ${s.cx} ${s.cy})`}
+        />
+      ))}
       <rect width="100" height="125" fill={`url(#${id}-v)`} />
     </svg>
   );

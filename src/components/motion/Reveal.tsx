@@ -1,7 +1,4 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
-import { DUR_REVEAL, EASE_BLOOM, VIEWPORT_ONCE } from "./constants";
+import { cn } from "@/lib/cn";
 
 type RevealProps = {
   children: React.ReactNode;
@@ -10,19 +7,18 @@ type RevealProps = {
   delay?: number;
 };
 
-/** Default entrance: fade + rise 24px. Fires once at 80% viewport. */
+/**
+ * Default entrance: fade + rise 24px, once at 80% viewport.
+ * Server component — animation is CSS driven by MotionObserver.
+ */
 export function Reveal({ children, className, delay = 0 }: RevealProps) {
-  const reduced = useReducedMotion();
-
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: reduced ? 0 : 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={VIEWPORT_ONCE}
-      transition={{ duration: DUR_REVEAL, ease: EASE_BLOOM, delay }}
+    <div
+      data-io
+      className={cn("io-reveal", className)}
+      style={delay > 0 ? { transitionDelay: `${delay}s` } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

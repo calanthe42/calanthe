@@ -34,6 +34,11 @@ export function TransitionLink({ href, onClick, target, ...props }: TransitionLi
           return;
         }
         e.preventDefault();
+        /* Only the clicked element morphs — a [data-vt-hero] child gets
+           the shared name at click time, so duplicate names can never
+           abort the transition. */
+        const heroEl = e.currentTarget.querySelector<HTMLElement>("[data-vt-hero]");
+        if (heroEl) heroEl.style.viewTransitionName = "product-hero";
         document.startViewTransition(() => {
           router.push(href);
         });
