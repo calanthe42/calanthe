@@ -1,40 +1,66 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type Lenis from "lenis";
+import { LenisContext } from "@/lib/lenis-context";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
-const LenisProvider = lazy(() =>
-  import("./LenisProvider").then((m) => ({ default: m.LenisProvider })),
-);
-
 /**
- * Lenis smooth scroll, mounted after the browser goes idle so its chunk
- * and ticker never compete with first paint or hydration (Lighthouse
- * TBT). Scrolling is native until then — visually indistinguishable in
- * the first moments of a visit.
+ * Lenis smooth scroll, created imperatively once the browser is idle so
+ * its chunk and ticker never compete with first paint or hydration.
+ * The React tree never changes shape — children are rendered directly
+ * in every state, so activating Lenis can never remount the app.
  * prefers-reduced-motion → native scrolling permanently.
  */
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const reduced = useReducedMotionPref();
-  const [ready, setReady] = useState(false);
+  const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
     if (reduced) return;
-    if (typeof window.requestIdleCallback === "function") {
-      const handle = window.requestIdleCallback(() => setReady(true));
-      return () => window.cancelIdleCallback(handle);
+
+    let instance: Lenis | null = null;
+    let disposed = false;
+    let tickerFn: ((time: number) => void) | null = null;
+    let gsapRef: typeof import("gsap").gsap | null = null;
+
+    async function start() {
+      const [{ default: LenisCtor }, { gsap }, { ScrollTrigger }] =
+        await Promise.all([
+          import("lenis"),
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ]);
+      if (disposed) return;
+      gsap.registerPlugin(ScrollTrigger);
+      instance = new LenisCtor({ autoRaf: false });
+      instance.on("scroll", ScrollTrigger.update);
+      tickerFn = (time: number) => instance?.raf(time * 1000);
+      gsap.ticker.add(tickerFn);
+      gsap.ticker.lagSmoothing(0);
+      gsapRef = gsap;
+      setLenis(instance);
     }
-    const handle = setTimeout(() => setReady(true), 1500);
-    return () => clearTimeout(handle);
+
+    let idleHandle: number | undefined;
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(() => void start());
+    } else {
+      idleHandle = window.setTimeout(() => void start(), 1500) as unknown as number;
+    }
+
+    return () => {
+      disposed = true;
+      if (typeof window.cancelIdleCallback === "function" && idleHandle !== undefined) {
+        window.cancelIdleCallback(idleHandle);
+      } else if (idleHandle !== undefined) {
+        clearTimeout(idleHandle);
+      }
+      if (tickerFn && gsapRef) gsapRef.ticker.remove(tickerFn);
+      instance?.destroy();
+      setLenis(null);
+    };
   }, [reduced]);
 
-  if (reduced || !ready) {
-    return <>{children}</>;
-  }
-
-  return (
-    <Suspense fallback={<>{children}</>}>
-      <LenisProvider>{children}</LenisProvider>
-    </Suspense>
-  );
+  return <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>;
 }

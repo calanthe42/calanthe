@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLenis } from "lenis/react";
+import { useLenisInstance } from "@/lib/lenis-context";
 
 /** Pause Lenis and lock document scroll while an overlay is open. */
 export function useScrollLock(active: boolean): void {
-  const lenis = useLenis();
+  const lenis = useLenisInstance();
 
   useEffect(() => {
     if (active) {
