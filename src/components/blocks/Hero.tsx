@@ -57,7 +57,7 @@ export function Hero({ media }: HeroProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative -mt-16 flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive"
+      className="relative -mt-16 flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive lg:-mt-[6.75rem]"
     >
       {/* Full-bleed imagery — swappable for real photography */}
       <div ref={bgRef} className="absolute inset-[-8%] will-change-transform">

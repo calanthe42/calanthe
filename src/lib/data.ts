@@ -40,6 +40,14 @@ export const PHOTOS = {
   pinkTulip: photo("1623077227088-94024ab979c8"),
 } as const;
 
+export type FlowerType =
+  | "roses"
+  | "peonies"
+  | "orchids"
+  | "tulips"
+  | "lilies"
+  | "wildflowers";
+
 export type Product = {
   id: string;
   slug: string;
@@ -47,9 +55,28 @@ export type Product = {
   priceAed: number;
   images: readonly [ProductImage, ProductImage];
   occasions: readonly OccasionSlug[];
+  flowers: readonly FlowerType[];
   featured: boolean;
   newArrival: boolean;
 };
+
+export const flowerTypes: readonly { slug: FlowerType; name: string }[] = [
+  { slug: "roses", name: "Roses" },
+  { slug: "peonies", name: "Peonies" },
+  { slug: "orchids", name: "Orchids" },
+  { slug: "tulips", name: "Tulips" },
+  { slug: "lilies", name: "Lilies" },
+  { slug: "wildflowers", name: "Wildflowers" },
+];
+
+/** Client-approved price buckets. */
+export const priceBuckets = [
+  { id: "under-300", label: "Under AED 300", min: 0, max: 299 },
+  { id: "300-600", label: "AED 300 - 600", min: 300, max: 600 },
+  { id: "over-600", label: "Over AED 600", min: 601, max: Infinity },
+] as const;
+
+export type PriceBucketId = (typeof priceBuckets)[number]["id"];
 
 export type OccasionSlug =
   "birthday" | "congratulations" | "new-baby" | "love" | "just-because";
@@ -113,6 +140,7 @@ export const products: readonly Product[] = [
       img("amber-hour-b", "olive", "Amber Hour arrangement, detail", PHOTOS.peachRoses),
     ],
     occasions: ["birthday", "just-because"],
+    flowers: ["roses", "tulips"],
     featured: true,
     newArrival: true,
   },
@@ -136,6 +164,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["love"],
+    flowers: ["roses", "peonies"],
     featured: true,
     newArrival: false,
   },
@@ -154,6 +183,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["new-baby", "congratulations"],
+    flowers: ["peonies", "tulips"],
     featured: false,
     newArrival: true,
   },
@@ -177,6 +207,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["love", "just-because"],
+    flowers: ["roses"],
     featured: true,
     newArrival: false,
   },
@@ -195,6 +226,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["just-because"],
+    flowers: ["wildflowers"],
     featured: false,
     newArrival: true,
   },
@@ -213,6 +245,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["congratulations", "birthday"],
+    flowers: ["roses", "lilies"],
     featured: true,
     newArrival: true,
   },
@@ -226,6 +259,7 @@ export const products: readonly Product[] = [
       img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail", PHOTOS.dahliaDark),
     ],
     occasions: ["love"],
+    flowers: ["peonies"],
     featured: true,
     newArrival: false,
   },
@@ -244,6 +278,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["just-because", "new-baby"],
+    flowers: ["orchids"],
     featured: false,
     newArrival: true,
   },
@@ -262,6 +297,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["congratulations"],
+    flowers: ["roses"],
     featured: false,
     newArrival: true,
   },
@@ -280,6 +316,7 @@ export const products: readonly Product[] = [
       ),
     ],
     occasions: ["birthday", "just-because"],
+    flowers: ["lilies", "wildflowers"],
     featured: true,
     newArrival: false,
   },
@@ -317,19 +354,29 @@ export const sizes: readonly ProductSize[] = [
   { id: "premium", name: "Premium", priceDeltaAed: 320, note: "Twice the stems" },
 ] as const;
 
-export type AddonId = "vase" | "chocolates" | "balloon" | "polaroid";
+export type AddonId =
+  | "vase"
+  | "chocolates"
+  | "balloon"
+  | "cake"
+  | "teddy"
+  | "polaroid";
 
 export type Addon = {
   id: AddonId;
   name: string;
   priceAed: number;
+  /** Placeholder art until the client photographs real add-ons. */
+  image: ProductImage;
 };
 
 export const addons: readonly Addon[] = [
-  { id: "vase", name: "Vase", priceAed: 60 },
-  { id: "chocolates", name: "Chocolates", priceAed: 85 },
-  { id: "balloon", name: "Balloon", priceAed: 35 },
-  { id: "polaroid", name: "Polaroid Card", priceAed: 25 },
+  { id: "vase", name: "Vase", priceAed: 60, image: img("addon-vase", "olive", "A ceramic vase") },
+  { id: "chocolates", name: "Chocolates", priceAed: 85, image: img("addon-choc", "burgundy", "A box of chocolates") },
+  { id: "balloon", name: "Balloon", priceAed: 35, image: img("addon-balloon", "warm", "A heart balloon") },
+  { id: "cake", name: "Bento Cake", priceAed: 95, image: img("addon-cake", "warm", "A bento cake") },
+  { id: "teddy", name: "Teddy Bear", priceAed: 90, image: img("addon-teddy", "warm", "A teddy bear") },
+  { id: "polaroid", name: "Polaroid Card", priceAed: 25, image: img("addon-polaroid", "olive", "A polaroid card") },
 ] as const;
 
 export type DeliveryZone = {
@@ -586,6 +633,35 @@ export const helpNavLinks = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Refund & Cancellation Policy", href: "/refund-policy" },
 ] as const;
+
+/* ------------------------------------------------------------------ */
+/* Trust layer (ALL numbers/logos are placeholders — client to confirm) */
+/* ------------------------------------------------------------------ */
+
+/** FLAGGED placeholder — replace with the client's real count/rating. */
+export const TRUST = {
+  customersLine: "14,000+ happy customers",
+  ratingLine: "Rated 5 stars by our clients",
+  guarantees: [
+    { title: "Same-day delivery", copy: "Ordered before 5pm, at their door today." },
+    { title: "Video approval", copy: "See your arrangement on WhatsApp before it leaves." },
+    { title: "Freshness guarantee", copy: "Composed the morning of delivery, never before." },
+    { title: "All seven Emirates", copy: "One atelier, delivering across the UAE." },
+  ],
+  /** FLAGGED placeholders — swap for real press logos when provided. */
+  pressPlaceholders: ["Press One", "Press Two", "Press Three", "Press Four"],
+} as const;
+
+export const VIDEO_APPROVAL = {
+  eyebrow: "Before it leaves the atelier",
+  title: "See it before it's delivered.",
+  copy: "When your arrangement is finished, your florist sends you a photo or video on WhatsApp. Nothing is delivered until you love it.",
+  steps: [
+    "We compose your arrangement by hand",
+    "You receive a photo or video on WhatsApp",
+    "Approve it, and it's on its way",
+  ],
+} as const;
 
 export const CONTACT = {
   whatsapp: "+971500000000",
