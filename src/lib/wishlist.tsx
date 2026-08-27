@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 type WishlistContextValue = {
   ids: readonly string[];
@@ -40,11 +47,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
-  return (
-    <WishlistContext.Provider value={{ ids, has, toggle }}>
-      {children}
-    </WishlistContext.Provider>
-  );
+  const value = useMemo(() => ({ ids, has, toggle }), [ids, has, toggle]);
+
+  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 }
 
 export function useWishlist(): WishlistContextValue {

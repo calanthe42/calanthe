@@ -6,8 +6,14 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Monogram } from "@/components/ui/Monogram";
 import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { buttonClasses } from "@/components/ui/Button";
-import { itemUnitPrice, useCart, type CartItem as CartItemType } from "@/lib/cart";
-import { addons, formatAed, FREE_DELIVERY_THRESHOLD_AED, sizes } from "@/lib/data";
+import {
+  describeCartItem,
+  itemUnitPrice,
+  useCart,
+  type CartItem as CartItemType,
+} from "@/lib/cart";
+import { formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 function QtyStepper({ item }: { item: CartItemType }) {
   const { setQty } = useCart();
@@ -37,10 +43,6 @@ function QtyStepper({ item }: { item: CartItemType }) {
 
 function CartLine({ item }: { item: CartItemType }) {
   const { removeItem } = useCart();
-  const size = sizes.find((s) => s.id === item.sizeId);
-  const addonNames = item.addonIds
-    .map((id) => addons.find((a) => a.id === id)?.name)
-    .filter(Boolean);
 
   return (
     <li className="flex gap-4 py-5">
@@ -59,10 +61,7 @@ function CartLine({ item }: { item: CartItemType }) {
             {formatAed(itemUnitPrice(item) * item.qty)}
           </p>
         </div>
-        <p className="text-sm text-sage">
-          {size?.name}
-          {addonNames.length > 0 && <> · {addonNames.join(" · ")}</>}
-        </p>
+        <p className="text-sm text-sage">{describeCartItem(item)}</p>
         {item.giftMessage && (
           <p className="text-sm italic text-sage">Gift message included</p>
         )}
@@ -85,6 +84,7 @@ export function CartDrawer() {
   const { items, subtotalAed, isOpen, closeCart } = useCart();
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
   const progress = Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
+  useScrollLock(isOpen);
 
   return (
     <AnimatePresence>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,20 +10,16 @@ import {
   useReducedMotion,
   useScroll,
 } from "motion/react";
-import { useLenis } from "lenis/react";
 import { useCart } from "@/lib/cart";
+import { primaryNavLinks } from "@/lib/data";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { Logotype } from "@/components/ui/Logotype";
 import { cn } from "@/lib/cn";
 
-const NAV_LINKS = [
-  { label: "Shop", href: "/shop" },
-  { label: "Occasions", href: "/occasions" },
-  { label: "Build Your Own", href: "/build-your-own" },
-  { label: "Membership", href: "/membership" },
-] as const;
+const NAV_LINKS = primaryNavLinks;
 
 /** Routes whose hero sits dark and full-bleed behind the header. */
 const OVERLAY_ROUTES = new Set(["/"]);
@@ -34,24 +30,10 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { scrollY } = useScroll();
-  const lenis = useLenis();
   const { count, openCart } = useCart();
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
-
-  useEffect(() => {
-    if (menuOpen) {
-      lenis?.stop();
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      lenis?.start();
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      lenis?.start();
-      document.documentElement.style.overflow = "";
-    };
-  }, [menuOpen, lenis]);
+  useScrollLock(menuOpen);
 
   const onDark = (overlay && !scrolled) || menuOpen;
 

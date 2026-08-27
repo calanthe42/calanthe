@@ -1,44 +1,111 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import {
+  chipClasses,
+  chipOffClasses,
+  chipOnClasses,
+  fieldClasses,
+  labelClasses,
+} from "@/components/ui/form-classes";
 import { Monogram } from "@/components/ui/Monogram";
 import { cn } from "@/lib/cn";
-import { itemUnitPrice, useCart } from "@/lib/cart";
+import { describeCartItem, itemUnitPrice, useCart, type CartItem } from "@/lib/cart";
 import { useToast } from "@/lib/toast";
 import {
-  addons,
   deliveryZones,
   formatAed,
   FREE_DELIVERY_THRESHOLD_AED,
-  sizes,
   timeSlots,
+  type DeliveryZone,
 } from "@/lib/data";
-import { buildDays, uaeNow } from "@/lib/delivery";
+import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
 
-const field =
-  "w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none";
-const label =
-  "mb-2 block font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage";
-const chip =
-  "flex min-h-11 items-center justify-center rounded-sm border px-4 text-center text-sm transition-colors duration-200 ease-bloom";
-const chipOff = "border-hairline text-olive hover:border-sage";
-const chipOn = "border-olive bg-cream text-olive";
+const OrderSummary = memo(function OrderSummary({
+  items,
+  subtotalAed,
+  zone,
+  deliveryFee,
+  totalAed,
+}: {
+  items: readonly CartItem[];
+  subtotalAed: number;
+  zone: DeliveryZone | undefined;
+  deliveryFee: number;
+  totalAed: number;
+}) {
+  return (
+    <div className="rounded-sm border border-hairline bg-cream p-6">
+      <h2 className="mb-4 font-brand text-xs font-medium uppercase tracking-brand text-olive">
+        Order Summary
+      </h2>
+      <ul className="flex flex-col gap-4">
+        {items.map((item) => (
+          <li key={item.key} className="flex gap-3">
+            <div className="aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-sm">
+              <BotanicalPlaceholder seed={item.image.seed} palette={item.image.palette} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="truncate font-display text-base text-olive">
+                  {item.name} × {item.qty}
+                </p>
+                <p className="shrink-0 text-sm text-olive">
+                  {formatAed(itemUnitPrice(item) * item.qty)}
+                </p>
+              </div>
+              <p className="text-xs text-sage">
+                {describeCartItem(item)}
+                {item.giftMessage && <> · Gift card</>}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <hr className="my-4 border-0 border-t border-hairline" />
+      <dl className="flex flex-col gap-2 text-sm">
+        <div className="flex justify-between text-sage">
+          <dt>Subtotal</dt>
+          <dd>{formatAed(subtotalAed)}</dd>
+        </div>
+        <div className="flex justify-between text-sage">
+          <dt>Delivery{zone ? ` — ${zone.name}` : ""}</dt>
+          <dd>
+            {zone
+              ? deliveryFee === 0
+                ? "Complimentary"
+                : formatAed(deliveryFee)
+              : "Select area"}
+          </dd>
+        </div>
+        <div className="flex justify-between pt-1 font-display text-xl text-olive">
+          <dt>Total</dt>
+          <dd>{formatAed(totalAed)}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+});
 
 export function CheckoutForm() {
   const { items, subtotalAed, clear } = useCart();
   const { toast } = useToast();
 
+  /* Pre-fill from the day/slot chosen on the product page, if any. */
+  const preferred = items.find((i) => i.preferredDay);
+  const { days, selectedDay, setDay, slot, setSlot } = useDeliverySchedule({
+    day: preferred?.preferredDay,
+    slot: preferred?.preferredSlot,
+  });
+
   const [mode, setMode] = useState<"gift" | "myself">("gift");
   const [surprise, setSurprise] = useState(false);
   const [zoneId, setZoneId] = useState<string>("");
-  const [now, setNow] = useState<Date | null>(null);
-  const [dayKey, setDayKey] = useState<string | null>(null);
-  const [slot, setSlot] = useState<(typeof timeSlots)[number]>(timeSlots[0]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [recipientName, setRecipientName] = useState("");
@@ -47,21 +114,12 @@ export function CheckoutForm() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [placed, setPlaced] = useState<string | null>(null);
 
-  useEffect(() => {
-    setNow(uaeNow());
-  }, []);
-  const days = useMemo(() => (now ? buildDays(now) : []), [now]);
-  useEffect(() => {
-    if (days.length > 0 && dayKey === null) {
-      setDayKey(days.find((d) => !d.disabled)?.key ?? null);
-    }
-  }, [days, dayKey]);
-
   const zone = deliveryZones.find((z) => z.id === zoneId);
   const freeDelivery = subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
   const deliveryFee = zone ? (freeDelivery ? 0 : zone.feeAed) : 0;
   const totalAed = subtotalAed + deliveryFee;
-  const tabbyInstalment = Math.ceil(totalAed / 4);
+  /* Fractional so 4 instalments always sum to exactly the total. */
+  const tabbyInstalment = (totalAed / 4).toFixed(2);
 
   function placeOrder() {
     if (items.length === 0) return;
@@ -71,6 +129,12 @@ export function CheckoutForm() {
     }
     if (mode === "gift" && !recipientName.trim()) {
       toast("Tell us who is receiving the flowers");
+      return;
+    }
+    /* The schedule refreshes every minute, so a day that slipped past
+       the cutoff while the form was open is caught here. */
+    if (!selectedDay || !days.some((d) => d.key === selectedDay && !d.disabled)) {
+      toast("Your delivery day is no longer available — pick another");
       return;
     }
     const number = `CAL-${1100 + Math.floor((totalAed + name.length * 7) % 800)}`;
@@ -110,68 +174,6 @@ export function CheckoutForm() {
     );
   }
 
-  const summary = (
-    <div className="rounded-sm border border-hairline bg-cream p-6">
-      <h2 className="mb-4 font-brand text-xs font-medium uppercase tracking-brand text-olive">
-        Order Summary
-      </h2>
-      <ul className="flex flex-col gap-4">
-        {items.map((item) => {
-          const size = sizes.find((s) => s.id === item.sizeId);
-          const addonNames = item.addonIds
-            .map((id) => addons.find((a) => a.id === id)?.name)
-            .filter(Boolean);
-          return (
-            <li key={item.key} className="flex gap-3">
-              <div className="aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-sm">
-                <BotanicalPlaceholder
-                  seed={item.image.seed}
-                  palette={item.image.palette}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="truncate font-display text-base text-olive">
-                    {item.name} × {item.qty}
-                  </p>
-                  <p className="shrink-0 text-sm text-olive">
-                    {formatAed(itemUnitPrice(item) * item.qty)}
-                  </p>
-                </div>
-                <p className="text-xs text-sage">
-                  {size?.name}
-                  {addonNames.length > 0 && <> · {addonNames.join(" · ")}</>}
-                  {item.giftMessage && <> · Gift card</>}
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      <hr className="my-4 border-0 border-t border-hairline" />
-      <dl className="flex flex-col gap-2 text-sm">
-        <div className="flex justify-between text-sage">
-          <dt>Subtotal</dt>
-          <dd>{formatAed(subtotalAed)}</dd>
-        </div>
-        <div className="flex justify-between text-sage">
-          <dt>Delivery{zone ? ` — ${zone.name}` : ""}</dt>
-          <dd>
-            {zone
-              ? deliveryFee === 0
-                ? "Complimentary"
-                : formatAed(deliveryFee)
-              : "Select area"}
-          </dd>
-        </div>
-        <div className="flex justify-between pt-1 font-display text-xl text-olive">
-          <dt>Total</dt>
-          <dd>{formatAed(totalAed)}</dd>
-        </div>
-      </dl>
-    </div>
-  );
-
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_24rem] lg:gap-16">
       <div className="flex flex-col gap-10">
@@ -189,7 +191,11 @@ export function CheckoutForm() {
                 type="button"
                 aria-pressed={mode === value}
                 onClick={() => setMode(value)}
-                className={cn(chip, "py-3", mode === value ? chipOn : chipOff)}
+                className={cn(
+                  chipClasses,
+                  "py-3",
+                  mode === value ? chipOnClasses : chipOffClasses,
+                )}
               >
                 {text}
               </button>
@@ -206,26 +212,26 @@ export function CheckoutForm() {
               >
                 <div className="grid grid-cols-1 gap-4 pt-5 sm:grid-cols-2">
                   <div>
-                    <label className={label} htmlFor="rec-name">
+                    <label className={labelClasses} htmlFor="rec-name">
                       Recipient name
                     </label>
                     <input
                       id="rec-name"
                       value={recipientName}
                       onChange={(e) => setRecipientName(e.target.value)}
-                      className={field}
+                      className={fieldClasses}
                       placeholder="Their name"
                     />
                   </div>
                   <div>
-                    <label className={label} htmlFor="rec-phone">
+                    <label className={labelClasses} htmlFor="rec-phone">
                       Recipient phone
                     </label>
                     <input
                       id="rec-phone"
                       value={recipientPhone}
                       onChange={(e) => setRecipientPhone(e.target.value)}
-                      className={field}
+                      className={fieldClasses}
                       placeholder="+971 …"
                       inputMode="tel"
                     />
@@ -247,14 +253,14 @@ export function CheckoutForm() {
 
         {/* Delivery area */}
         <section>
-          <label className={label} htmlFor="zone">
+          <label className={labelClasses} htmlFor="zone">
             Delivery area
           </label>
           <select
             id="zone"
             value={zoneId}
             onChange={(e) => setZoneId(e.target.value)}
-            className={cn(field, "appearance-none")}
+            className={cn(fieldClasses, "appearance-none")}
           >
             <option value="" disabled>
               Choose your emirate
@@ -275,20 +281,20 @@ export function CheckoutForm() {
 
         {/* Day + slot */}
         <section>
-          <p className={label}>Delivery day</p>
+          <p className={labelClasses}>Delivery day</p>
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
             {days.map((day) => (
               <button
                 key={day.key}
                 type="button"
                 disabled={day.disabled}
-                aria-pressed={dayKey === day.key}
-                onClick={() => setDayKey(day.key)}
+                aria-pressed={selectedDay === day.key}
+                onClick={() => setDay(day.key)}
                 className={cn(
-                  chip,
+                  chipClasses,
                   "flex-col gap-0 px-4 py-2",
                   day.disabled && "cursor-not-allowed opacity-40",
-                  dayKey === day.key ? chipOn : chipOff,
+                  selectedDay === day.key ? chipOnClasses : chipOffClasses,
                 )}
               >
                 <span className="text-sm">{day.label}</span>
@@ -303,7 +309,7 @@ export function CheckoutForm() {
                 type="button"
                 aria-pressed={slot === s}
                 onClick={() => setSlot(s)}
-                className={cn(chip, slot === s ? chipOn : chipOff)}
+                className={cn(chipClasses, slot === s ? chipOnClasses : chipOffClasses)}
               >
                 {s}
               </button>
@@ -314,34 +320,34 @@ export function CheckoutForm() {
         {/* Your details */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className={label} htmlFor="name">
+            <label className={labelClasses} htmlFor="name">
               Your name
             </label>
             <input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={field}
+              className={fieldClasses}
               placeholder="Full name"
               autoComplete="name"
             />
           </div>
           <div>
-            <label className={label} htmlFor="phone">
+            <label className={labelClasses} htmlFor="phone">
               Your phone
             </label>
             <input
               id="phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={field}
+              className={fieldClasses}
               placeholder="+971 …"
               inputMode="tel"
               autoComplete="tel"
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={label} htmlFor="address">
+            <label className={labelClasses} htmlFor="address">
               Delivery address
             </label>
             <textarea
@@ -349,7 +355,7 @@ export function CheckoutForm() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               rows={2}
-              className={field}
+              className={fieldClasses}
               placeholder="Villa / apartment, street, area"
               autoComplete="street-address"
             />
@@ -358,13 +364,13 @@ export function CheckoutForm() {
 
         {/* Payment placeholder */}
         <section>
-          <p className={label}>Payment</p>
+          <p className={labelClasses}>Payment</p>
           <div className="rounded-sm border border-hairline p-5">
             <p className="text-sm text-olive">Card payment</p>
             <div className="mt-3 grid grid-cols-1 gap-3 opacity-50 sm:grid-cols-[1fr_6rem_6rem]">
-              <input className={field} placeholder="Card number" disabled />
-              <input className={field} placeholder="MM / YY" disabled />
-              <input className={field} placeholder="CVC" disabled />
+              <input className={fieldClasses} placeholder="Card number" disabled />
+              <input className={fieldClasses} placeholder="MM / YY" disabled />
+              <input className={fieldClasses} placeholder="CVC" disabled />
             </div>
             <p className="mt-3 text-xs text-sage">
               Payment is connected in the backend phase — this is a visual placeholder.
@@ -375,7 +381,7 @@ export function CheckoutForm() {
               tabby
             </span>
             <p className="text-sm text-sage">
-              or 4 interest-free payments of {formatAed(tabbyInstalment)}
+              or 4 interest-free payments of AED {tabbyInstalment}
             </p>
           </div>
         </section>
@@ -416,7 +422,15 @@ export function CheckoutForm() {
             +
           </span>
         </button>
-        <div className={cn("lg:block", summaryOpen ? "block" : "hidden")}>{summary}</div>
+        <div className={cn("lg:block", summaryOpen ? "block" : "hidden")}>
+          <OrderSummary
+            items={items}
+            subtotalAed={subtotalAed}
+            zone={zone}
+            deliveryFee={deliveryFee}
+            totalAed={totalAed}
+          />
+        </div>
         <div className="mt-6">
           <Button variant="primary" className="w-full" onClick={placeOrder}>
             Place Order — {formatAed(totalAed)}

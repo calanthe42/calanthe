@@ -6,7 +6,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { fieldClasses } from "@/components/ui/form-classes";
 import { Monogram } from "@/components/ui/Monogram";
+import { clearAuth, readAuth } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/lib/toast";
 import {
@@ -138,7 +140,21 @@ function Reminders() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem("calanthe-reminders-v1");
-      if (raw) setReminders(JSON.parse(raw) as Reminder[]);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setReminders(
+            parsed.filter(
+              (r): r is Reminder =>
+                typeof r === "object" &&
+                r !== null &&
+                typeof (r as Reminder).name === "string" &&
+                typeof (r as Reminder).occasion === "string" &&
+                typeof (r as Reminder).date === "string",
+            ),
+          );
+        }
+      }
     } catch {
       /* start empty */
     }
@@ -153,8 +169,7 @@ function Reminders() {
     }
   }
 
-  const field =
-    "w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none";
+  const field = fieldClasses;
 
   return (
     <div>
@@ -240,11 +255,7 @@ export function AccountClient() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    try {
-      setAuthed(localStorage.getItem("calanthe-auth-v1") !== null);
-    } catch {
-      setAuthed(false);
-    }
+    setAuthed(readAuth() !== null);
   }, []);
 
   if (authed === null) return <div className="min-h-[50svh]" />;
@@ -263,8 +274,7 @@ export function AccountClient() {
     );
   }
 
-  const field =
-    "w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none";
+  const field = fieldClasses;
 
   return (
     <div>
@@ -345,11 +355,7 @@ export function AccountClient() {
             <button
               type="button"
               onClick={() => {
-                try {
-                  localStorage.removeItem("calanthe-auth-v1");
-                } catch {
-                  /* ignore */
-                }
+                clearAuth();
                 setAuthed(false);
                 toast("Signed out");
               }}

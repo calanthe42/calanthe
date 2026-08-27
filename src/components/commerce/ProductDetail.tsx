@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Reveal } from "@/components/motion/Reveal";
@@ -8,8 +8,14 @@ import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
+import {
+  chipClasses,
+  chipOffClasses,
+  chipOnClasses,
+  fieldClasses,
+} from "@/components/ui/form-classes";
 import { cn } from "@/lib/cn";
-import { useCart } from "@/lib/cart";
+import { itemUnitPrice, useCart } from "@/lib/cart";
 import { useToast } from "@/lib/toast";
 import {
   addons,
@@ -21,7 +27,7 @@ import {
   type Product,
   type SizeId,
 } from "@/lib/data";
-import { buildDays, cutoffCountdown, uaeNow } from "@/lib/delivery";
+import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
 
 const GALLERY_SUFFIXES = ["", "-alt", "-detail", "-scale"] as const;
 
@@ -52,71 +58,62 @@ export function ProductDetail({ product }: ProductDetailProps) {
   );
   const [view, setView] = useState(0);
   const [zoom, setZoom] = useState(false);
-  const [origin, setOrigin] = useState("50% 50%");
   const mainImageRef = useRef<HTMLDivElement>(null);
+  /* Cursor-follow zoom is written imperatively — pointer moves must
+     never re-render this tree (see brand/motion-spec: no jank). */
+  const zoomLayerRef = useRef<HTMLDivElement>(null);
 
   /* Selections */
   const [sizeId, setSizeId] = useState<SizeId>("standard");
   const [addonIds, setAddonIds] = useState<readonly AddonId[]>([]);
   const [giftMessage, setGiftMessage] = useState("");
-  const [now, setNow] = useState<Date | null>(null);
-  const [dayKey, setDayKey] = useState<string | null>(null);
-  const [slot, setSlot] = useState<(typeof timeSlots)[number]>(timeSlots[0]);
+  const { now, days, selectedDay, setDay, slot, setSlot, countdown } =
+    useDeliverySchedule();
 
-  useEffect(() => {
-    setNow(uaeNow());
-    const t = setInterval(() => setNow(uaeNow()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-
-  const days = useMemo(() => (now ? buildDays(now) : []), [now]);
-  useEffect(() => {
-    if (days.length > 0 && dayKey === null) {
-      setDayKey(days.find((d) => !d.disabled)?.key ?? null);
-    }
-  }, [days, dayKey]);
-  const countdown = now ? cutoffCountdown(now) : null;
-
-  const totalAed = useMemo(() => {
-    const size = sizes.find((s) => s.id === sizeId);
-    const addonTotal = addonIds.reduce(
-      (sum, id) => sum + (addons.find((a) => a.id === id)?.priceAed ?? 0),
-      0,
-    );
-    return product.priceAed + (size?.priceDeltaAed ?? 0) + addonTotal;
-  }, [product.priceAed, sizeId, addonIds]);
+  /* Same pricing rule the cart charges — never a second copy of it. */
+  const totalAed = useMemo(
+    () => itemUnitPrice({ basePriceAed: product.priceAed, sizeId, addonIds }),
+    [product.priceAed, sizeId, addonIds],
+  );
 
   function flyToCart() {
-    const source = mainImageRef.current;
-    const target = document.getElementById("header-cart");
-    if (!source || !target || reduced) return;
-    const from = source.getBoundingClientRect();
-    const to = target.getBoundingClientRect();
-    const clone = source.cloneNode(true) as HTMLElement;
-    Object.assign(clone.style, {
-      position: "fixed",
-      left: `${from.left}px`,
-      top: `${from.top}px`,
-      width: `${from.width}px`,
-      height: `${from.height}px`,
-      margin: "0",
-      zIndex: "80",
-      pointerEvents: "none",
-      borderRadius: "2px",
-      overflow: "hidden",
-    });
-    document.body.appendChild(clone);
-    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
-    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
-    clone
-      .animate(
+    try {
+      const source = mainImageRef.current;
+      const target = document.getElementById("header-cart");
+      if (!source || !target || reduced) return;
+      if (typeof source.animate !== "function") return;
+      const from = source.getBoundingClientRect();
+      const to = target.getBoundingClientRect();
+      const clone = source.cloneNode(true) as HTMLElement;
+      Object.assign(clone.style, {
+        position: "fixed",
+        left: `${from.left}px`,
+        top: `${from.top}px`,
+        width: `${from.width}px`,
+        height: `${from.height}px`,
+        margin: "0",
+        zIndex: "80",
+        pointerEvents: "none",
+        borderRadius: "2px",
+        overflow: "hidden",
+      });
+      document.body.appendChild(clone);
+      const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+      const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+      const anim = clone.animate(
         [
           { transform: "translate(0, 0) scale(1)", opacity: 1 },
           { transform: `translate(${dx}px, ${dy}px) scale(0.05)`, opacity: 0.4 },
         ],
         { duration: 650, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
-      )
-      .finished.finally(() => clone.remove());
+      );
+      anim.onfinish = () => clone.remove();
+      anim.oncancel = () => clone.remove();
+      /* Belt and braces — never leave an orphaned clone. */
+      setTimeout(() => clone.remove(), 1200);
+    } catch {
+      /* decorative only — adding to cart must never fail because of it */
+    }
   }
 
   function handleAdd() {
@@ -131,12 +128,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
       addonIds,
       qty: 1,
       giftMessage: giftMessage.trim() || undefined,
+      preferredDay: selectedDay ?? undefined,
+      preferredSlot: slot,
     });
     toast(`${product.name} added to your cart`);
   }
 
-  const chipBase =
-    "flex min-h-11 items-center justify-center rounded-sm border px-4 text-center transition-colors duration-200 ease-bloom";
+  const chipBase = chipClasses;
 
   return (
     <div className="mx-auto max-w-7xl px-6 pb-28 pt-8 lg:px-8 lg:pb-16 lg:pt-14">
@@ -150,10 +148,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
             onMouseEnter={() => setZoom(true)}
             onMouseLeave={() => setZoom(false)}
             onMouseMove={(e) => {
+              const layer = zoomLayerRef.current;
+              if (!layer) return;
               const r = e.currentTarget.getBoundingClientRect();
-              setOrigin(
-                `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}% ${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`,
-              );
+              layer.style.transformOrigin = `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}% ${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`;
             }}
           >
             <AnimatePresence initial={false}>
@@ -166,10 +164,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 transition={{ duration: 0.5, ease: EASE_BLOOM }}
               >
                 <div
+                  ref={zoomLayerRef}
                   className="h-full w-full transition-transform duration-300 ease-bloom"
                   style={{
                     transform: zoom && !reduced ? "scale(1.8)" : "scale(1)",
-                    transformOrigin: origin,
                   }}
                 >
                   <BotanicalPlaceholder
@@ -300,7 +298,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               onChange={(e) => setGiftMessage(e.target.value.slice(0, 220))}
               rows={3}
               placeholder="Write the words they'll keep…"
-              className="w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none"
+              className={fieldClasses}
             />
             <AnimatePresence>
               {giftMessage.trim() && (
@@ -333,15 +331,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   key={day.key}
                   type="button"
                   disabled={day.disabled}
-                  aria-pressed={dayKey === day.key}
-                  onClick={() => setDayKey(day.key)}
+                  aria-pressed={selectedDay === day.key}
+                  onClick={() => setDay(day.key)}
                   className={cn(
                     chipBase,
                     "flex-col gap-0 px-4 py-2",
                     day.disabled && "cursor-not-allowed opacity-40",
-                    dayKey === day.key
-                      ? "border-olive bg-cream"
-                      : "border-hairline hover:border-sage",
+                    selectedDay === day.key ? chipOnClasses : chipOffClasses,
                   )}
                 >
                   <span className="text-sm text-olive">{day.label}</span>
@@ -356,12 +352,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   type="button"
                   aria-pressed={slot === s}
                   onClick={() => setSlot(s)}
-                  className={cn(
-                    chipBase,
-                    slot === s
-                      ? "border-olive bg-cream"
-                      : "border-hairline hover:border-sage",
-                  )}
+                  className={cn(chipBase, slot === s ? chipOnClasses : chipOffClasses)}
                 >
                   <span className="text-sm text-olive">{s}</span>
                 </button>

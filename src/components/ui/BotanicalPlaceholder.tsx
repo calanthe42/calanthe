@@ -42,20 +42,27 @@ function rng(seedStr: string): () => number {
   };
 }
 
-/**
- * Soft-focus botanical abstraction in the brand palette — blurred
- * organic forms, like flowers seen through frosted glass. Deterministic
- * per seed. Replace with real photography when the client provides it.
- */
-export function BotanicalPlaceholder({
-  seed,
-  palette = "warm",
-  className,
-}: BotanicalPlaceholderProps) {
+type Shape = {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  rot: number;
+  fill: string;
+  opacity: number;
+};
+
+/* Compositions are pure functions of (seed, palette) — cache them so
+   re-renders never re-run the PRNG. Works on server and client. */
+const shapeCache = new Map<string, Shape[]>();
+
+function shapesFor(seed: string, palette: Palette): Shape[] {
+  const cacheKey = `${palette}|${seed}`;
+  const cached = shapeCache.get(cacheKey);
+  if (cached) return cached;
+
   const { base, blobs } = palettes[palette];
   const rand = rng(seed);
-  const id = `bp-${seed.replace(/[^a-zA-Z0-9-]/g, "")}`;
-
   const shapes = Array.from({ length: 7 }, (_, i) => {
     const cx = 12 + rand() * 76;
     const cy = 10 + rand() * 80;
@@ -66,6 +73,23 @@ export function BotanicalPlaceholder({
     const opacity = 0.35 + rand() * 0.4;
     return { cx, cy, rx, ry, rot, fill, opacity };
   });
+  shapeCache.set(cacheKey, shapes);
+  return shapes;
+}
+
+/**
+ * Soft-focus botanical abstraction in the brand palette — blurred
+ * organic forms, like flowers seen through frosted glass. Deterministic
+ * per seed. Replace with real photography when the client provides it.
+ */
+export function BotanicalPlaceholder({
+  seed,
+  palette = "warm",
+  className,
+}: BotanicalPlaceholderProps) {
+  const { base } = palettes[palette];
+  const id = `bp-${seed.replace(/[^a-zA-Z0-9-]/g, "")}`;
+  const shapes = shapesFor(seed, palette);
 
   return (
     <svg

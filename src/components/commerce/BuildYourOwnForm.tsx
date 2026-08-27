@@ -27,10 +27,12 @@ const STEPS = [
   "For the Florist",
 ] as const;
 
-const chip =
-  "flex min-h-11 items-center justify-center rounded-sm border px-4 text-center text-sm transition-colors duration-200 ease-bloom";
-const chipOff = "border-hairline text-olive hover:border-sage";
-const chipOn = "border-olive bg-cream text-olive";
+import {
+  chipClasses as chip,
+  chipOffClasses as chipOff,
+  chipOnClasses as chipOn,
+  fieldClasses,
+} from "@/components/ui/form-classes";
 
 export function BuildYourOwnForm() {
   const { toast } = useToast();
@@ -155,7 +157,7 @@ export function BuildYourOwnForm() {
                       value={customBudget}
                       onChange={(e) => setCustomBudget(e.target.value)}
                       placeholder="Your budget"
-                      className="w-36 rounded-sm border border-hairline bg-canvas px-3 py-2.5 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none"
+                      className={cn(fieldClasses, "w-36 px-3 py-2.5")}
                     />
                   </label>
                 </motion.div>
@@ -276,7 +278,7 @@ export function BuildYourOwnForm() {
               rows={3}
               disabled={leaveBlank}
               placeholder="Write the words they'll keep…"
-              className="mt-4 w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none disabled:opacity-50"
+              className={cn(fieldClasses, "mt-4 disabled:opacity-50")}
             />
             <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 text-sm text-sage">
               <input
@@ -304,7 +306,7 @@ export function BuildYourOwnForm() {
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
               rows={3}
               placeholder="Allergies, flowers to avoid, a style you love — anything that helps."
-              className="mt-4 w-full rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none"
+              className={cn(fieldClasses, "mt-4")}
             />
           </li>
         </Reveal>

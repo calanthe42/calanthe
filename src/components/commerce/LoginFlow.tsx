@@ -7,6 +7,7 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
+import { writeAuth } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/lib/toast";
 
@@ -44,10 +45,9 @@ export function LoginFlow() {
   function verify(cells: string[]) {
     if (cells.some((c) => c === "")) return;
     /* Mock verification — the backend phase wires the real OTP. */
-    try {
-      localStorage.setItem("calanthe-auth-v1", JSON.stringify({ phone }));
-    } catch {
-      /* storage unavailable */
+    if (!writeAuth({ phone })) {
+      toast("Your browser is blocking storage — sign-in can't be kept");
+      return;
     }
     toast("Welcome back to the atelier");
     router.push("/account");

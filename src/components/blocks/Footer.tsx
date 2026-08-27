@@ -1,21 +1,9 @@
 import Link from "next/link";
 import { Monogram } from "@/components/ui/Monogram";
-import { CONTACT } from "@/lib/data";
+import { CONTACT, helpNavLinks, primaryNavLinks } from "@/lib/data";
 
-const shopLinks = [
-  { label: "Shop All", href: "/shop" },
-  { label: "Occasions", href: "/occasions" },
-  { label: "Build Your Own", href: "/build-your-own" },
-  { label: "Membership", href: "/membership" },
-] as const;
-
-const helpLinks = [
-  { label: "Delivery Information", href: "/delivery" },
-  { label: "FAQs", href: "/faqs" },
-  { label: "Terms & Conditions", href: "/terms" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Refund & Cancellation Policy", href: "/refund-policy" },
-] as const;
+const shopLinks = primaryNavLinks;
+const helpLinks = helpNavLinks;
 
 const linkClass =
   "text-sm text-sage transition-colors duration-200 ease-bloom hover:text-cream";

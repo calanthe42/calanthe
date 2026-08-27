@@ -482,6 +482,25 @@ export const instagramTiles: readonly ProductImage[] = [
   img("ig-12", "olive", "Calanthe on Instagram"),
 ] as const;
 
+/* ------------------------------------------------------------------ */
+/* Navigation (single source for header + footer)                      */
+/* ------------------------------------------------------------------ */
+
+export const primaryNavLinks = [
+  { label: "Shop", href: "/shop" },
+  { label: "Occasions", href: "/occasions" },
+  { label: "Build Your Own", href: "/build-your-own" },
+  { label: "Membership", href: "/membership" },
+] as const;
+
+export const helpNavLinks = [
+  { label: "Delivery Information", href: "/delivery" },
+  { label: "FAQs", href: "/faqs" },
+  { label: "Terms & Conditions", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Refund & Cancellation Policy", href: "/refund-policy" },
+] as const;
+
 export const CONTACT = {
   whatsapp: "+971500000000",
   whatsappHref: "https://wa.me/971500000000",

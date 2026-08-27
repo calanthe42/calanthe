@@ -7,10 +7,11 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from "react";
 import type { AddonId, PlaceholderPalette, SizeId } from "@/lib/data";
-import { addons, sizes } from "@/lib/data";
+import { addons, products, sizes, timeSlots } from "@/lib/data";
 
 export type CartItem = {
   /** productId + size + sorted addons — one line per configuration. */
@@ -24,15 +25,29 @@ export type CartItem = {
   addonIds: readonly AddonId[];
   qty: number;
   giftMessage?: string;
+  /** Chosen on the product page; pre-fills checkout. */
+  preferredDay?: string;
+  preferredSlot?: string;
 };
 
-export function itemUnitPrice(item: CartItem): number {
+export function itemUnitPrice(
+  item: Pick<CartItem, "basePriceAed" | "sizeId" | "addonIds">,
+): number {
   const size = sizes.find((s) => s.id === item.sizeId);
   const addonTotal = item.addonIds.reduce(
     (sum, id) => sum + (addons.find((a) => a.id === id)?.priceAed ?? 0),
     0,
   );
   return item.basePriceAed + (size?.priceDeltaAed ?? 0) + addonTotal;
+}
+
+/** "Deluxe · Vase · Chocolates" — one description used by every cart view. */
+export function describeCartItem(item: Pick<CartItem, "sizeId" | "addonIds">): string {
+  const parts = [
+    sizes.find((s) => s.id === item.sizeId)?.name,
+    ...item.addonIds.map((id) => addons.find((a) => a.id === id)?.name),
+  ].filter((x): x is string => Boolean(x));
+  return parts.join(" · ");
 }
 
 type CartState = { items: CartItem[] };
@@ -46,6 +61,56 @@ type CartAction =
 
 function keyOf(item: Omit<CartItem, "key">): string {
   return `${item.productId}|${item.sizeId}|${[...item.addonIds].sort().join(",")}|${item.giftMessage ?? ""}`;
+}
+
+/**
+ * Rebuild stored lines against the live catalog: unknown products are
+ * dropped; name, slug, image and price always come from the catalog so
+ * stale or tampered storage can never change what is charged.
+ */
+function sanitizeStoredItems(parsed: unknown): CartItem[] {
+  if (!Array.isArray(parsed)) return [];
+  const items: CartItem[] = [];
+  for (const raw of parsed) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const r = raw as Record<string, unknown>;
+    const product = products.find((p) => p.id === r.productId);
+    if (!product) continue;
+
+    const sizeId = sizes.some((s) => s.id === r.sizeId)
+      ? (r.sizeId as SizeId)
+      : "standard";
+    const addonIds = Array.isArray(r.addonIds)
+      ? (r.addonIds.filter((id) => addons.some((a) => a.id === id)) as AddonId[])
+      : [];
+    const qty =
+      typeof r.qty === "number" && Number.isInteger(r.qty)
+        ? Math.min(Math.max(r.qty, 1), 20)
+        : 1;
+
+    const item: Omit<CartItem, "key"> = {
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.images[0].placeholder,
+      basePriceAed: product.priceAed,
+      sizeId,
+      addonIds,
+      qty,
+      giftMessage:
+        typeof r.giftMessage === "string" && r.giftMessage.trim()
+          ? r.giftMessage.slice(0, 220)
+          : undefined,
+      preferredDay: typeof r.preferredDay === "string" ? r.preferredDay : undefined,
+      preferredSlot:
+        typeof r.preferredSlot === "string" &&
+        (timeSlots as readonly string[]).includes(r.preferredSlot)
+          ? r.preferredSlot
+          : undefined,
+    };
+    items.push({ ...item, key: keyOf(item) });
+  }
+  return items;
 }
 
 function reducer(state: CartState, action: CartAction): CartState {
@@ -101,22 +166,27 @@ const STORAGE_KEY = "calanthe-cart-v1";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
+  /* Never persist until the stored cart has been read, or the initial
+     empty state would clobber it. */
+  const hydrated = useRef(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed: unknown = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          dispatch({ type: "hydrate", items: parsed as CartItem[] });
-        }
+        dispatch({
+          type: "hydrate",
+          items: sanitizeStoredItems(JSON.parse(raw)),
+        });
       }
     } catch {
       /* corrupt storage — start empty */
     }
+    hydrated.current = true;
   }, []);
 
   useEffect(() => {
+    if (!hydrated.current) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
     } catch {
@@ -133,21 +203,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [state.items],
   );
 
-  const value: CartContextValue = {
-    items: state.items,
-    subtotalAed,
-    count,
-    isOpen,
-    openCart: useCallback(() => setIsOpen(true), []),
-    closeCart: useCallback(() => setIsOpen(false), []),
-    addItem: useCallback((item) => {
-      dispatch({ type: "add", item });
-      setIsOpen(true);
-    }, []),
-    removeItem: useCallback((key) => dispatch({ type: "remove", key }), []),
-    setQty: useCallback((key, qty) => dispatch({ type: "setQty", key, qty }), []),
-    clear: useCallback(() => dispatch({ type: "clear" }), []),
-  };
+  const openCart = useCallback(() => setIsOpen(true), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
+  const addItem = useCallback((item: Omit<CartItem, "key">) => {
+    dispatch({ type: "add", item });
+    setIsOpen(true);
+  }, []);
+  const removeItem = useCallback((key: string) => dispatch({ type: "remove", key }), []);
+  const setQty = useCallback(
+    (key: string, qty: number) => dispatch({ type: "setQty", key, qty }),
+    [],
+  );
+  const clear = useCallback(() => dispatch({ type: "clear" }), []);
+
+  const value = useMemo<CartContextValue>(
+    () => ({
+      items: state.items,
+      subtotalAed,
+      count,
+      isOpen,
+      openCart,
+      closeCart,
+      addItem,
+      removeItem,
+      setQty,
+      clear,
+    }),
+    [
+      state.items,
+      subtotalAed,
+      count,
+      isOpen,
+      openCart,
+      closeCart,
+      addItem,
+      removeItem,
+      setQty,
+      clear,
+    ],
+  );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
