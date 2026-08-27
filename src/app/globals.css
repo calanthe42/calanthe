@@ -59,6 +59,23 @@ body::after {
   }
 }
 
+/* Loading monogram — a quiet breathing pulse. */
+.monogram-pulse {
+  animation: monogram-pulse 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes monogram-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Footer monogram — one slow turn per minute. */
 .monogram-rotate {
   animation: monogram-rotate 60s linear infinite;
@@ -112,7 +129,8 @@ body::after {
   .hero-kenburns,
   .hero-scrollcue,
   .marquee-track,
-  .monogram-rotate {
+  .monogram-rotate,
+  .monogram-pulse {
     animation: none;
   }
 }
