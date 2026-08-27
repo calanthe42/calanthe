@@ -13,7 +13,7 @@ export default function Loading() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 4 }, (_, i) => (
             <div key={i} className="flex flex-col gap-3">
-              <div className="aspect-[4/5] animate-pulse rounded-sm bg-cream" />
+              <div className="aspect-[4/5] animate-pulse rounded-media bg-cream" />
               <div className="h-4 w-3/4 animate-pulse rounded-sm bg-cream" />
             </div>
           ))}

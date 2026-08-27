@@ -25,7 +25,7 @@ function MarqueeRow({
         {doubled.map((tile, i) => (
           <div
             key={`${tile.placeholder.seed}-${i}`}
-            className="aspect-square w-36 shrink-0 overflow-hidden rounded-sm lg:w-44"
+            className="aspect-square w-36 shrink-0 overflow-hidden rounded-media lg:w-44"
             aria-hidden={i >= tiles.length}
           >
             <BotanicalPlaceholder

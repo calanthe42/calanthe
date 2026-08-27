@@ -47,7 +47,7 @@ const OrderSummary = memo(function OrderSummary({
       <ul className="flex flex-col gap-4">
         {items.map((item) => (
           <li key={item.key} className="flex gap-3">
-            <div className="aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-sm">
+            <div className="aspect-[4/5] w-14 shrink-0 overflow-hidden rounded-media-sm">
               <BotanicalPlaceholder seed={item.image.seed} palette={item.image.palette} />
             </div>
             <div className="min-w-0 flex-1">

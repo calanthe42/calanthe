@@ -29,7 +29,7 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
       >
         <ClipReveal
           className={cn(
-            "relative w-full rounded-sm",
+            "relative w-full rounded-media shadow-soft ring-1 ring-olive/5",
             editorial ? "aspect-[4/3] lg:aspect-[8/5]" : "aspect-[4/5]",
           )}
         >

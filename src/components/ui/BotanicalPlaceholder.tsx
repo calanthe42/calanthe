@@ -9,19 +9,20 @@ type BotanicalPlaceholderProps = {
   className?: string;
 };
 
-/* Brand-only colors, warm and muted — stand-ins until real photography. */
+/* Petal-toned tints mixed from the brand palette — warm and soft,
+   stand-ins until real photography. */
 const palettes: Record<Palette, { base: string; blobs: string[] }> = {
   warm: {
-    base: "#d8cfb4",
-    blobs: ["#868764", "#b55b29", "#e4dcc5", "#5c6039", "#a5a37e", "#2b2f1b"],
+    base: "#ded3b9",
+    blobs: ["#cfa583", "#b96a3a", "#ece5d2", "#a5a37e", "#d9bfa0", "#8a8b66"],
   },
   olive: {
-    base: "#3a3f26",
-    blobs: ["#868764", "#2b2f1b", "#e4dcc5", "#5c6039", "#b55b29", "#4a4f2e"],
+    base: "#414628",
+    blobs: ["#8a8b66", "#5c6039", "#e7dfc9", "#b06a3f", "#6b7046", "#2b2f1b"],
   },
   burgundy: {
-    base: "#3a1a23",
-    blobs: ["#2e131b", "#b55b29", "#e4dcc5", "#5a2c37", "#868764", "#46202b"],
+    base: "#432129",
+    blobs: ["#5f2f3a", "#b06a3f", "#e2d3c3", "#7c4650", "#8a5560", "#2e131b"],
   },
 };
 

@@ -46,7 +46,7 @@ function CartLine({ item }: { item: CartItemType }) {
 
   return (
     <li className="flex gap-4 py-5">
-      <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-sm">
+      <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-media-sm">
         <BotanicalPlaceholder seed={item.image.seed} palette={item.image.palette} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">

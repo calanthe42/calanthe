@@ -17,10 +17,13 @@
 
   --tracking-brand: 0.18em;
 
-  /* ---- Shape: luxury is almost square ---- */
+  /* ---- Shape: luxury is almost square; media breathes softer ---- */
   --radius-*: initial;
   --radius-sm: 2px;
   --radius-md: 4px;
+  /* Imagery only — product photos, occasion tiles, media cards. */
+  --radius-media-sm: 8px;
+  --radius-media: 12px;
 
   /* ---- Motion: everything blooms, nothing bounces ---- */
   --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);

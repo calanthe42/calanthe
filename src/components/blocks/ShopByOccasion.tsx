@@ -39,7 +39,7 @@ export function ShopByOccasion() {
             <StaggerItem key={occasion.slug} className={cn(tileLayout[i])}>
               <Link
                 href={`/occasions/${occasion.slug}`}
-                className="group relative block h-full w-full overflow-hidden rounded-sm"
+                className="group relative block h-full w-full overflow-hidden rounded-media shadow-soft"
               >
                 <Parallax speed={parallaxSpeeds[i] ?? 1} className="absolute inset-[-8%]">
                   <BotanicalPlaceholder

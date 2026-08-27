@@ -143,7 +143,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         <div>
           <div
             ref={mainImageRef}
-            className="relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-sm"
+            className="relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-media shadow-soft"
             style={{ viewTransitionName: "product-hero" }}
             onMouseEnter={() => setZoom(true)}
             onMouseLeave={() => setZoom(false)}
@@ -188,7 +188,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 aria-current={view === i}
                 onClick={() => setView(i)}
                 className={cn(
-                  "aspect-[4/5] w-16 overflow-hidden rounded-sm border transition-colors duration-200 ease-bloom lg:w-20",
+                  "aspect-[4/5] w-16 overflow-hidden rounded-media-sm border transition-colors duration-200 ease-bloom lg:w-20",
                   view === i
                     ? "border-olive"
                     : "border-transparent opacity-70 hover:opacity-100",
@@ -307,7 +307,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4, ease: EASE_BLOOM }}
-                  className="mt-4 rounded-sm bg-cream px-6 py-7 shadow-[0_2px_16px_rgba(43,47,27,0.08)]"
+                  className="mt-4 rounded-media-sm bg-cream px-6 py-7 shadow-[0_2px_16px_rgba(43,47,27,0.08)]"
                 >
                   <blockquote className="whitespace-pre-wrap text-center font-display text-xl font-light italic leading-relaxed text-olive">
                     {giftMessage}

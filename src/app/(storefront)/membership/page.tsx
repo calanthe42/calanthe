@@ -59,7 +59,7 @@ export default function MembershipPage() {
             <StaggerItem key={tier.id} className="h-full">
               <article
                 className={cn(
-                  "relative flex h-full flex-col rounded-sm border p-7 lg:p-8",
+                  "relative flex h-full flex-col rounded-media-sm border p-7 lg:p-8",
                   tier.mostLoved ? "border-olive bg-cream" : "border-hairline bg-canvas",
                 )}
               >

@@ -52,6 +52,14 @@ body::after {
   padding-inline: clamp(1.25rem, 3vw, 2rem);
 }
 
+/* Soft depth: large blur, low opacity, olive-tinted — tiles lift off
+   the cream instead of sitting flat. */
+.shadow-soft {
+  box-shadow:
+    0 18px 44px -18px rgba(43, 47, 27, 0.22),
+    0 4px 12px -6px rgba(43, 47, 27, 0.08);
+}
+
 /* Editorial headline scale for section titles. */
 .display-2 {
   font-size: clamp(2rem, 1.2rem + 3.5vw, 3rem);

@@ -26,7 +26,7 @@ export default function OccasionsPage() {
           <StaggerItem key={occasion.slug}>
             <Link
               href={`/occasions/${occasion.slug}`}
-              className="group relative block aspect-[4/3] overflow-hidden rounded-sm"
+              className="group relative block aspect-[4/3] overflow-hidden rounded-media shadow-soft"
             >
               <BotanicalPlaceholder
                 seed={occasion.image.placeholder.seed}
