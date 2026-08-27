@@ -26,11 +26,7 @@ export type Product = {
 };
 
 export type OccasionSlug =
-  | "birthday"
-  | "congratulations"
-  | "new-baby"
-  | "love"
-  | "just-because";
+  "birthday" | "congratulations" | "new-baby" | "love" | "just-because";
 
 export type Occasion = {
   slug: OccasionSlug;
@@ -38,11 +34,7 @@ export type Occasion = {
   image: ProductImage;
 };
 
-function img(
-  seed: string,
-  palette: PlaceholderPalette,
-  alt: string,
-): ProductImage {
+function img(seed: string, palette: PlaceholderPalette, alt: string): ProductImage {
   return { alt, placeholder: { seed, palette } };
 }
 
