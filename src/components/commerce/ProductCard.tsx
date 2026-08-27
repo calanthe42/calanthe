@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ClipReveal } from "@/components/motion/ClipReveal";
+import { WishlistButton } from "@/components/commerce/WishlistButton";
 import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
-import { IconHeart } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { formatAed, type Product } from "@/lib/data";
 
@@ -40,13 +40,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
       </Link>
 
-      <button
-        type="button"
-        aria-label={`Add ${product.name} to wishlist`}
-        className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center text-cream transition-opacity duration-200 ease-bloom hover:opacity-70"
-      >
-        <IconHeart className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(43,47,27,0.4)]" />
-      </button>
+      <WishlistButton
+        productId={product.id}
+        productName={product.name}
+        className="absolute right-1 top-1 text-cream"
+      />
     </article>
   );
 }

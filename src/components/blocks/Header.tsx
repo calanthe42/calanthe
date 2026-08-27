@@ -11,6 +11,7 @@ import {
   useScroll,
 } from "motion/react";
 import { useLenis } from "lenis/react";
+import { useCart } from "@/lib/cart";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
@@ -34,6 +35,7 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { scrollY } = useScroll();
   const lenis = useLenis();
+  const { count, openCart } = useCart();
 
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
 
@@ -144,13 +146,19 @@ export function Header() {
           >
             <IconUser className="h-[22px] w-[22px]" />
           </Link>
-          <Link
-            href="/cart"
-            aria-label="Cart"
-            className="flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
+          <button
+            type="button"
+            aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
+            onClick={openCart}
+            className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
           >
             <IconBag className="h-[22px] w-[22px]" />
-          </Link>
+            {count > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-sm bg-burnt-orange px-0.5 text-[0.625rem] font-medium text-cream">
+                {count}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 

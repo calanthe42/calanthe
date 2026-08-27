@@ -1,0 +1,57 @@
+"use client";
+
+import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { EASE_BLOOM } from "@/components/motion/constants";
+
+type Toast = { id: number; message: string };
+
+type ToastContextValue = {
+  toast: (message: string) => void;
+};
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const nextId = useRef(1);
+
+  const toast = useCallback((message: string) => {
+    const id = nextId.current++;
+    setToasts((prev) => [...prev.slice(-2), { id, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3200);
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ toast }}>
+      {children}
+      <div
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),1rem)] z-[70] flex flex-col items-center gap-2 px-6"
+      >
+        <AnimatePresence>
+          {toasts.map((t) => (
+            <motion.p
+              key={t.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: EASE_BLOOM }}
+              className="rounded-sm border border-hairline bg-cream px-5 py-3 text-center text-sm text-olive shadow-[0_4px_24px_rgba(43,47,27,0.18)]"
+            >
+              {t.message}
+            </motion.p>
+          ))}
+        </AnimatePresence>
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast(): ToastContextValue {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  return ctx;
+}
