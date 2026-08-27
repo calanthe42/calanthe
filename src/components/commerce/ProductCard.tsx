@@ -47,7 +47,7 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
           </div>
         </ClipReveal>
         <div className="mt-3 flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-xl font-normal text-olive">{product.name}</h3>
+          <h3 className="font-display text-lg font-normal text-olive lg:text-xl">{product.name}</h3>
           <p className="shrink-0 text-base text-sage">{formatAed(product.priceAed)}</p>
         </div>
       </TransitionLink>

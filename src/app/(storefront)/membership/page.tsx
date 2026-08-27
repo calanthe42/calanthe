@@ -33,10 +33,10 @@ export default function MembershipPage() {
     <main>
       {/* Olive hero */}
       <section className="bg-olive">
-        <div className="mx-auto flex max-w-7xl flex-col items-center px-6 py-20 text-center lg:px-8 lg:py-28">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gutter section-pad text-center">
           <Reveal className="flex flex-col items-center">
             <Eyebrow className="text-cream/70">A Weekly Ritual</Eyebrow>
-            <h1 className="mt-4 font-display text-4xl font-light text-cream lg:text-6xl">
+            <h1 className="display-2 mt-4 font-display font-light text-cream">
               The Calanthe Membership
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-cream/80">
@@ -53,7 +53,7 @@ export default function MembershipPage() {
       </section>
 
       {/* Tiers */}
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+      <section className="mx-auto max-w-7xl gutter section-pad">
         <Stagger className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
           {membershipTiers.map((tier) => (
             <StaggerItem key={tier.id} className="h-full">
@@ -105,7 +105,7 @@ export default function MembershipPage() {
 
       {/* How it works */}
       <section className="bg-cream">
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-7xl gutter section-pad">
           <Reveal>
             <Eyebrow>How it works</Eyebrow>
           </Reveal>
@@ -126,7 +126,7 @@ export default function MembershipPage() {
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto max-w-3xl px-6 py-16 lg:py-24">
+      <section className="mx-auto max-w-3xl px-6 section-pad">
         <Reveal>
           <Eyebrow>Questions, answered</Eyebrow>
           <div className="mt-6">

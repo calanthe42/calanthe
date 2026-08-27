@@ -38,6 +38,26 @@ body::after {
   color: var(--color-cream);
 }
 
+/* ------------------------------------------------------------------ */
+/* Vertical rhythm — one scale for the whole site.                     */
+/* ------------------------------------------------------------------ */
+
+/* Section breathing: ~64px on phones → ~120px on desktop. */
+.section-pad {
+  padding-block: clamp(4rem, 4vw + 2.5rem, 7.5rem);
+}
+
+/* Container side gutters: 20px on phones → 32px on desktop. */
+.gutter {
+  padding-inline: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* Editorial headline scale for section titles. */
+.display-2 {
+  font-size: clamp(2rem, 1.2rem + 3.5vw, 3rem);
+  line-height: 1.12;
+}
+
 /* Mobile product rows scroll edge-to-edge without a visible scrollbar. */
 .no-scrollbar {
   scrollbar-width: none;

@@ -11,7 +11,7 @@ const linkClass =
 export function Footer() {
   return (
     <footer className="bg-olive pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-16 lg:pt-20">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl gutter">
         {/* Stacked lockup */}
         <div className="flex flex-col items-center gap-4">
           <Monogram className="w-16 text-cream" title="Calanthe monogram" />

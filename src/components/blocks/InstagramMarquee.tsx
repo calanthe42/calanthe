@@ -44,7 +44,7 @@ export function InstagramMarquee() {
   const rowB = instagramTiles.slice(6, 12);
 
   return (
-    <section className="overflow-hidden py-16 lg:py-24">
+    <section className="overflow-hidden section-pad">
       <a
         href={CONTACT.instagramHref}
         target="_blank"

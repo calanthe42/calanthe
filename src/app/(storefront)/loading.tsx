@@ -2,7 +2,7 @@ import { Monogram } from "@/components/ui/Monogram";
 
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-20">
+    <main className="mx-auto max-w-7xl gutter section-pad">
       <div className="flex flex-col items-center gap-8 py-8">
         <Monogram className="monogram-pulse w-12 text-sage" />
       </div>

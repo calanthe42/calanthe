@@ -21,11 +21,11 @@ const pillars = [
 /** Quiet cream section — quality, presentation, attention to detail. */
 export function CalantheTouch() {
   return (
-    <section className="bg-cream py-20 lg:py-28">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="bg-cream section-pad">
+      <div className="mx-auto max-w-7xl gutter">
         <Reveal className="flex flex-col items-center text-center">
           <MonogramBloom className="w-14 text-olive" />
-          <h2 className="mt-6 font-display text-4xl font-light text-olive lg:text-5xl">
+          <h2 className="display-2 mt-6 font-display font-light text-olive">
             The Calanthe Touch
           </h2>
         </Reveal>

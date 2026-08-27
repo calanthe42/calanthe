@@ -52,12 +52,12 @@ export function WeeklyRitual() {
     <section ref={sectionRef} className="relative overflow-hidden">
       <div ref={oliveRef} className="absolute inset-0 bg-olive opacity-0" />
 
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-6 py-24 text-center lg:px-8 lg:py-36">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center gutter section-pad text-center">
         <Reveal delay={0.15} className="flex flex-col items-center">
           <p className="font-brand text-xs font-medium uppercase tracking-brand text-cream/70">
             A Weekly Ritual
           </p>
-          <h2 className="mt-4 font-display text-4xl font-light text-cream lg:text-6xl">
+          <h2 className="display-2 mt-4 font-display font-light text-cream">
             The Calanthe Membership
           </h2>
           <p className="mt-5 max-w-md text-base leading-relaxed text-cream/80">

@@ -64,7 +64,7 @@ export function FaqAccordion() {
               onClick={() => setOpen(isOpen ? null : i)}
               className="flex min-h-14 w-full items-center justify-between gap-4 py-4 text-left"
             >
-              <span className="font-display text-xl font-normal text-olive">
+              <span className="font-display text-lg font-normal text-olive lg:text-xl">
                 {item.q}
               </span>
               <span

@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 
 export default function BuildYourOwnPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 lg:py-20">
+    <main className="mx-auto max-w-3xl gutter section-pad">
       <Reveal className="mb-12">
         <Eyebrow>Bespoke</Eyebrow>
-        <h1 className="mt-3 font-display text-4xl font-light leading-[1.08] text-olive lg:text-6xl">
+        <h1 className="display-2 mt-3 font-display font-light text-olive">
           Made for them, by you.
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">

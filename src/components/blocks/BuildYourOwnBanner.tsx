@@ -126,7 +126,7 @@ export function BuildYourOwnBanner() {
       </div>
 
       {/* Content — left column */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl gutter">
         <div className="max-w-md lg:max-w-lg">
           <p className="byo-eyebrow mb-4 font-brand text-xs font-medium uppercase tracking-brand text-cream/70">
             Bespoke

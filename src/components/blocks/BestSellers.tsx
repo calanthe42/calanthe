@@ -11,11 +11,11 @@ export function BestSellers() {
   const sellers = getBestSellers().slice(0, 4);
 
   return (
-    <section className="py-16 lg:py-24">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="section-pad">
+      <div className="mx-auto max-w-7xl gutter">
         <Reveal>
           <Eyebrow>Best Sellers</Eyebrow>
-          <h2 className="mt-3 font-display text-4xl font-light text-olive lg:text-5xl">
+          <h2 className="display-2 mt-3 font-display font-light text-olive">
             Loved, week after week.
           </h2>
         </Reveal>
