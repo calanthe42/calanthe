@@ -45,7 +45,10 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
           p.name.toLowerCase().includes(q) ||
           p.flowers.some((f) => f.includes(q)) ||
           p.occasions.some((o) =>
-            occasions.find((x) => x.slug === o)?.name.toLowerCase().includes(q),
+            occasions
+              .find((x) => x.slug === o)
+              ?.name.toLowerCase()
+              .includes(q),
           ),
       )
       .slice(0, 6);
@@ -109,9 +112,7 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                   <span className="flex-1 font-display text-lg text-olive">
                     {product.name}
                   </span>
-                  <span className="text-sm text-sage">
-                    {formatAed(product.priceAed)}
-                  </span>
+                  <span className="text-sm text-sage">{formatAed(product.priceAed)}</span>
                 </Link>
               </li>
             ))}
@@ -124,9 +125,7 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
             onClick={viewAll}
             className="mt-6 min-h-11 font-brand text-xs font-medium uppercase tracking-brand text-olive underline decoration-burnt-orange underline-offset-8 transition-opacity duration-200 ease-bloom hover:opacity-70"
           >
-            {results.length > 0
-              ? "View all results"
-              : "Search the whole collection"}
+            {results.length > 0 ? "View all results" : "Search the whole collection"}
           </button>
         )}
       </div>

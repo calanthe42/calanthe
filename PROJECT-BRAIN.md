@@ -13,6 +13,27 @@ Living state document. Update at the end of every working pass.
   phase replaces: catalog, payment (Tabby badge is visual), OTP auth,
   orders, BYO submission, memberships.
 
+## Structure pass (2026-08-28, flowers.ae wireframe)
+
+- 3-row header: trust utility strip (locked same-day line centre; flagged
+  placeholder counts flanking) · logo/search/account/cart · layered nav
+  (Occasion / Flower / Price mega-menus + featured links). Mobile menu =
+  accordion groups. Search overlay with instant results.
+- Shop grid: uniform 2/4-col, from-prices, View affordance; URL filters
+  q / flower / price (client-approved buckets Under 300 / 300-600 / Over 600).
+- PDP order mirrors their buying wireframe: gallery → title/price → size →
+  add-on image tiles (6 incl. Bento Cake, Teddy) → recipient → gift message
+  → date/slot → video-approval + guarantees → CTA. Recipient + day/slot
+  travel with the cart and pre-fill checkout.
+- Cart drawer: "Complete the gift" upsell tiles (adds to last line).
+- Homepage additions (client-approved): QuickNav band, VideoApprovalSection,
+  TrustBand + press placeholders — locked section order/copy untouched.
+- Checkout covers their 9-step logic (extras → recipient → message →
+  delivery → date/address → billing incl. email → payment card/Tabby +
+  flagged wallet row → place order).
+- Help: real /delivery (zones/fees/cutoff from constants), /faqs, structured
+  legal pages awaiting client copy.
+
 ## IMAGERY — curated placeholders, NOT client photography
 
 Every photograph on the site is a **curated Unsplash placeholder**, chosen

@@ -337,8 +337,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
               />
             </div>
             <p className="mt-2 text-xs text-sage">
-              We only use this to coordinate delivery. The price is never shown
-              to the recipient.
+              We only use this to coordinate delivery. The price is never shown to the
+              recipient.
             </p>
           </Reveal>
 
@@ -422,8 +422,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   Video approval
                 </span>
                 <br />
-                We&apos;ll send you a photo or video of your finished arrangement
-                on WhatsApp before it&apos;s delivered.
+                We&apos;ll send you a photo or video of your finished arrangement on
+                WhatsApp before it&apos;s delivered.
               </p>
             </div>
             <p className="mt-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">

@@ -58,6 +58,7 @@ type CartAction =
   | { type: "add"; item: Omit<CartItem, "key"> }
   | { type: "remove"; key: string }
   | { type: "setQty"; key: string; qty: number }
+  | { type: "addAddon"; key: string; addonId: AddonId }
   | { type: "clear" }
   | { type: "hydrate"; items: CartItem[] };
 
@@ -145,6 +146,17 @@ function reducer(state: CartState, action: CartAction): CartState {
         ),
       };
     }
+    case "addAddon": {
+      return {
+        items: state.items.map((i) => {
+          if (i.key !== action.key || i.addonIds.includes(action.addonId)) {
+            return i;
+          }
+          const next = { ...i, addonIds: [...i.addonIds, action.addonId] };
+          return { ...next, key: keyOf(next) };
+        }),
+      };
+    }
     case "clear":
       return { items: [] };
     case "hydrate":
@@ -162,6 +174,7 @@ type CartContextValue = {
   addItem: (item: Omit<CartItem, "key">) => void;
   removeItem: (key: string) => void;
   setQty: (key: string, qty: number) => void;
+  addAddonToItem: (key: string, addonId: AddonId) => void;
   clear: () => void;
 };
 
@@ -220,6 +233,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (key: string, qty: number) => dispatch({ type: "setQty", key, qty }),
     [],
   );
+  const addAddonToItem = useCallback(
+    (key: string, addonId: AddonId) => dispatch({ type: "addAddon", key, addonId }),
+    [],
+  );
   const clear = useCallback(() => dispatch({ type: "clear" }), []);
 
   const value = useMemo<CartContextValue>(
@@ -233,6 +250,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       setQty,
+      addAddonToItem,
       clear,
     }),
     [
@@ -245,6 +263,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       removeItem,
       setQty,
+      addAddonToItem,
       clear,
     ],
   );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { cn } from "@/lib/cn";
-import { membershipFaq, weekDays } from "@/lib/data";
+import { membershipFaq, weekDays, type FaqItem } from "@/lib/data";
 
 export function DayPicker() {
   const [day, setDay] = useState<string>("Thu");
@@ -49,12 +49,12 @@ function dayName(short: string): string {
   return names[short] ?? short;
 }
 
-export function FaqAccordion() {
+export function FaqAccordion({ items = membershipFaq }: { items?: readonly FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
     <ul className="divide-y divide-hairline border-b border-t border-hairline">
-      {membershipFaq.map((item, i) => {
+      {items.map((item, i) => {
         const isOpen = open === i;
         return (
           <li key={item.q}>

@@ -65,9 +65,7 @@ export function Header() {
   const pathname = usePathname();
   const overlay = OVERLAY_ROUTES.has(pathname);
   const [scrolled, setScrolled] = useState(false);
-  const [menuState, setMenuState] = useState<"closed" | "open" | "closing">(
-    "closed",
-  );
+  const [menuState, setMenuState] = useState<"closed" | "open" | "closing">("closed");
   const [searchOpen, setSearchOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { count, openCart } = useCart();

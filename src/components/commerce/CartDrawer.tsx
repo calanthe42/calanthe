@@ -12,7 +12,7 @@ import {
   useCart,
   type CartItem as CartItemType,
 } from "@/lib/cart";
-import { formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
+import { addons, formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 function QtyStepper({ item }: { item: CartItemType }) {
@@ -77,6 +77,42 @@ function CartLine({ item }: { item: CartItemType }) {
         </div>
       </div>
     </li>
+  );
+}
+
+function CompleteTheGift() {
+  const { items, addAddonToItem } = useCart();
+  const last = items[items.length - 1];
+  if (!last) return null;
+  const suggestions = addons.filter((a) => !last.addonIds.includes(a.id)).slice(0, 3);
+  if (suggestions.length === 0) return null;
+
+  return (
+    <div className="border-t border-hairline px-6 py-4">
+      <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+        Complete the gift
+      </p>
+      <div className="grid grid-cols-3 gap-3">
+        {suggestions.map((addon) => (
+          <button
+            key={addon.id}
+            type="button"
+            onClick={() => addAddonToItem(last.key, addon.id)}
+            className="flex flex-col overflow-hidden rounded-media-sm border border-hairline text-left transition-colors duration-200 ease-bloom hover:border-sage"
+          >
+            <span className="block aspect-square w-full overflow-hidden">
+              <FloralImage image={addon.image} sizes="110px" />
+            </span>
+            <span className="px-2 pt-1.5 text-xs leading-tight text-olive">
+              {addon.name}
+            </span>
+            <span className="px-2 pb-2 pt-0.5 text-[0.6875rem] text-sage">
+              +{formatAed(addon.priceAed)}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -171,6 +207,8 @@ export function CartDrawer() {
                     <CartLine key={item.key} item={item} />
                   ))}
                 </ul>
+
+                <CompleteTheGift />
 
                 <footer className="border-t border-hairline px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4">
                   <div className="mb-4 flex items-baseline justify-between">

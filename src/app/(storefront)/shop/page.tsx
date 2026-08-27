@@ -25,8 +25,8 @@ export default async function ShopPage({
           Composed this morning, at your door today.
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
-          Every arrangement is built stem by stem in the atelier — no two ever
-          quite the same.
+          Every arrangement is built stem by stem in the atelier — no two ever quite the
+          same.
         </p>
       </Reveal>
 

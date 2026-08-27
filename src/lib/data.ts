@@ -41,12 +41,7 @@ export const PHOTOS = {
 } as const;
 
 export type FlowerType =
-  | "roses"
-  | "peonies"
-  | "orchids"
-  | "tulips"
-  | "lilies"
-  | "wildflowers";
+  "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
 
 export type Product = {
   id: string;
@@ -354,13 +349,7 @@ export const sizes: readonly ProductSize[] = [
   { id: "premium", name: "Premium", priceDeltaAed: 320, note: "Twice the stems" },
 ] as const;
 
-export type AddonId =
-  | "vase"
-  | "chocolates"
-  | "balloon"
-  | "cake"
-  | "teddy"
-  | "polaroid";
+export type AddonId = "vase" | "chocolates" | "balloon" | "cake" | "teddy" | "polaroid";
 
 export type Addon = {
   id: AddonId;
@@ -371,12 +360,42 @@ export type Addon = {
 };
 
 export const addons: readonly Addon[] = [
-  { id: "vase", name: "Vase", priceAed: 60, image: img("addon-vase", "olive", "A ceramic vase") },
-  { id: "chocolates", name: "Chocolates", priceAed: 85, image: img("addon-choc", "burgundy", "A box of chocolates") },
-  { id: "balloon", name: "Balloon", priceAed: 35, image: img("addon-balloon", "warm", "A heart balloon") },
-  { id: "cake", name: "Bento Cake", priceAed: 95, image: img("addon-cake", "warm", "A bento cake") },
-  { id: "teddy", name: "Teddy Bear", priceAed: 90, image: img("addon-teddy", "warm", "A teddy bear") },
-  { id: "polaroid", name: "Polaroid Card", priceAed: 25, image: img("addon-polaroid", "olive", "A polaroid card") },
+  {
+    id: "vase",
+    name: "Vase",
+    priceAed: 60,
+    image: img("addon-vase", "olive", "A ceramic vase"),
+  },
+  {
+    id: "chocolates",
+    name: "Chocolates",
+    priceAed: 85,
+    image: img("addon-choc", "burgundy", "A box of chocolates"),
+  },
+  {
+    id: "balloon",
+    name: "Balloon",
+    priceAed: 35,
+    image: img("addon-balloon", "warm", "A heart balloon"),
+  },
+  {
+    id: "cake",
+    name: "Bento Cake",
+    priceAed: 95,
+    image: img("addon-cake", "warm", "A bento cake"),
+  },
+  {
+    id: "teddy",
+    name: "Teddy Bear",
+    priceAed: 90,
+    image: img("addon-teddy", "warm", "A teddy bear"),
+  },
+  {
+    id: "polaroid",
+    name: "Polaroid Card",
+    priceAed: 25,
+    image: img("addon-polaroid", "olive", "A polaroid card"),
+  },
 ] as const;
 
 export type DeliveryZone = {
@@ -519,6 +538,30 @@ export const membershipFaq: readonly FaqItem[] = [
   },
 ] as const;
 
+/** Site-wide FAQ (delivery/quality) — /faqs. */
+export const siteFaq: readonly FaqItem[] = [
+  {
+    q: "When will my flowers arrive?",
+    a: "Order before 5pm and we deliver the same day, anywhere in the UAE. You will choose a delivery day and time window at checkout.",
+  },
+  {
+    q: "How fresh are the arrangements?",
+    a: "Every arrangement is composed by hand on the morning of its delivery - never the night before - and travels cool and upright.",
+  },
+  {
+    q: "What if a flower is out of season?",
+    a: "Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.",
+  },
+  {
+    q: "Can I see my arrangement before it is delivered?",
+    a: "Yes - your florist sends a photo or video on WhatsApp for your approval before every delivery.",
+  },
+  {
+    q: "How can I pay?",
+    a: "Cards are accepted at checkout, with Tabby instalments; wallet payments arrive soon. The recipient never sees the price.",
+  },
+] as const;
+
 /* ------------------------------------------------------------------ */
 /* Mock orders (account area)                                          */
 /* ------------------------------------------------------------------ */
@@ -644,8 +687,14 @@ export const TRUST = {
   ratingLine: "Rated 5 stars by our clients",
   guarantees: [
     { title: "Same-day delivery", copy: "Ordered before 5pm, at their door today." },
-    { title: "Video approval", copy: "See your arrangement on WhatsApp before it leaves." },
-    { title: "Freshness guarantee", copy: "Composed the morning of delivery, never before." },
+    {
+      title: "Video approval",
+      copy: "See your arrangement on WhatsApp before it leaves.",
+    },
+    {
+      title: "Freshness guarantee",
+      copy: "Composed the morning of delivery, never before.",
+    },
     { title: "All seven Emirates", copy: "One atelier, delivering across the UAE." },
   ],
   /** FLAGGED placeholders — swap for real press logos when provided. */

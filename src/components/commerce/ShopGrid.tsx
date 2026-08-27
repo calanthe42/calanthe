@@ -96,9 +96,7 @@ export function ShopGrid({
     if (price !== "all") {
       const bucket = priceBuckets.find((b) => b.id === price);
       if (bucket) {
-        list = list.filter(
-          (p) => p.priceAed >= bucket.min && p.priceAed <= bucket.max,
-        );
+        list = list.filter((p) => p.priceAed >= bucket.min && p.priceAed <= bucket.max);
       }
     }
 

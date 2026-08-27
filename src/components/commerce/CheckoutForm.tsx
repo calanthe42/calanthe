@@ -154,9 +154,9 @@ export function CheckoutForm() {
           Thank you — your flowers are in our hands.
         </h1>
         <p className="max-w-sm text-base leading-relaxed text-sage">
-          Order {placed}. Before delivery, your florist will send you a photo
-          or video of the finished arrangement on WhatsApp for your approval.
-          (UI preview — no payment was taken.)
+          Order {placed}. Before delivery, your florist will send you a photo or video of
+          the finished arrangement on WhatsApp for your approval. (UI preview — no payment
+          was taken.)
         </p>
         <Link href="/account" className={buttonClasses("secondary")}>
           View Your Orders
