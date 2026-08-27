@@ -149,8 +149,8 @@ export function BuildYourOwnBanner() {
             className="byo-copy io-reveal mb-8 max-w-sm text-base leading-relaxed text-cream/80"
             style={{ transitionDelay: "0.25s" }}
           >
-            Choose your budget, colours and preferences. We&apos;ll take care of
-            the flowers.
+            Choose your budget, colours and preferences. We&apos;ll take care of the
+            flowers.
           </p>
           <div
             data-io

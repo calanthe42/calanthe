@@ -25,12 +25,11 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     let gsapRef: typeof import("gsap").gsap | null = null;
 
     async function start() {
-      const [{ default: LenisCtor }, { gsap }, { ScrollTrigger }] =
-        await Promise.all([
-          import("lenis"),
-          import("gsap"),
-          import("gsap/ScrollTrigger"),
-        ]);
+      const [{ default: LenisCtor }, { gsap }, { ScrollTrigger }] = await Promise.all([
+        import("lenis"),
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
       if (disposed) return;
       gsap.registerPlugin(ScrollTrigger);
       instance = new LenisCtor({ autoRaf: false });

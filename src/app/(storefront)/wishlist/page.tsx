@@ -13,9 +13,7 @@ export default function WishlistPage() {
     <main className="mx-auto max-w-7xl gutter section-pad">
       <Reveal className="mb-10">
         <Eyebrow>Kept Close</Eyebrow>
-        <h1 className="display-2 mt-3 font-display font-light text-olive">
-          Wishlist
-        </h1>
+        <h1 className="display-2 mt-3 font-display font-light text-olive">Wishlist</h1>
       </Reveal>
       <WishlistPageClient />
     </main>

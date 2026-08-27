@@ -64,7 +64,9 @@ function shapesFor(seed: string, palette: Palette): Shape[] {
 
   const { base, blobs } = palettes[palette];
   const rand = rng(seed);
-  const shapes = Array.from({ length: 7 }, (_, i) => {
+  /* Hero frames get a denser, fuller bouquet. */
+  const count = seed.includes("hero") ? 13 : 7;
+  const shapes = Array.from({ length: count }, (_, i) => {
     const cx = 12 + rand() * 76;
     const cy = 10 + rand() * 80;
     const rx = 18 + rand() * 30;
