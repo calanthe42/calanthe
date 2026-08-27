@@ -17,26 +17,27 @@ export type ProductImage = {
   placeholder: { seed: string; palette: PlaceholderPalette };
 };
 
-/** Curated, palette-matched Unsplash photography (placeholder until the
- *  client's own shoots arrive). */
+/** Cohesive 3D/CGI floral placeholder imagery (one warm sculptural
+ *  world, unified by the floral-grade CSS filter) — the client's real
+ *  photography replaces these URLs later. */
 const photo = (id: string, w = 1600) =>
   `https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=format&fit=crop`;
 
 export const PHOTOS = {
-  heroBouquet: photo("1487530811176-3780de880c2d", 2400),
-  terracotta: photo("1533616688419-b7a585564566"),
-  dahliaDark: photo("1444021465936-c6ca81d39b84"),
-  blushKraft: photo("1563241527-3004b7be0ffd"),
-  redRoses: photo("1494972308805-463bc619d34e"),
-  poppyMeadow: photo("1465146344425-f00d5f5c8f07"),
-  peachRoses: photo("1591886960571-74d43a9d4166"),
-  moodyProtea: photo("1457089328109-e5d9bd499191"),
-  whiteOrchid: photo("1454262041357-5d96f50a2f27"),
-  roseMauveWall: photo("1518895949257-7621c3c786d7"),
-  callaLilies: photo("1469259943454-aa100abba749"),
-  whiteRoseWood: photo("1495231916356-a86217efff12"),
-  stargazer: photo("1502977249166-824b3a8a4d6d"),
-  pinkTulip: photo("1520763185298-1b434c919102"),
+  heroBouquet: photo("1700022949496-28ee625db7bd", 2400),
+  terracotta: photo("1637404230552-5ac6d76cb3a0"),
+  dahliaDark: photo("1638884703877-36d2f4137ff9"),
+  blushKraft: photo("1710858775474-08799a698bbc"),
+  redRoses: photo("1767810164592-d167c543f1ea"),
+  poppyMeadow: photo("1699017494672-2eb201788e72"),
+  peachRoses: photo("1652680882466-e83b0cccab34"),
+  moodyProtea: photo("1558473720-cf2dbe8a1f91"),
+  whiteOrchid: photo("1755502046743-78265e184cc3"),
+  roseMauveWall: photo("1679931974860-1af5ac3cc051"),
+  callaLilies: photo("1640595843206-4f554e6c6030"),
+  whiteRoseWood: photo("1628959892554-3ab56cee1bdd"),
+  stargazer: photo("1640597995884-57667d173ccf"),
+  pinkTulip: photo("1623077227088-94024ab979c8"),
 } as const;
 
 export type Product = {

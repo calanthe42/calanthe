@@ -52,6 +52,12 @@ body::after {
   padding-inline: clamp(1.25rem, 3vw, 2rem);
 }
 
+/* One warm color-grade over all floral imagery so mixed sources read
+   as a single brand world. */
+.floral-grade {
+  filter: sepia(0.14) saturate(0.88) contrast(1.03) brightness(1.02) hue-rotate(-4deg);
+}
+
 /* Soft depth: large blur, low opacity, olive-tinted — tiles lift off
    the cream instead of sitting flat. */
 .shadow-soft {

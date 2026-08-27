@@ -28,7 +28,7 @@ export function FloralImage({ image, sizes, priority, className }: FloralImagePr
           fill
           sizes={sizes ?? "100vw"}
           priority={priority}
-          className="object-cover"
+          className="floral-grade object-cover"
         />
       </div>
     );
