@@ -1,0 +1,32 @@
+/*
+ * CALANTHE design tokens — the single source of truth.
+ * The default Tailwind palette is reset: only brand colors exist.
+ */
+@theme {
+  /* ---- Color (nothing else allowed) ---- */
+  --color-*: initial;
+  --color-olive: #2b2f1b; /* primary text + primary dark surfaces */
+  --color-sage: #868764; /* muted text / borders / icons */
+  --color-burgundy: #2e131b; /* intimate sections only */
+  --color-burnt-orange: #b55b29; /* accent + CTA only — never large fills */
+  --color-cream: #e4dcc5; /* cards / surfaces */
+  --color-canvas: #f3efdf; /* page background */
+  --color-hairline: #cbc4a9; /* hairlines / dividers */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* ---- Type ---- */
+  --font-brand: var(--font-cinzel), serif; /* wordmark / nav / eyebrows / buttons */
+  --font-display: var(--font-cormorant), serif; /* editorial headlines */
+  --font-sans: var(--font-instrument), sans-serif; /* body / UI / prices */
+
+  --tracking-brand: 0.18em;
+
+  /* ---- Shape: luxury is almost square ---- */
+  --radius-*: initial;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+
+  /* ---- Motion: everything blooms, nothing bounces ---- */
+  --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
+}
