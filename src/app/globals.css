@@ -39,6 +39,37 @@ body::after {
   display: none;
 }
 
+/* Instagram marquee — CSS-only, pauses on hover. */
+.marquee-track {
+  animation: marquee 48s linear infinite;
+}
+.marquee-reverse {
+  animation-direction: reverse;
+}
+.group:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Footer monogram — one slow turn per minute. */
+.monogram-rotate {
+  animation: monogram-rotate 60s linear infinite;
+}
+
+@keyframes monogram-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Hero: ken-burns settle 1.08 → 1 over 6s, once. Transform-only. */
 .hero-kenburns {
   animation: hero-kenburns 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -79,7 +110,9 @@ body::after {
     scroll-behavior: auto;
   }
   .hero-kenburns,
-  .hero-scrollcue {
+  .hero-scrollcue,
+  .marquee-track,
+  .monogram-rotate {
     animation: none;
   }
 }
