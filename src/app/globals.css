@@ -5,6 +5,13 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Guard: nothing may ever scroll the page sideways. `clip` (not
+   `hidden`) so no scroll container is created and sticky keeps working. */
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   background: var(--color-canvas);
   color: var(--color-olive);
