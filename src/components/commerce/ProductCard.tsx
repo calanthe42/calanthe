@@ -1,0 +1,52 @@
+import Link from "next/link";
+import { ClipReveal } from "@/components/motion/ClipReveal";
+import { BotanicalPlaceholder } from "@/components/ui/BotanicalPlaceholder";
+import { IconHeart } from "@/components/ui/icons";
+import { cn } from "@/lib/cn";
+import { formatAed, type Product } from "@/lib/data";
+
+type ProductCardProps = {
+  product: Product;
+  className?: string;
+};
+
+/**
+ * 4:5 image with ClipReveal entrance; on devices with hover the second
+ * image crossfades in. Wishlist heart is a 44px target.
+ */
+export function ProductCard({ product, className }: ProductCardProps) {
+  const [front, back] = product.images;
+
+  return (
+    <article className={cn("group relative", className)}>
+      <Link href={`/shop/${product.slug}`} aria-label={product.name} className="block">
+        <ClipReveal className="relative aspect-[4/5] w-full rounded-sm">
+          <div className="relative h-full w-full">
+            <BotanicalPlaceholder
+              seed={front.placeholder.seed}
+              palette={front.placeholder.palette}
+            />
+            <div className="absolute inset-0 opacity-0 transition-opacity duration-500 ease-bloom group-hover:opacity-100">
+              <BotanicalPlaceholder
+                seed={back.placeholder.seed}
+                palette={back.placeholder.palette}
+              />
+            </div>
+          </div>
+        </ClipReveal>
+        <div className="mt-3 flex items-baseline justify-between gap-3">
+          <h3 className="font-display text-xl font-normal text-olive">{product.name}</h3>
+          <p className="shrink-0 text-base text-sage">{formatAed(product.priceAed)}</p>
+        </div>
+      </Link>
+
+      <button
+        type="button"
+        aria-label={`Add ${product.name} to wishlist`}
+        className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center text-cream transition-opacity duration-200 ease-bloom hover:opacity-70"
+      >
+        <IconHeart className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(43,47,27,0.4)]" />
+      </button>
+    </article>
+  );
+}

@@ -31,6 +31,14 @@ body::after {
   color: var(--color-cream);
 }
 
+/* Mobile product rows scroll edge-to-edge without a visible scrollbar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Hero: ken-burns settle 1.08 → 1 over 6s, once. Transform-only. */
 .hero-kenburns {
   animation: hero-kenburns 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
