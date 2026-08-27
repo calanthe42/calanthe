@@ -42,3 +42,4 @@ next-env.d.ts
 
 # client-provided raw brand sources (large binaries; web copies live in public/brand)
 /Calanthe_Final Files/
+.vercel

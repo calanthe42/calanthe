@@ -1,46 +1,40 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ReactLenis, type LenisRef } from "lenis/react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+const LenisProvider = lazy(() =>
+  import("./LenisProvider").then((m) => ({ default: m.LenisProvider })),
+);
 
 /**
- * Lenis smooth scroll for the whole app, driven by GSAP's ticker so
- * ScrollTrigger scrub scenes stay in perfect sync.
- * prefers-reduced-motion → native scrolling, no smoothing at all.
+ * Lenis smooth scroll, mounted after the browser goes idle so its chunk
+ * and ticker never compete with first paint or hydration (Lighthouse
+ * TBT). Scrolling is native until then — visually indistinguishable in
+ * the first moments of a visit.
+ * prefers-reduced-motion → native scrolling permanently.
  */
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const prefersReducedMotion = useReducedMotionPref();
-  const lenisRef = useRef<LenisRef>(null);
+  const reduced = useReducedMotionPref();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
-
-    function update(time: number) {
-      lenisRef.current?.lenis?.raf(time * 1000);
+    if (reduced) return;
+    if (typeof window.requestIdleCallback === "function") {
+      const handle = window.requestIdleCallback(() => setReady(true));
+      return () => window.cancelIdleCallback(handle);
     }
-    const lenis = lenisRef.current?.lenis;
-    lenis?.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add(update);
-    gsap.ticker.lagSmoothing(0);
+    const handle = setTimeout(() => setReady(true), 1500);
+    return () => clearTimeout(handle);
+  }, [reduced]);
 
-    return () => {
-      lenis?.off("scroll", ScrollTrigger.update);
-      gsap.ticker.remove(update);
-    };
-  }, [prefersReducedMotion]);
-
-  if (prefersReducedMotion) {
+  if (reduced || !ready) {
     return <>{children}</>;
   }
 
   return (
-    <ReactLenis root options={{ autoRaf: false }} ref={lenisRef}>
-      {children}
-    </ReactLenis>
+    <Suspense fallback={<>{children}</>}>
+      <LenisProvider>{children}</LenisProvider>
+    </Suspense>
   );
 }
