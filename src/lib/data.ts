@@ -267,11 +267,7 @@ export const FREE_DELIVERY_THRESHOLD_AED = 350;
 /** Orders placed before this hour (UAE time) can be delivered today. */
 export const SAME_DAY_CUTOFF_HOUR = 17;
 
-export const timeSlots = [
-  "10:00 – 13:00",
-  "13:00 – 17:00",
-  "17:00 – 21:00",
-] as const;
+export const timeSlots = ["10:00 – 13:00", "13:00 – 17:00", "17:00 – 21:00"] as const;
 
 /* ------------------------------------------------------------------ */
 /* Build Your Own                                                      */
@@ -367,15 +363,7 @@ export const membershipTiers: readonly MembershipTier[] = [
   },
 ] as const;
 
-export const weekDays = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-] as const;
+export const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 export type FaqItem = { q: string; a: string };
 

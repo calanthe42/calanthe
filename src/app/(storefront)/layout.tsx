@@ -1,4 +1,5 @@
 import { AnnouncementBar } from "@/components/blocks/AnnouncementBar";
+import { Footer } from "@/components/blocks/Footer";
 import { Header } from "@/components/blocks/Header";
 
 export default function StorefrontLayout({
@@ -9,6 +10,7 @@ export default function StorefrontLayout({
       <AnnouncementBar />
       <Header />
       {children}
+      <Footer />
     </>
   );
 }
