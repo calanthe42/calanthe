@@ -10,6 +10,8 @@ type ProductCardProps = {
   className?: string;
   /** Editorial (2x) tiles use a wider image crop. */
   editorial?: boolean;
+  /** Collection-grid variant: from-price + quick View affordance. */
+  showView?: boolean;
 };
 
 /**
@@ -17,7 +19,12 @@ type ProductCardProps = {
  * [data-vt-hero] container is named for the view-transition morph by
  * TransitionLink at click time. Wishlist heart is a 44px target.
  */
-export function ProductCard({ product, className, editorial = false }: ProductCardProps) {
+export function ProductCard({
+  product,
+  className,
+  editorial = false,
+  showView = false,
+}: ProductCardProps) {
   const [front, back] = product.images;
 
   return (
@@ -44,8 +51,16 @@ export function ProductCard({ product, className, editorial = false }: ProductCa
           <h3 className="font-display text-lg font-normal text-olive lg:text-xl">
             {product.name}
           </h3>
-          <p className="shrink-0 text-base text-sage">{formatAed(product.priceAed)}</p>
+          <p className="shrink-0 text-sm text-sage lg:text-base">
+            {showView && <span className="mr-1 text-xs">from</span>}
+            {formatAed(product.priceAed)}
+          </p>
         </div>
+        {showView && (
+          <p className="mt-1.5 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage transition-colors duration-200 ease-bloom group-hover:text-burnt-orange">
+            View —
+          </p>
+        )}
       </TransitionLink>
 
       <WishlistButton

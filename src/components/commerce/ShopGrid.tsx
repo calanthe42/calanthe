@@ -4,17 +4,17 @@ import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Monogram } from "@/components/ui/Monogram";
 import { cn } from "@/lib/cn";
-import { occasions, type OccasionSlug, type Product } from "@/lib/data";
+import {
+  flowerTypes,
+  occasions,
+  priceBuckets,
+  type FlowerType,
+  type OccasionSlug,
+  type PriceBucketId,
+  type Product,
+} from "@/lib/data";
 
-type PriceBand = "all" | "under-500" | "500-750" | "over-750";
 type SortKey = "featured" | "price-asc" | "price-desc" | "new";
-
-const priceBands: readonly { id: PriceBand; label: string }[] = [
-  { id: "all", label: "Any price" },
-  { id: "under-500", label: "Under AED 500" },
-  { id: "500-750", label: "AED 500–750" },
-  { id: "over-750", label: "AED 750+" },
-];
 
 const sortKeys: readonly { id: SortKey; label: string }[] = [
   { id: "featured", label: "Featured" },
@@ -52,22 +52,55 @@ type ShopGridProps = {
   products: readonly Product[];
   /** Hide the occasion row when the page itself is an occasion. */
   showOccasionFilter?: boolean;
+  initialQuery?: string;
+  initialFlower?: string;
+  initialPrice?: string;
 };
 
-export function ShopGrid({ products, showOccasionFilter = true }: ShopGridProps) {
+export function ShopGrid({
+  products,
+  showOccasionFilter = true,
+  initialQuery = "",
+  initialFlower = "",
+  initialPrice = "",
+}: ShopGridProps) {
   const [occasion, setOccasion] = useState<OccasionSlug | "all">("all");
-  const [price, setPrice] = useState<PriceBand>("all");
+  const [flower, setFlower] = useState<FlowerType | "all">(
+    flowerTypes.some((f) => f.slug === initialFlower)
+      ? (initialFlower as FlowerType)
+      : "all",
+  );
+  const [price, setPrice] = useState<PriceBucketId | "all">(
+    priceBuckets.some((b) => b.id === initialPrice)
+      ? (initialPrice as PriceBucketId)
+      : "all",
+  );
   const [sort, setSort] = useState<SortKey>("featured");
+  const query = initialQuery.trim().toLowerCase();
 
   const visible = useMemo(() => {
     let list = [...products];
+    if (query) {
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.flowers.some((f) => f.includes(query)),
+      );
+    }
     if (occasion !== "all") {
       list = list.filter((p) => p.occasions.includes(occasion));
     }
-    if (price === "under-500") list = list.filter((p) => p.priceAed < 500);
-    if (price === "500-750")
-      list = list.filter((p) => p.priceAed >= 500 && p.priceAed <= 750);
-    if (price === "over-750") list = list.filter((p) => p.priceAed > 750);
+    if (flower !== "all") {
+      list = list.filter((p) => p.flowers.includes(flower));
+    }
+    if (price !== "all") {
+      const bucket = priceBuckets.find((b) => b.id === price);
+      if (bucket) {
+        list = list.filter(
+          (p) => p.priceAed >= bucket.min && p.priceAed <= bucket.max,
+        );
+      }
+    }
 
     switch (sort) {
       case "price-asc":
@@ -84,12 +117,18 @@ export function ShopGrid({ products, showOccasionFilter = true }: ShopGridProps)
         break;
     }
     return list;
-  }, [products, occasion, price, sort]);
+  }, [products, query, occasion, flower, price, sort]);
 
   return (
     <div>
+      {query && (
+        <p className="mb-4 text-sm text-sage">
+          Results for &ldquo;{initialQuery.trim()}&rdquo;
+        </p>
+      )}
+
       {/* Quiet text filters */}
-      <div className="flex flex-col gap-2 border-b border-t border-hairline py-3">
+      <div className="flex flex-col gap-1 border-b border-t border-hairline py-3">
         {showOccasionFilter && (
           <div className="no-scrollbar flex gap-5 overflow-x-auto">
             <FilterButton active={occasion === "all"} onClick={() => setOccasion("all")}>
@@ -104,10 +143,23 @@ export function ShopGrid({ products, showOccasionFilter = true }: ShopGridProps)
                 {o.name}
               </FilterButton>
             ))}
+            <span aria-hidden className="my-auto h-4 w-px shrink-0 bg-hairline" />
+            {flowerTypes.map((f) => (
+              <FilterButton
+                key={f.slug}
+                active={flower === f.slug}
+                onClick={() => setFlower(flower === f.slug ? "all" : f.slug)}
+              >
+                {f.name}
+              </FilterButton>
+            ))}
           </div>
         )}
         <div className="no-scrollbar flex items-center gap-5 overflow-x-auto">
-          {priceBands.map((band) => (
+          <FilterButton active={price === "all"} onClick={() => setPrice("all")}>
+            Any price
+          </FilterButton>
+          {priceBuckets.map((band) => (
             <FilterButton
               key={band.id}
               active={price === band.id}
@@ -140,15 +192,12 @@ export function ShopGrid({ products, showOccasionFilter = true }: ShopGridProps)
           </p>
         </div>
       ) : (
-        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-12">
-          {visible.map((product, i) => {
-            const editorial = i % 7 === 6;
-            return (
-              <li key={product.id} className={cn(editorial && "col-span-2")}>
-                <ProductCard product={product} editorial={editorial} />
-              </li>
-            );
-          })}
+        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-10">
+          {visible.map((product) => (
+            <li key={product.id}>
+              <ProductCard product={product} showView />
+            </li>
+          ))}
         </ul>
       )}
     </div>
