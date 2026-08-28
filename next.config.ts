@@ -1,5 +1,6 @@
 import path from "path";
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
 
 const nextConfig: NextConfig = {
   // Stray lockfiles exist higher up the tree; pin the workspace root here.
@@ -15,4 +16,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPayload(nextConfig);

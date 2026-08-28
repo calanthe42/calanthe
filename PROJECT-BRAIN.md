@@ -2,6 +2,26 @@
 
 Living state document. Update at the end of every working pass.
 
+## BACKEND (phase B0 complete — foundation)
+
+- Project HOME is now C:\dev\calanthe (moved out of OneDrive, which
+  corrupted .next; the OneDrive copy is dead).
+- Payload CMS 3 lives in the same app: /admin panel, REST /api/*,
+  GraphQL /api/graphql. Storefront moved under src/app/(frontend).
+- Postgres (Neon) via Payload's Drizzle adapter, MIGRATIONS ONLY
+  (push disabled everywhere). PAYLOAD_SECRET + DATABASE_URL required
+  to boot; env is Zod-validated at boot and fails closed in prod
+  (src/lib/env.ts + instrumentation.ts).
+- Money = integer fils. src/lib/money.ts is the only conversion layer
+  (unit-tested); lib/pricing.ts (B3) will be the only totals engine.
+- Sentry env-gated; Upstash Redis rate-limit factory in src/lib/redis.ts.
+- Production builds use WEBPACK (next build) — Payload does not support
+  Turbopack builds on Next 15. Dev keeps Turbopack.
+- Spec: brand/backend-architecture.md (locked). Progress diary:
+  docs/PROGRESS/. Security state: docs/SECURITY.md.
+- AWAITING: real Neon DATABASE_URL (placeholder in .env.local) — live
+  /admin login verification is the first act of B1.
+
 ## Current state (2026-08-28)
 
 - Full storefront UI live on Vercel staging: https://calanthe.vercel.app
