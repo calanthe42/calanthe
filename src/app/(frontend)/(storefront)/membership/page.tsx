@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { DayPicker, FaqAccordion } from "@/components/commerce/MembershipInteractive";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { Button } from "@/components/ui/Button";
+import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { cn } from "@/lib/cn";
-import { formatAed, membershipTiers } from "@/lib/data";
+import { CONTACT, formatAed, membershipTiers } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Membership",
@@ -87,19 +87,26 @@ export default function MembershipPage() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  variant={tier.mostLoved ? "primary" : "secondary"}
-                  className="mt-7 w-full"
+                <a
+                  href={`${CONTACT.whatsappHref}?text=${encodeURIComponent(
+                    `Hello Calanthe, I'd like to begin the ${tier.name} membership.`,
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    buttonClasses(tier.mostLoved ? "primary" : "secondary"),
+                    "mt-7 w-full",
+                  )}
                 >
                   Begin {tier.name}
-                </Button>
+                </a>
               </article>
             </StaggerItem>
           ))}
         </Stagger>
         <p className="mt-6 text-center text-xs text-sage">
-          Membership checkout arrives with the backend phase — buttons are preview-only
-          for now.
+          Online membership checkout arrives with the backend phase — for now,
+          &ldquo;Begin&rdquo; opens WhatsApp so our florists can set it up with you directly.
         </p>
       </section>
 

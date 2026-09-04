@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  experimental: {
+    // Two root layouts ((frontend) + (payload)) mean genuinely unmatched
+    // routes bypass both — global-not-found.tsx is the only way to give
+    // them the brand 404 instead of Next's bare default.
+    globalNotFound: true,
+  },
   images: {
     // Curated placeholder photography until the client's own arrives.
     remotePatterns: [

@@ -31,9 +31,12 @@ export function LoginFlow() {
   }, [stage, resendIn]);
 
   function sendCode() {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 8) {
-      toast("Enter your full phone number");
+    /* UAE mobile: 9 digits after +971, starting with 5 (5X XXX XXXX).
+       A leading 0 is a common local-format mistake — strip it. */
+    let digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("0")) digits = digits.slice(1);
+    if (!/^5\d{8}$/.test(digits)) {
+      toast("Enter a valid UAE mobile number, e.g. 50 123 4567");
       return;
     }
     setStage("otp");

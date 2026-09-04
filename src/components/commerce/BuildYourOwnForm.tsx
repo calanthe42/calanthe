@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Reveal } from "@/components/motion/Reveal";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/lib/toast";
@@ -94,6 +95,9 @@ export function BuildYourOwnForm() {
         <p className="max-w-sm text-xs leading-relaxed text-sage">
           (UI preview — this will create a real request once the backend arrives.)
         </p>
+        <Link href="/shop" className={cn(buttonClasses("secondary"), "mt-2")}>
+          Continue Shopping
+        </Link>
       </div>
     );
   }
