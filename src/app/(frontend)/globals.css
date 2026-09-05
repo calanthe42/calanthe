@@ -100,6 +100,66 @@ body::after {
   }
 }
 
+/* The index line under the hero: a hairline draws in under each link
+   and the letters open slightly — the house hover grammar, rather than
+   a box lighting up. */
+.quicknav-link {
+  position: relative;
+  padding-block: 0.5rem;
+  transition:
+    color 0.25s var(--ease-bloom),
+    letter-spacing 0.25s var(--ease-bloom);
+}
+.quicknav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-burnt-orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease-bloom);
+}
+.quicknav-link:hover {
+  color: var(--color-olive);
+  letter-spacing: 0.22em;
+}
+.quicknav-link:hover::after,
+.quicknav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quicknav-link,
+  .quicknav-link::after {
+    transition: none;
+  }
+  .quicknav-link:hover {
+    letter-spacing: var(--tracking-brand);
+  }
+}
+
+/* Hero CTAs: a pure-CSS entrance. These sit in the bottom fifth of the
+   viewport, which is exactly where MotionObserver's -20% rootMargin
+   never fires — a scroll reveal here leaves them invisible until the
+   visitor scrolls, i.e. the main call to action never shows on load. */
+.hero-cta-in {
+  animation: hero-cta-in 0.8s var(--ease-bloom) 0.55s both;
+}
+
+@keyframes hero-cta-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Above-the-fold headline entrance: pure CSS so the LCP text paints and
    animates before any JavaScript arrives. Transform-only, NO clipping
    mask — clipped text defers LCP until the animation ends. */
@@ -536,6 +596,7 @@ body.overlay-open .hero-logo-dock {
   }
   .hero-kenburns,
   .hero-ribbon,
+  .hero-cta-in,
   .logo-breathe,
   .marquee-track,
   .monogram-rotate,

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HeroLogoDock } from "@/components/motion/HeroLogoDock";
 import { Parallax } from "@/components/motion/Parallax";
-import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { StackedLogo } from "@/components/ui/StackedLogo";
@@ -72,6 +71,13 @@ export function Hero({ media }: HeroProps) {
           ].join(", "),
         }}
       />
+      {/* Phones only: the tall crop puts the brightest part of the
+          bouquet directly behind the words, so they need a firmer
+          floor than the desktop crop does. */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-olive/90 via-olive/45 to-transparent lg:hidden"
+      />
 
       {/* The mark, at rest: large and dead-centre in the VIEWPORT on
           load (fixed, not relative to the hero's own box — the two
@@ -106,24 +112,24 @@ export function Hero({ media }: HeroProps) {
             className="mb-8 font-display text-[clamp(2.75rem,10vw,3.6rem)] font-light leading-[1.04] text-cream lg:mb-10 lg:text-[clamp(3.4rem,4.6vw,4.75rem)]"
           />
 
-          <Reveal delay={0.7}>
+          <div className="hero-cta-in">
             <div className="flex flex-col gap-3 sm:max-w-md sm:flex-row sm:gap-4">
               <ButtonLink
                 href="/shop"
                 variant="glass-primary"
-                className="w-full sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="w-full whitespace-nowrap sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
                 Shop Flowers
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
-                className="w-full sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="w-full whitespace-nowrap sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
                 Build Your Own
               </ButtonLink>
             </div>
-          </Reveal>
+          </div>
         </div>
       </div>
     </section>

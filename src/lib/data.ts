@@ -40,6 +40,38 @@ export const PHOTOS = {
   pinkTulip: photo("1623077227088-94024ab979c8"),
 } as const;
 
+/** Real floral photography for the product cards (Pexels licence).
+ *  Chosen per product by character, not at random — see the name of
+ *  each key. Extensions matter: Pexels serves some assets as .png and
+ *  some as .jpeg, and guessing wrong 404s. Every URL below was probed
+ *  before being committed. */
+const pexels = (id: string, ext: "jpeg" | "png" = "jpeg", w = 1200) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.${ext}?auto=compress&cs=tinysrgb&w=${w}`;
+
+export const PRODUCT_PHOTOS = {
+  amberVase: pexels("15246050"),
+  amberInterior: pexels("32555688"),
+  devotionBouquet: pexels("13306125"),
+  devotionDense: pexels("20178982", "png"),
+  blushMass: pexels("8734731"),
+  blushRose: pexels("11439083"),
+  bordeauxRose: pexels("6616435"),
+  bordeauxDark: pexels("19629031"),
+  cinderMuted: pexels("34777731"),
+  cinderGrass: pexels("32059911"),
+  dawnDahlia: pexels("14744122"),
+  dawnPastel: pexels("20295105"),
+  velvetLilac: pexels("9656872"),
+  velvetStem: pexels("4060937"),
+  softWhiteRose: pexels("6257764"),
+  softGypsophila: pexels("31046060"),
+  longStemVase: pexels("33654909"),
+  longStemBlossom: pexels("14898893"),
+  meadowField: pexels("30210424"),
+  meadowMixed: pexels("35461534"),
+} as const;
+
+
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
 
@@ -131,8 +163,8 @@ export const products: readonly Product[] = [
     name: "Amber Hour",
     priceAed: 480,
     images: [
-      img("amber-hour-a", "warm", "Amber Hour arrangement", PHOTOS.terracotta),
-      img("amber-hour-b", "olive", "Amber Hour arrangement, detail", PHOTOS.peachRoses),
+      img("amber-hour-a", "warm", "Amber Hour arrangement", PRODUCT_PHOTOS.amberInterior),
+      img("amber-hour-b", "olive", "Amber Hour arrangement, detail", PRODUCT_PHOTOS.amberVase),
     ],
     occasions: ["birthday", "just-because"],
     flowers: ["roses", "tulips"],
@@ -149,13 +181,13 @@ export const products: readonly Product[] = [
         "quiet-devotion-a",
         "burgundy",
         "Quiet Devotion arrangement",
-        PHOTOS.dahliaDark,
+        PRODUCT_PHOTOS.devotionBouquet,
       ),
       img(
         "quiet-devotion-b",
         "warm",
         "Quiet Devotion arrangement, detail",
-        PHOTOS.redRoses,
+        PRODUCT_PHOTOS.devotionDense,
       ),
     ],
     occasions: ["love"],
@@ -169,12 +201,12 @@ export const products: readonly Product[] = [
     name: "The First Letter",
     priceAed: 420,
     images: [
-      img("first-letter-a", "warm", "The First Letter arrangement", PHOTOS.blushKraft),
+      img("first-letter-a", "warm", "The First Letter arrangement", PRODUCT_PHOTOS.blushRose),
       img(
         "first-letter-b",
         "olive",
         "The First Letter arrangement, detail",
-        PHOTOS.pinkTulip,
+        PRODUCT_PHOTOS.blushMass,
       ),
     ],
     occasions: ["new-baby", "congratulations"],
@@ -192,13 +224,13 @@ export const products: readonly Product[] = [
         "bordeaux-whisper-a",
         "burgundy",
         "Bordeaux Whisper arrangement",
-        PHOTOS.redRoses,
+        PRODUCT_PHOTOS.bordeauxRose,
       ),
       img(
         "bordeaux-whisper-b",
         "warm",
         "Bordeaux Whisper arrangement, detail",
-        PHOTOS.moodyProtea,
+        PRODUCT_PHOTOS.bordeauxDark,
       ),
     ],
     occasions: ["love", "just-because"],
@@ -212,12 +244,12 @@ export const products: readonly Product[] = [
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
-      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PHOTOS.whiteRoseWood),
+      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PRODUCT_PHOTOS.cinderMuted),
       img(
         "sage-cinder-b",
         "warm",
         "Sage & Cinder arrangement, detail",
-        PHOTOS.callaLilies,
+        PRODUCT_PHOTOS.cinderGrass,
       ),
     ],
     occasions: ["just-because"],
@@ -231,12 +263,12 @@ export const products: readonly Product[] = [
     name: "Dawn Procession",
     priceAed: 850,
     images: [
-      img("dawn-procession-a", "warm", "Dawn Procession arrangement", PHOTOS.peachRoses),
+      img("dawn-procession-a", "warm", "Dawn Procession arrangement", PRODUCT_PHOTOS.dawnDahlia),
       img(
         "dawn-procession-b",
         "olive",
         "Dawn Procession arrangement, detail",
-        PHOTOS.blushKraft,
+        PRODUCT_PHOTOS.dawnPastel,
       ),
     ],
     occasions: ["congratulations", "birthday"],
@@ -250,8 +282,8 @@ export const products: readonly Product[] = [
     name: "Velvet Hour",
     priceAed: 950,
     images: [
-      img("velvet-hour-a", "burgundy", "Velvet Hour arrangement", PHOTOS.moodyProtea),
-      img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail", PHOTOS.dahliaDark),
+      img("velvet-hour-a", "burgundy", "Velvet Hour arrangement", PRODUCT_PHOTOS.velvetLilac),
+      img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail", PRODUCT_PHOTOS.velvetStem),
     ],
     occasions: ["love"],
     flowers: ["peonies"],
@@ -264,12 +296,12 @@ export const products: readonly Product[] = [
     name: "A Soft Reply",
     priceAed: 350,
     images: [
-      img("soft-reply-a", "warm", "A Soft Reply arrangement", PHOTOS.whiteOrchid),
+      img("soft-reply-a", "warm", "A Soft Reply arrangement", PRODUCT_PHOTOS.softWhiteRose),
       img(
         "soft-reply-b",
         "warm",
         "A Soft Reply arrangement, detail",
-        PHOTOS.pinkTulip,
+        PRODUCT_PHOTOS.softGypsophila,
       ),
     ],
     occasions: ["just-because", "new-baby"],
@@ -283,12 +315,12 @@ export const products: readonly Product[] = [
     name: "The Long Stem",
     priceAed: 540,
     images: [
-      img("long-stem-a", "olive", "The Long Stem arrangement", PHOTOS.roseMauveWall),
+      img("long-stem-a", "olive", "The Long Stem arrangement", PRODUCT_PHOTOS.longStemVase),
       img(
         "long-stem-b",
         "burgundy",
         "The Long Stem arrangement, detail",
-        PHOTOS.stargazer,
+        PRODUCT_PHOTOS.longStemBlossom,
       ),
     ],
     occasions: ["congratulations"],
@@ -302,12 +334,12 @@ export const products: readonly Product[] = [
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [
-      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PHOTOS.poppyMeadow),
+      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PRODUCT_PHOTOS.meadowField),
       img(
         "meadow-dusk-b",
         "warm",
         "Meadow at Dusk arrangement, detail",
-        PHOTOS.roseMauveWall,
+        PRODUCT_PHOTOS.meadowMixed,
       ),
     ],
     occasions: ["birthday", "just-because"],
