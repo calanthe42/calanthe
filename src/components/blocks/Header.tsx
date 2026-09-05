@@ -149,8 +149,12 @@ export function Header() {
     <header
       className={cn(
         "sticky top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        /* Blur is desktop-only: on a phone, backdrop-blur re-renders
+           every frame as content moves under it, which is one of the
+           most expensive things a mobile GPU can do while scrolling.
+           Phones get a near-solid bar instead — same look, no cost. */
         solid
-          ? "border-b border-hairline/60 bg-canvas/75 backdrop-blur-md"
+          ? "border-b border-hairline/60 bg-canvas/95 lg:bg-canvas/75 lg:backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       )}
     >

@@ -83,7 +83,7 @@ export function Hero({ media }: HeroProps) {
       <Link
         href="/"
         aria-label="Calanthe — home"
-        className="hero-mark-inline fixed left-1/2 top-1/2 z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2"
+        className="hero-mark-inline fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2"
       >
         <StackedLogo tone="cream" priority sizes="(min-width: 1024px) 560px, 330px" />
       </Link>
@@ -110,14 +110,14 @@ export function Hero({ media }: HeroProps) {
             <div className="flex flex-col gap-3 sm:max-w-md sm:flex-row sm:gap-4">
               <ButtonLink
                 href="/shop"
-                variant="primary"
+                variant="glass-primary"
                 className="w-full sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
                 Shop Flowers
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
-                variant="secondary-cream"
+                variant="glass"
                 className="w-full sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
                 Build Your Own

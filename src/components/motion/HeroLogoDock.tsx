@@ -44,16 +44,21 @@ export function HeroLogoDock() {
     /* How far to travel, in pixels, as a TRANSFORM — never `top`.
        Animating `top` forces layout on every frame and stutters badly on
        phones (see brand/motion-spec.md: transform/opacity only). The mark
-       stays pinned at top:50% in CSS and we move it with translateY.
+       stays pinned by CSS `top` and we move it with translateY.
 
-       Distance = where the navbar's line sits (half the measured row
-       height, since the header is pinned to the top by the time the mark
-       arrives) minus where the mark starts (the viewport's middle). */
+       Its resting centre is simply its computed `top`, because
+       yPercent:-50 centres the mark on that coordinate — so this reads
+       correctly whatever `--logo-hero-top` is at this breakpoint (50% on
+       desktop, higher on phones to clear the bouquet), and it is not
+       affected by any transform GSAP has already applied. */
     const dockY = () => {
       const row = document.querySelector<HTMLElement>("[data-nav-row]");
       const navCentre = (row?.offsetHeight ?? 64) / 2;
-      const viewportCentre = document.documentElement.clientHeight / 2;
-      return navCentre - viewportCentre;
+      const restCentre = parseFloat(getComputedStyle(mark).top);
+      if (Number.isNaN(restCentre)) {
+        return navCentre - document.documentElement.clientHeight / 2;
+      }
+      return navCentre - restCentre;
     };
 
     /* Navbar size ÷ current hero size, both read from the same custom
@@ -78,6 +83,11 @@ export function HeroLogoDock() {
         end: "+=60%",
         scrub: 0.5,
         invalidateOnRefresh: true,
+        /* Idle drift runs only while the mark is still at rest — the
+           moment it starts travelling, one motion at a time. */
+        onUpdate: (self) => {
+          mark.classList.toggle("is-travelling", self.progress > 0.005);
+        },
       },
     });
 
@@ -113,9 +123,13 @@ export function HeroLogoDock() {
       ref={markRef}
       href="/"
       aria-label="Calanthe — home"
-      className="hero-logo-dock fixed left-1/2 top-1/2 z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2 will-change-transform"
+      className="hero-logo-dock fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2 will-change-transform"
     >
-      <StackedLogo priority sizes="(min-width: 1024px) 560px, 330px" />
+      {/* Inner element carries the settle + idle drift so those never
+          collide with the scroll transform GSAP puts on the link. */}
+      <span className="logo-breathe block">
+        <StackedLogo priority sizes="(min-width: 1024px) 560px, 330px" />
+      </span>
     </Link>
   );
 }

@@ -355,9 +355,14 @@ body::after {
   }
 }
 
-/* Hero: ken-burns settle 1.08 → 1 over 6s, once. Transform-only. */
-.hero-kenburns {
-  animation: hero-kenburns 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+/* Hero: ken-burns settle 1.08 → 1 over 6s, once. Transform-only.
+   Desktop only — on a phone this 6s scale on a full-screen photo
+   overlaps exactly when the visitor first scrolls, and scaling a
+   viewport-sized image costs the frames the travelling mark needs. */
+@media (min-width: 1024px) {
+  .hero-kenburns {
+    animation: hero-kenburns 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
 }
 
 @keyframes hero-kenburns {
@@ -378,11 +383,15 @@ body::after {
 :root {
   --logo-nav-w: 64px;
   --logo-hero-w: min(78vw, 330px);
+  /* Phone: sit above the bouquet rather than on top of it — the tall
+     crop puts the flowers low, so the mark rides higher. */
+  --logo-hero-top: 34%;
 }
 @media (min-width: 1024px) {
   :root {
     --logo-nav-w: 78px;
     --logo-hero-w: min(38vw, 560px);
+    --logo-hero-top: 50%;
   }
 }
 
@@ -397,6 +406,90 @@ body::after {
 .stacked-logo[data-tone="cream"] .stacked-olive,
 .stacked-logo[data-tone="olive"] .stacked-cream {
   opacity: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Frosted-glass CTAs — hero only, over photography. The blur is cheap
+   here because the hero image behind them is static once it has
+   settled (parallax and ken-burns are desktop-only).                  */
+/* ------------------------------------------------------------------ */
+.btn-glass {
+  position: relative;
+  background: rgba(228, 220, 197, 0.13);
+  border: 1px solid rgba(228, 220, 197, 0.34);
+  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  backdrop-filter: blur(12px) saturate(1.25);
+  box-shadow:
+    0 6px 26px -10px rgba(20, 22, 12, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    background-color 0.3s var(--ease-bloom),
+    box-shadow 0.3s var(--ease-bloom),
+    border-color 0.3s var(--ease-bloom),
+    transform 0.2s var(--ease-bloom);
+}
+
+.btn-glass:hover {
+  background: rgba(228, 220, 197, 0.2);
+  border-color: rgba(228, 220, 197, 0.5);
+  box-shadow:
+    0 10px 34px -10px rgba(181, 91, 41, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+/* The primary action carries the brand accent, still as glass so the
+   pair reads as one family — burnt-orange stays the CTA colour. */
+.btn-glass-primary {
+  background: rgba(181, 91, 41, 0.42);
+  border-color: rgba(228, 220, 197, 0.42);
+  box-shadow:
+    0 8px 30px -10px rgba(181, 91, 41, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.btn-glass-primary:hover {
+  background: rgba(181, 91, 41, 0.56);
+  box-shadow:
+    0 12px 40px -10px rgba(181, 91, 41, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+/* ------------------------------------------------------------------ */
+/* The hero mark's own life: a one-time settle on load, then the
+   faintest drift while the visitor hasn't scrolled yet. Both live on an
+   INNER element so they never fight GSAP, which owns the outer
+   element's transform. Transform-only — the mark is never faded from
+   zero (it may be the LCP element).                                   */
+/* ------------------------------------------------------------------ */
+.logo-breathe {
+  animation:
+    logo-settle 1.4s var(--ease-bloom) both,
+    logo-drift 7s ease-in-out 1.4s infinite;
+}
+
+/* Once the mark starts travelling, the idle drift stops — one motion
+   at a time, and nothing competes with the scroll. */
+.hero-logo-dock.is-travelling .logo-breathe {
+  animation-play-state: paused;
+}
+
+@keyframes logo-settle {
+  from {
+    transform: scale(1.06) translateY(6px);
+  }
+  to {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes logo-drift {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.012);
+  }
 }
 
 /* The hero's logo mark, at rest in the markup, is the no-JS /
@@ -443,6 +536,7 @@ body.overlay-open .hero-logo-dock {
   }
   .hero-kenburns,
   .hero-ribbon,
+  .logo-breathe,
   .marquee-track,
   .monogram-rotate,
   .monogram-pulse,
