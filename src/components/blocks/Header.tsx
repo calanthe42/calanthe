@@ -9,55 +9,18 @@ import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
-import { flowerTypes, occasions, priceBuckets } from "@/lib/data";
+import { navTree } from "@/lib/data";
+import { LanguageToggle } from "@/components/blocks/LanguageToggle";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 /** Routes whose hero sits full-bleed behind a transparent header. */
 const OVERLAY_ROUTES = new Set(["/"]);
 
-/** Always-visible top-level links either side of the centered mark. */
-const NAV_LEFT = [
-  { label: "Shop", href: "/shop" },
-  { label: "Build Your Own", href: "/build-your-own" },
-] as const;
-
-const NAV_RIGHT = [
-  { label: "Occasions", href: "/occasions" },
-  { label: "Membership", href: "/membership" },
-] as const;
-
-/* Deeper discovery lives in the mobile menu only — the persistent bar
-   stays to two links a side (see NAV_LEFT/NAV_RIGHT above). */
-const MENU_GROUPS = [
-  {
-    label: "Shop by Occasion",
-    links: occasions.map((o) => ({
-      label: o.name,
-      href: `/occasions/${o.slug}`,
-    })),
-  },
-  {
-    label: "Shop by Flower",
-    links: flowerTypes.map((f) => ({
-      label: f.name,
-      href: `/shop?flower=${f.slug}`,
-    })),
-  },
-  {
-    label: "Shop by Price",
-    links: priceBuckets.map((b) => ({
-      label: b.label,
-      href: `/shop?price=${b.id}`,
-    })),
-  },
-] as const;
-
-const MENU_FEATURED = [
-  { label: "Build Your Own", href: "/build-your-own" },
-  { label: "Membership", href: "/membership" },
-  { label: "Account", href: "/account" },
-] as const;
+/* The client's menu tree: headings with what sits under them. Split
+   either side of the centred mark on desktop. */
+const NAV_LEFT = navTree.slice(0, 2);
+const NAV_RIGHT = navTree.slice(2);
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -275,6 +238,10 @@ export function Header() {
             >
               <IconUser className="h-[22px] w-[22px]" />
             </Link>
+            <LanguageToggle
+              tone={onDark ? "cream" : "olive"}
+              className="ml-1 hidden lg:inline-flex"
+            />
             <button
               type="button"
               id="header-cart"
@@ -319,51 +286,73 @@ export function Header() {
                   Search
                 </button>
               </li>
-              {MENU_GROUPS.map((group) => (
-                <li key={group.label} className="border-b border-cream/10">
-                  <details className="group/acc">
-                    <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
-                      {group.label}
-                      <span
-                        aria-hidden
-                        className="text-sage transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
-                      >
-                        +
-                      </span>
-                    </summary>
-                    <ul className="flex flex-col pb-4">
-                      {group.links.map((link) => (
-                        <li key={link.href}>
+              {navTree.map((group) =>
+                group.children.length ? (
+                  <li key={group.href} className="border-b border-cream/10">
+                    <details className="group/acc">
+                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
+                        {group.label}
+                        <span
+                          aria-hidden
+                          className="text-sage transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
+                        >
+                          +
+                        </span>
+                      </summary>
+                      <ul className="flex flex-col pb-4">
+                        <li>
                           <Link
-                            href={link.href}
+                            href={group.href}
                             onClick={closeMenu}
                             className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                           >
-                            {link.label}
+                            All {group.label}
                           </Link>
                         </li>
-                      ))}
-                    </ul>
-                  </details>
-                </li>
-              ))}
-              {MENU_FEATURED.map((link) => (
-                <li key={link.href + link.label} className="border-b border-cream/10">
-                  <Link
-                    href={link.href}
-                    onClick={closeMenu}
-                    className="block py-4 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+                        {group.children.map((link) => (
+                          <li key={link.href}>
+                            <Link
+                              href={link.href}
+                              onClick={closeMenu}
+                              className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ) : (
+                  <li key={group.href} className="border-b border-cream/10">
+                    <Link
+                      href={group.href}
+                      onClick={closeMenu}
+                      className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                    >
+                      {group.label}
+                    </Link>
+                  </li>
+                ),
+              )}
+              <li className="border-b border-cream/10">
+                <Link
+                  href="/account"
+                  onClick={closeMenu}
+                  className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                >
+                  Account
+                </Link>
+              </li>
             </ul>
           </nav>
 
-          <p className="menu-footnote mt-6 shrink-0 font-brand text-[0.625rem] uppercase tracking-brand text-sage">
-            Flower Atelier — UAE
-          </p>
+          <div className="menu-footnote mt-6 flex shrink-0 items-center justify-between gap-4">
+            <p className="font-brand text-[0.625rem] uppercase tracking-brand text-sage">
+              Flower Atelier — UAE
+            </p>
+            <LanguageToggle tone="cream" />
+          </div>
         </div>
       )}
 

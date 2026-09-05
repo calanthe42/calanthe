@@ -493,19 +493,23 @@ body::after {
 
 /* The primary action carries the brand accent, still as glass so the
    pair reads as one family — burnt-orange stays the CTA colour. */
+/* The primary action carries the brand accent at full strength. At 42%
+   over a dark photograph the burnt-orange muddied into brown and no
+   longer read as a Calanthe colour, so it is solid now — still with the
+   glass edge and glow so the pair stays one family. */
 .btn-glass-primary {
-  background: rgba(181, 91, 41, 0.42);
-  border-color: rgba(228, 220, 197, 0.42);
+  background: var(--color-burnt-orange);
+  border-color: rgba(228, 220, 197, 0.5);
   box-shadow:
-    0 8px 30px -10px rgba(181, 91, 41, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    0 8px 30px -10px rgba(181, 91, 41, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .btn-glass-primary:hover {
-  background: rgba(181, 91, 41, 0.56);
+  background: color-mix(in oklab, var(--color-burnt-orange) 88%, #ffffff);
   box-shadow:
-    0 12px 40px -10px rgba(181, 91, 41, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+    0 12px 40px -10px rgba(181, 91, 41, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 /* ------------------------------------------------------------------ */

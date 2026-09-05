@@ -106,7 +106,7 @@ export const priceBuckets = [
 export type PriceBucketId = (typeof priceBuckets)[number]["id"];
 
 export type OccasionSlug =
-  "birthday" | "congratulations" | "new-baby" | "love" | "just-because";
+  "birthday" | "graduation" | "new-born" | "love" | "just-because";
 
 export type Occasion = {
   slug: OccasionSlug;
@@ -130,19 +130,19 @@ export const occasions: readonly Occasion[] = [
     image: img("occ-birthday", "warm", "Birthday arrangements", PHOTOS.peachRoses),
   },
   {
-    slug: "congratulations",
-    name: "Congratulations",
+    slug: "graduation",
+    name: "Graduation",
     image: img(
       "occ-congrats",
       "olive",
-      "Congratulations arrangements",
+      "Graduation arrangements",
       PHOTOS.terracotta,
     ),
   },
   {
-    slug: "new-baby",
-    name: "New Baby",
-    image: img("occ-baby", "warm", "New baby arrangements", PHOTOS.whiteOrchid),
+    slug: "new-born",
+    name: "New Born",
+    image: img("occ-baby", "warm", "New born arrangements", PHOTOS.whiteOrchid),
   },
   {
     slug: "love",
@@ -209,7 +209,7 @@ export const products: readonly Product[] = [
         PRODUCT_PHOTOS.blushMass,
       ),
     ],
-    occasions: ["new-baby", "congratulations"],
+    occasions: ["new-born", "graduation"],
     flowers: ["peonies", "tulips"],
     featured: false,
     newArrival: true,
@@ -271,7 +271,7 @@ export const products: readonly Product[] = [
         PRODUCT_PHOTOS.dawnPastel,
       ),
     ],
-    occasions: ["congratulations", "birthday"],
+    occasions: ["graduation", "birthday"],
     flowers: ["roses", "lilies"],
     featured: true,
     newArrival: true,
@@ -304,7 +304,7 @@ export const products: readonly Product[] = [
         PRODUCT_PHOTOS.softGypsophila,
       ),
     ],
-    occasions: ["just-because", "new-baby"],
+    occasions: ["just-because", "new-born"],
     flowers: ["orchids"],
     featured: false,
     newArrival: true,
@@ -323,7 +323,7 @@ export const products: readonly Product[] = [
         PRODUCT_PHOTOS.longStemBlossom,
       ),
     ],
-    occasions: ["congratulations"],
+    occasions: ["graduation"],
     flowers: ["roses"],
     featured: false,
     newArrival: true,
@@ -459,6 +459,9 @@ export const timeSlots = ["10:00 – 13:00", "13:00 – 17:00", "17:00 – 21:00
 
 export const byoBudgetsAed = [250, 350, 500, 750, 1000] as const;
 
+/** Orders below this are not composed — enforced in BuildYourOwnForm. */
+export const BYO_MIN_BUDGET_AED = 150;
+
 /** FLAGGED: placeholder — replace with the client's exact note text. */
 export const byoBudgetNote =
   "Every budget is composed with the same care — a smaller arrangement is simply a quieter one.";
@@ -479,8 +482,8 @@ export const byoColours = [
 export const byoOccasionOptions = [
   "Birthday",
   "Anniversary",
-  "Congratulations",
-  "New Baby",
+  "Graduation",
+  "New Born",
   "Love & Romance",
   "Thank You",
   "Get Well Soon",
@@ -695,10 +698,33 @@ export const instagramTiles: readonly ProductImage[] = [
 /* ------------------------------------------------------------------ */
 
 export const primaryNavLinks = [
+  { label: "About", href: "/about" },
   { label: "Shop", href: "/shop" },
-  { label: "Occasions", href: "/occasions" },
-  { label: "Build Your Own", href: "/build-your-own" },
-  { label: "Membership", href: "/membership" },
+  { label: "Memberships", href: "/membership" },
+  { label: "Events", href: "/events" },
+] as const;
+
+/** The layered menu: a heading, then what sits under it. */
+export const navTree = [
+  { label: "About Calanthe", href: "/about", children: [] },
+  {
+    label: "Shop",
+    href: "/shop",
+    children: [
+      { label: "Shop by Occasion", href: "/occasions" },
+      { label: "Ready Made for Today", href: "/shop?ready=today" },
+      { label: "Build Your Own", href: "/build-your-own" },
+    ],
+  },
+  { label: "Memberships", href: "/membership", children: [] },
+  {
+    label: "Events",
+    href: "/events",
+    children: [
+      { label: "Guest Favors", href: "/events#guest-favors" },
+      { label: "Event Arrangements", href: "/events#arrangements" },
+    ],
+  },
 ] as const;
 
 export const helpNavLinks = [
@@ -745,9 +771,10 @@ export const VIDEO_APPROVAL = {
 } as const;
 
 export const CONTACT = {
-  whatsapp: "+971500000000",
-  whatsappHref: "https://wa.me/971500000000",
-  instagramHandle: "@calanthe",
-  instagramHref: "https://instagram.com/calanthe",
-  email: "hello@calanthe.ae",
+  whatsapp: "+971 56 211 2733",
+  whatsappHref: "https://wa.me/971562112733",
+  instagramHandle: "@calanthe.ae",
+  instagramHref: "https://instagram.com/calanthe.ae",
+  email: "calanthe.ae@gmail.com",
+  site: "www.calanthe.ae",
 } as const;

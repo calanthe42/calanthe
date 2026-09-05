@@ -13,6 +13,7 @@ import {
   BYO_VASE_PRICE_AED,
   byoBudgetNote,
   byoBudgetsAed,
+  BYO_MIN_BUDGET_AED,
   byoColours,
   byoOccasionOptions,
   formatAed,
@@ -52,7 +53,9 @@ export function BuildYourOwnForm() {
   const budgetValue = useMemo(() => {
     if (budget === "other") {
       const n = Number.parseInt(customBudget, 10);
-      return Number.isFinite(n) && n > 0 ? n : 0;
+      /* Below the floor counts as no budget, so the form blocks and
+         explains rather than silently accepting an order we can't make. */
+      return Number.isFinite(n) && n >= BYO_MIN_BUDGET_AED ? n : 0;
     }
     return budget ?? 0;
   }, [budget, customBudget]);
@@ -71,7 +74,11 @@ export function BuildYourOwnForm() {
 
   function handleSubmit() {
     if (budgetValue === 0) {
-      toast("Choose a budget so our florists know where to begin");
+      toast(
+        budget === "other" && customBudget
+          ? `The smallest arrangement we compose is AED ${BYO_MIN_BUDGET_AED}`
+          : "Choose a budget so our florists know where to begin",
+      );
       return;
     }
     if (!occasion) {
@@ -157,10 +164,10 @@ export function BuildYourOwnForm() {
                     <input
                       type="number"
                       inputMode="numeric"
-                      min={150}
+                      min={BYO_MIN_BUDGET_AED}
                       value={customBudget}
                       onChange={(e) => setCustomBudget(e.target.value)}
-                      placeholder="Your budget"
+                      placeholder={`From ${BYO_MIN_BUDGET_AED}`}
                       className={cn(fieldClasses, "w-36 px-3 py-2.5")}
                     />
                   </label>
