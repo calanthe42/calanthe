@@ -5,8 +5,10 @@ import { CONTACT, helpNavLinks, primaryNavLinks } from "@/lib/data";
 const shopLinks = primaryNavLinks;
 const helpLinks = helpNavLinks;
 
+/* inline-flex + min-h-11 gives every footer link the 44px tap area the
+   project requires, without changing how the column looks. */
 const linkClass =
-  "text-sm text-cream/75 transition-colors duration-200 ease-bloom hover:text-cream";
+  "inline-flex min-h-11 items-center text-sm text-cream/75 transition-colors duration-200 ease-bloom hover:text-cream";
 
 export function Footer() {
   return (

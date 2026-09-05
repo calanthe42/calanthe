@@ -1,3 +1,4 @@
+import { CutoffCountdown } from "@/components/blocks/CutoffCountdown";
 import { TRUST } from "@/lib/data";
 
 /**
@@ -13,7 +14,7 @@ export function AnnouncementBar() {
           {TRUST.customersLine}
         </p>
         <p className="text-center font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream">
-          Same-day delivery across the UAE
+          <CutoffCountdown />
         </p>
         <p className="hidden font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream/60 lg:block">
           Video approval on every order

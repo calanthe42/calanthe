@@ -559,6 +559,17 @@ body::after {
 /* Both full-screen overlays (mobile menu, search) show their own
    brand mark — hide the traveling mark underneath rather than let it
    show through at the wrong scale. Header.tsx toggles this class. */
+/* Centring uses the standalone `translate` property, NOT `transform`.
+   GSAP owns `transform` on this element; when centring lived in a
+   Tailwind -translate-x-1/2 class it was applied twice on some
+   viewports (once by CSS, once by GSAP's xPercent) and the mark shot
+   off to the left. `translate` composes with `transform` instead of
+   fighting it, so pre-JS centring and the scroll animation coexist. */
+.hero-logo-dock,
+.hero-mark-inline {
+  translate: -50% -50%;
+}
+
 .hero-logo-dock {
   transition: opacity 0.2s var(--ease-bloom);
 }

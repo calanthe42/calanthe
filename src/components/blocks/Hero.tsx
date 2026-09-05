@@ -89,7 +89,7 @@ export function Hero({ media }: HeroProps) {
       <Link
         href="/"
         aria-label="Calanthe — home"
-        className="hero-mark-inline fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2"
+        className="hero-mark-inline fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)]"
       >
         <StackedLogo tone="cream" priority sizes="(min-width: 1024px) 560px, 330px" />
       </Link>

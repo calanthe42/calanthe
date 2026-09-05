@@ -46,7 +46,7 @@ export function InstagramMarquee() {
         href={CONTACT.instagramHref}
         target="_blank"
         rel="noreferrer"
-        className="mb-8 block text-center font-brand text-xs font-medium uppercase tracking-brand text-olive transition-opacity duration-200 ease-bloom hover:opacity-60 lg:mb-10"
+        className="mx-auto mb-8 flex min-h-11 w-fit items-center justify-center px-4 text-center font-brand text-xs font-medium uppercase tracking-brand text-olive transition-opacity duration-200 ease-bloom hover:opacity-60 lg:mb-10"
       >
         {CONTACT.instagramHandle}
       </a>

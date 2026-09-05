@@ -51,14 +51,26 @@ export function HeroLogoDock() {
        correctly whatever `--logo-hero-top` is at this breakpoint (50% on
        desktop, higher on phones to clear the bouquet), and it is not
        affected by any transform GSAP has already applied. */
+    /* Measure the mark's real resting centre rather than deriving it
+       from CSS. `top` is a percentage, centring lives on the standalone
+       `translate` property, and GSAP owns `transform` — working out how
+       those three compose by hand got it wrong twice. Momentarily
+       resetting the animated properties and reading the actual rect is
+       exact, and it stays exact if any of those change later. */
+    const restCentre = () => {
+      const y = gsap.getProperty(mark, "y");
+      const scale = gsap.getProperty(mark, "scale");
+      gsap.set(mark, { y: 0, scale: 1 });
+      const r = mark.getBoundingClientRect();
+      const centre = r.top + r.height / 2;
+      gsap.set(mark, { y, scale });
+      return centre;
+    };
+
     const dockY = () => {
       const row = document.querySelector<HTMLElement>("[data-nav-row]");
       const navCentre = (row?.offsetHeight ?? 64) / 2;
-      const restCentre = parseFloat(getComputedStyle(mark).top);
-      if (Number.isNaN(restCentre)) {
-        return navCentre - document.documentElement.clientHeight / 2;
-      }
-      return navCentre - restCentre;
+      return navCentre - restCentre();
     };
 
     /* Navbar size ÷ current hero size, both read from the same custom
@@ -72,7 +84,7 @@ export function HeroLogoDock() {
       return navW / heroW;
     };
 
-    gsap.set(mark, { xPercent: -50, yPercent: -50, y: 0, scale: 1 });
+    gsap.set(mark, { y: 0, scale: 1 });
     gsap.set(cream, { opacity: 1 });
     gsap.set(olive, { opacity: 0 });
 
@@ -103,8 +115,6 @@ export function HeroLogoDock() {
       mark,
       {
         y: dockY,
-        xPercent: -50,
-        yPercent: -50,
         scale: dockScale,
         ease: "none",
         duration: 1,
@@ -128,7 +138,7 @@ export function HeroLogoDock() {
       ref={markRef}
       href="/"
       aria-label="Calanthe — home"
-      className="hero-logo-dock fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)] -translate-x-1/2 -translate-y-1/2 will-change-transform"
+      className="hero-logo-dock fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)] will-change-transform"
     >
       {/* Inner element carries the settle + idle drift so those never
           collide with the scroll transform GSAP puts on the link. */}
