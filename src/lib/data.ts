@@ -212,12 +212,12 @@ export const products: readonly Product[] = [
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
-      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PHOTOS.poppyMeadow),
+      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PHOTOS.whiteRoseWood),
       img(
         "sage-cinder-b",
         "warm",
         "Sage & Cinder arrangement, detail",
-        PHOTOS.whiteRoseWood,
+        PHOTOS.callaLilies,
       ),
     ],
     occasions: ["just-because"],
@@ -269,7 +269,7 @@ export const products: readonly Product[] = [
         "soft-reply-b",
         "warm",
         "A Soft Reply arrangement, detail",
-        PHOTOS.whiteRoseWood,
+        PHOTOS.pinkTulip,
       ),
     ],
     occasions: ["just-because", "new-baby"],
@@ -302,12 +302,12 @@ export const products: readonly Product[] = [
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [
-      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PHOTOS.callaLilies),
+      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PHOTOS.poppyMeadow),
       img(
         "meadow-dusk-b",
         "warm",
         "Meadow at Dusk arrangement, detail",
-        PHOTOS.poppyMeadow,
+        PHOTOS.roseMauveWall,
       ),
     ],
     occasions: ["birthday", "just-because"],

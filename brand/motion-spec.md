@@ -41,8 +41,27 @@ that flowers are being composed in front of them — never to show off.
   → body → CTA is the canonical order.
 - Hover states are micro (150–250ms): letterspacing widen, overlay deepen,
   crossfade. Nothing moves more than a few px on hover.
-- Scroll cue lines draw downward (scaleY with top origin), loop gently.
-- Ken-burns settle on hero: scale 1.08→1 over 6s, once, transform-only.
+- No scroll cues, down arrows, or "scroll down" affordances anywhere —
+  the content itself is the invitation.
+- Ken-burns settle on hero's photography glimpse: scale 1.08→1 over 6s,
+  once, transform-only.
+- Hero opening beat (2026-09 redesign, cinematic pass): full-viewport
+  photography is the whole background (`.hero-kenburns` settle, same
+  `.floral-grade` color-grade as the rest of the site — no card
+  treatment, no inset frame). A single radial scrim concentrates
+  darkening at bottom-left where the words sit and fades to nothing
+  toward the rest of the frame, so the photograph keeps its own
+  colour. The logo lockup (`MonogramBloom` + `Logotype`) and locked
+  words sit in that bottom-left pocket. Sequence: monogram blooms
+  (built-in timing) -> small ribbon detail settles in beside the
+  lockup (`.hero-ribbon`, a compact material accent, not a
+  page-spanning line, 1.1s, translateX+scale->none) -> headline
+  SplitLines (immediate mode, delay 0.4s) -> CTAs (`Reveal`, delay
+  0.7s). One idea at a time, per the law above. No background
+  monogram watermark in this pass — the header's own centred
+  `Logotype` (see `Header.tsx`, `OVERLAY_ROUTES`) is the only other
+  brand mark on screen, and the dark scrim means its existing
+  cream-on-dark treatment already reads correctly with no changes.
 - Marquees are CSS-only (`translateX` keyframes), pause on hover.
 
 ## Smooth scroll

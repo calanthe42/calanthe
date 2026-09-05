@@ -7,8 +7,8 @@ import { TRUST } from "@/lib/data";
  */
 export function AnnouncementBar() {
   return (
-    <div className="bg-olive pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-2 lg:justify-between lg:px-8">
+    <div className="flex h-8 items-center bg-olive pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 lg:justify-between lg:px-8">
         <p className="hidden font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream/60 lg:block">
           {TRUST.customersLine}
         </p>
