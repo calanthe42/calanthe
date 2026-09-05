@@ -113,18 +113,20 @@ export function Hero({ media }: HeroProps) {
           />
 
           <div className="hero-cta-in">
-            <div className="flex flex-col gap-3 sm:max-w-md sm:flex-row sm:gap-4">
+            {/* Phone: two compact pills side by side in the thumb zone.
+                Desktop: full-size, generous. */}
+            <div className="flex flex-row gap-2.5 sm:max-w-md sm:gap-4">
               <ButtonLink
                 href="/shop"
                 variant="glass-primary"
-                className="w-full whitespace-nowrap sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
               >
                 Shop Flowers
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
-                className="w-full whitespace-nowrap sm:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
               >
                 Build Your Own
               </ButtonLink>

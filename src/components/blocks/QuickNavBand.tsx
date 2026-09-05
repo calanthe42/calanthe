@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Monogram } from "@/components/ui/Monogram";
 import { occasions } from "@/lib/data";
 
 const extra = [
@@ -7,12 +8,11 @@ const extra = [
 ] as const;
 
 /**
- * The line directly beneath the hero. Deliberately NOT a row of filter
- * chips — boxed pills read as a search UI and undo the hero the moment
- * you leave it. This is an index line instead: bare type on the page's
- * own ground (no second background, so there is no seam under the
- * hero), hairline above and below, and a rule that draws under each
- * link on hover.
+ * The line directly beneath the hero. Not filter chips, and not a
+ * second card grid — a chapter opening: the house seal, a single line
+ * of intent, then the occasions set in the display serif at a size
+ * that can actually carry. Hairline rules top and bottom, the page's
+ * own ground behind it so there is no seam under the hero.
  */
 export function QuickNavBand() {
   const links = [
@@ -25,22 +25,27 @@ export function QuickNavBand() {
       aria-label="Shop shortcuts"
       className="border-b border-hairline/70 bg-canvas"
     >
-      <div className="mx-auto max-w-7xl gutter">
-        <div className="no-scrollbar flex items-center gap-7 overflow-x-auto py-5 lg:justify-center lg:gap-10 lg:py-6">
-          <span className="shrink-0 whitespace-nowrap font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage/70">
+      <div className="mx-auto max-w-7xl gutter py-8 lg:py-11">
+        <div className="flex flex-col items-center gap-1.5 lg:gap-2">
+          <Monogram className="h-6 w-6 text-burnt-orange/70 lg:h-7 lg:w-7" />
+          <p className="font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-sage/80 lg:text-[0.625rem]">
             Send flowers for
-          </span>
-
-          {links.map((link) => (
-            <Link
-              key={link.href + link.label}
-              href={link.href}
-              className="quicknav-link shrink-0 whitespace-nowrap font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-olive/80"
-            >
-              {link.label}
-            </Link>
-          ))}
+          </p>
         </div>
+
+        {/* Phone scrolls; desktop centres and wraps. */}
+        <ul className="no-scrollbar mt-5 flex items-baseline gap-6 overflow-x-auto lg:mt-6 lg:flex-wrap lg:justify-center lg:gap-x-9 lg:gap-y-3 lg:overflow-visible">
+          {links.map((link) => (
+            <li key={link.href + link.label} className="shrink-0">
+              <Link
+                href={link.href}
+                className="quicknav-link block whitespace-nowrap font-display text-[1.375rem] font-light leading-none text-olive lg:text-[1.75rem]"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </nav>
   );

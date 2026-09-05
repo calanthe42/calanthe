@@ -105,10 +105,8 @@ body::after {
    a box lighting up. */
 .quicknav-link {
   position: relative;
-  padding-block: 0.5rem;
-  transition:
-    color 0.25s var(--ease-bloom),
-    letter-spacing 0.25s var(--ease-bloom);
+  padding-bottom: 0.4rem;
+  transition: color 0.3s var(--ease-bloom);
 }
 .quicknav-link::after {
   content: "";
@@ -120,11 +118,10 @@ body::after {
   background: var(--color-burnt-orange);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.35s var(--ease-bloom);
+  transition: transform 0.4s var(--ease-bloom);
 }
 .quicknav-link:hover {
-  color: var(--color-olive);
-  letter-spacing: 0.22em;
+  color: var(--color-burnt-orange);
 }
 .quicknav-link:hover::after,
 .quicknav-link:focus-visible::after {
@@ -135,9 +132,6 @@ body::after {
   .quicknav-link,
   .quicknav-link::after {
     transition: none;
-  }
-  .quicknav-link:hover {
-    letter-spacing: var(--tracking-brand);
   }
 }
 

@@ -10,8 +10,13 @@ const linkClass =
 
 export function Footer() {
   return (
-    <footer className="bg-olive pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-16 lg:pt-20">
-      <div className="mx-auto max-w-7xl gutter">
+    <footer className="relative overflow-hidden bg-olive pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-16 lg:pt-20">
+      {/* The mark as a watermark — oversized, barely there, bled off the
+          bottom edge so it reads as embossed paper rather than a logo
+          pasted on. Decorative; the real lockup sits above it. */}
+      <Monogram className="pointer-events-none absolute -bottom-[34%] left-1/2 w-[130%] -translate-x-1/2 text-cream/[0.04] sm:w-[80%] lg:-bottom-[42%] lg:w-[46%]" />
+
+      <div className="relative mx-auto max-w-7xl gutter">
         {/* Stacked lockup */}
         <div className="flex flex-col items-center gap-4">
           <Monogram className="w-16 text-cream" title="Calanthe monogram" />

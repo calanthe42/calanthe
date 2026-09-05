@@ -80,8 +80,13 @@ export function HeroLogoDock() {
       scrollTrigger: {
         trigger: hero,
         start: "top top",
-        end: "+=60%",
-        scrub: 0.5,
+        /* Must finish well before the hero leaves the screen. At 60%
+           the mark was still full-size while the next section was
+           already showing — on a phone it read as a giant logo
+           floating over the page. 34% docks it with most of the hero
+           still visible, which is what the movement is for. */
+        end: "+=34%",
+        scrub: 0.4,
         invalidateOnRefresh: true,
         /* Idle drift runs only while the mark is still at rest — the
            moment it starts travelling, one motion at a time. */

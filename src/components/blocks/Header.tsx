@@ -154,7 +154,7 @@ export function Header() {
            most expensive things a mobile GPU can do while scrolling.
            Phones get a near-solid bar instead — same look, no cost. */
         solid
-          ? "border-b border-hairline/60 bg-canvas/95 lg:bg-canvas/75 lg:backdrop-blur-md"
+          ? "border-b border-hairline/60 bg-canvas lg:bg-canvas/75 lg:backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       )}
     >
