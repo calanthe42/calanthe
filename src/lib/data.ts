@@ -71,6 +71,17 @@ export const PRODUCT_PHOTOS = {
   meadowMixed: pexels("35461534"),
 } as const;
 
+/** Real photography for the occasion tiles — one per occasion, chosen
+ *  for that occasion's feeling and kept distinct from the product
+ *  photos so the page never repeats an image. */
+export const OCCASION_PHOTOS = {
+  birthday: pexels("31497181"),
+  graduation: pexels("30734753"),
+  newBorn: pexels("22880072"),
+  love: pexels("38055799"),
+  justBecause: pexels("37418132"),
+} as const;
+
 
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
@@ -127,7 +138,7 @@ export const occasions: readonly Occasion[] = [
   {
     slug: "birthday",
     name: "Birthday",
-    image: img("occ-birthday", "warm", "Birthday arrangements", PHOTOS.peachRoses),
+    image: img("occ-birthday", "warm", "Birthday arrangements", OCCASION_PHOTOS.birthday),
   },
   {
     slug: "graduation",
@@ -136,23 +147,23 @@ export const occasions: readonly Occasion[] = [
       "occ-congrats",
       "olive",
       "Graduation arrangements",
-      PHOTOS.terracotta,
+      OCCASION_PHOTOS.graduation,
     ),
   },
   {
     slug: "new-born",
     name: "New Born",
-    image: img("occ-baby", "warm", "New born arrangements", PHOTOS.whiteOrchid),
+    image: img("occ-baby", "warm", "New born arrangements", OCCASION_PHOTOS.newBorn),
   },
   {
     slug: "love",
     name: "Love",
-    image: img("occ-love", "burgundy", "Love arrangements", PHOTOS.redRoses),
+    image: img("occ-love", "burgundy", "Love arrangements", OCCASION_PHOTOS.love),
   },
   {
     slug: "just-because",
     name: "Just Because",
-    image: img("occ-because", "olive", "Just because arrangements", PHOTOS.poppyMeadow),
+    image: img("occ-because", "olive", "Just because arrangements", OCCASION_PHOTOS.justBecause),
   },
 ] as const;
 
