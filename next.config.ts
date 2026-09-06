@@ -1,11 +1,12 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import type { NextConfig } from "next";
 import { withPayload } from "@payloadcms/next/withPayload";
 
 const nextConfig: NextConfig = {
   // Stray lockfiles exist higher up the tree; pin the workspace root here.
   turbopack: {
-    root: path.join(__dirname),
+    root: path.dirname(fileURLToPath(import.meta.url)),
   },
   experimental: {
     // Two root layouts ((frontend) + (payload)) mean genuinely unmatched

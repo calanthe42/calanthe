@@ -19,6 +19,13 @@ export default buildConfig({
   },
   collections: [Users],
   editor: lexicalEditor(),
+  /* The management interface will become a separate private Calanthe Admin
+     app on its own origin; Payload's own /admin stays as the internal and
+     development interface. A cross-origin admin needs both of these lists,
+     and an empty allow-list is the safe default until that origin exists.
+     Add the admin app's origin here (and nowhere else) when it is built. */
+  cors: [env.NEXT_PUBLIC_SERVER_URL],
+  csrf: [env.NEXT_PUBLIC_SERVER_URL],
   db: postgresAdapter({
     pool: {
       connectionString: env.DATABASE_URL,
