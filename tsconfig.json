@@ -19,7 +19,20 @@
       }
     ],
     "paths": {
+      /* Architectural boundaries — see docs/PROJECT-STRUCTURE.md.
+         Every import states its own safety:
+           @shared/*    safe in the browser and on the server
+           @frontend/*  customer UI, never imports backend
+           @backend/*   server only, never reaches the browser
+           @admin/*     Payload admin presentation */
+      "@frontend/*": ["./src/frontend/*"],
+      "@backend/*": ["./src/backend/*"],
+      "@admin/*": ["./src/admin/*"],
+      "@shared/*": ["./src/shared/*"],
+
+      /* Legacy — removed in step 8, once every import has moved. */
       "@/*": ["./src/*"],
+
       "@payload-config": ["./src/payload.config.ts"]
     }
   },
