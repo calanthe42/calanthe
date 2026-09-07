@@ -73,6 +73,8 @@ export interface Config {
     products: Product;
     orders: Order;
     events: Event;
+    enquiries: Enquiry;
+    memberships: Membership;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +88,8 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -126,32 +130,72 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Customers, staff and owners. One table, separated by role.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * Used to address the customer personally.
+   */
+  firstName?: string | null;
+  lastName?: string | null;
+  /**
+   * Display name, built from the first and last name.
+   */
   name?: string | null;
   role: 'admin' | 'staff' | 'customer';
   /**
    * International format, e.g. +971501234567
    */
   phone?: string | null;
+  /**
+   * Optional. Marketing use still requires consent.
+   */
+  birthday?: string | null;
+  /**
+   * Suspended and closed accounts cannot log in.
+   */
+  accountStatus: 'active' | 'suspended' | 'closed';
+  anonymisedAt?: string | null;
+  /**
+   * Saved delivery addresses. Exactly one is the default.
+   */
   addresses?:
     | {
         /**
-         * e.g. Home, Office
+         * e.g. Home, Office, Mum
          */
         label?: string | null;
-        line1: string;
-        line2?: string | null;
-        area?: string | null;
-        city: string;
+        /**
+         * Who receives it here. Often not the account holder.
+         */
+        recipientName?: string | null;
+        recipientPhone?: string | null;
         emirate: 'abu-dhabi' | 'dubai' | 'sharjah' | 'ajman' | 'umm-al-quwain' | 'ras-al-khaimah' | 'fujairah';
+        /**
+         * e.g. Al Reem Island
+         */
+        area?: string | null;
+        street: string;
+        apartment?: string | null;
+        /**
+         * Gate codes, landmarks, when to call.
+         */
+        deliveryInstructions?: string | null;
+        /**
+         * Only one address can be the default.
+         */
         isDefault?: boolean | null;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Products this customer saved. Storefront UI comes later.
+   */
+  wishlist?: (number | Product)[] | null;
   /**
    * Consent is given by a deliberate action, never by placing an order.
    */
@@ -162,11 +206,28 @@ export interface User {
     unsubscribedAt?: string | null;
   };
   /**
-   * Set by the payment provider. Never edited by hand.
+   * Admin only. Never shown to the customer.
+   */
+  tags?:
+    | (
+        | 'vip'
+        | 'corporate'
+        | 'wedding-client'
+        | 'event-client'
+        | 'wholesale'
+        | 'repeat'
+        | 'do-not-contact'
+        | 'payment-issue'
+      )[]
+    | null;
+  /**
+   * Internal only. Never shown to the customer.
+   */
+  notes?: string | null;
+  /**
+   * Reference to the payment provider. No card data is stored here.
    */
   stripeCustomerId?: string | null;
-  notes?: string | null;
-  anonymisedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -174,6 +235,8 @@ export interface User {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
+  _verified?: boolean | null;
+  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -185,96 +248,6 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
-}
-/**
- * Photography for products and occasions.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  /**
-   * Describe the arrangement for someone who cannot see it, e.g. 'Blush peonies in a cream vase'.
-   */
-  alt: string;
-  /**
-   * Photographer attribution, if required.
-   */
-  credit?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-  sizes?: {
-    thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    card?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    hero?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-    og?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
-}
-/**
- * Why someone is buying — birthdays, love, new arrivals.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "occasions".
- */
-export interface Occasion {
-  id: number;
-  name: string;
-  /**
-   * The page address. Generated from the name; changing it breaks live links.
-   */
-  slug: string;
-  /**
-   * The tile image on the occasions grid.
-   */
-  image?: (number | null) | Media;
-  /**
-   * Lower numbers appear first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Unticked hides it from the website.
-   */
-  active?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * The arrangements for sale.
@@ -390,6 +363,96 @@ export interface Product {
   };
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Why someone is buying — birthdays, love, new arrivals.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "occasions".
+ */
+export interface Occasion {
+  id: number;
+  name: string;
+  /**
+   * The page address. Generated from the name; changing it breaks live links.
+   */
+  slug: string;
+  /**
+   * The tile image on the occasions grid.
+   */
+  image?: (number | null) | Media;
+  /**
+   * Lower numbers appear first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Unticked hides it from the website.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Photography for products and occasions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe the arrangement for someone who cannot see it, e.g. 'Blush peonies in a cream vase'.
+   */
+  alt: string;
+  /**
+   * Photographer attribution, if required.
+   */
+  credit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Placed orders. The snapshot is permanent; only fulfilment moves.
@@ -589,6 +652,160 @@ export interface Event {
   createdAt: string;
 }
 /**
+ * Every lead: build-your-own, events, memberships, contact, custom requests.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  /**
+   * Assigned automatically from a Postgres sequence. Never reused.
+   */
+  enquiryNumber?: string | null;
+  type: 'BUILD_YOUR_OWN' | 'EVENT' | 'MEMBERSHIP' | 'CONTACT' | 'CUSTOM_REQUEST';
+  /**
+   * Empty for guest enquiries.
+   */
+  customer?: (number | null) | User;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string | null;
+  company?: string | null;
+  subject: string;
+  /**
+   * In the enquirer's own words.
+   */
+  message?: string | null;
+  /**
+   * Incomplete requests are expected.
+   */
+  buildYourOwn?: {
+    style?: ('romantic' | 'minimal' | 'wild' | 'structured' | 'luxe' | 'unsure') | null;
+    flowers?: ('roses' | 'peonies' | 'orchids' | 'tulips' | 'lilies' | 'wildflowers' | 'florists-choice')[] | null;
+    colours?: ('blush' | 'white-cream' | 'burgundy' | 'terracotta' | 'sage' | 'bold' | 'pastel')[] | null;
+    size?: ('standard' | 'deluxe' | 'premium' | 'statement') | null;
+    quantity?: number | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    deliveryDate?: string | null;
+    deliveryLocation?: string | null;
+    cardMessage?: string | null;
+    specialInstructions?: string | null;
+    inspirationImages?:
+      | {
+          image: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Link to the Events record, which holds the venue, guest count, services and dates. Not duplicated here.
+   */
+  relatedEvent?: (number | null) | Event;
+  /**
+   * Interest only. Submitting this never activates a membership — that requires a Membership record and a payment.
+   */
+  membership?: {
+    /**
+     * Always 'interest'. Guarded server-side.
+     */
+    status?: 'interest' | null;
+    preferredPlan?: ('MONTHLY' | 'QUARTERLY' | 'CUSTOM') | null;
+    frequency?: ('WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY') | null;
+    deliveryPreference?: ('home' | 'office' | 'gift') | null;
+    preferredStartDate?: string | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    notes?: string | null;
+  };
+  customRequest?: {
+    category?:
+      | ('unusual-flowers' | 'large-order' | 'special-gift' | 'corporate' | 'last-minute' | 'decoration' | 'other')
+      | null;
+    description?: string | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    requestedDate?: string | null;
+    attachments?:
+      | {
+          image: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  status: 'NEW' | 'IN_REVIEW' | 'WAITING_FOR_CUSTOMER' | 'QUOTED' | 'CONVERTED' | 'RESOLVED' | 'SPAM' | 'CANCELLED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  source: 'WEBSITE' | 'INSTAGRAM' | 'WHATSAPP' | 'PHONE' | 'ADMIN' | 'OTHER';
+  /**
+   * Unassigned leads are the ones that get dropped.
+   */
+  assignedStaff?: (number | null) | User;
+  /**
+   * Drives the 'follow-ups due' view. Cannot be set in the past.
+   */
+  followUpAt?: string | null;
+  resolvedAt?: string | null;
+  lastContactedAt?: string | null;
+  lastContactMethod?: ('EMAIL' | 'WHATSAPP' | 'PHONE' | 'INSTAGRAM' | 'IN_PERSON') | null;
+  /**
+   * What was said, and when. Internal only.
+   */
+  communicationNotes?: string | null;
+  /**
+   * Internal only. Never shown to the enquirer.
+   */
+  internalNotes?: string | null;
+  /**
+   * Set when a membership enquiry becomes a real membership.
+   */
+  convertedMembership?: (number | null) | Membership;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Active and pending subscriptions. Billing is not connected yet.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships".
+ */
+export interface Membership {
+  id: number;
+  /**
+   * A membership always belongs to a registered account.
+   */
+  customer: number | User;
+  plan: 'MONTHLY' | 'QUARTERLY' | 'CUSTOM';
+  /**
+   * Starts PENDING. Until billing is connected, ACTIVE means a human confirmed payment.
+   */
+  status: 'PENDING' | 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'EXPIRED';
+  deliveryFrequency: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY';
+  /**
+   * What this customer pays per delivery, in fils (AED × 100).
+   */
+  pricePerDeliveryFils?: number | null;
+  startDate?: string | null;
+  /**
+   * Maintained by hand until the billing provider is connected.
+   */
+  nextBillingDate?: string | null;
+  notes?: string | null;
+  /**
+   * Set by the payment provider. Empty until billing is connected.
+   */
+  providerCustomerId?: string | null;
+  providerSubscriptionId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -635,6 +852,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'memberships';
+        value: number | Membership;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -683,21 +908,29 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
   name?: T;
   role?: T;
   phone?: T;
+  birthday?: T;
+  accountStatus?: T;
+  anonymisedAt?: T;
   addresses?:
     | T
     | {
         label?: T;
-        line1?: T;
-        line2?: T;
-        area?: T;
-        city?: T;
+        recipientName?: T;
+        recipientPhone?: T;
         emirate?: T;
+        area?: T;
+        street?: T;
+        apartment?: T;
+        deliveryInstructions?: T;
         isDefault?: T;
         id?: T;
       };
+  wishlist?: T;
   marketing?:
     | T
     | {
@@ -706,9 +939,9 @@ export interface UsersSelect<T extends boolean = true> {
         source?: T;
         unsubscribedAt?: T;
       };
-  stripeCustomerId?: T;
+  tags?: T;
   notes?: T;
-  anonymisedAt?: T;
+  stripeCustomerId?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -716,6 +949,8 @@ export interface UsersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
+  _verified?: T;
+  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -920,6 +1155,98 @@ export interface EventsSelect<T extends boolean = true> {
   quoteAmountFils?: T;
   internalNotes?: T;
   source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  enquiryNumber?: T;
+  type?: T;
+  customer?: T;
+  contactName?: T;
+  contactEmail?: T;
+  contactPhone?: T;
+  company?: T;
+  subject?: T;
+  message?: T;
+  buildYourOwn?:
+    | T
+    | {
+        style?: T;
+        flowers?: T;
+        colours?: T;
+        size?: T;
+        quantity?: T;
+        budgetFils?: T;
+        deliveryDate?: T;
+        deliveryLocation?: T;
+        cardMessage?: T;
+        specialInstructions?: T;
+        inspirationImages?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
+      };
+  relatedEvent?: T;
+  membership?:
+    | T
+    | {
+        status?: T;
+        preferredPlan?: T;
+        frequency?: T;
+        deliveryPreference?: T;
+        preferredStartDate?: T;
+        budgetFils?: T;
+        notes?: T;
+      };
+  customRequest?:
+    | T
+    | {
+        category?: T;
+        description?: T;
+        budgetFils?: T;
+        requestedDate?: T;
+        attachments?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
+      };
+  status?: T;
+  priority?: T;
+  source?: T;
+  assignedStaff?: T;
+  followUpAt?: T;
+  resolvedAt?: T;
+  lastContactedAt?: T;
+  lastContactMethod?: T;
+  communicationNotes?: T;
+  internalNotes?: T;
+  convertedMembership?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships_select".
+ */
+export interface MembershipsSelect<T extends boolean = true> {
+  customer?: T;
+  plan?: T;
+  status?: T;
+  deliveryFrequency?: T;
+  pricePerDeliveryFils?: T;
+  startDate?: T;
+  nextBillingDate?: T;
+  notes?: T;
+  providerCustomerId?: T;
+  providerSubscriptionId?: T;
   updatedAt?: T;
   createdAt?: T;
 }
