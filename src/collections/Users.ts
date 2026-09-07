@@ -47,6 +47,7 @@ export const Users: CollectionConfig = {
     lockTime: 10 * 60 * 1000, // 10 minutes
   },
   admin: {
+    group: "People",
     useAsTitle: "email",
     defaultColumns: ["email", "name", "role"],
   },

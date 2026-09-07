@@ -3,6 +3,11 @@ import { fileURLToPath } from "url";
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import sharp from "sharp";
+import { Events } from "@/collections/Events";
+import { Media } from "@/collections/Media";
+import { Occasions } from "@/collections/Occasions";
+import { Products } from "@/collections/Products";
 import { Users } from "@/collections/Users";
 import { env } from "@/lib/env";
 
@@ -17,7 +22,10 @@ export default buildConfig({
       titleSuffix: " · Calanthe Admin",
     },
   },
-  collections: [Users],
+  collections: [Users, Media, Occasions, Products, Events],
+  /* Required for the `media` image sizes — Payload delegates resizing to
+     sharp and silently skips size generation when it is absent. */
+  sharp,
   editor: lexicalEditor(),
   /* The management interface will become a separate private Calanthe Admin
      app on its own origin; Payload's own /admin stays as the internal and

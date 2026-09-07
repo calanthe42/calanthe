@@ -68,6 +68,10 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    media: Media;
+    occasions: Occasion;
+    products: Product;
+    events: Event;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,6 +80,10 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    occasions: OccasionsSelect<false> | OccasionsSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -177,6 +185,292 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Photography for products and occasions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe the arrangement for someone who cannot see it, e.g. 'Blush peonies in a cream vase'.
+   */
+  alt: string;
+  /**
+   * Photographer attribution, if required.
+   */
+  credit?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * Why someone is buying — birthdays, love, new arrivals.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "occasions".
+ */
+export interface Occasion {
+  id: number;
+  name: string;
+  /**
+   * The page address. Generated from the name; changing it breaks live links.
+   */
+  slug: string;
+  /**
+   * The tile image on the occasions grid.
+   */
+  image?: (number | null) | Media;
+  /**
+   * Lower numbers appear first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Unticked hides it from the website.
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The arrangements for sale.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  /**
+   * The name customers see, e.g. Amber Hour.
+   */
+  name: string;
+  /**
+   * Page address: /product/<slug>. Generated from the name. Changing it breaks live links and past emails.
+   */
+  slug: string;
+  /**
+   * One or two lines for product cards and search results. Max 200 characters.
+   */
+  shortDescription?: string | null;
+  /**
+   * The full story on the product page.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. This is the price customers pay.
+   */
+  priceFils: number;
+  /**
+   * Optional crossed-out 'was' price. Must be higher than the price. Leave empty if not on offer.
+   */
+  compareAtPriceFils?: number | null;
+  /**
+   * AED only. Multi-currency is deliberately out of scope (docs/ARCHITECTURE.md §9).
+   */
+  currency: 'AED';
+  /**
+   * The shape of the arrangement.
+   */
+  category: 'bouquet' | 'vase-arrangement' | 'box-arrangement' | 'basket' | 'single-stem' | 'plant' | 'event-piece';
+  /**
+   * Drives the storefront's flower filter.
+   */
+  flowers?: ('roses' | 'peonies' | 'orchids' | 'tulips' | 'lilies' | 'wildflowers')[] | null;
+  /**
+   * Which occasion pages this product appears on.
+   */
+  occasions?: (number | Occasion)[] | null;
+  /**
+   * The first image is the one shown on cards and in search results.
+   */
+  images: {
+    image: number | Media;
+    id?: string | null;
+  }[];
+  /**
+   * Unticked keeps it off the website entirely. New products start hidden.
+   */
+  available?: boolean | null;
+  /**
+   * Shows in the homepage featured row.
+   */
+  featured?: boolean | null;
+  /**
+   * Shows in the Best Sellers row.
+   */
+  bestseller?: boolean | null;
+  /**
+   * Availability depends on the season — shown with a seasonal note.
+   */
+  seasonal?: boolean | null;
+  /**
+   * Tick to enforce a stock count. Most made-to-order arrangements do not.
+   */
+  trackStock?: boolean | null;
+  /**
+   * Units on hand. Cannot be negative.
+   */
+  stock?: number | null;
+  /**
+   * Lower numbers appear first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Optional. Falls back to the name and short description.
+   */
+  seo?: {
+    /**
+     * Max ~60 characters.
+     */
+    title?: string | null;
+    /**
+     * Max ~155 characters shows in full on Google.
+     */
+    description?: string | null;
+    image?: (number | null) | Media;
+    noIndex?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Wedding, corporate and large-order requests.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  name: string;
+  /**
+   * Where the quote is sent.
+   */
+  email: string;
+  /**
+   * International format, e.g. +971501234567
+   */
+  phone: string;
+  /**
+   * For corporate enquiries. Leave empty for private clients.
+   */
+  company?: string | null;
+  eventType: 'wedding' | 'corporate' | 'birthday' | 'engagement' | 'private' | 'decoration' | 'large-order' | 'other';
+  /**
+   * Leave empty if the client has not fixed a date.
+   */
+  eventDate?: string | null;
+  /**
+   * Venue and emirate, as the client described it.
+   */
+  eventLocation?: string | null;
+  estimatedGuests?: number | null;
+  /**
+   * What the client says they want to spend, in fils (AED × 100). Optional — many will not say.
+   */
+  budgetFils?: number | null;
+  requestedServices?:
+    | (
+        | 'bridal-bouquet'
+        | 'ceremony'
+        | 'centrepieces'
+        | 'installation'
+        | 'arch'
+        | 'buttonholes'
+        | 'favours'
+        | 'setup'
+        | 'teardown'
+      )[]
+    | null;
+  /**
+   * What the client asked for, in their own words.
+   */
+  description: string;
+  inspirationImages?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Where this enquiry has got to.
+   */
+  status: 'NEW' | 'CONTACTED' | 'QUOTED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  /**
+   * Who is answering this.
+   */
+  assignedStaff?: (number | null) | User;
+  /**
+   * The quoted total in fils (AED × 100). Admin only.
+   */
+  quoteAmountFils?: number | null;
+  /**
+   * Internal only. Never sent to the client.
+   */
+  internalNotes?: string | null;
+  /**
+   * The page the enquiry was submitted from. Set by the website.
+   */
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -199,10 +493,27 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'users';
-    value: number | User;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'occasions';
+        value: number | Occasion;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
@@ -292,6 +603,151 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  credit?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "occasions_select".
+ */
+export interface OccasionsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  image?: T;
+  sortOrder?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  shortDescription?: T;
+  description?: T;
+  priceFils?: T;
+  compareAtPriceFils?: T;
+  currency?: T;
+  category?: T;
+  flowers?: T;
+  occasions?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  available?: T;
+  featured?: T;
+  bestseller?: T;
+  seasonal?: T;
+  trackStock?: T;
+  stock?: T;
+  sortOrder?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        noIndex?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  phone?: T;
+  company?: T;
+  eventType?: T;
+  eventDate?: T;
+  eventLocation?: T;
+  estimatedGuests?: T;
+  budgetFils?: T;
+  requestedServices?: T;
+  description?: T;
+  inspirationImages?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  status?: T;
+  assignedStaff?: T;
+  quoteAmountFils?: T;
+  internalNotes?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

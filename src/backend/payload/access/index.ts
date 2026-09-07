@@ -61,7 +61,26 @@ export const publicRead: Access = () => true;
 export const canAccessAdminPanel = ({ req }: { req: PayloadRequest }): boolean =>
   req.user?.role === "admin" || req.user?.role === "staff";
 
+/**
+ * Catalogue read rule: internal users see every row, the public sees only
+ * rows whose live-flag is true.
+ *
+ * Returns a query constraint rather than a boolean, so Payload filters at
+ * the database level — a draft or unavailable product cannot be reached by
+ * guessing its id, and a public list cannot be paged into.
+ */
+export const publicReadWhenLive =
+  (liveField: string): Access =>
+  ({ req: { user } }) => {
+    if (user?.role === "admin" || user?.role === "staff") return true;
+    return { [liveField]: { equals: true } };
+  };
+
 /* --- Field-level --- */
+
+/** Internal staff may write this field; customers and the public may not. */
+export const isStaffField: FieldAccess = ({ req: { user } }) =>
+  user?.role === "admin" || user?.role === "staff";
 
 /**
  * Server-only field. Denies every request that arrives through the API or
