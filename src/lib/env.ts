@@ -43,8 +43,8 @@ if (!parsed.success) {
    phase itself makes no network calls, so it is exempt — the server
    still refuses to BOOT without these via instrumentation.ts.) */
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
-if (parsed.data.NODE_ENV === "production" && !isBuildPhase) {
-  const missing = (
+if (process.env.VERCEL_ENV === "production" && !isBuildPhase) {
+    const missing = (
     ["SENTRY_DSN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"] as const
   ).filter((k) => !parsed.data[k]);
   if (missing.length > 0) {
