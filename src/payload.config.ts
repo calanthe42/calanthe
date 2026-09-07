@@ -12,6 +12,7 @@ import { Occasions } from "@/collections/Occasions";
 import { Orders } from "@/collections/Orders";
 import { Products } from "@/collections/Products";
 import { Users } from "@/collections/Users";
+import { MAX_UPLOAD_BYTES, buildStoragePlugins } from "@backend/payload/storage";
 import { env } from "@/lib/env";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +30,17 @@ export default buildConfig({
   /* Required for the `media` image sizes — Payload delegates resizing to
      sharp and silently skips size generation when it is absent. */
   sharp,
+  /* Persistent object storage for uploads. See backend/payload/storage.ts
+     for why Vercel Blob, and what happens when the token is absent. */
+  plugins: buildStoragePlugins(),
+  upload: {
+    /* Vercel caps a serverless request body at 4.5 MB. Without an explicit
+       limit the platform rejects a larger upload with an opaque 413 that
+       looks like a bug; with it, Payload returns a readable validation error
+       naming the real limit. Raising this requires client-side uploads —
+       see the clientUploads note in backend/payload/storage.ts. */
+    limits: { fileSize: MAX_UPLOAD_BYTES },
+  },
   editor: lexicalEditor(),
   /* The management interface will become a separate private Calanthe Admin
      app on its own origin; Payload's own /admin stays as the internal and

@@ -88,6 +88,15 @@ these images are mood-matched stand-ins, not the client's arrangements.
   exact-hour delivery slot (not built — TODO), delivery fees per emirate.
 - Legal copy: T&C, privacy, refund pages.
 
+## Media storage (resolved 2026-09-07)
+
+- Uploads go to **Vercel Blob** (`@payloadcms/storage-vercel-blob`), wired
+  in src/backend/payload/storage.ts. Production refuses to boot without
+  BLOB_READ_WRITE_TOKEN rather than writing to Vercel's ephemeral disk.
+- Local development falls back to ./uploads with an explicit warning.
+- 4 MB upload cap (Vercel's serverless body limit is 4.5 MB); raster images
+  only, SVG excluded. Details: docs/DEPLOYMENT.md §4.
+
 ## Known debt
 
 - Lighthouse mobile perf 61–84 (target ≥90) — separate perf pass planned;

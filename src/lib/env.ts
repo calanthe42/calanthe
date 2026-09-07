@@ -24,6 +24,12 @@ const schema = z.object({
   SENTRY_DSN: z.string().url().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+
+  /* --- Media storage (required in production) ---
+     Server-side only. Vercel injects this when a Blob store is connected.
+     Absent locally = uploads fall back to ./uploads (see
+     backend/payload/storage.ts), which is development-only. */
+  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -45,7 +51,14 @@ if (!parsed.success) {
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 if (process.env.VERCEL_ENV === "production" && !isBuildPhase) {
     const missing = (
-    ["SENTRY_DSN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"] as const
+    [
+      "SENTRY_DSN",
+      "UPSTASH_REDIS_REST_URL",
+      "UPSTASH_REDIS_REST_TOKEN",
+      /* Without this, uploads silently land on an ephemeral filesystem and
+         are lost on the next deploy. Fail closed. */
+      "BLOB_READ_WRITE_TOKEN",
+    ] as const
   ).filter((k) => !parsed.data[k]);
   if (missing.length > 0) {
     throw new Error(

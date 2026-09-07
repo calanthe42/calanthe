@@ -29,6 +29,7 @@ Related: [DATABASE](./DATABASE.md) · [ORDERS](./ORDERS.md) ·
 | Payments | None |
 | Email | None |
 | Security headers | **Absent from `next.config.ts`** |
+| Media storage | Vercel Blob adapter, production-enforced — `src/backend/payload/storage.ts` ✅ |
 | Tests | 1 file (`money.test.ts`); Vitest configured |
 
 The storefront is a complete, high-quality front end sitting on a

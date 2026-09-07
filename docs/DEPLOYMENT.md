@@ -34,7 +34,7 @@ Related: [ARCHITECTURE](./ARCHITECTURE.md) · [SECURITY](./SECURITY.md) ·
 | `EMAIL_FROM_TRANSACTIONAL` | M in prod | B3 | `Calanthe <orders@calanthe.ae>` |
 | `EMAIL_FROM_MARKETING` | M in prod | B7 | `Calanthe <hello@calanthe.ae>` |
 | `EMAIL_ADMIN_RECIPIENTS` | M in prod | B3 | Comma-separated |
-| `BLOB_READ_WRITE_TOKEN` | M in prod | B1 | Vercel Blob for `media` (§4) |
+| `BLOB_READ_WRITE_TOKEN` | M in prod | ✅ done | Vercel Blob for `media` — implemented, see §4 |
 | `CRON_SECRET` | M in prod | B5 | Authorises the reconciliation job |
 
 **No fake or placeholder secret is ever committed.** `.env.example`
@@ -82,29 +82,86 @@ branching exists precisely to make this impossible.
 
 ---
 
-## 4. Media storage — a blocker for B1
+## 4. Media storage — RESOLVED (Vercel Blob)
 
-Payload's default upload adapter writes to local disk. **Vercel's
-filesystem is ephemeral**: uploads survive until the next deployment,
-then vanish. The client would upload her photography and lose it.
+Payload's default adapter writes to local disk, and **Vercel's filesystem
+is ephemeral**: uploads survive until the next deployment, then vanish
+silently. This section records how that is now prevented.
 
-Options, in order of preference:
+### Provider
 
-1. **Vercel Blob** (`@payloadcms/storage-vercel-blob`) — same dashboard,
-   same billing, one env var. Recommended.
-2. **Cloudflare R2** (`@payloadcms/storage-s3`) — cheaper at volume, no
-   egress fees, more setup.
-3. **S3** — most portable, most configuration.
+**Vercel Blob** — `@payloadcms/storage-vercel-blob`, wired in
+`src/backend/payload/storage.ts` and registered as a plugin in
+`src/payload.config.ts`.
 
-This must be decided and wired **before** B1 ships, not after the
-client has uploaded a hundred photographs.
+Chosen over Cloudflare R2 and S3 because it adds no second vendor, no
+second bill and no second credential to rotate: Vercel injects the token
+itself. R2 is cheaper at high image bandwidth and remains the sensible
+migration later — swapping the adapter is a config change, not a schema
+change, so that door stays open.
 
-**Do not forget `next.config.ts`.** `images.remotePatterns` currently
-allows only `images.unsplash.com` and `images.pexels.com`. The moment
-media moves to Blob or R2, that host must be added or **every image on
-the site breaks** — Next's image optimiser rejects unlisted hosts. The
-Unsplash and Pexels entries are then removed once the placeholder
-photography is gone.
+### Environment variable
+
+| Variable | | Notes |
+| --- | --- | --- |
+| `BLOB_READ_WRITE_TOKEN` | M in prod, P | **Server-side only — never `NEXT_PUBLIC_`.** Injected automatically by Vercel once a Blob store is connected to the project. |
+
+Declared in `src/lib/env.ts`, listed in `.env.example`, and included in the
+production-runtime required set. It is **not** required during `next build`
+(the build makes no network calls), so a build never needs a runtime secret.
+
+### Behaviour per environment
+
+| | Storage | On a missing token |
+| --- | --- | --- |
+| **Local** | `./uploads` on disk | Expected. Logs an explicit warning naming the fallback. |
+| **Preview** | Vercel Blob | Falls back to local disk. Acceptable — preview data is disposable. |
+| **Production** | Vercel Blob | **Refuses to boot.** `resolveStorageMode()` throws rather than writing to an ephemeral disk. |
+
+The fallback is deliberate and explicit, never silent: production cannot
+reach it, and development says so out loud. `resolveStorageMode()` is a pure
+function and is unit-tested for all six of these cases.
+
+### Upload limits and accepted types
+
+- **4 MB per file**, enforced by `upload.limits` in the Payload config.
+  Vercel caps a serverless request body at 4.5 MB; without an explicit limit
+  the platform returns an opaque 413 that looks like a bug. With it, Payload
+  returns a readable validation error.
+- **Raster images only** — `image/jpeg`, `image/png`, `image/webp`,
+  `image/avif`. **SVG is deliberately excluded**: it is a script container,
+  not a picture. Payload also sniffs the real type, so renaming a `.svg` to
+  `.jpg` does not get through.
+- Sharp still generates the four sizes (`thumbnail`, `card`, `hero`, `og`)
+  and all metadata — filename, mime type, filesize, width, height, focal
+  point — is preserved in Postgres. **No binaries are stored in the
+  database**, only URLs and metadata.
+
+> **Raising the 4 MB limit** requires client-side uploads
+> (`clientUploads`), which upload straight from the browser to Blob and
+> bypass the body limit. It is deliberately **off**: as shipped it defaults
+> to `access: ({ req }) => !!req.user`, which would let any signed-in
+> *customer* mint an upload token, and it hardcodes `allowOverwrite: true`
+> on a caller-chosen pathname. The correct access rule is written down as
+> `clientUploadAccess` in `storage.ts`; enabling it needs testing against a
+> live Blob store.
+
+### Existing `/uploads` files
+
+**None exist.** The directory is empty and the `media` table has zero rows,
+so there is nothing to migrate. `/uploads` is gitignored and remains the
+local-development target only. If files ever do accumulate there before a
+Blob store is connected, they are development artefacts and can be deleted.
+
+### `next.config.ts`
+
+`images.remotePatterns` now includes `*.public.blob.vercel-storage.com`.
+Payload currently serves media through its own same-origin route
+(`/api/media/file/...`), so this is not strictly required today — it is
+there so that enabling `disablePayloadAccessControl` later, which switches
+to direct CDN URLs, does not silently break every image on the site. The
+Unsplash and Pexels entries are removed once the placeholder photography is
+gone.
 
 ---
 

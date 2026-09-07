@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "images.pexels.com" },
+      /* Vercel Blob. Payload currently serves media through its own
+         same-origin route, so this is not strictly needed today — it is here
+         so that enabling `disablePayloadAccessControl` later (which switches
+         to direct CDN URLs) does not silently break every image on the site. */
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
 };
