@@ -161,12 +161,17 @@ export const Products: CollectionConfig = {
     {
       name: "images",
       type: "array",
-      minRows: 1,
       maxRows: 8,
-      required: true,
       labels: { singular: "Image", plural: "Images" },
+      /* NOT globally required, deliberately. The legacy catalogue was imported
+         with its photography still on an external host, so those products
+         exist here with no Media rows yet. The real rule — no product goes
+         LIVE without a photograph — is enforced in validateProductState
+         instead, which is stricter about what matters and permissive about
+         what does not. */
       admin: {
-        description: "The first image is the one shown on cards and in search results.",
+        description:
+          "The first image is shown on cards and in search results. Required before a product can be made available.",
       },
       fields: [
         { name: "image", type: "upload", relationTo: "media", required: true },
@@ -197,6 +202,13 @@ export const Products: CollectionConfig = {
       defaultValue: false,
       index: true,
       admin: { position: "sidebar", description: "Shows in the Best Sellers row." },
+    },
+    {
+      name: "newArrival",
+      type: "checkbox",
+      defaultValue: false,
+      index: true,
+      admin: { position: "sidebar", description: "Shows in the New Arrivals row." },
     },
     {
       name: "seasonal",
@@ -239,6 +251,39 @@ export const Products: CollectionConfig = {
       defaultValue: 0,
       index: true,
       admin: { position: "sidebar", description: "Lower numbers appear first." },
+    },
+
+    {
+      name: "legacyImages",
+      type: "array",
+      /* MIGRATION ARTEFACT, and intended to be temporary.
+         The original catalogue referenced photography on an external host
+         (Pexels) rather than files we hold. Those references cannot become
+         Media rows without downloading third-party images, so they are
+         preserved verbatim here: alt text and placeholder art are real work
+         that would otherwise be lost, and each row records exactly which
+         photograph a product is waiting for.
+         Delete this field once the client's own photography is uploaded to
+         Media and wired into `images`. */
+      labels: { singular: "Legacy image", plural: "Legacy images" },
+      admin: {
+        description:
+          "Imported from the pre-database catalogue. Replace with real Media uploads, then remove.",
+      },
+      fields: [
+        { name: "alt", type: "text", required: true },
+        { name: "src", type: "text", admin: { description: "External URL from the old catalogue." } },
+        { name: "placeholderSeed", type: "text" },
+        {
+          name: "placeholderPalette",
+          type: "select",
+          options: [
+            { label: "Warm", value: "warm" },
+            { label: "Olive", value: "olive" },
+            { label: "Burgundy", value: "burgundy" },
+          ],
+        },
+      ],
     },
 
     /* ---------- SEO ---------- */

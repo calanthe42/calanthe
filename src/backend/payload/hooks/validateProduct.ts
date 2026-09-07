@@ -39,6 +39,21 @@ export const validateProductState: CollectionBeforeValidateHook = ({ data, origi
     );
   }
 
+  /* A live product with no photograph is a broken shop page. `images` is not
+     globally required — the legacy catalogue was imported before its
+     photography existed as Media — so the rule is enforced at the moment it
+     actually matters: when someone tries to put the product in front of a
+     customer. */
+  if (merged.available === true) {
+    const images = Array.isArray(merged.images) ? merged.images : [];
+    if (images.length === 0) {
+      throw new APIError(
+        "This product has no image. Add at least one photograph before making it available.",
+        400,
+      );
+    }
+  }
+
   if (merged.trackStock === true && merged.available === true) {
     const stock = merged.stock;
     if (typeof stock !== "number" || stock <= 0) {

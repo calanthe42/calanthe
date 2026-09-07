@@ -6,6 +6,7 @@ import * as migration_20260907_030934_customer_management from './20260907_03093
 import * as migration_20260907_031053_drop_legacy_address_columns from './20260907_031053_drop_legacy_address_columns';
 import * as migration_20260907_033604_enquiries_and_memberships from './20260907_033604_enquiries_and_memberships';
 import * as migration_20260907_071945_media_storage from './20260907_071945_media_storage';
+import * as migration_20260907_202357_catalog_legacy_fields from './20260907_202357_catalog_legacy_fields';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20260907_071945_media_storage.up,
     down: migration_20260907_071945_media_storage.down,
-    name: '20260907_071945_media_storage'
+    name: '20260907_071945_media_storage',
+  },
+  {
+    up: migration_20260907_202357_catalog_legacy_fields.up,
+    down: migration_20260907_202357_catalog_legacy_fields.down,
+    name: '20260907_202357_catalog_legacy_fields'
   },
 ];

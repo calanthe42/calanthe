@@ -312,12 +312,14 @@ export interface Product {
    */
   occasions?: (number | Occasion)[] | null;
   /**
-   * The first image is the one shown on cards and in search results.
+   * The first image is shown on cards and in search results. Required before a product can be made available.
    */
-  images: {
-    image: number | Media;
-    id?: string | null;
-  }[];
+  images?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Unticked keeps it off the website entirely. New products start hidden.
    */
@@ -330,6 +332,10 @@ export interface Product {
    * Shows in the Best Sellers row.
    */
   bestseller?: boolean | null;
+  /**
+   * Shows in the New Arrivals row.
+   */
+  newArrival?: boolean | null;
   /**
    * Availability depends on the season — shown with a seasonal note.
    */
@@ -346,6 +352,21 @@ export interface Product {
    * Lower numbers appear first.
    */
   sortOrder?: number | null;
+  /**
+   * Imported from the pre-database catalogue. Replace with real Media uploads, then remove.
+   */
+  legacyImages?:
+    | {
+        alt: string;
+        /**
+         * External URL from the old catalogue.
+         */
+        src?: string | null;
+        placeholderSeed?: string | null;
+        placeholderPalette?: ('warm' | 'olive' | 'burgundy') | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Optional. Falls back to the name and short description.
    */
@@ -1063,10 +1084,20 @@ export interface ProductsSelect<T extends boolean = true> {
   available?: T;
   featured?: T;
   bestseller?: T;
+  newArrival?: T;
   seasonal?: T;
   trackStock?: T;
   stock?: T;
   sortOrder?: T;
+  legacyImages?:
+    | T
+    | {
+        alt?: T;
+        src?: T;
+        placeholderSeed?: T;
+        placeholderPalette?: T;
+        id?: T;
+      };
   seo?:
     | T
     | {
