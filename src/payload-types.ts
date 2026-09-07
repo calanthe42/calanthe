@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     occasions: Occasion;
     products: Product;
+    orders: Order;
     events: Event;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -83,6 +84,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     occasions: OccasionsSelect<false> | OccasionsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -390,6 +392,122 @@ export interface Product {
   createdAt: string;
 }
 /**
+ * Placed orders. The snapshot is permanent; only fulfilment moves.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  /**
+   * Assigned automatically from a Postgres sequence. Never reused.
+   */
+  orderNumber?: string | null;
+  customerType: 'guest' | 'registered';
+  /**
+   * Empty for guest orders.
+   */
+  customer?: (number | null) | User;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  deliveryEmirate: 'abu-dhabi' | 'dubai' | 'sharjah' | 'ajman' | 'umm-al-quwain' | 'ras-al-khaimah' | 'fujairah';
+  deliveryDate: string;
+  /**
+   * As sold to the customer, e.g. "13:00 – 17:00".
+   */
+  deliveryTimeSlot: string;
+  /**
+   * Directions the customer gave. Not internal notes.
+   */
+  deliveryNotes?: string | null;
+  /**
+   * Empty means the buyer is the recipient.
+   */
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  /**
+   * Handwritten onto the card exactly as typed.
+   */
+  cardMessage?: string | null;
+  /**
+   * Frozen at checkout. Product name, slug and price are copies — renaming or repricing the product never changes them.
+   */
+  items: {
+    /**
+     * Reporting link only. Never read for display or price.
+     */
+    product?: (number | null) | Product;
+    productName: string;
+    productSlug: string;
+    quantity: number;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    unitPriceFils: number;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    lineTotalFils: number;
+    /**
+     * Size, add-ons, e.g. "Size: Deluxe".
+     */
+    selectedOptions?:
+      | {
+          label: string;
+          value: string;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  subtotalFils: number;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  deliveryFeeFils: number;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  discountFils: number;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  totalFils: number;
+  currency: 'AED';
+  couponCode?: string | null;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  couponDiscountFils?: number | null;
+  /**
+   * Where the order is in the workshop.
+   */
+  fulfilmentStatus: 'NEW' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
+  /**
+   * Set by the payment provider only. Stays PENDING until Stripe/Tabby is connected.
+   */
+  paymentStatus: 'PENDING' | 'AUTHORIZED' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
+  /**
+   * Who is making this.
+   */
+  assignedStaff?: (number | null) | User;
+  /**
+   * Internal only. Never sent to the customer.
+   */
+  internalNotes?: string | null;
+  /**
+   * Where the order came from, e.g. "web-checkout", "phone".
+   */
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Wedding, corporate and large-order requests.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -509,6 +627,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
       } | null)
     | ({
         relationTo: 'events';
@@ -716,6 +838,58 @@ export interface ProductsSelect<T extends boolean = true> {
         image?: T;
         noIndex?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  customerType?: T;
+  customer?: T;
+  customerName?: T;
+  customerEmail?: T;
+  customerPhone?: T;
+  deliveryAddress?: T;
+  deliveryEmirate?: T;
+  deliveryDate?: T;
+  deliveryTimeSlot?: T;
+  deliveryNotes?: T;
+  recipientName?: T;
+  recipientPhone?: T;
+  cardMessage?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        productName?: T;
+        productSlug?: T;
+        quantity?: T;
+        unitPriceFils?: T;
+        lineTotalFils?: T;
+        selectedOptions?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  subtotalFils?: T;
+  deliveryFeeFils?: T;
+  discountFils?: T;
+  totalFils?: T;
+  currency?: T;
+  couponCode?: T;
+  couponDiscountFils?: T;
+  fulfilmentStatus?: T;
+  paymentStatus?: T;
+  assignedStaff?: T;
+  internalNotes?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }

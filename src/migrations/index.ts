@@ -1,6 +1,7 @@
 import * as migration_20260906_222240_initial from './20260906_222240_initial';
 import * as migration_20260906_232516_customer_identity from './20260906_232516_customer_identity';
 import * as migration_20260907_013536_products_and_events from './20260907_013536_products_and_events';
+import * as migration_20260907_021741_orders from './20260907_021741_orders';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20260907_013536_products_and_events.up,
     down: migration_20260907_013536_products_and_events.down,
-    name: '20260907_013536_products_and_events'
+    name: '20260907_013536_products_and_events',
+  },
+  {
+    up: migration_20260907_021741_orders.up,
+    down: migration_20260907_021741_orders.down,
+    name: '20260907_021741_orders'
   },
 ];

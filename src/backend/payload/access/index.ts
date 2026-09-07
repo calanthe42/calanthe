@@ -94,3 +94,37 @@ export const isStaffField: FieldAccess = ({ req: { user } }) =>
 export const serverOnlyField: FieldAccess = () => false;
 
 export const isAdminField: FieldAccess = ({ req: { user } }) => user?.role === "admin";
+
+/**
+ * Written once when the row is created, then frozen for every role —
+ * including admin, including through the admin panel and the REST API.
+ *
+ * This is the mechanism behind the order snapshot (docs/ARCHITECTURE.md §6):
+ * what a customer paid, what they were told, and where it went must still
+ * read the same in two years, after the product has been renamed, repriced
+ * and archived. Editing history is not a feature.
+ *
+ * Server code that legitimately needs to write these — a payment webhook
+ * reconciling an order — calls the Local API with `overrideAccess: true`,
+ * which is a deliberate, greppable act rather than an open door.
+ */
+export const immutableAfterCreate: { create: FieldAccess; update: FieldAccess } = {
+  create: isStaffField,
+  update: () => false,
+};
+
+/**
+ * Internal users see every row; a signed-in customer sees only their own,
+ * as a database-level constraint.
+ *
+ * Guest rows (owner field null) match nobody, which is correct: a guest
+ * order is reachable by staff and by the server, never by a customer who
+ * happens to be logged in with the same email.
+ */
+export const isStaffOrOwnerOf =
+  (ownerField: string): Access =>
+  ({ req: { user } }) => {
+    if (!user) return false;
+    if (user.role === "admin" || user.role === "staff") return true;
+    return { [ownerField]: { equals: user.id } };
+  };

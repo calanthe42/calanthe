@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { Events } from "@/collections/Events";
 import { Media } from "@/collections/Media";
 import { Occasions } from "@/collections/Occasions";
+import { Orders } from "@/collections/Orders";
 import { Products } from "@/collections/Products";
 import { Users } from "@/collections/Users";
 import { env } from "@/lib/env";
@@ -22,7 +23,7 @@ export default buildConfig({
       titleSuffix: " · Calanthe Admin",
     },
   },
-  collections: [Users, Media, Occasions, Products, Events],
+  collections: [Users, Media, Occasions, Products, Orders, Events],
   /* Required for the `media` image sizes — Payload delegates resizing to
      sharp and silently skips size generation when it is absent. */
   sharp,
