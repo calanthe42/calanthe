@@ -20,6 +20,11 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 export default buildConfig({
   secret: env.PAYLOAD_SECRET,
   serverURL: env.NEXT_PUBLIC_SERVER_URL,
+  /* Payload's own CMS moves to /cms so that /admin can host the business
+     admin application. Nothing about Payload's backend changes: the REST and
+     GraphQL endpoints, access control and Local API are untouched, and /cms
+     remains the full developer CMS. */
+  routes: { admin: "/cms" },
   admin: {
     user: Users.slug,
     meta: {

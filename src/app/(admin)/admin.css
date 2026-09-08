@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "../../styles/tokens.css";
+
+/*
+ * The Calanthe admin.
+ *
+ * It borrows the brand's palette, type and shape from tokens.css so it is
+ * recognisably Calanthe — and then diverges deliberately. The storefront is
+ * editorial: generous, slow, image-led. A tool someone uses for six hours a
+ * day is none of those things. Here the priorities are density without
+ * crowding, unambiguous state, and never making the owner guess.
+ *
+ * Concretely: a lighter ground than the storefront's canvas so data reads
+ * first; one accent (burnt orange) reserved for the primary action on a
+ * screen; olive for structure; sage for everything secondary.
+ */
+
+@theme {
+  /* A cooler, quieter ground than the storefront's warm canvas — long
+     sessions on #F3EFDF are tiring, and white makes tables legible. */
+  --color-admin-bg: #faf8f2;
+  --color-admin-surface: #ffffff;
+  --color-admin-sunken: #f4f1e7;
+
+  /* Status. Derived from the brand rather than a generic traffic-light set,
+     so a badge never looks borrowed from another product. */
+  --color-status-new: #2b2f1b;
+  --color-status-progress: #b55b29;
+  --color-status-done: #4a6741;
+  --color-status-halt: #2e131b;
+}
+
+/* Film grain belongs to the storefront's editorial surface, not to a table of
+   orders. The admin stays flat and legible. */
+.admin-shell {
+  background: var(--color-admin-bg);
+  color: var(--color-olive);
+  font-family: var(--font-sans);
+  min-height: 100svh;
+}
+
+/* Focus must be obvious for keyboard users: this is a tool, and people who
+   live in it will tab through it. */
+.admin-shell :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-burnt-orange);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Tables scroll inside their own container so the page body never does. */
+.admin-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-shell *,
+  .admin-shell *::before,
+  .admin-shell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -24,8 +24,10 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       disallow: [
-        /* Payload — authenticated surfaces */
+        /* Authenticated surfaces: the business admin and the Payload CMS
+           behind it. Neither may be crawled. */
         "/admin",
+        "/cms",
         "/api/",
 
         /* Personal and transactional: nothing to index, and every one
