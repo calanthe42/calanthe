@@ -11,7 +11,8 @@ import {
   useState,
 } from "react";
 import type { AddonId, ProductImage, SizeId } from "@/lib/data";
-import { addons, products, sizes, timeSlots } from "@/lib/data";
+import { addons, sizes, timeSlots } from "@/lib/data";
+import type { Product } from "@/lib/data";
 
 export type CartItem = {
   /** productId + size + sorted addons — one line per configuration. */
@@ -71,7 +72,7 @@ function keyOf(item: Omit<CartItem, "key">): string {
  * dropped; name, slug, image and price always come from the catalog so
  * stale or tampered storage can never change what is charged.
  */
-function sanitizeStoredItems(parsed: unknown): CartItem[] {
+function sanitizeStoredItems(parsed: unknown, products: readonly Product[]): CartItem[] {
   if (!Array.isArray(parsed)) return [];
   const items: CartItem[] = [];
   for (const raw of parsed) {
@@ -182,7 +183,16 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "calanthe-cart-v1";
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  /* The catalogue is fetched on the server and passed in — a client provider
+     must never reach for the database itself. Defaults to empty so the
+     provider still mounts in isolation (tests, storybook-style rendering). */
+  catalogue = [],
+}: {
+  children: React.ReactNode;
+  catalogue?: readonly Product[];
+}) {
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
   /* Never persist until the stored cart has been read, or the initial
@@ -190,19 +200,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const hydrated = useRef(false);
 
   useEffect(() => {
+    /* Once only. The catalogue is a dependency because sanitising needs it,
+       but re-running would replace the live cart with the stored one. */
+    if (hydrated.current) return;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         dispatch({
           type: "hydrate",
-          items: sanitizeStoredItems(JSON.parse(raw)),
+          items: sanitizeStoredItems(JSON.parse(raw), catalogue),
         });
       }
     } catch {
       /* corrupt storage — start empty */
     }
     hydrated.current = true;
-  }, []);
+  }, [catalogue]);
 
   useEffect(() => {
     if (!hydrated.current) return;

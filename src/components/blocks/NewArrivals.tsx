@@ -2,10 +2,10 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { getNewArrivals } from "@/lib/data";
+import { getNewArrivals } from "@backend/data/products";
 
-export function NewArrivals() {
-  const arrivals = getNewArrivals().slice(0, 4);
+export async function NewArrivals() {
+  const arrivals = await getNewArrivals(4);
 
   return (
     <section className="section-pad">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Monogram } from "@/components/ui/Monogram";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { occasions } from "@/lib/data";
+import type { Occasion } from "@/lib/data";
 import { cn } from "@/lib/cn";
 
 const extra = [
@@ -22,7 +22,7 @@ const extra = [
  * sitting there. Pointer-only by design (`lg:` + hover state): on a
  * phone it stays a clean, quiet line.
  */
-export function QuickNavBand() {
+export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion[] }) {
   const [active, setActive] = useState<number | null>(null);
 
   const links = [

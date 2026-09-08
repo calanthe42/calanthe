@@ -2,10 +2,24 @@ import { notFound } from "next/navigation";
 import { Reveal } from "@/components/motion/Reveal";
 import { ShopGrid } from "@/components/commerce/ShopGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { occasions, products } from "@/lib/data";
+import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
+import {
+  getActiveOccasionBySlug,
+  getActiveOccasionSlugs,
+} from "@backend/data/occasions";
+import { getProductsForOccasion } from "@backend/data/products";
 
-export function generateStaticParams() {
-  return occasions.map((o) => ({ slug: o.slug }));
+/* The catalogue is now database-backed, so these pages must be allowed to
+   change without a redeploy — otherwise an edit in /admin would never reach
+   the site. Five minutes is a deliberate compromise: fresh enough that the
+   client sees her change while she is still looking, cheap enough that the
+   shop is served from cache under load. On-demand revalidation from a Payload
+   afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const slugs = await getActiveOccasionSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function OccasionPage({
@@ -14,10 +28,12 @@ export default async function OccasionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const occasion = occasions.find((o) => o.slug === slug);
+  const occasion = await getActiveOccasionBySlug(slug);
   if (!occasion) notFound();
 
-  const matches = products.filter((p) => p.occasions.includes(occasion.slug));
+  /* The occasion -> product relationship now lives in the database, and the
+     query returns available products only. */
+  const matches = await getProductsForOccasion(occasion.slug);
 
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
@@ -28,7 +44,14 @@ export default async function OccasionPage({
         </h1>
       </Reveal>
 
-      <ShopGrid products={matches} showOccasionFilter={false} />
+      {matches.length === 0 ? (
+        <CatalogueEmpty
+          title={`No ${occasion.name.toLowerCase()} arrangements just yet.`}
+          message="This collection is being composed. Do come back shortly."
+        />
+      ) : (
+        <ShopGrid products={matches} showOccasionFilter={false} />
+      )}
     </main>
   );
 }

@@ -4,14 +4,24 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { occasions } from "@/lib/data";
+import { getActiveOccasions } from "@backend/data/occasions";
+
+/* The catalogue is now database-backed, so these pages must be allowed to
+   change without a redeploy — otherwise an edit in /admin would never reach
+   the site. Five minutes is a deliberate compromise: fresh enough that the
+   client sees her change while she is still looking, cheap enough that the
+   shop is served from cache under load. On-demand revalidation from a Payload
+   afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Occasions",
   description: "Flowers for every unspoken thing — shop Calanthe by occasion.",
 };
 
-export default function OccasionsPage() {
+export default async function OccasionsPage() {
+  const occasions = await getActiveOccasions();
+
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
       <Reveal className="mb-10 max-w-2xl lg:mb-14">

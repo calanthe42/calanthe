@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { occasions, products } from "@/lib/data";
+import { getActiveOccasionSlugs } from "@backend/data/occasions";
+import { getAvailableProductSlugs } from "@backend/data/products";
 import { absoluteUrl } from "@/lib/site";
 
 /**
@@ -29,6 +30,14 @@ import { absoluteUrl } from "@/lib/site";
    real `updatedAt` so lastModified means something. */
 const BUILD_TIME = new Date();
 
+/* The catalogue is now database-backed, so these pages must be allowed to
+   change without a redeploy — otherwise an edit in /admin would never reach
+   the site. Five minutes is a deliberate compromise: fresh enough that the
+   client sees her change while she is still looking, cheap enough that the
+   shop is served from cache under load. On-demand revalidation from a Payload
+   afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
+export const revalidate = 300;
+
 type Entry = MetadataRoute.Sitemap[number];
 
 const marketingRoutes: ReadonlyArray<{
@@ -50,7 +59,14 @@ const marketingRoutes: ReadonlyArray<{
   { path: "/refund-policy", priority: 0.3, changeFrequency: "yearly" },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  /* Only what the public can actually reach: an unavailable product 404s, and
+     listing a 404 in a sitemap is a crawl error. */
+  const [productSlugs, occasionSlugs] = await Promise.all([
+    getAvailableProductSlugs(),
+    getActiveOccasionSlugs(),
+  ]);
+
   const marketing: MetadataRoute.Sitemap = marketingRoutes.map(
     ({ path, priority, changeFrequency }) => ({
       url: absoluteUrl(path || "/"),
@@ -60,16 +76,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  const occasionPages: MetadataRoute.Sitemap = occasions.map((occasion) => ({
-    url: absoluteUrl(`/occasions/${occasion.slug}`),
+  const occasionPages: MetadataRoute.Sitemap = occasionSlugs.map((slug) => ({
+    url: absoluteUrl(`/occasions/${slug}`),
     lastModified: BUILD_TIME,
     changeFrequency: "monthly",
     priority: 0.7,
   }));
 
   /* Canonical product URLs only — /shop/[slug] redirects here. */
-  const productPages: MetadataRoute.Sitemap = products.map((product) => ({
-    url: absoluteUrl(`/product/${product.slug}`),
+  const productPages: MetadataRoute.Sitemap = productSlugs.map((slug) => ({
+    url: absoluteUrl(`/product/${slug}`),
     lastModified: BUILD_TIME,
     changeFrequency: "weekly",
     priority: 0.8,

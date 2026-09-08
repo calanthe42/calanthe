@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SearchOverlay } from "@/components/blocks/SearchOverlay";
+import type { Occasion, Product } from "@/lib/data";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
@@ -43,7 +44,13 @@ function IconSearch({ className }: { className?: string }) {
  * on the homepage, motion allowed — ceded entirely to `HeroLogoDock`,
  * which is the exact same mark travelling in from the hero's centre.
  */
-export function Header() {
+export function Header({
+  products = [],
+  occasions = [],
+}: {
+  products?: readonly Product[];
+  occasions?: readonly Occasion[];
+} = {}) {
   const pathname = usePathname();
   const overlay = OVERLAY_ROUTES.has(pathname);
   const reducedMotion = useReducedMotionPref();
@@ -356,7 +363,12 @@ export function Header() {
         </div>
       )}
 
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        products={products}
+        occasions={occasions}
+      />
     </header>
   );
 }

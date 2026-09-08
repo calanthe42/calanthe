@@ -4,11 +4,12 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { getBestSellers, PHOTOS } from "@/lib/data";
+import { getBestSellers } from "@backend/data/products";
+import { PHOTOS } from "@/lib/data";
 
 /** Same grammar as New Arrivals; the first tile is a 2x editorial moment. */
-export function BestSellers() {
-  const sellers = getBestSellers().slice(0, 4);
+export async function BestSellers() {
+  const sellers = await getBestSellers(4);
 
   return (
     <section className="section-pad">
