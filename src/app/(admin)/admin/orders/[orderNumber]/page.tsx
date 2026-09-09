@@ -1,4 +1,8 @@
 import { notFound } from "next/navigation";
+import { headers as nextHeaders } from "next/headers";
+import { getPayload } from "payload";
+import config from "@payload-config";
+import { OrderOps } from "@admin/components/OrderOps";
 import { formatFils } from "@/lib/money";
 import { Card, PageHeader, StatusBadge, Table, Td } from "@admin/components/ui";
 import { getAdminOrderByNumber } from "@backend/data/admin-metrics";
@@ -22,6 +26,25 @@ export default async function AdminOrderPage({
   const { orderNumber } = await params;
   const order = await getAdminOrderByNumber(decodeURIComponent(orderNumber));
   if (!order) notFound();
+
+  /* Internal users who can own an order. Read as the caller, so a staff
+     member sees only what the permission model allows. */
+  const payload = await getPayload({ config });
+  const { user } = await payload.auth({ headers: await nextHeaders() });
+  const team = await payload
+    .find({
+      collection: "users",
+      where: { role: { in: ["admin", "staff"] } },
+      limit: 50,
+      depth: 0,
+      user,
+    })
+    .catch(() => ({ docs: [] as { id: number; name?: string | null; email: string }[] }));
+
+  const staffOptions = team.docs.map((m) => ({
+    label: m.name || m.email,
+    value: String(m.id),
+  }));
 
   const items = order.items ?? [];
   const isGift = Boolean(order.recipientName || order.cardMessage);
@@ -165,6 +188,20 @@ export default async function AdminOrderPage({
             </div>
           ) : null}
         </div>
+      </div>
+
+      <div className="mt-10">
+        <OrderOps
+          orderId={order.id}
+          fulfilmentStatus={order.fulfilmentStatus}
+          internalNotes={order.internalNotes ?? undefined}
+          assignedStaffId={
+            typeof order.assignedStaff === "object" && order.assignedStaff
+              ? order.assignedStaff.id
+              : (order.assignedStaff ?? undefined)
+          }
+          staff={staffOptions}
+        />
       </div>
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-sage">

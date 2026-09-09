@@ -56,7 +56,7 @@ export default async function AdminProductsPage({
               }`
         }
         action={
-          <ActionLink href="/cms/collections/products/create" variant="primary">
+          <ActionLink href="/admin/products/new" variant="primary">
             Add product
           </ActionLink>
         }
@@ -81,7 +81,7 @@ export default async function AdminProductsPage({
           title="No products yet"
           message="Your arrangements will appear here once you add the first one."
           action={
-            <ActionLink href="/cms/collections/products/create" variant="primary">
+            <ActionLink href="/admin/products/new" variant="primary">
               Add your first product
             </ActionLink>
           }
@@ -101,7 +101,7 @@ export default async function AdminProductsPage({
               <tr key={product.id} className="border-b border-hairline/50 last:border-0">
                 <Td>
                   <Link
-                    href={`/cms/collections/products/${product.id}`}
+                    href={`/admin/products/${product.id}/edit`}
                     className="font-medium hover:underline"
                   >
                     {product.name}

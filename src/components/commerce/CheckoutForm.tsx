@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useTransition } from "react";
+import { placeCodOrder } from "@backend/actions/checkout";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
@@ -117,6 +118,7 @@ export function CheckoutForm() {
   const [address, setAddress] = useState("");
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [placed, setPlaced] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const zone = deliveryZones.find((z) => z.id === zoneId);
   const freeDelivery = subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
@@ -127,7 +129,7 @@ export function CheckoutForm() {
 
   function placeOrder() {
     if (items.length === 0) return;
-    if (!name.trim() || !phone.trim() || !zoneId || !address.trim()) {
+    if (!name.trim() || !phone.trim() || !email.trim() || !zoneId || !address.trim()) {
       toast("A few delivery details are still missing");
       return;
     }
@@ -141,8 +143,36 @@ export function CheckoutForm() {
       toast("Your delivery day is no longer available — pick another");
       return;
     }
-    const number = `CAL-${1100 + Math.floor((totalAed + name.length * 7) % 800)}`;
-    setPlaced(number);
+    /* Everything that costs money is recomputed on the server from the
+       product records. This sends what was chosen, never what it costs. */
+    startTransition(async () => {
+      const result = await placeCodOrder({
+        lines: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.qty,
+          sizeId: item.sizeId,
+          addonIds: [...item.addonIds],
+          giftMessage: item.giftMessage,
+        })),
+        customerName: name.trim(),
+        customerEmail: email.trim(),
+        customerPhone: phone.trim(),
+        deliveryEmirate: zoneId,
+        deliveryAddress: address.trim(),
+        deliveryDate: selectedDay,
+        deliveryTimeSlot: slot,
+        recipientName: mode === "gift" ? recipientName.trim() : undefined,
+        recipientPhone: mode === "gift" ? recipientPhone.trim() || undefined : undefined,
+        cardMessage: items.find((i) => i.giftMessage)?.giftMessage,
+      });
+
+      if (!result.ok) {
+        toast(result.message);
+        return;
+      }
+      setPlaced(result.orderNumber);
+      clear();
+    });
     clear();
   }
 
@@ -457,7 +487,12 @@ export function CheckoutForm() {
           />
         </div>
         <div className="mt-6">
-          <Button variant="primary" className="w-full" onClick={placeOrder}>
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={placeOrder}
+            disabled={pending}
+          >
             Place Order — {formatAed(totalAed)}
           </Button>
         </div>
