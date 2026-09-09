@@ -20,9 +20,24 @@ export default async function StorefrontLayout({
 
   return (
     <Providers catalogue={catalogue}>
+      {/* First thing in the tab order on every page: a way past the
+          navigation. Every storefront page renders its content in a
+          <main>, which is what this targets. */}
+      <a
+        href="#main"
+        className="skip-link m-3 rounded-sm bg-olive px-5 py-3 font-brand text-xs font-medium uppercase tracking-brand text-cream"
+      >
+        Skip to content
+      </a>
       <AnnouncementBar />
       <Header products={catalogue} occasions={occasions} />
-      {children}
+      {/* tabIndex -1 so the skip link actually MOVES focus here. Without
+          it the browser scrolls but leaves focus in the navigation, and
+          the next Tab drops the visitor straight back into the menu —
+          which is the failure mode most skip links ship with. */}
+      <div id="main" tabIndex={-1}>
+        {children}
+      </div>
       <Footer />
       <LazyCartDrawer />
       <WhatsAppButton />

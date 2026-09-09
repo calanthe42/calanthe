@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Reveal } from "@/components/motion/Reveal";
 import { ShopGrid } from "@/components/commerce/ShopGrid";
@@ -16,6 +17,32 @@ import { getProductsForOccasion } from "@backend/data/products";
    shop is served from cache under load. On-demand revalidation from a Payload
    afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
 export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const occasion = await getActiveOccasionBySlug(slug);
+  if (!occasion) return { title: "Occasion" };
+
+  const description = `${occasion.name} flowers, hand-composed by the Calanthe atelier and delivered across the UAE.`;
+  const image = occasion.image.src;
+
+  return {
+    title: occasion.name,
+    description,
+    alternates: { canonical: `/occasions/${occasion.slug}` },
+    openGraph: {
+      type: "website",
+      title: `${occasion.name} — CALANTHE`,
+      description,
+      url: `/occasions/${occasion.slug}`,
+      ...(image ? { images: [{ url: image, alt: occasion.image.alt }] } : {}),
+    },
+  };
+}
 
 export async function generateStaticParams() {
   const slugs = await getActiveOccasionSlugs();

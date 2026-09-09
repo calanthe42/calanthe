@@ -5,13 +5,14 @@ import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { HeroRibbon } from "@/components/blocks/HeroRibbon";
+import { HeroMedia } from "@/components/blocks/HeroMedia";
 
 type HeroProps = {
   /**
-   * SWAP POINT for the client's real photography: pass any node that
-   * fills its parent (an <Image fill className="object-cover" /> once
-   * real imagery arrives, or a video element — the section itself
-   * doesn't care what fills it).
+   * SWAP POINT: pass any node that fills its parent. Left unset, the
+   * hero renders <HeroMedia />, which is the poster photograph plus the
+   * optional hero film (see lib/hero-media.ts) — the section itself
+   * doesn't care what fills it.
    */
   media?: React.ReactNode;
 };
@@ -34,26 +35,7 @@ export function Hero({ media }: HeroProps) {
           frame it can get. */}
       <Parallax speed={0.93} desktopOnly className="absolute inset-0">
         <div className="hero-kenburns h-full w-full">
-          {media ?? (
-            /* Art-directed, not just resized: landscape screens get the
-               wide crop, portrait screens get the tall one. The browser
-               downloads only the one it needs. */
-            <picture className="block h-full w-full">
-              <source
-                media="(min-aspect-ratio: 1/1)"
-                srcSet="/brand/hero-desktop.jpg"
-              />
-              <img
-                src="/brand/hero-mobile.jpg"
-                alt="A Calanthe arrangement of garden roses, daisies and coral blossom in a white vase"
-                width={1600}
-                height={2000}
-                fetchPriority="high"
-                decoding="async"
-                className="h-full w-full object-cover"
-              />
-            </picture>
-          )}
+          {media ?? <HeroMedia />}
         </div>
       </Parallax>
 

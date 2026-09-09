@@ -14,24 +14,21 @@ import {
   chipOnClasses,
   fieldClasses,
 } from "@/components/ui/form-classes";
+import { uniqueProductViews } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 import { itemUnitPrice, useCart } from "@/lib/cart";
 import { useToast } from "@/lib/toast";
 import {
   addons,
   formatAed,
-  PHOTOS,
   sizes,
   timeSlots,
   type AddonId,
-  type PlaceholderPalette,
   type Product,
   type ProductImage,
   type SizeId,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
-
-const GALLERY_SUFFIXES = ["", "-alt", "-detail", "-scale"] as const;
 
 type ProductDetailProps = {
   product: Product;
@@ -42,38 +39,27 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const { toast } = useToast();
   const reduced = useReducedMotion();
 
-  /* Gallery: the product's two views plus two atelier shots that are
-     not already in this product's pair. */
-  const views = useMemo<ProductImage[]>(() => {
-    const pool = [
-      PHOTOS.stargazer,
-      PHOTOS.whiteRoseWood,
-      PHOTOS.pinkTulip,
-      PHOTOS.roseMauveWall,
-      PHOTOS.peachRoses,
-      PHOTOS.poppyMeadow,
-    ].filter((src) => src !== product.images[0].src && src !== product.images[1].src);
-    return [
-      product.images[0],
-      product.images[1],
-      {
-        alt: `${product.name}, atelier detail`,
-        src: pool[0],
-        placeholder: {
-          seed: `${product.images[0].placeholder.seed}-detail`,
-          palette: "warm" as PlaceholderPalette,
-        },
-      },
-      {
-        alt: `${product.name}, in the atelier`,
-        src: pool[1],
-        placeholder: {
-          seed: `${product.images[1].placeholder.seed}-scale`,
-          palette: product.images[0].placeholder.palette,
-        },
-      },
-    ];
-  }, [product]);
+  /**
+   * THE GALLERY SHOWS THIS PRODUCT'S OWN PHOTOGRAPHS AND NOTHING ELSE.
+   *
+   * It previously padded every product to four views by pulling two
+   * unrelated photographs out of a shared pool and captioning them
+   * "atelier detail" and "in the atelier" — which told the customer she
+   * was looking at further views of the arrangement she was about to
+   * buy, when she was looking at different flowers entirely. A gallery
+   * of two real photographs is honest; a gallery of four with two
+   * invented is a picture of a product that does not exist.
+   *
+   * So: the product's images, with duplicates dropped. Most products
+   * carry only one real photograph today (the second slot is padded by
+   * the data layer when a document has one image), and one photograph
+   * is what those products now show.
+   */
+  const views = useMemo<ProductImage[]>(
+    () => uniqueProductViews(product.images),
+    [product],
+  );
+
   const [view, setView] = useState(0);
   const [zoom, setZoom] = useState(false);
   const mainImageRef = useRef<HTMLDivElement>(null);
@@ -201,10 +187,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </AnimatePresence>
           </div>
 
+          {/* A single-photograph product gets no thumbnail strip: one
+              thumbnail under one image is a control that does nothing. */}
+          {views.length > 1 && (
           <div className="mt-3 flex gap-3">
             {views.map((v, i) => (
               <button
-                key={v.placeholder.seed + GALLERY_SUFFIXES[i]}
+                key={v.src ?? v.placeholder.seed}
                 type="button"
                 aria-label={`View ${i + 1}`}
                 aria-current={view === i}
@@ -220,6 +209,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               </button>
             ))}
           </div>
+          )}
         </div>
 
         {/* ---- Details — reveal cascade ---- */}

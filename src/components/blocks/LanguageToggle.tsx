@@ -17,8 +17,12 @@ type LanguageToggleProps = {
 export function LanguageToggle({ tone = "olive", className }: LanguageToggleProps) {
   const { locale, setLocale } = useLocale();
 
+  /* h-11, not h-7: the pill around these two buttons was already 44px
+     tall, but the buttons themselves were 28px, so the top and bottom
+     8px of the control did nothing when tapped. Filling the container
+     costs no pixels on screen and makes the target the size it looks. */
   const base =
-    "flex h-7 min-w-7 items-center justify-center px-1.5 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom";
+    "flex h-11 min-w-7 items-center justify-center px-2 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom";
   const on = tone === "cream" ? "text-cream" : "text-olive";
   const off = tone === "cream" ? "text-cream/45 hover:text-cream/80" : "text-sage hover:text-olive";
 
