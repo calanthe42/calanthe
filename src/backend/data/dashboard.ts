@@ -1,14 +1,20 @@
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import type { Order } from "@/payload-types";
+import type { Enquiry, Order } from "@/payload-types";
 import type { SeriesPoint } from "@admin/components/Charts";
+import { dubaiDateInputValue } from "@backend/domain/dates";
 
 /**
  * The dashboard's data, read as the signed-in user.
  *
  * Everything is derived from real orders. A day with no orders is a zero, not
  * a gap and not an invention — the chart tells the truth about a quiet week.
+ *
+ * DAYS ARE UAE DAYS. The server runs in UTC, so "today" computed from the
+ * server's clock started at 04:00 in Dubai: an order placed at 02:00 on a
+ * Tuesday landed on Monday's bar, and "today's deliveries" missed the first
+ * four hours of the morning. Day boundaries are now midnight Asia/Dubai.
  */
 
 export type Period = 7 | 30 | 90;
@@ -18,8 +24,11 @@ export function parsePeriod(value: string | undefined): Period {
   return n === 30 || n === 90 ? n : 7;
 }
 
-function dayKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+const DAY_MS = 86_400_000;
+
+/** Midnight in the UAE on the day containing `date`. The UAE has no DST. */
+function uaeDayStart(date: Date): Date {
+  return new Date(`${dubaiDateInputValue(date.toISOString())}T00:00:00+04:00`);
 }
 
 function isPaid(order: Order): boolean {
@@ -31,19 +40,22 @@ export type DashboardData = {
   ordersInPeriod: number;
   revenueInPeriodFils: number;
   previousRevenueFils: number;
+  /** Placed, not cancelled, not yet paid — cash on delivery included. */
+  awaitingPaymentFils: number;
   statusCounts: { label: string; value: number; className: string }[];
   statusTotal: number;
   bestSellers: { name: string; units: number; revenueFils: number }[];
   needsAttention: Order[];
   todaysDeliveries: Order[];
   recent: Order[];
+  recentEnquiries: Enquiry[];
 };
 
 const STATUS_STYLE: { key: string; label: string; className: string }[] = [
   { key: "NEW", label: "New", className: "bg-olive/70" },
   { key: "CONFIRMED", label: "Confirmed", className: "bg-olive/45" },
-  { key: "PREPARING", label: "Preparing", className: "bg-[#b55b29]/80" },
-  { key: "READY", label: "Ready", className: "bg-[#b55b29]/55" },
+  { key: "PREPARING", label: "Being prepared", className: "bg-[#b55b29]/80" },
+  { key: "READY", label: "Ready to go", className: "bg-[#b55b29]/55" },
   { key: "OUT_FOR_DELIVERY", label: "Out for delivery", className: "bg-[#b55b29]/35" },
   { key: "DELIVERED", label: "Delivered", className: "bg-[#4a6741]/70" },
   { key: "CANCELLED", label: "Cancelled", className: "bg-burgundy/60" },
@@ -54,74 +66,73 @@ export async function getDashboardData(period: Period): Promise<DashboardData> {
   const { user } = await payload.auth({ headers: await nextHeaders() });
 
   const now = new Date();
-  const start = new Date(now);
-  start.setDate(start.getDate() - (period - 1));
-  start.setHours(0, 0, 0, 0);
-
+  const todayStart = uaeDayStart(now);
+  const todayEnd = new Date(todayStart.getTime() + DAY_MS);
+  const start = new Date(todayStart.getTime() - (period - 1) * DAY_MS);
   /* The previous window of equal length, for the comparison. */
-  const prevStart = new Date(start);
-  prevStart.setDate(prevStart.getDate() - period);
+  const prevStart = new Date(start.getTime() - period * DAY_MS);
 
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart);
-  todayEnd.setDate(todayEnd.getDate() + 1);
+  const [windowOrders, previousOrders, openOrders, todays, recent, recentEnquiries] =
+    await Promise.all([
+      payload.find({
+        collection: "orders",
+        where: { createdAt: { greater_than_equal: start.toISOString() } },
+        limit: 1000,
+        depth: 0,
+        sort: "createdAt",
+        user,
+      }),
+      payload.find({
+        collection: "orders",
+        where: {
+          and: [
+            { createdAt: { greater_than_equal: prevStart.toISOString() } },
+            { createdAt: { less_than: start.toISOString() } },
+          ],
+        },
+        limit: 1000,
+        depth: 0,
+        user,
+      }),
+      payload.find({
+        collection: "orders",
+        where: {
+          fulfilmentStatus: { in: ["NEW", "CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY"] },
+        },
+        limit: 200,
+        depth: 0,
+        sort: "deliveryDate",
+        user,
+      }),
+      payload.find({
+        collection: "orders",
+        where: {
+          and: [
+            { deliveryDate: { greater_than_equal: todayStart.toISOString() } },
+            { deliveryDate: { less_than: todayEnd.toISOString() } },
+          ],
+        },
+        limit: 100,
+        depth: 0,
+        sort: "deliveryTimeSlot",
+        user,
+      }),
+      payload.find({ collection: "orders", sort: "-createdAt", limit: 6, depth: 0, user }),
+      payload
+        .find({ collection: "enquiries", sort: "-createdAt", limit: 5, depth: 0, user })
+        .then((r) => r.docs)
+        .catch(() => [] as Enquiry[]),
+    ]);
 
-  const [windowOrders, previousOrders, openOrders, todays, recent] = await Promise.all([
-    payload.find({
-      collection: "orders",
-      where: { createdAt: { greater_than_equal: start.toISOString() } },
-      limit: 1000,
-      depth: 0,
-      sort: "createdAt",
-      user,
-    }),
-    payload.find({
-      collection: "orders",
-      where: {
-        and: [
-          { createdAt: { greater_than_equal: prevStart.toISOString() } },
-          { createdAt: { less_than: start.toISOString() } },
-        ],
-      },
-      limit: 1000,
-      depth: 0,
-      user,
-    }),
-    payload.find({
-      collection: "orders",
-      where: { fulfilmentStatus: { in: ["NEW", "CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY"] } },
-      limit: 200,
-      depth: 0,
-      sort: "deliveryDate",
-      user,
-    }),
-    payload.find({
-      collection: "orders",
-      where: {
-        and: [
-          { deliveryDate: { greater_than_equal: todayStart.toISOString() } },
-          { deliveryDate: { less_than: todayEnd.toISOString() } },
-        ],
-      },
-      limit: 100,
-      depth: 0,
-      sort: "deliveryTimeSlot",
-      user,
-    }),
-    payload.find({ collection: "orders", sort: "-createdAt", limit: 6, depth: 0, user }),
-  ]);
-
-  /* One bucket per day so quiet days are visible rather than skipped. */
+  /* One bucket per UAE day so quiet days are visible rather than skipped. */
   const buckets = new Map<string, { orders: number; revenueFils: number }>();
   for (let i = 0; i < period; i += 1) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    buckets.set(dayKey(d), { orders: 0, revenueFils: 0 });
+    const key = dubaiDateInputValue(new Date(start.getTime() + i * DAY_MS).toISOString());
+    buckets.set(key, { orders: 0, revenueFils: 0 });
   }
 
   for (const order of windowOrders.docs) {
-    const key = dayKey(new Date(order.createdAt));
-    const bucket = buckets.get(key);
+    const bucket = buckets.get(dubaiDateInputValue(order.createdAt));
     if (!bucket) continue;
     bucket.orders += 1;
     if (isPaid(order)) bucket.revenueFils += Number(order.totalFils ?? 0);
@@ -129,7 +140,11 @@ export async function getDashboardData(period: Period): Promise<DashboardData> {
 
   const series: SeriesPoint[] = [...buckets.entries()].map(([iso, value]) => ({
     iso,
-    label: new Date(iso).toLocaleDateString("en-AE", { day: "numeric", month: "short" }),
+    label: new Date(`${iso}T12:00:00+04:00`).toLocaleDateString("en-AE", {
+      day: "numeric",
+      month: "short",
+      timeZone: "Asia/Dubai",
+    }),
     orders: value.orders,
     revenueFils: value.revenueFils,
   }));
@@ -137,6 +152,15 @@ export async function getDashboardData(period: Period): Promise<DashboardData> {
   const revenueInPeriodFils = series.reduce((sum, p) => sum + p.revenueFils, 0);
   const previousRevenueFils = previousOrders.docs
     .filter(isPaid)
+    .reduce((sum, o) => sum + Number(o.totalFils ?? 0), 0);
+
+  const awaitingPaymentFils = windowOrders.docs
+    .filter(
+      (o) =>
+        !isPaid(o) &&
+        o.fulfilmentStatus !== "CANCELLED" &&
+        (o.paymentStatus === "PENDING" || o.paymentStatus === "AUTHORIZED"),
+    )
     .reduce((sum, o) => sum + Number(o.totalFils ?? 0), 0);
 
   /* Status distribution across every open order, not just this window —
@@ -164,8 +188,8 @@ export async function getDashboardData(period: Period): Promise<DashboardData> {
     .sort((a, b) => b.units - a.units)
     .slice(0, 5);
 
-  /* Needs attention: a delivery date that has passed while the order is
-     still open. Nothing is invented — this is a real operational failure. */
+  /* Overdue: a delivery date before today (UAE) while the order is still
+     open. Nothing is invented — this is a real operational failure. */
   const needsAttention = openOrders.docs.filter(
     (o) => new Date(o.deliveryDate).getTime() < todayStart.getTime(),
   );
@@ -175,11 +199,13 @@ export async function getDashboardData(period: Period): Promise<DashboardData> {
     ordersInPeriod: windowOrders.totalDocs,
     revenueInPeriodFils,
     previousRevenueFils,
+    awaitingPaymentFils,
     statusCounts,
     statusTotal: openOrders.docs.length,
     bestSellers,
     needsAttention,
     todaysDeliveries: todays.docs,
     recent: recent.docs,
+    recentEnquiries,
   };
 }

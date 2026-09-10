@@ -4,6 +4,25 @@ import { headers as nextHeaders } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { getMediaUsage } from "@backend/data/media-usage";
+import { followUpIsoFromDateInput } from "@backend/domain/dates";
+import { FormInputError } from "@backend/domain/form-error";
+import { listNames, toMediaOption, type MediaOption } from "@backend/domain/media-option";
+import {
+  parseAedToFils,
+  parseIdList,
+  parseProductForm,
+  parseSlug,
+  parseWholeNumber,
+  readChecked,
+  readText,
+  type ParsedProduct,
+} from "@backend/domain/product-form";
+import {
+  lexicalToPlainText,
+  plainTextToLexical,
+  sameDescription,
+} from "@backend/domain/richtext";
 
 /**
  * Every write the business admin performs.
@@ -17,9 +36,15 @@ import config from "@payload-config";
  *
  * The only file in the codebase that does use overrideAccess is
  * actions/checkout.ts, for the documented reason stated there.
+ *
+ * Parsing lives in backend/domain (pure, unit-tested). These functions do only
+ * what needs a server: who is asking, saving, and refreshing the pages that
+ * show what changed.
  */
 
-export type ActionResult = { ok: true; message: string } | { ok: false; message: string };
+export type ActionResult =
+  | { ok: true; message: string; id?: number; media?: MediaOption }
+  | { ok: false; message: string };
 
 async function authed() {
   const payload = await getPayload({ config });
@@ -27,94 +52,93 @@ async function authed() {
   return { payload, user };
 }
 
-/** Turns Payload's thrown errors into something a florist can read. */
+type ValidationDetail = { message?: unknown; path?: unknown };
+
+/** Turns anything thrown into a sentence a florist can act on. */
 function toMessage(error: unknown, fallback: string): string {
+  if (error instanceof FormInputError) return error.message;
+
   const raw = error instanceof Error ? error.message : "";
-  if (/not allowed|forbidden/i.test(raw)) {
+  if (/not allowed|forbidden|unauthori[sz]ed/i.test(raw)) {
     return "You do not have permission to do that.";
   }
-  /* Validation errors from hooks are already written for humans. */
-  if (raw && raw.length < 300) return raw;
+
+  const details = (error as { data?: { errors?: ValidationDetail[] } } | null)?.data?.errors;
+  const first = Array.isArray(details) ? details[0] : undefined;
+  const detail = typeof first?.message === "string" ? first.message : "";
+  const combined = `${raw} ${detail} ${typeof first?.path === "string" ? first.path : ""}`;
+
+  if ((/slug/i.test(combined) && /unique|duplicate|already/i.test(combined)) || /duplicate key/i.test(raw)) {
+    return "That web address is already in use. Choose a different one.";
+  }
+  if (detail && detail.length < 200) return detail;
+  /* Validation errors thrown by the collections' hooks are already written
+     for people. Anything long or multi-line is a stack, never shown. */
+  if (raw && raw.length < 300 && !raw.includes("\n")) return raw;
   return fallback;
 }
 
-const str = (v: FormDataEntryValue | null) => (typeof v === "string" ? v.trim() : "");
-const on = (v: FormDataEntryValue | null) => v === "on" || v === "true";
-
 /**
- * AED in the form, fils in the database.
- *
- * The owner types 480. Nobody in this business thinks in fils, and
- * "Price (fils): 48000" is how a bouquet gets listed at a hundred times its
- * price. Rounding happens once, here, at the boundary.
+ * The storefront reads the catalogue in its layout (search, cart pricing) and
+ * on most pages, so a catalogue change refreshes all of it — otherwise an edit
+ * made here would wait for the five-minute revalidation window to appear.
  */
-function aedFieldToFils(value: FormDataEntryValue | null): number | undefined {
-  const raw = str(value);
-  if (raw === "") return undefined;
-  const aed = Number(raw);
-  if (!Number.isFinite(aed) || aed < 0) throw new Error("Enter a price like 480 or 480.50.");
-  return Math.round(aed * 100);
+function revalidateStorefront() {
+  revalidatePath("/", "layout");
 }
 
 /* ------------------------------------------------------------------ */
 /* Products                                                            */
 /* ------------------------------------------------------------------ */
 
-function productDataFromForm(form: FormData) {
-  const priceFils = aedFieldToFils(form.get("priceAed"));
-  if (priceFils === undefined) throw new Error("A price is required.");
-
-  const compareAtPriceFils = aedFieldToFils(form.get("compareAtPriceAed"));
-
-  const occasions = form
-    .getAll("occasions")
-    .map((v) => Number(v))
-    .filter((n) => Number.isInteger(n));
-
-  const flowers = form.getAll("flowers").map(String).filter(Boolean);
-
-  /* Media ids chosen in the picker, in the order they were chosen. */
-  const images = form
-    .getAll("imageIds")
-    .map((v) => Number(v))
-    .filter((n) => Number.isInteger(n))
-    .map((id) => ({ image: id }));
-
+function productFields(parsed: ParsedProduct) {
   return {
-    name: str(form.get("name")),
-    shortDescription: str(form.get("shortDescription")) || undefined,
-    priceFils,
-    ...(compareAtPriceFils !== undefined ? { compareAtPriceFils } : {}),
-    currency: "AED",
-    category: str(form.get("category")) || "bouquet",
-    flowers,
-    occasions,
-    images,
-    available: on(form.get("available")),
-    featured: on(form.get("featured")),
-    bestseller: on(form.get("bestseller")),
-    newArrival: on(form.get("newArrival")),
-    seasonal: on(form.get("seasonal")),
-    sortOrder: Number(str(form.get("sortOrder")) || 0),
+    name: parsed.name,
+    shortDescription: parsed.shortDescription,
+    priceFils: parsed.priceFils,
+    compareAtPriceFils: parsed.compareAtPriceFils,
+    currency: "AED" as const,
+    category: parsed.category,
+    flowers: parsed.flowers,
+    occasions: parsed.occasions,
+    images: parsed.imageIds.map((image) => ({ image })),
+    available: parsed.available,
+    featured: parsed.featured,
+    bestseller: parsed.bestseller,
+    newArrival: parsed.newArrival,
+    seasonal: parsed.seasonal,
+    trackStock: parsed.trackStock,
+    sortOrder: parsed.sortOrder,
+    ...(parsed.stock !== undefined ? { stock: parsed.stock } : {}),
   };
 }
 
 export async function createProduct(form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    const data = productDataFromForm(form);
-    if (!data.name) return { ok: false, message: "A product name is required." };
+    const parsed = parseProductForm(form);
+    const description = plainTextToLexical(parsed.descriptionText);
 
-    const slug = str(form.get("slug"));
     const doc = await payload.create({
       collection: "products",
       user,
       overrideAccess: false,
-      data: { ...data, ...(slug ? { slug } : {}) } as never,
+      data: {
+        ...productFields(parsed),
+        /* No slug given: the collection's hook derives one from the name. */
+        ...(parsed.slug ? { slug: parsed.slug } : {}),
+        ...(description ? { description } : {}),
+        seo: {
+          title: parsed.seoTitle,
+          description: parsed.seoDescription,
+          noIndex: parsed.noIndex,
+        },
+      } as never,
     });
+
     revalidatePath("/admin/products");
-    revalidatePath("/shop");
-    return { ok: true, message: `“${doc.name}” created.` };
+    revalidateStorefront();
+    return { ok: true, message: `“${doc.name}” created.`, id: doc.id };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The product could not be created.") };
   }
@@ -123,20 +147,48 @@ export async function createProduct(form: FormData): Promise<ActionResult> {
 export async function updateProduct(id: number, form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    const data = productDataFromForm(form);
-    if (!data.name) return { ok: false, message: "A product name is required." };
+    const parsed = parseProductForm(form);
 
-    const doc = await payload.update({
+    const existing = await payload.findByID({
+      collection: "products",
+      id,
+      depth: 0,
+      user,
+      overrideAccess: false,
+    });
+
+    const shareImage = existing.seo?.image;
+    const data: Record<string, unknown> = {
+      ...productFields(parsed),
+      seo: {
+        title: parsed.seoTitle,
+        description: parsed.seoDescription,
+        noIndex: parsed.noIndex,
+        /* Not edited on this screen; carried so saving never clears it. */
+        image: typeof shareImage === "object" && shareImage ? shareImage.id : (shareImage ?? null),
+      },
+    };
+
+    /* An empty web address on an existing product means "keep it". */
+    if (parsed.slug) data.slug = parsed.slug;
+
+    /* Only when the words changed — see backend/domain/richtext.ts. A price
+       edit must never flatten formatting added elsewhere. */
+    if (!sameDescription(parsed.descriptionText, lexicalToPlainText(existing.description))) {
+      data.description = plainTextToLexical(parsed.descriptionText);
+    }
+
+    await payload.update({
       collection: "products",
       id,
       user,
       overrideAccess: false,
       data: data as never,
     });
+
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}/edit`);
-    revalidatePath("/shop");
-    revalidatePath(`/product/${doc.slug}`);
+    revalidateStorefront();
     return { ok: true, message: "Changes saved." };
   } catch (error) {
     return { ok: false, message: toMessage(error, "Your changes could not be saved.") };
@@ -146,10 +198,30 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
 export async function deleteProduct(id: number): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    await payload.delete({ collection: "products", id, user, overrideAccess: false });
+    /* Products that have been ordered are hidden, never deleted: the orders
+       keep their own snapshot, but the catalogue's history should too
+       (collections/Products.ts). */
+    const ordered = await payload
+      .count({
+        collection: "orders",
+        user,
+        overrideAccess: false,
+        where: { "items.product": { equals: id } },
+      })
+      .then((r) => r.totalDocs)
+      .catch(() => 0);
+
+    if (ordered > 0) {
+      return {
+        ok: false,
+        message: `This product is part of ${ordered} order${ordered === 1 ? "" : "s"}, so it is kept for your records. Untick “Available to buy” to hide it instead.`,
+      };
+    }
+
+    const doc = await payload.delete({ collection: "products", id, user, overrideAccess: false });
     revalidatePath("/admin/products");
-    revalidatePath("/shop");
-    return { ok: true, message: "Product deleted." };
+    revalidateStorefront();
+    return { ok: true, message: `“${doc.name}” deleted.` };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The product could not be deleted.") };
   }
@@ -159,45 +231,59 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
 /* Media                                                               */
 /* ------------------------------------------------------------------ */
 
+const UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
 /**
  * Upload a photograph.
  *
  * Goes through Payload's upload pipeline, so it lands in whatever storage is
  * configured — Vercel Blob in production, local disk in development — and
  * sharp still generates the four sizes. Nothing about storage changes here.
+ *
+ * Returns the new photo so the picker can show and select it immediately,
+ * without a page reload losing whatever the owner has typed into the product.
  */
 export async function uploadMedia(form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
   const file = form.get("file");
-  const alt = str(form.get("alt"));
+  const alt = readText(form.get("alt"));
 
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, message: "Choose a photograph to upload." };
   }
-  if (!alt) {
-    return { ok: false, message: "Describe the photograph so it is accessible." };
+  if (!UPLOAD_TYPES.includes(file.type)) {
+    return { ok: false, message: "Use a JPEG, PNG, WebP or AVIF photograph." };
   }
-  /* Matches the server limit, so the person gets a sentence rather than a 413. */
-  if (file.size > 4 * 1024 * 1024) {
-    return { ok: false, message: "That image is larger than 4 MB. Please use a smaller file." };
+  if (!alt) {
+    return {
+      ok: false,
+      message: "Describe the photograph first — for example “Blush peonies in a cream vase”.",
+    };
+  }
+  if (alt.length > 200) {
+    return { ok: false, message: "Keep the description under 200 characters." };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false, message: "That photo is larger than 4 MB. Please use a smaller file." };
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await payload.create({
+    const doc = await payload.create({
       collection: "media",
       user,
       overrideAccess: false,
       data: { alt } as never,
       file: {
-        data: buffer,
+        data: Buffer.from(await file.arrayBuffer()),
         mimetype: file.type,
         name: file.name,
         size: file.size,
       },
     });
     revalidatePath("/admin/media");
-    return { ok: true, message: "Photograph uploaded." };
+    const media = toMediaOption(doc);
+    return { ok: true, message: "Photo uploaded.", id: doc.id, ...(media ? { media } : {}) };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The upload failed. Please try again.") };
   }
@@ -206,20 +292,35 @@ export async function uploadMedia(form: FormData): Promise<ActionResult> {
 export async function deleteMedia(id: number): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
+    /* Refused while anything uses it, naming what does — rather than a
+       product page quietly losing its photograph. */
+    const usedBy = (await getMediaUsage()).get(id) ?? [];
+    if (usedBy.length > 0) {
+      return {
+        ok: false,
+        message: `This photo is used by ${listNames(usedBy)}. Remove it there first, then delete it.`,
+      };
+    }
     await payload.delete({ collection: "media", id, user, overrideAccess: false });
     revalidatePath("/admin/media");
-    return { ok: true, message: "Photograph removed." };
+    return { ok: true, message: "Photo deleted." };
   } catch (error) {
-    return {
-      ok: false,
-      message: toMessage(error, "It could not be removed — it may still be used by a product."),
-    };
+    return { ok: false, message: toMessage(error, "The photo could not be deleted.") };
   }
 }
 
 /* ------------------------------------------------------------------ */
 /* Orders                                                              */
 /* ------------------------------------------------------------------ */
+
+const FULFILMENT_DONE: Record<string, string> = {
+  CONFIRMED: "Order confirmed.",
+  PREPARING: "Marked as being prepared.",
+  READY: "Marked ready to go.",
+  OUT_FOR_DELIVERY: "Marked out for delivery.",
+  DELIVERED: "Marked delivered.",
+  CANCELLED: "Order cancelled.",
+};
 
 /**
  * Fulfilment only.
@@ -243,7 +344,8 @@ export async function updateOrderFulfilment(
       data: { fulfilmentStatus } as never,
     });
     revalidatePath("/admin/orders");
-    return { ok: true, message: `Marked as ${fulfilmentStatus.toLowerCase().replace(/_/g, " ")}.` };
+    revalidatePath("/admin");
+    return { ok: true, message: FULFILMENT_DONE[fulfilmentStatus] ?? "Status updated." };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The status could not be updated.") };
   }
@@ -251,20 +353,20 @@ export async function updateOrderFulfilment(
 
 export async function updateOrderOperations(id: number, form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
-  const assigned = str(form.get("assignedStaff"));
   try {
+    const assigned = parseIdList(form.getAll("assignedStaff"))[0];
     await payload.update({
       collection: "orders",
       id,
       user,
       overrideAccess: false,
       data: {
-        internalNotes: str(form.get("internalNotes")),
-        assignedStaff: assigned ? Number(assigned) : null,
+        internalNotes: readText(form.get("internalNotes")),
+        assignedStaff: assigned ?? null,
       } as never,
     });
     revalidatePath("/admin/orders");
-    return { ok: true, message: "Order updated." };
+    return { ok: true, message: "Order notes saved." };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The order could not be updated.") };
   }
@@ -274,31 +376,42 @@ export async function updateOrderOperations(id: number, form: FormData): Promise
 /* Occasions                                                           */
 /* ------------------------------------------------------------------ */
 
-function occasionDataFromForm(form: FormData) {
-  const image = str(form.get("imageId"));
+function occasionFields(form: FormData) {
+  const name = readText(form.get("name"));
+  if (!name) throw new FormInputError("Give the occasion a name.");
+  if (name.length > 80) throw new FormInputError("The name is too long — keep it under 80 characters.");
+
+  const description = readText(form.get("description"));
+  if (description.length > 600) {
+    throw new FormInputError("The description is too long — keep it under 600 characters.");
+  }
+
+  const slug = parseSlug(readText(form.get("slug")));
+  const [imageId] = parseIdList(form.getAll("imageId"));
+
   return {
-    name: str(form.get("name")),
-    ...(str(form.get("slug")) ? { slug: str(form.get("slug")) } : {}),
-    ...(image ? { image: Number(image) } : { image: null }),
-    sortOrder: Number(str(form.get("sortOrder")) || 0),
-    active: on(form.get("active")),
+    name,
+    ...(slug ? { slug } : {}),
+    description: description || null,
+    image: imageId ?? null,
+    sortOrder: parseWholeNumber(readText(form.get("sortOrder")), "Order", true) ?? 0,
+    active: readChecked(form.get("active")),
   };
 }
 
 export async function createOccasion(form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    const data = occasionDataFromForm(form);
-    if (!data.name) return { ok: false, message: "An occasion name is required." };
-    await payload.create({
+    const data = occasionFields(form);
+    const doc = await payload.create({
       collection: "occasions",
       user,
       overrideAccess: false,
       data: data as never,
     });
     revalidatePath("/admin/occasions");
-    revalidatePath("/occasions");
-    return { ok: true, message: `“${data.name}” created.` };
+    revalidateStorefront();
+    return { ok: true, message: `“${doc.name}” created.`, id: doc.id };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The occasion could not be created.") };
   }
@@ -312,10 +425,10 @@ export async function updateOccasion(id: number, form: FormData): Promise<Action
       id,
       user,
       overrideAccess: false,
-      data: occasionDataFromForm(form) as never,
+      data: occasionFields(form) as never,
     });
     revalidatePath("/admin/occasions");
-    revalidatePath("/occasions");
+    revalidateStorefront();
     return { ok: true, message: "Changes saved." };
   } catch (error) {
     return { ok: false, message: toMessage(error, "Your changes could not be saved.") };
@@ -325,9 +438,28 @@ export async function updateOccasion(id: number, form: FormData): Promise<Action
 export async function deleteOccasion(id: number): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
+    /* Deleting an occasion silently strips it from every product that uses
+       it. Refuse instead, and say how many. */
+    const used = await payload
+      .count({
+        collection: "products",
+        user,
+        overrideAccess: false,
+        where: { occasions: { in: [id] } },
+      })
+      .then((r) => r.totalDocs)
+      .catch(() => 0);
+
+    if (used > 0) {
+      return {
+        ok: false,
+        message: `${used} product${used === 1 ? " uses" : "s use"} this occasion. Remove it from ${used === 1 ? "that product" : "those products"} first, or untick “Show on the website” to hide it.`,
+      };
+    }
+
     await payload.delete({ collection: "occasions", id, user, overrideAccess: false });
     revalidatePath("/admin/occasions");
-    revalidatePath("/occasions");
+    revalidateStorefront();
     return { ok: true, message: "Occasion deleted." };
   } catch (error) {
     return { ok: false, message: toMessage(error, "The occasion could not be deleted.") };
@@ -340,51 +472,64 @@ export async function deleteOccasion(id: number): Promise<ActionResult> {
 
 export async function updateEnquiry(id: number, form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
-  const assigned = str(form.get("assignedStaff"));
-  const followUp = str(form.get("followUpAt"));
   try {
+    const assigned = parseIdList(form.getAll("assignedStaff"))[0];
+
+    /* The follow-up day is only sent when it changed. Re-sending an
+       unchanged day that has since passed would be refused by the
+       collection's no-past-dates rule, and nothing else could be saved. */
+    const followUpDate = readText(form.get("followUpDate"));
+    const followUpOriginal = readText(form.get("followUpDateOriginal"));
+    const followUp =
+      followUpDate === followUpOriginal
+        ? {}
+        : { followUpAt: followUpDate ? followUpIsoFromDateInput(followUpDate, new Date()) : null };
+
     await payload.update({
       collection: "enquiries",
       id,
       user,
       overrideAccess: false,
       data: {
-        status: str(form.get("status")),
-        priority: str(form.get("priority")),
-        assignedStaff: assigned ? Number(assigned) : null,
-        internalNotes: str(form.get("internalNotes")),
-        ...(followUp ? { followUpAt: new Date(followUp).toISOString() } : {}),
+        status: readText(form.get("status")),
+        priority: readText(form.get("priority")),
+        assignedStaff: assigned ?? null,
+        internalNotes: readText(form.get("internalNotes")),
+        ...followUp,
       } as never,
     });
     revalidatePath("/admin/enquiries");
-    return { ok: true, message: "Enquiry updated." };
+    revalidatePath(`/admin/enquiries/${id}`);
+    revalidatePath("/admin");
+    return { ok: true, message: "Enquiry saved." };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The enquiry could not be updated.") };
+    return { ok: false, message: toMessage(error, "The enquiry could not be saved.") };
   }
 }
 
 export async function updateEvent(id: number, form: FormData): Promise<ActionResult> {
   const { payload, user } = await authed();
-  const assigned = str(form.get("assignedStaff"));
-  const quote = aedFieldToFils(form.get("quoteAmountAed"));
   try {
+    const assigned = parseIdList(form.getAll("assignedStaff"))[0];
+    const quote = parseAedToFils(readText(form.get("quoteAmountAed")), "Quote");
     await payload.update({
       collection: "events",
       id,
       user,
       overrideAccess: false,
       data: {
-        status: str(form.get("status")),
-        assignedStaff: assigned ? Number(assigned) : null,
-        internalNotes: str(form.get("internalNotes")),
+        status: readText(form.get("status")),
+        assignedStaff: assigned ?? null,
+        internalNotes: readText(form.get("internalNotes")),
         /* Admin-only at field level; a staff attempt is stripped by Payload,
            which is why this is passed unconditionally and not guarded here. */
-        ...(quote !== undefined ? { quoteAmountFils: quote } : {}),
+        ...(quote !== null ? { quoteAmountFils: quote } : {}),
       } as never,
     });
     revalidatePath("/admin/events");
-    return { ok: true, message: "Event updated." };
+    revalidatePath(`/admin/events/${id}`);
+    return { ok: true, message: "Event saved." };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The event could not be updated.") };
+    return { ok: false, message: toMessage(error, "The event could not be saved.") };
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { updateEnquiry, updateEvent } from "@backend/actions/admin";
+import { dubaiDateInputValue } from "@backend/domain/dates";
 import { ActionForm, Field, Fieldset, Select, TextArea, TextInput } from "@admin/components/Form";
 
 /**
@@ -57,8 +58,12 @@ export function EnquiryWorkflow({
   followUpAt?: string;
   staff: { label: string; value: string }[];
 }) {
+  /* A calendar day in UAE time — see backend/domain/dates.ts for why this
+     is no longer a date-and-time field. */
+  const followUpDate = dubaiDateInputValue(followUpAt);
+
   return (
-    <ActionForm action={(form) => updateEnquiry(id, form)} submitLabel="Save">
+    <ActionForm action={(form) => updateEnquiry(id, form)} submitLabel="Save changes" inline>
       <Fieldset legend="Working this enquiry">
         <Field label="Status" name="status">
           <Select name="status" options={ENQUIRY_STATUS} defaultValue={status} />
@@ -76,14 +81,11 @@ export function EnquiryWorkflow({
         </Field>
         <Field
           label="Follow up on"
-          name="followUpAt"
-          hint="Cannot be in the past — the system refuses a date that has already gone."
+          name="followUpDate"
+          hint="The day to get back to them. Leave empty for no reminder."
         >
-          <TextInput
-            name="followUpAt"
-            type="datetime-local"
-            defaultValue={followUpAt ? followUpAt.slice(0, 16) : undefined}
-          />
+          <input type="hidden" name="followUpDateOriginal" value={followUpDate} />
+          <TextInput name="followUpDate" type="date" defaultValue={followUpDate} />
         </Field>
         <Field label="Internal notes" name="internalNotes" hint="Never shown to the enquirer.">
           <TextArea name="internalNotes" rows={5} defaultValue={internalNotes} />
@@ -111,7 +113,7 @@ export function EventWorkflow({
   staff: { label: string; value: string }[];
 }) {
   return (
-    <ActionForm action={(form) => updateEvent(id, form)} submitLabel="Save">
+    <ActionForm action={(form) => updateEvent(id, form)} submitLabel="Save changes" inline>
       <Fieldset legend="Working this event">
         <Field label="Status" name="status">
           <Select name="status" options={EVENT_STATUS} defaultValue={status} />
@@ -125,18 +127,8 @@ export function EventWorkflow({
           />
         </Field>
         {canQuote ? (
-          <Field
-            label="Quote (AED)"
-            name="quoteAmountAed"
-            hint="What the business is charging. Owner only."
-          >
-            <TextInput
-              name="quoteAmountAed"
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={quoteAmountAed}
-            />
+          <Field label="Quote (AED)" name="quoteAmountAed" hint="What the business is charging. Owner only.">
+            <TextInput name="quoteAmountAed" type="text" inputMode="decimal" defaultValue={quoteAmountAed} />
           </Field>
         ) : null}
         <Field label="Internal notes" name="internalNotes" hint="Never shown to the client.">

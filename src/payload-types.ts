@@ -395,6 +395,10 @@ export interface Occasion {
   id: number;
   name: string;
   /**
+   * A line or two shown under the name on the occasion's page.
+   */
+  description?: string | null;
+  /**
    * The page address. Generated from the name; changing it breaks live links.
    */
   slug: string;
@@ -1053,6 +1057,7 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface OccasionsSelect<T extends boolean = true> {
   name?: T;
+  description?: T;
   slug?: T;
   image?: T;
   sortOrder?: T;

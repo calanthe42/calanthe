@@ -123,6 +123,8 @@ export type Occasion = {
   slug: OccasionSlug;
   name: string;
   image: ProductImage;
+  /** Written by the owner in /admin. Absent until she writes one. */
+  description?: string;
 };
 
 function img(

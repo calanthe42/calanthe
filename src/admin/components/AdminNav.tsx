@@ -4,17 +4,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { adminLogout } from "@backend/actions/admin-auth";
 
 /**
- * The admin's navigation: a collapsible rail on desktop, a drawer on mobile.
+ * The admin's navigation: a fixed rail on desktop, a drawer on mobile.
  *
  * Grouped by what the owner is trying to do rather than by collection, which
  * is the whole difference between this and the CMS. "Shop", "Orders",
  * "Business", "System" are the four hats she wears; the database tables
  * underneath are not her problem.
+ *
+ * TWO COMPONENTS, NOT ONE. This used to be a single component mounted twice —
+ * once in the page row, once in the top bar — and each mount rendered both the
+ * drawer trigger and the rail. On a phone that left a second, stray menu
+ * button pinned beside the content. The rail and the drawer are now separate,
+ * and each is mounted exactly where it belongs.
  */
 
-export type NavItem = { label: string; href: string; badge?: number };
+export type NavItem = { label: string; href: string };
 export type NavGroup = { heading: string | null; items: NavItem[] };
 
 export const NAV: NavGroup[] = [
@@ -58,6 +65,15 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function Brand() {
+  return (
+    <div>
+      <p className="font-brand text-base uppercase tracking-brand text-cream">Calanthe</p>
+      <p className="mt-0.5 text-xs text-cream/55">Admin</p>
+    </div>
+  );
+}
+
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
@@ -80,18 +96,13 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors duration-150",
+                      "flex min-h-10 items-center rounded-md px-3 text-sm transition-colors duration-150",
                       active
                         ? "bg-cream/15 font-medium text-cream"
                         : "text-cream/70 hover:bg-cream/10 hover:text-cream",
                     )}
                   >
-                    <span>{item.label}</span>
-                    {item.badge ? (
-                      <span className="rounded-sm bg-burnt-orange px-1.5 py-0.5 text-[11px] font-medium text-cream">
-                        {item.badge}
-                      </span>
-                    ) : null}
+                    {item.label}
                   </Link>
                 </li>
               );
@@ -103,100 +114,133 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function UserFooter({ name, role }: { name: string; role: string }) {
+/**
+ * Who is signed in, sign-out, and — for the owner only — the way to the
+ * developer CMS.
+ *
+ * The CMS link is deliberately small, labelled for what it is, and absent for
+ * staff. Nothing a florist or the owner does day to day needs it; it exists so
+ * a developer maintaining the site can reach the infrastructure without the
+ * business screens having to pretend it is not there.
+ */
+function UserFooter({ name, role, isOwner }: { name: string; role: string; isOwner: boolean }) {
   return (
     <div className="mt-auto border-t border-cream/15 px-6 py-4">
       <p className="truncate text-sm font-medium text-cream">{name}</p>
       <p className="text-xs text-cream/55">{role}</p>
-      <Link
-        href="/cms/logout"
-        className="mt-3 inline-block text-xs text-cream/70 underline underline-offset-4 hover:text-cream"
-      >
-        Sign out
-      </Link>
+      <form action={adminLogout} className="mt-3">
+        <button
+          type="submit"
+          className="min-h-9 text-xs text-cream/75 underline underline-offset-4 hover:text-cream"
+        >
+          Sign out
+        </button>
+      </form>
+      {isOwner ? (
+        <div className="mt-4 border-t border-cream/10 pt-3">
+          <p className="font-brand text-[9px] uppercase tracking-brand text-cream/35">Developer</p>
+          <a
+            href="/cms"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-flex min-h-9 items-center text-[11px] text-cream/45 hover:text-cream/80"
+          >
+            Developer CMS ↗
+          </a>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-export function AdminNav({ name, role }: { name: string; role: string }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+type NavProps = { name: string; role: string; isOwner: boolean };
+
+/** Desktop rail. Hidden below the `lg` breakpoint. */
+export function AdminSidebar({ name, role, isOwner }: NavProps) {
+  return (
+    <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col bg-olive lg:flex">
+      <div className="px-6 py-6">
+        <Brand />
+      </div>
+      <div className="flex-1 overflow-y-auto pb-4">
+        <NavLinks />
+      </div>
+      <UserFooter name={name} role={role} isOwner={isOwner} />
+    </aside>
+  );
+}
+
+/** Mobile trigger and drawer. Renders nothing at `lg` and above. */
+export function AdminMobileNav({ name, role, isOwner }: NavProps) {
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   /* A drawer that survives navigation traps the user on mobile. */
-  useEffect(() => setDrawerOpen(false), [pathname]);
+  useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
-    if (!drawerOpen) return;
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen]);
+    /* The page behind a modal drawer must not scroll under a thumb. */
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
 
   return (
-    <>
-      {/* Mobile trigger. Lives in flow so it never covers content. */}
+    <div className="lg:hidden">
       <button
         type="button"
-        onClick={() => setDrawerOpen(true)}
-        aria-label="Open navigation"
-        aria-expanded={drawerOpen}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-hairline bg-white text-olive lg:hidden"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        aria-expanded={open}
+        className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-hairline bg-white text-olive"
       >
-        <span aria-hidden className="text-lg leading-none">
-          ≡
-        </span>
+        <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+          <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
       </button>
 
-      {/* Desktop rail */}
-      <aside className="hidden w-60 shrink-0 flex-col bg-olive lg:flex">
-        <div className="px-6 py-6">
-          <p className="font-brand text-base uppercase tracking-brand text-cream">Calanthe</p>
-          <p className="mt-0.5 text-xs text-cream/55">Admin</p>
-        </div>
-        <div className="flex-1 overflow-y-auto pb-4">
-          <NavLinks />
-        </div>
-        <UserFooter name={name} role={role} />
-      </aside>
-
-      {/* Mobile drawer */}
-      {drawerOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {open ? (
+        <div className="fixed inset-0 z-50">
           <button
             type="button"
-            aria-label="Close navigation"
-            onClick={() => setDrawerOpen(false)}
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
             className="absolute inset-0 bg-olive/60"
           />
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Admin navigation"
+            aria-label="Admin menu"
             className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-olive"
           >
-            <div className="flex items-start justify-between px-6 py-6">
-              <div>
-                <p className="font-brand text-base uppercase tracking-brand text-cream">Calanthe</p>
-                <p className="mt-0.5 text-xs text-cream/55">Admin</p>
-              </div>
+            <div className="flex items-start justify-between px-6 py-5">
+              <Brand />
               <button
                 type="button"
-                onClick={() => setDrawerOpen(false)}
-                aria-label="Close navigation"
-                className="h-11 w-11 text-cream/70 hover:text-cream"
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                className="-mr-3 inline-flex h-11 w-11 items-center justify-center text-cream/70 hover:text-cream"
               >
-                <span aria-hidden>×</span>
+                <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto pb-4">
-              <NavLinks onNavigate={() => setDrawerOpen(false)} />
+              <NavLinks onNavigate={() => setOpen(false)} />
             </div>
-            <UserFooter name={name} role={role} />
+            <UserFooter name={name} role={role} isOwner={isOwner} />
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

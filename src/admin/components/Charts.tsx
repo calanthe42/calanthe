@@ -43,7 +43,7 @@ export function BarChart({
     <div className="rounded-md border border-hairline/70 bg-white p-5">
       <div className="mb-1 flex items-baseline justify-between gap-3">
         <h3 className="font-brand text-[10px] uppercase tracking-brand text-sage">{title}</h3>
-        <p className="font-display text-2xl font-light tabular-nums text-olive">
+        <p className="font-display text-2xl font-light tabular-nums lining-nums text-olive">
           {metric === "orders" ? total : formatFils(total)}
         </p>
       </div>
@@ -75,9 +75,11 @@ export function BarChart({
                   rx={0.3}
                   className={metric === "orders" ? "fill-olive/70" : "fill-[#b55b29]/75"}
                 >
+                  {/* ONE string child. `{label}:{" "}{value}` is four children,
+                      which React 19 refuses for <title> — the dashboard failed
+                      hydration the moment a period contained an order. */}
                   <title>
-                    {points[i].label}:{" "}
-                    {metric === "orders" ? `${value} orders` : formatFils(value)}
+                    {`${points[i].label}: ${metric === "orders" ? `${value} orders` : formatFils(value)}`}
                   </title>
                 </rect>
               );

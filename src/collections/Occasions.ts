@@ -34,6 +34,14 @@ export const Occasions: CollectionConfig = {
   fields: [
     { name: "name", type: "text", required: true, maxLength: 80 },
     {
+      name: "description",
+      type: "textarea",
+      maxLength: 600,
+      /* Optional, and nullable in the database, so every existing occasion
+         stays valid without a backfill. */
+      admin: { description: "A line or two shown under the name on the occasion's page." },
+    },
+    {
       name: "slug",
       type: "text",
       required: true,

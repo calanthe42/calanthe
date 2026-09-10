@@ -2,6 +2,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Media, Product as PayloadProduct } from "@/payload-types";
 import type { PlaceholderPalette, Product, ProductImage } from "@/lib/data";
+import { servedMediaPath } from "@backend/domain/media-option";
 
 /**
  * The only place the storefront reads products from the database.
@@ -68,7 +69,7 @@ function toImages(doc: PayloadProduct): readonly [ProductImage, ProductImage] {
     .filter(isMedia)
     .map((media, index) => ({
       alt: media.alt ?? doc.name,
-      src: media.url ?? undefined,
+      src: servedMediaPath(media.url),
       placeholder: { seed: `${doc.slug}-${index}`, palette: toPalette(undefined) },
     }));
 

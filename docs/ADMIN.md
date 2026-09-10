@@ -9,6 +9,59 @@ Related: [SECURITY §3](./SECURITY.md) · [DATABASE](./DATABASE.md) ·
 
 ---
 
+## 0. Where the business actually works: `/admin`
+
+> Sections 1–7 below describe the original plan to theme Payload's own
+> admin panel. That plan was superseded: the business works in a custom
+> Calanthe application at **`/admin`**, and Payload's panel at **`/cms`**
+> is developer infrastructure only. The rules in those sections — business
+> language, no fils, legal next steps only, nothing marks an order paid —
+> all still apply, and are implemented in `/admin`.
+
+**The owner never needs `/cms` for normal work.** Every business operation
+has a Calanthe screen:
+
+| Area | Screens |
+| --- | --- |
+| Sign in / out | `/admin/login` — Payload's own `login`, same `payload-token` cookie, admin/staff only (`backend/actions/admin-auth.ts`) |
+| Dashboard | `/admin` — revenue, orders, customers, waiting enquiries; 7/30/90 days; today's deliveries, overdue orders, best sellers, recent orders and enquiries; quick actions |
+| Products | `/admin/products` (search, availability, category, highlight, sort; Edit/View on every row) · `/new` · `/[id]/edit` |
+| Occasions | `/admin/occasions` · `/new` · `/[id]/edit` |
+| Media | `/admin/media` — upload, preview, search, type and usage filters, delete (refused while in use) |
+| Orders | `/admin/orders` (search, status, payment, delivery dates) · `/[orderNumber]` |
+| Customers | `/admin/customers` · `/[id]` (owner only) |
+| Enquiries | `/admin/enquiries` (search, status, priority, type) · `/[id]` |
+| Events | `/admin/events` (search, status, type) · `/[id]` |
+
+**The product editor** covers every business field: name, web address,
+short and full description, price and compare-at price **in AED**,
+category, flowers, occasions, photos (upload or choose, reorder, remove —
+the first is the card image), availability, featured / bestseller / new /
+seasonal, stock, shop order, search title and description, and "hide from
+search engines". Photos are picked in a dialog that can also upload, so the
+owner never leaves the product to add one. A product cannot be made
+available without a photo; the editor says so before she tries.
+
+**The full description** is edited as plain paragraphs and stored as
+Lexical rich text. It is only rewritten when the words change, so saving a
+price never flattens formatting added elsewhere (`backend/domain/richtext.ts`).
+
+**Deletes refuse rather than break.** A photo used by a product or occasion,
+an occasion used by a product, and a product that has been ordered cannot be
+deleted — the message names what is using it and offers the alternative
+(remove it there, or hide instead).
+
+**Where `/cms` still appears:** one small "Developer CMS ↗" link in the
+sidebar footer, rendered for the owner role only. Staff never see it.
+
+**Screens not yet built** (Memberships, Marketing, Delivery, Staff,
+Settings) say so plainly and no longer link to the CMS.
+
+All admin reads and writes run as the signed-in user — no `overrideAccess`
+anywhere in the admin (`backend/actions/admin.ts`).
+
+---
+
 ## 1. Navigation — business language, not schema
 
 Payload groups collections by `admin.group`. The labels below are what

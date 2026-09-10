@@ -18,6 +18,13 @@
 @theme {
   /* A cooler, quieter ground than the storefront's warm canvas — long
      sessions on #F3EFDF are tiring, and white makes tables legible. */
+  /* tokens.css resets Tailwind's default palette (`--color-*: initial`), which
+     is the storefront's brand law — and which also removed `white`. Every
+     `bg-white` in this admin was therefore silently transparent: invisible on
+     cards over the pale ground, but a see-through media picker, delete
+     confirmation and toast over anything darker. White is defined here, for
+     the admin only; the storefront's palette is untouched. */
+  --color-white: #ffffff;
   --color-admin-bg: #faf8f2;
   --color-admin-surface: #ffffff;
   --color-admin-sunken: #f4f1e7;
@@ -41,10 +48,18 @@
 
 /* Focus must be obvious for keyboard users: this is a tool, and people who
    live in it will tab through it. */
-.admin-shell :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+.admin-shell :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+.admin-portal :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--color-burnt-orange);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* Dialogs portalled to <body> (the media picker) sit outside .admin-shell,
+   so they carry the admin's type and ink themselves. */
+.admin-portal {
+  font-family: var(--font-sans);
+  color: var(--color-olive);
 }
 
 /* Tables scroll inside their own container so the page body never does. */

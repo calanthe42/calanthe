@@ -2,6 +2,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Media, Occasion as PayloadOccasion } from "@/payload-types";
 import type { Occasion, ProductImage } from "@/lib/data";
+import { servedMediaPath } from "@backend/domain/media-option";
 
 /**
  * The only place the storefront reads occasions from the database.
@@ -32,7 +33,7 @@ function toImage(doc: PayloadOccasion): ProductImage {
   if (isMedia(media)) {
     return {
       alt: media.alt ?? `${doc.name} arrangements`,
-      src: media.url ?? undefined,
+      src: servedMediaPath(media.url),
       placeholder: { seed: `occ-${doc.slug}`, palette: "warm" },
     };
   }
@@ -47,6 +48,7 @@ function toStorefrontOccasion(doc: PayloadOccasion): Occasion {
     slug: doc.slug as Occasion["slug"],
     name: doc.name,
     image: toImage(doc),
+    ...(doc.description ? { description: doc.description } : {}),
   };
 }
 

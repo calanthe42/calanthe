@@ -82,7 +82,10 @@ export function productJsonLd(product: ProductJsonLdInput): JsonLd {
     "@type": "Product",
     name: product.name,
     url: absoluteUrl(`/product/${product.slug}`),
-    ...(product.image ? { image: product.image } : {}),
+    /* Photos are served root-relative; structured data must be absolute. */
+    ...(product.image
+      ? { image: product.image.startsWith("/") ? absoluteUrl(product.image) : product.image }
+      : {}),
     brand: { "@type": "Brand", name: "Calanthe" },
     offers: {
       "@type": "Offer",

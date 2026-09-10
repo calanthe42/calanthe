@@ -57,3 +57,10 @@ describe("structured data claims nothing the business cannot back", () => {
     expect(items[1]?.name).toBe("Shop");
   });
 });
+
+describe("product structured data images", () => {
+  it("turns a root-relative photo path into an absolute URL, as search engines require", () => {
+    const data = productJsonLd({ name: "Amber", slug: "amber", priceAed: 480, image: "/api/media/file/a.jpg" });
+    expect(String(data.image)).toMatch(/^https?:\/\/[^/]+\/api\/media\/file\/a\.jpg$/);
+  });
+});

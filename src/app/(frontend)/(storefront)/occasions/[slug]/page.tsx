@@ -27,7 +27,9 @@ export async function generateMetadata({
   const occasion = await getActiveOccasionBySlug(slug);
   if (!occasion) return { title: "Occasion" };
 
-  const description = `${occasion.name} flowers, hand-composed by the Calanthe atelier and delivered across the UAE.`;
+  const description =
+    occasion.description ||
+    `${occasion.name} flowers, hand-composed by the Calanthe atelier and delivered across the UAE.`;
   const image = occasion.image.src;
 
   return {
@@ -69,6 +71,12 @@ export default async function OccasionPage({
         <h1 className="display-2 mt-3 font-display font-light text-olive">
           {occasion.name}
         </h1>
+        {/* The owner's own words, when she has written them in /admin. */}
+        {occasion.description ? (
+          <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
+            {occasion.description}
+          </p>
+        ) : null}
       </Reveal>
 
       {matches.length === 0 ? (
