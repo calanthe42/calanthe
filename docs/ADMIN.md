@@ -19,46 +19,91 @@ Related: [SECURITY §3](./SECURITY.md) · [DATABASE](./DATABASE.md) ·
 > all still apply, and are implemented in `/admin`.
 
 **The owner never needs `/cms` for normal work.** Every business operation
-has a Calanthe screen:
+has a Calanthe screen, in her language and her theme.
+
+### 0.1 One design system
+
+Every screen is assembled from the primitives in `src/admin/ui/` — one
+Button, one Table, one Dialog, one toast system, one save cycle. No screen
+carries its own copy of anything (see `src/admin/README.md`).
+
+| Piece | How it is built |
+| --- | --- |
+| Modal, confirmation, mobile drawer | The browser's own `<dialog>` with `showModal()`: the top layer, so no ancestor can clip or re-anchor it, with focus trapping, Escape and focus return built in |
+| Row menu, tabs | The WAI-ARIA patterns by hand: arrow keys, Home/End, type-to-find, Escape returns focus to the trigger |
+| Tables | A real `<table>` from 768px; below that each row becomes a card, so the Edit button is never the part that falls off-screen |
+| Toasts, saving state | One provider and one `useAction` hook, used by every screen |
+
+**No dependency was added for any of it.** Display primitives are Server
+Components; only interaction is a client island.
+
+### 0.2 Theme and language are decided on the server
+
+`calanthe-admin-theme` (light, dark, system) and `calanthe-admin-locale`
+(en, ar) are cookies read in `(admin)/admin/layout.tsx`, which stamps `lang`,
+`dir` and `data-theme` on `<html>` before the first byte reaches the browser.
+There is no flash of the wrong theme, and no moment where Arabic renders
+left-to-right.
+
+- Dark mode is **designed, not inverted** (section 5).
+- Arabic **mirrors the whole layout** (section 6.1). Every admin file uses
+  logical CSS only, enforced by `src/admin/rtl-guard.test.ts`, which fails
+  the build if a left/right-specific class appears in an admin class string.
+- Both switches live at the foot of the navigation, beside View store and
+  the account, and on the sign-in screen.
+
+### 0.3 The screens
 
 | Area | Screens |
 | --- | --- |
-| Sign in / out | `/admin/login` — Payload's own `login`, same `payload-token` cookie, admin/staff only (`backend/actions/admin-auth.ts`) |
-| Dashboard | `/admin` — revenue, orders, customers, waiting enquiries; 7/30/90 days; today's deliveries, overdue orders, best sellers, recent orders and enquiries; quick actions |
-| Products | `/admin/products` (search, availability, category, highlight, sort; Edit/View on every row) · `/new` · `/[id]/edit` |
-| Occasions | `/admin/occasions` · `/new` · `/[id]/edit` |
-| Media | `/admin/media` — upload, preview, search, type and usage filters, delete (refused while in use) |
-| Orders | `/admin/orders` (search, status, payment, delivery dates) · `/[orderNumber]` |
+| Sign in / out | `/admin/login` — Payload's own `login`, the same `payload-token` cookie, admin/staff only; language and theme can be chosen before signing in |
+| Dashboard | `/admin` — revenue (placed orders, with paid shown beside it), orders, customers, products; 7/30/90 days; a **Needs attention** panel built only from conditions that are true; revenue and order charts; open orders by status; top products; today's deliveries; recent orders and enquiries; quick actions |
+| Products | `/admin/products` (search, availability including missing photos and out of stock, category, highlight, sort, paging) · `/new` · `/[id]/edit` |
+| Occasions | `/admin/occasions` (search, status) · `/new` · `/[id]/edit` |
+| Media | `/admin/media` — upload, search, type and usage filters, a details sheet with editable alt text, delete (refused while in use) |
+| Orders | `/admin/orders` (search, status, payment, needs-attention, delivery dates, paging) · `/[orderNumber]` |
 | Customers | `/admin/customers` · `/[id]` (owner only) |
-| Enquiries | `/admin/enquiries` (search, status, priority, type) · `/[id]` |
+| Enquiries | `/admin/enquiries` (search, status including "waiting for a reply", priority, type, follow-up due) · `/[id]` |
 | Events | `/admin/events` (search, status, type) · `/[id]` |
+| Not built yet | Discounts, Delivery, Memberships, Campaigns, Staff, Settings — each marked "Soon", saying plainly what is missing, linking to nothing |
 
-**The product editor** covers every business field: name, web address,
-short and full description, price and compare-at price **in AED**,
-category, flowers, occasions, photos (upload or choose, reorder, remove —
-the first is the card image), availability, featured / bestseller / new /
-seasonal, stock, shop order, search title and description, and "hide from
-search engines". Photos are picked in a dialog that can also upload, so the
-owner never leaves the product to add one. A product cannot be made
-available without a photo; the editor says so before she tries.
+Navigation is grouped **Overview, Catalog, Sales, Operations, Marketing,
+System**, as a sidebar on desktop and a drawer on a phone.
 
-**The full description** is edited as plain paragraphs and stored as
-Lexical rich text. It is only rewritten when the words change, so saving a
-price never flattens formatting added elsewhere (`backend/domain/richtext.ts`).
+**The product editor** covers every business field: name, web address, short
+and full description, price and compare-at price **in AED**, category,
+flowers, occasions, photos (upload or choose, reorder, set the primary one,
+remove), availability, featured / bestseller / new arrival / seasonal, stock,
+store order, search title and description, and "hide from search engines". A
+product cannot be made available without a photo, and the switch says so
+before she tries.
+
+**The full description** is edited as plain paragraphs and stored as Lexical
+rich text, rewritten only when the words change, so saving a price never
+flattens formatting added elsewhere (`backend/domain/richtext.ts`).
+
+### 0.4 Every change says what happened
+
+Every save, delete and status change moves through one path:
+idle, saving, then **saved** or **couldn't save**. "Saved" and its toast
+appear only after the server confirms — nothing is optimistic. A failed save
+keeps everything that was typed and says why. Leaving a form with unsaved
+changes asks first.
 
 **Deletes refuse rather than break.** A photo used by a product or occasion,
 an occasion used by a product, and a product that has been ordered cannot be
-deleted — the message names what is using it and offers the alternative
-(remove it there, or hide instead).
+deleted — the message names what is using it and offers the alternative.
 
-**Where `/cms` still appears:** one small "Developer CMS ↗" link in the
-sidebar footer, rendered for the owner role only. Staff never see it.
+### 0.5 Security is unchanged
 
-**Screens not yet built** (Memberships, Marketing, Delivery, Staff,
-Settings) say so plainly and no longer link to the CMS.
+All admin reads and writes run as the signed-in user — **no `overrideAccess`
+anywhere in the admin** (`backend/actions/admin.ts`). What a staff member may
+see is decided by Payload's access rules, not by hiding links: the customer
+list refuses staff, the product editor is read-only for them, and the
+"Developer CMS" link is rendered for the owner alone.
 
-All admin reads and writes run as the signed-in user — no `overrideAccess`
-anywhere in the admin (`backend/actions/admin.ts`).
+Server actions return an English message **plus a dictionary code**, and the
+admin translates it. The backend keeps no knowledge of languages or screens.
 
 ---
 
@@ -222,33 +267,33 @@ and it removes the single biggest source of admin error: entering
 
 ## 5. Light and dark
 
-```ts
-admin: { theme: "all" }   // verified available in Payload 3.88
-```
+The admin is a custom application, so this is no longer Payload's `theme`
+setting. `(admin)/admin.css` defines one set of **semantic** tokens with two
+values each; components name a role, never a brand colour, so both themes are
+correct by construction.
 
-`"all"` gives every user a light/dark toggle that persists per account.
-On top of it, one stylesheet (`admin.components.css`) maps Payload's CSS
-custom properties to Calanthe's palette so both themes are the brand,
-not a tinted default:
-
-| | Light | Dark |
+| Role | Light | Dark |
 | --- | --- | --- |
-| Background | `canvas #F3EFDF` | `olive #2B2F1B` |
-| Surface | `#FFFFFF` | `#353A22` |
-| Text | `olive #2B2F1B` | `cream #E4DCC5` |
-| Accent / primary action | `burnt-orange #B55B29` | `burnt-orange #B55B29` |
-| Hairline | `#CBC4A9` | `rgba(228,220,197,.18)` |
-| Headings | Cinzel | Cinzel |
+| `page` | `#F7F4EB` warm cream | `#12140C` olive-black |
+| `surface` / `raised` | `#FFFDF8` / `#FFFFFF` | `#1A1D13` / `#22261A` |
+| `ink` / `ink-2` / `ink-3` | `#2B2F1B` / `#55583F` / `#66674B` | `#EDE7D5` / `#C9C4AE` / `#A19F86` |
+| `line` / `line-strong` | `#E6E0CF` / `#CBC4A9` | `#2C3022` / `#434834` |
+| `accent` (primary action) | burnt orange `#B55B29` | `#D27C47` |
+| `success` / `warning` / `danger` | `#3F6337` / `#8A4A1C` / `#8C2F3C` | `#9CBF8C` / `#E3A86A` / `#EB8F9A` |
+| Navigation | olive `#2B2F1B` | `#0E1009` |
 
-The accent stays constant across themes so a primary action is always
-the same colour — the one thing that should never move.
+**Dark is designed, not inverted.** Surfaces grow lighter as they come
+forward, text is warm rather than white, and the accent is lifted so it keeps
+its contrast on a dark ground.
 
-Contrast is checked both ways: cream on olive is 8.9:1, olive on canvas
-is 10.4:1, and burnt-orange on canvas is 4.6:1 — all above WCAG AA for
-their sizes. Burnt-orange is used for large text and buttons only, never
-small body copy.
+Contrast was checked both ways at body size: the quietest text colour
+(`ink-3`) is 4.9:1 on the light sunken surface and 6.3:1 on the dark one, and
+accent, success, warning and danger all clear 4.5:1 on their surfaces. On the
+dark navigation the focus ring switches to the navigation's own ink, because
+the accent is under 3:1 there.
 
----
+The choice persists in a cookie and follows the device on a first visit
+(system). Switching repaints colours only — no layout shift.
 
 ## 6. English and Arabic
 
@@ -256,32 +301,34 @@ Two independent things, often confused:
 
 ### 6.1 Admin interface language
 
-Payload ships Arabic translations — **verified present** in
-`@payloadcms/translations@3.88.0` (`ar`, `dateFNSKey: "ar"`, one of 44
-bundled languages).
+Built — and not through Payload. The admin carries its own dictionary.
 
-```ts
-i18n: {
-  supportedLanguages: { en, ar },
-  fallbackLanguage: "en",
-}
-```
+- `src/admin/i18n/en.ts` is the source **and the schema**: `ar.ts` is typed
+  against it, so a missing or misspelt key is a compile error, and the keys
+  passed to `t()` are typed too.
+- Plurals use CLDR categories. Arabic's six forms (zero, one, two, few, many,
+  other) are all present and selected by `Intl.PluralRules`.
+- Stored values — statuses, emirates, categories, event types — are
+  translated through `labels`, so a florist never meets a database constant.
+- Server action results carry a dictionary code, so "Changes saved" and every
+  validation message appear in the reader's language.
+- Money stays `AED 1,234.50`, and both languages use Western digits and
+  Asia/Dubai dates.
+- IBM Plex Sans Arabic is loaded for Arabic only (its `unicode-range` means an
+  English session never downloads it). Cinzel and Cormorant have no Arabic
+  glyphs, and letter-spacing breaks Arabic letter joins, so under `:lang(ar)`
+  the brand faces fall back to Plex, untracked.
 
-Each user picks their language in their own account settings, so the
-owner can work in English while a florist works in Arabic.
+**Right-to-left is real, not Arabic text in a left-to-right layout.** Every
+admin file uses logical properties only (enforced by
+`src/admin/rtl-guard.test.ts`), directional icons mirror, the drawer opens
+from the correct edge, and charts run right-to-left with the text.
 
-> **Honest limitation.** A search of `@payloadcms/ui@3.88.0` found no
-> `rtlLanguages`, `dir="rtl"` or `isRTL` handling. Payload will render
-> Arabic **text** in a **left-to-right layout**. It is usable, but it is
-> not correct.
->
-> Fixing it properly means setting `dir="rtl"` on the admin root via a
-> custom provider plus a targeted stylesheet converting Payload's
-> physical CSS properties (`margin-left`, `left`) to logical ones
-> (`margin-inline-start`, `inset-inline-start`). That is a real cost and
-> it must be **measured before it is promised**. Plan: ship Arabic text
-> in LTR at B1.5, evaluate the RTL stylesheet as a separate, scoped
-> task, and tell the client which of the two she is getting.
+> **Honest limitation.** The Arabic strings were written for clarity and
+> consistency, not by a native speaker of the brand's voice, and they have not
+> yet been verified in a browser. They should be reviewed before launch — the
+> structure makes that a text edit in one file, with the type checker
+> guaranteeing nothing is missed.
 
 ### 6.2 Content language (the important one)
 

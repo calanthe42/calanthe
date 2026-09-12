@@ -3,9 +3,22 @@
 | | |
 | --- | --- |
 | **Date** | 2026-09-11 |
-| **Status** | Approved in brainstorming, section by section; awaiting review of this written spec |
+| **Status** | Approved in brainstorming; **superseded in part** by the Admin Foundation brief of 2026-09-12 (see below) |
 | **Part of** | Calanthe Admin 3.0 — sub-project 1 of 2 (this: admin UI rebuild · next: promotions) |
 | **Owner of decisions** | The client (via the brainstorming session) |
+
+---
+
+> **Superseded in part.** The Phase 1 "Admin Foundation" brief (2026-09-12)
+> changed five decisions after this spec was approved: the admin ships with
+> **Arabic as well as English**; it ships with **light and dark themes**;
+> occasions get **no SEO fields and no migration** (no schema change);
+> **Discounts** appears now as a marked placeholder in the catalogue section
+> instead of promotions arriving as a second sub-project; and the work lands
+> in **one commit** rather than six. Everything else in this document — the
+> native-first primitives, the right-to-left rules, the server-first split,
+> and an action centre built only from conditions that are true — is what was
+> built.
 
 ---
 
