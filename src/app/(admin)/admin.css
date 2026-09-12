@@ -10,70 +10,297 @@
  * day is none of those things. Here the priorities are density without
  * crowding, unambiguous state, and never making the owner guess.
  *
- * Concretely: a lighter ground than the storefront's canvas so data reads
- * first; one accent (burnt orange) reserved for the primary action on a
- * screen; olive for structure; sage for everything secondary.
+ * SEMANTIC TOKENS, TWO THEMES. Components never name a brand colour. They
+ * name a role — page, surface, ink, line, accent, danger — and the theme
+ * decides what that role looks like. Light is warm cream and olive; dark is
+ * a designed olive-black, not an inversion: surfaces rise in lightness as
+ * they come forward, text is warm rather than white, and the burnt-orange
+ * accent is lifted so it keeps its contrast.
+ *
+ * Every text/background pairing below was checked against WCAG AA (4.5:1 for
+ * body-size text): ink-3, the quietest text colour, is 4.9:1 on the sunken
+ * light surface and 6.3:1 on the dark surface.
+ *
+ * The theme is chosen on the server from a cookie and stamped on <html> as
+ * data-theme="light|dark|system", so the first paint is already right — no
+ * flash, no layout shift. "system" follows prefers-color-scheme in CSS alone.
  */
 
-@theme {
-  /* A cooler, quieter ground than the storefront's warm canvas — long
-     sessions on #F3EFDF are tiring, and white makes tables legible. */
-  /* tokens.css resets Tailwind's default palette (`--color-*: initial`), which
-     is the storefront's brand law — and which also removed `white`. Every
-     `bg-white` in this admin was therefore silently transparent: invisible on
-     cards over the pale ground, but a see-through media picker, delete
-     confirmation and toast over anything darker. White is defined here, for
-     the admin only; the storefront's palette is untouched. */
-  --color-white: #ffffff;
-  --color-admin-bg: #faf8f2;
-  --color-admin-surface: #ffffff;
-  --color-admin-sunken: #f4f1e7;
-
-  /* Status. Derived from the brand rather than a generic traffic-light set,
-     so a badge never looks borrowed from another product. */
-  --color-status-new: #2b2f1b;
-  --color-status-progress: #b55b29;
-  --color-status-done: #4a6741;
-  --color-status-halt: #2e131b;
+@theme inline {
+  --color-page: var(--a-page);
+  --color-surface: var(--a-surface);
+  --color-raised: var(--a-raised);
+  --color-sunken: var(--a-sunken);
+  --color-ink: var(--a-ink);
+  --color-ink-2: var(--a-ink-2);
+  --color-ink-3: var(--a-ink-3);
+  --color-line: var(--a-line);
+  --color-line-strong: var(--a-line-strong);
+  --color-accent: var(--a-accent);
+  --color-accent-hover: var(--a-accent-hover);
+  --color-on-accent: var(--a-on-accent);
+  --color-success: var(--a-success);
+  --color-warning: var(--a-warning);
+  --color-danger: var(--a-danger);
+  --color-field: var(--a-field);
+  --color-hover: var(--a-hover);
+  --color-focus: var(--a-focus);
+  --color-overlay: var(--a-overlay);
+  --color-knob: var(--a-knob);
+  --color-nav: var(--a-nav);
+  --color-nav-ink: var(--a-nav-ink);
+  --color-nav-ink-2: var(--a-nav-ink-2);
+  --color-nav-hover: var(--a-nav-hover);
+  --color-nav-active: var(--a-nav-active);
+  --color-chart-1: var(--a-chart-1);
+  --color-chart-2: var(--a-chart-2);
+  --shadow-card: var(--a-shadow-card);
+  --shadow-raised: var(--a-shadow-raised);
 }
 
-/* Film grain belongs to the storefront's editorial surface, not to a table of
-   orders. The admin stays flat and legible. */
-.admin-shell {
-  background: var(--color-admin-bg);
-  color: var(--color-olive);
-  font-family: var(--font-sans);
-  min-height: 100svh;
+/* ---------------- Light (default) ---------------- */
+:root {
+  color-scheme: light;
+  --a-page: #f7f4eb;
+  --a-surface: #fffdf8;
+  --a-raised: #ffffff;
+  --a-sunken: #f0ece0;
+  --a-ink: #2b2f1b;
+  --a-ink-2: #55583f;
+  --a-ink-3: #66674b;
+  --a-line: #e6e0cf;
+  --a-line-strong: #cbc4a9;
+  --a-accent: #b55b29;
+  --a-accent-hover: #9f4f23;
+  --a-on-accent: #ffffff;
+  --a-success: #3f6337;
+  --a-warning: #8a4a1c;
+  --a-danger: #8c2f3c;
+  --a-field: #ffffff;
+  --a-hover: rgb(43 47 27 / 0.05);
+  --a-focus: #b55b29;
+  --a-overlay: rgb(28 31 18 / 0.55);
+  --a-knob: #ffffff;
+  --a-nav: #2b2f1b;
+  --a-nav-ink: #efe8d6;
+  --a-nav-ink-2: #b9b597;
+  --a-nav-hover: rgb(228 220 197 / 0.08);
+  --a-nav-active: rgb(228 220 197 / 0.14);
+  --a-chart-1: #b55b29;
+  --a-chart-2: #2b2f1b;
+  --a-shadow-card: 0 1px 2px rgb(43 47 27 / 0.05);
+  --a-shadow-raised: 0 18px 40px -12px rgb(43 47 27 / 0.28), 0 2px 6px rgb(43 47 27 / 0.08);
 }
 
-/* Focus must be obvious for keyboard users: this is a tool, and people who
-   live in it will tab through it. */
-.admin-shell :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
-.admin-portal :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-burnt-orange);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+/* ---------------- Dark ---------------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --a-page: #12140c;
+  --a-surface: #1a1d13;
+  --a-raised: #22261a;
+  --a-sunken: #0e1009;
+  --a-ink: #ede7d5;
+  --a-ink-2: #c9c4ae;
+  --a-ink-3: #a19f86;
+  --a-line: #2c3022;
+  --a-line-strong: #434834;
+  --a-accent: #d27c47;
+  --a-accent-hover: #df8c58;
+  --a-on-accent: #1b1106;
+  --a-success: #9cbf8c;
+  --a-warning: #e3a86a;
+  --a-danger: #eb8f9a;
+  --a-field: #15180f;
+  --a-hover: rgb(237 231 213 / 0.06);
+  --a-focus: #e0925e;
+  --a-overlay: rgb(4 5 2 / 0.72);
+  --a-knob: #c9c4ae;
+  --a-nav: #0e1009;
+  --a-nav-ink: #ede7d5;
+  --a-nav-ink-2: #a9a68c;
+  --a-nav-hover: rgb(237 231 213 / 0.06);
+  --a-nav-active: rgb(237 231 213 / 0.11);
+  --a-chart-1: #d27c47;
+  --a-chart-2: #c9c4ae;
+  --a-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --a-shadow-raised: 0 18px 44px -10px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.4);
 }
 
-/* Dialogs portalled to <body> (the media picker) sit outside .admin-shell,
-   so they carry the admin's type and ink themselves. */
-.admin-portal {
-  font-family: var(--font-sans);
-  color: var(--color-olive);
+/* "system" is the first-visit default: the device decides, in CSS alone. */
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] {
+    color-scheme: dark;
+    --a-page: #12140c;
+    --a-surface: #1a1d13;
+    --a-raised: #22261a;
+    --a-sunken: #0e1009;
+    --a-ink: #ede7d5;
+    --a-ink-2: #c9c4ae;
+    --a-ink-3: #a19f86;
+    --a-line: #2c3022;
+    --a-line-strong: #434834;
+    --a-accent: #d27c47;
+    --a-accent-hover: #df8c58;
+    --a-on-accent: #1b1106;
+    --a-success: #9cbf8c;
+    --a-warning: #e3a86a;
+    --a-danger: #eb8f9a;
+    --a-field: #15180f;
+    --a-hover: rgb(237 231 213 / 0.06);
+    --a-focus: #e0925e;
+    --a-overlay: rgb(4 5 2 / 0.72);
+    --a-knob: #c9c4ae;
+    --a-nav: #0e1009;
+    --a-nav-ink: #ede7d5;
+    --a-nav-ink-2: #a9a68c;
+    --a-nav-hover: rgb(237 231 213 / 0.06);
+    --a-nav-active: rgb(237 231 213 / 0.11);
+    --a-chart-1: #d27c47;
+    --a-chart-2: #c9c4ae;
+    --a-shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+    --a-shadow-raised: 0 18px 44px -10px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.4);
+  }
 }
 
-/* Tables scroll inside their own container so the page body never does. */
+/* ---------------- Base ----------------
+   In the base layer so any utility class on a component can override it. */
+@layer base {
+  /* Film grain belongs to the storefront's editorial surface, not to a table
+     of orders. The admin stays flat and legible. */
+  .admin-root {
+    background: var(--a-page);
+    color: var(--a-ink);
+    font-family: var(--font-instrument), var(--font-arabic), system-ui, sans-serif;
+    min-height: 100svh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Focus must be obvious for keyboard users: this is a tool, and people who
+     live in it will tab through it. */
+  .admin-root :focus-visible {
+    outline: 2px solid var(--a-focus);
+    outline-offset: 2px;
+  }
+
+  /* On the dark navigation the accent is too close to the background to be a
+     visible focus ring (under 3:1), so the ring there is the navigation's ink. */
+  .admin-root .admin-nav :focus-visible {
+    outline-color: var(--a-nav-ink);
+  }
+
+  /* Native dialogs sit in the top layer, outside every stacking context and
+     clipping ancestor. The backdrop is a fixed colour because ::backdrop does
+     not reliably inherit custom properties across browsers. */
+  .admin-root dialog {
+    color: var(--a-ink);
+    max-width: none;
+    max-height: none;
+  }
+  .admin-root dialog::backdrop {
+    background: rgb(14 16 9 / 0.6);
+  }
+
+  .admin-root input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.7;
+    cursor: pointer;
+  }
+}
+
+/* ---------------- Arabic ----------------
+   Cinzel and Cormorant have no Arabic glyphs, and letter-spacing or
+   upper-casing Arabic breaks the joins between letters — tracked Arabic is
+   unreadable. So under Arabic the brand faces fall back to IBM Plex Sans
+   Arabic, untracked. The Latin wordmark carries lang="en" and keeps Cinzel.
+   Unlayered on purpose: these must win over the utility classes. */
+:lang(ar) .font-brand {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:lang(ar) .font-display {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:lang(en) .font-brand {
+  font-family: var(--font-cinzel), serif;
+}
+
+/* Wide content scrolls inside its own container; the page body never does. */
 .admin-scroll-x {
   overflow-x: auto;
   scrollbar-width: thin;
 }
 
+/* Tabular figures for any column of numbers. */
+.admin-root .tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ---------------- Responsive data table ----------------
+   A real <table> from 768px. Below that, each row becomes a card: the primary
+   cell is its title, other cells are label/value lines, and the actions cell
+   sits along the bottom — so the Edit button is never off-screen. Explicit
+   ARIA roles keep table semantics when display changes (Safari otherwise
+   drops them). Unlayered so it overrides cell padding utilities on phones. */
+@media (max-width: 767.98px) {
+  .a-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .a-table,
+  .a-table tbody,
+  .a-table tr,
+  .a-table td {
+    display: block;
+    width: 100%;
+  }
+  .a-table tr {
+    padding: 0.875rem 1rem;
+  }
+  .a-table tbody tr + tr {
+    border-top: 1px solid var(--a-line);
+  }
+  .a-table td {
+    padding: 0.2rem 0;
+    border: 0;
+  }
+  .a-table td[data-label]:not([data-primary]):not([data-actions]) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: end;
+  }
+  .a-table td[data-label]:not([data-primary]):not([data-actions])::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--a-ink-3);
+    text-align: start;
+  }
+  .a-table td[data-primary] {
+    padding-bottom: 0.5rem;
+  }
+  .a-table td[data-actions] {
+    padding-top: 0.625rem;
+  }
+  .a-table td[data-hide-mobile] {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .admin-shell *,
-  .admin-shell *::before,
-  .admin-shell *::after {
+  .admin-root *,
+  .admin-root *::before,
+  .admin-root *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

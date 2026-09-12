@@ -3,20 +3,16 @@ import { notFound } from "next/navigation";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { formatFils } from "@/lib/money";
-import {
-  Card,
-  DataList,
-  DataRow,
-  EmptyState,
-  PageHeader,
-  RowAction,
-  StatCard,
-  StatusBadge,
-  emirateLabel,
-  humanStatus,
-  uaeDate,
-} from "@admin/components/ui";
+import { getAdminI18n } from "@admin/i18n/server";
+import { toneFor } from "@admin/lib/status";
+import { Badge } from "@admin/ui/Badge";
+import { Card, StatCard } from "@admin/ui/Card";
+import { DescriptionList } from "@admin/ui/Content";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { EmptyState } from "@admin/ui/States";
+import { Table, Td, Tr } from "@admin/ui/Table";
+import { Tabs } from "@admin/ui/Tabs";
+import { displayName } from "@backend/data/admin-session";
 
 /**
  * One customer, with the order history computed from orders rather than
@@ -25,28 +21,26 @@ import {
  *
  * Read under the caller's own permissions. Payload's access rules mean a
  * staff member cannot open this page for anyone but themselves, which is the
- * intended behaviour: the customer list is the business's most valuable asset
- * and stays with the owner (docs/SECURITY.md §3).
+ * intended behaviour (docs/SECURITY.md §3).
  */
 
-export const metadata = { title: "Customer" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("customers.title") };
+}
 
-export default async function CustomerDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) notFound();
 
-  const payload = await getPayload({ config });
+  const [i18n, payload] = await Promise.all([getAdminI18n(), getPayload({ config })]);
+  const { t, label, money, date } = i18n;
   const { user } = await payload.auth({ headers: await nextHeaders() });
 
   const customer = await payload
     .findByID({ collection: "users", id: numericId, depth: 0, user, overrideAccess: false })
     .catch(() => null);
-
   if (!customer || customer.role !== "customer") notFound();
 
   const orders = await payload.find({
@@ -62,134 +56,128 @@ export default async function CustomerDetailPage({
   const paidFils = orders.docs
     .filter((o) => o.paymentStatus === "PAID" || o.paymentStatus === "PARTIALLY_REFUNDED")
     .reduce((sum, o) => sum + Number(o.totalFils ?? 0), 0);
+  const name = displayName(customer);
+  const addresses = customer.addresses ?? [];
 
-  const name =
-    [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
-    customer.name ||
-    customer.email;
+  const history =
+    orders.docs.length === 0 ? (
+      <EmptyState icon="bag" title={t("customers.detail.noOrders")} body={t("customers.detail.noOrdersBody")} />
+    ) : (
+      <Table
+        caption={t("customers.detail.history")}
+        columns={[
+          { key: "order", label: t("orders.columns.order") },
+          { key: "total", label: t("orders.columns.total"), align: "end" },
+          { key: "payment", label: t("orders.columns.payment") },
+          { key: "status", label: t("orders.columns.status") },
+        ]}
+      >
+        {orders.docs.map((order) => (
+          <Tr key={order.id}>
+            <Td primary>
+              <Link href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`} className="font-medium text-ink hover:underline">
+                {order.orderNumber}
+              </Link>
+              <span className="block text-xs text-ink-3">{t("customers.detail.placed", { date: date(order.createdAt, "long") })}</span>
+            </Td>
+            <Td label={t("orders.columns.total")} align="end" className="tabular">
+              {money(Number(order.totalFils))}
+            </Td>
+            <Td label={t("orders.columns.payment")}>
+              <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+            </Td>
+            <Td label={t("orders.columns.status")}>
+              <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)} dot>
+                {label("fulfilment", order.fulfilmentStatus)}
+              </Badge>
+            </Td>
+          </Tr>
+        ))}
+      </Table>
+    );
 
-  const marketing = customer.marketing?.subscribed
-    ? `Subscribed${customer.marketing.consentAt ? ` on ${uaeDate(customer.marketing.consentAt, "long")}` : ""}`
-    : "Not subscribed";
+  const information = (
+    <Card>
+      <DescriptionList
+        emptyLabel={t("common.nothingProvided")}
+        rows={[
+          [
+            t("orders.detail.customer"),
+            <a key="email" href={`mailto:${customer.email}`} className="break-all underline-offset-4 hover:underline" dir="ltr">
+              {customer.email}
+            </a>,
+          ],
+          [
+            t("orders.detail.recipientPhone"),
+            customer.phone ? (
+              <a href={`tel:${customer.phone}`} className="underline-offset-4 hover:underline" dir="ltr">
+                {customer.phone}
+              </a>
+            ) : null,
+          ],
+          [
+            t("customers.detail.marketing"),
+            customer.marketing?.subscribed
+              ? customer.marketing.consentAt
+                ? t("customers.detail.subscribedOn", { date: date(customer.marketing.consentAt, "long") })
+                : t("customers.subscribed")
+              : t("customers.notSubscribed"),
+          ],
+          [t("customers.detail.account"), label("accountStatus", String(customer.accountStatus ?? "active"))],
+        ]}
+      />
+    </Card>
+  );
+
+  const addressList =
+    addresses.length === 0 ? (
+      <EmptyState icon="truck" variant="card" title={t("customers.detail.noAddresses")} />
+    ) : (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {addresses.map((address, index) => (
+          <Card key={address.id ?? index}>
+            <p className="flex items-center gap-2 text-sm font-medium text-ink">
+              {address.label || t("customers.detail.address", { n: index + 1 })}
+              {address.isDefault ? <Badge>{t("customers.detail.default")}</Badge> : null}
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-2">
+              {[address.street, address.apartment, address.area, label("emirate", address.emirate)].filter(Boolean).join(", ")}
+            </p>
+          </Card>
+        ))}
+      </div>
+    );
 
   return (
     <>
       <PageHeader
         title={name}
-        breadcrumb={[
-          { label: "Orders" },
-          { label: "Customers", href: "/admin/customers" },
+        breadcrumbs={[
+          { label: t("nav.sections.sales") },
+          { label: t("customers.title"), href: "/admin/customers" },
           { label: name },
         ]}
-        description={`Customer since ${new Date(customer.createdAt).toLocaleDateString("en-AE", {
-          month: "long",
-          year: "numeric",
-          timeZone: "Asia/Dubai",
-        })}`}
+        description={t("customers.detail.since", { date: date(customer.createdAt, "monthYear") })}
       />
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Orders" value={String(orders.totalDocs)} />
-        <StatCard label="Total spent" value={formatFils(paidFils)} hint="Paid orders only" />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label={t("customers.detail.orders")} icon="bag" value={String(orders.totalDocs)} />
+        <StatCard label={t("customers.detail.totalSpent")} icon="trendUp" value={money(paidFils)} secondary={t("customers.detail.paidOnly")} />
         <StatCard
-          label="Last order"
-          value={orders.docs[0] ? uaeDate(orders.docs[0].createdAt, "short") : "Never"}
+          label={t("customers.detail.lastOrder")}
+          icon="calendar"
+          value={orders.docs[0] ? date(orders.docs[0].createdAt, "short") : t("common.never")}
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="min-w-0 lg:col-span-2">
-          <h2 className="mb-3 font-display text-xl font-light text-olive">Order history</h2>
-          {orders.docs.length === 0 ? (
-            <EmptyState
-              title="No orders yet"
-              message="This customer has an account but has not ordered — or ordered as a guest before registering."
-            />
-          ) : (
-            <DataList label="Order history">
-              {orders.docs.map((order) => {
-                const href = `/admin/orders/${order.orderNumber}`;
-                return (
-                  <DataRow
-                    key={order.id}
-                    title={
-                      <Link href={href} className="hover:underline">
-                        {order.orderNumber}
-                      </Link>
-                    }
-                    subtitle={`Placed ${uaeDate(order.createdAt, "long")}`}
-                    meta={
-                      <>
-                        <span className="font-medium tabular-nums text-olive">{formatFils(Number(order.totalFils))}</span>
-                        <StatusBadge value={order.paymentStatus} kind="payment" />
-                        <StatusBadge value={order.fulfilmentStatus} />
-                      </>
-                    }
-                    actions={
-                      <RowAction href={href} label={`Open order ${order.orderNumber}`}>
-                        Open
-                      </RowAction>
-                    }
-                  />
-                );
-              })}
-            </DataList>
-          )}
-        </div>
-
-        <div className="min-w-0 space-y-6">
-          <div>
-            <h2 className="mb-3 font-display text-xl font-light text-olive">Customer information</h2>
-            <Card>
-              <p className="break-all text-sm">
-                <a href={`mailto:${customer.email}`} className="text-olive underline-offset-4 hover:underline">
-                  {customer.email}
-                </a>
-              </p>
-              {customer.phone ? (
-                <p className="text-sm">
-                  <a href={`tel:${customer.phone}`} className="text-sage underline-offset-4 hover:text-olive hover:underline">
-                    {customer.phone}
-                  </a>
-                </p>
-              ) : null}
-              <dl className="mt-3 space-y-1 text-xs text-sage">
-                <div>
-                  <dt className="inline">Marketing: </dt>
-                  <dd className="inline text-olive">{marketing}</dd>
-                </div>
-                <div>
-                  <dt className="inline">Account: </dt>
-                  <dd className="inline text-olive">{humanStatus(String(customer.accountStatus ?? "active"))}</dd>
-                </div>
-              </dl>
-            </Card>
-          </div>
-
-          <div>
-            <h2 className="mb-3 font-display text-xl font-light text-olive">Saved addresses</h2>
-            {(customer.addresses ?? []).length === 0 ? (
-              <p className="text-sm text-sage">No saved addresses.</p>
-            ) : (
-              <div className="space-y-3">
-                {(customer.addresses ?? []).map((address, i) => (
-                  <Card key={address.id ?? i}>
-                    <p className="text-sm font-medium text-olive">
-                      {address.label || `Address ${i + 1}`}
-                      {address.isDefault ? <span className="ml-2 text-xs font-normal text-sage">Default</span> : null}
-                    </p>
-                    <p className="mt-1 text-sm text-sage">
-                      {[address.street, address.apartment, address.area, emirateLabel(address.emirate)]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <Tabs
+        label={name}
+        tabs={[
+          { value: "history", label: t("customers.detail.history"), badge: orders.totalDocs, content: history },
+          { value: "information", label: t("customers.detail.information"), content: information },
+          { value: "addresses", label: t("customers.detail.addresses"), badge: addresses.length, content: addressList },
+        ]}
+      />
     </>
   );
 }

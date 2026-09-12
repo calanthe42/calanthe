@@ -1,16 +1,11 @@
-import { ComingSoon, PageHeader } from "@admin/components/ui";
+import { ComingSoon } from "@admin/components/ComingSoon";
+import { getAdminI18n } from "@admin/i18n/server";
 
-export const metadata = { title: "Marketing" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("nav.campaigns") };
+}
 
-export default function MarketingPage() {
-  return (
-    <>
-      <PageHeader
-        title="Marketing"
-        breadcrumb={[{ label: "Business" }, { label: "Marketing" }]}
-      />
-      <ComingSoon area="Marketing"
-        note="Marketing consent is already recorded against every customer, with the date it was given. Campaign tools come with the email phase." />
-    </>
-  );
+export default function CampaignsPage() {
+  return <ComingSoon title="nav.campaigns" section="nav.sections.marketing" note="placeholders.campaigns" icon="megaphone" />;
 }

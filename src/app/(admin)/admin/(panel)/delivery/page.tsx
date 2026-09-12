@@ -1,16 +1,11 @@
-import { ComingSoon, PageHeader } from "@admin/components/ui";
+import { ComingSoon } from "@admin/components/ComingSoon";
+import { getAdminI18n } from "@admin/i18n/server";
 
-export const metadata = { title: "Delivery" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("nav.delivery") };
+}
 
 export default function DeliveryPage() {
-  return (
-    <>
-      <PageHeader
-        title="Delivery"
-        breadcrumb={[{ label: "Business" }, { label: "Delivery" }]}
-      />
-      <ComingSoon area="Delivery"
-        note="Delivery zones and fees are not yet a database collection — they are still configuration. This screen arrives with them." />
-    </>
-  );
+  return <ComingSoon title="nav.delivery" section="nav.sections.operations" note="placeholders.delivery" icon="truck" />;
 }

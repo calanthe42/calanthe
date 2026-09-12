@@ -2,23 +2,21 @@ import { notFound } from "next/navigation";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { formatFils } from "@/lib/money";
-import {
-  Card,
-  DetailList,
-  PageHeader,
-  StatusBadge,
-  eventTypeLabel,
-  humanStatus,
-  uaeDate,
-} from "@admin/components/ui";
 import { EventWorkflow } from "@admin/components/WorkflowForm";
+import { getAdminI18n } from "@admin/i18n/server";
+import { humanize } from "@admin/i18n/translate";
+import { toneFor } from "@admin/lib/status";
+import { Badge } from "@admin/ui/Badge";
+import { Card, CardHeader } from "@admin/ui/Card";
+import { DescriptionList } from "@admin/ui/Content";
+import { Icon } from "@admin/ui/icons";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { getTeamOptions } from "@backend/data/admin-metrics";
 import { getAdminSession } from "@backend/data/admin-session";
 
-export const metadata = { title: "Event" };
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="mb-3 font-display text-xl font-light text-olive">{children}</h2>;
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("events.title") };
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +24,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) notFound();
 
-  const [session, payload] = await Promise.all([getAdminSession(), getPayload({ config })]);
+  const [i18n, session, payload] = await Promise.all([getAdminI18n(), getAdminSession(), getPayload({ config })]);
+  const { t, label, money, date, number } = i18n;
   const { user } = await payload.auth({ headers: await nextHeaders() });
 
   const event = await payload
@@ -34,97 +33,84 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     .catch(() => null);
   if (!event) notFound();
 
-  const team = await payload
-    .find({
-      collection: "users",
-      where: { role: { in: ["admin", "staff"] } },
-      limit: 50,
-      depth: 0,
-      user,
-      overrideAccess: false,
-    })
-    .catch(() => ({ docs: [] as { id: number; name?: string | null; email: string }[] }));
-
-  const services = (event.requestedServices ?? []).map(humanStatus).join(", ");
+  const staff = await getTeamOptions();
+  const services = (event.requestedServices ?? []).map(humanize).join(", ");
 
   return (
     <>
       <PageHeader
         title={event.name}
-        breadcrumb={[
-          { label: "Orders" },
-          { label: "Events", href: "/admin/events" },
+        breadcrumbs={[
+          { label: t("nav.sections.operations") },
+          { label: t("events.title"), href: "/admin/events" },
           { label: event.name },
         ]}
-        description={`${eventTypeLabel(event.eventType)} · enquired ${uaeDate(event.createdAt, "long")}`}
-        action={<StatusBadge value={event.status} kind="plain" />}
+        description={t("events.detail.summary", {
+          type: label("eventType", event.eventType),
+          date: date(event.createdAt, "long"),
+        })}
+        badge={
+          <Badge tone={toneFor("eventStatus", event.status)} dot>
+            {label("eventStatus", event.status)}
+          </Badge>
+        }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          <section>
-            <SectionTitle>The event</SectionTitle>
-            <Card>
-              <DetailList
+          <Card>
+            <CardHeader title={t("events.detail.event")} />
+            <div className="mt-3">
+              <DescriptionList
+                emptyLabel={t("common.nothingProvided")}
                 rows={[
-                  ["Type", eventTypeLabel(event.eventType)],
-                  ["Date", event.eventDate ? uaeDate(event.eventDate, "long") : "Not fixed yet"],
-                  ["Venue", event.eventLocation],
-                  ["Guests", event.estimatedGuests ? String(event.estimatedGuests) : null],
-                  ["Client budget", event.budgetFils ? formatFils(Number(event.budgetFils)) : "Not stated"],
-                  ["Current quote", event.quoteAmountFils ? formatFils(Number(event.quoteAmountFils)) : null],
-                  ["Services requested", services || null],
+                  [t("events.detail.type"), label("eventType", event.eventType)],
+                  [t("events.detail.date"), event.eventDate ? date(event.eventDate, "long") : t("events.detail.notFixed")],
+                  [t("events.detail.venue"), event.eventLocation],
+                  [t("events.detail.guests"), event.estimatedGuests ? number(event.estimatedGuests) : null],
+                  [t("events.detail.budget"), event.budgetFils ? money(Number(event.budgetFils)) : t("events.detail.notStated")],
+                  [t("events.detail.quote"), event.quoteAmountFils ? money(Number(event.quoteAmountFils)) : null],
+                  [t("events.detail.services"), services || null],
                 ]}
               />
-            </Card>
-          </section>
+            </div>
+          </Card>
 
-          <section>
-            <SectionTitle>In their words</SectionTitle>
-            <Card>
-              <p className="whitespace-pre-line break-words text-sm leading-relaxed text-olive">
-                {event.description}
-              </p>
-            </Card>
-          </section>
+          <Card>
+            <CardHeader title={t("events.detail.words")} />
+            <p className="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-ink">{event.description}</p>
+          </Card>
 
-          <section>
-            <SectionTitle>Client</SectionTitle>
-            <Card>
-              <p className="font-medium text-olive">{event.name}</p>
-              {event.company ? <p className="text-sm text-sage">{event.company}</p> : null}
-              <p className="mt-1 break-all text-sm">
-                <a href={`mailto:${event.email}`} className="text-sage underline-offset-4 hover:text-olive hover:underline">
-                  {event.email}
-                </a>
-              </p>
-              <p className="text-sm">
-                <a href={`tel:${event.phone}`} className="text-sage underline-offset-4 hover:text-olive hover:underline">
-                  {event.phone}
-                </a>
-              </p>
-            </Card>
-          </section>
+          <Card>
+            <CardHeader title={t("events.detail.client")} />
+            <p className="mt-1 font-medium text-ink">{event.name}</p>
+            {event.company ? <p className="text-sm text-ink-2">{event.company}</p> : null}
+            <p className="mt-1.5 flex min-w-0 items-center gap-2 text-sm">
+              <Icon name="mail" className="h-4 w-4 text-ink-3" />
+              <a href={`mailto:${event.email}`} className="truncate text-ink-2 underline-offset-4 hover:text-ink hover:underline" dir="ltr">
+                {event.email}
+              </a>
+            </p>
+            <p className="mt-1 flex items-center gap-2 text-sm">
+              <Icon name="phone" className="h-4 w-4 text-ink-3" />
+              <a href={`tel:${event.phone}`} className="text-ink-2 underline-offset-4 hover:text-ink hover:underline" dir="ltr">
+                {event.phone}
+              </a>
+            </p>
+          </Card>
         </div>
 
-        <div className="min-w-0">
+        <div className="min-w-0 lg:sticky lg:top-24">
           <EventWorkflow
             id={event.id}
             status={event.status}
             assignedStaffId={
-              typeof event.assignedStaff === "object" && event.assignedStaff
-                ? event.assignedStaff.id
-                : (event.assignedStaff ?? undefined)
+              typeof event.assignedStaff === "object" && event.assignedStaff ? event.assignedStaff.id : (event.assignedStaff ?? undefined)
             }
             internalNotes={event.internalNotes ?? undefined}
-            quoteAmountAed={
-              event.quoteAmountFils ? String(Number(event.quoteAmountFils) / 100) : undefined
-            }
-            /* The quote is admin-only at field level. Hiding it from staff
-               here matches what the server would do anyway — it avoids
-               offering a control that would silently be ignored. */
+            quoteAmountAed={event.quoteAmountFils ? String(Number(event.quoteAmountFils) / 100) : undefined}
             canQuote={Boolean(session?.isAdmin)}
-            staff={team.docs.map((m) => ({ label: m.name || m.email, value: String(m.id) }))}
+            staff={staff}
           />
         </div>
       </div>

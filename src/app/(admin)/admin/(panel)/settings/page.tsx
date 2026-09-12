@@ -1,16 +1,11 @@
-import { ComingSoon, PageHeader } from "@admin/components/ui";
+import { ComingSoon } from "@admin/components/ComingSoon";
+import { getAdminI18n } from "@admin/i18n/server";
 
-export const metadata = { title: "Settings" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("nav.settings") };
+}
 
 export default function SettingsPage() {
-  return (
-    <>
-      <PageHeader
-        title="Settings"
-        breadcrumb={[{ label: "System" }, { label: "Settings" }]}
-      />
-      <ComingSoon area="Settings"
-        note="Shop-wide settings are not yet a collection. Nothing here is missing from the system — it simply has no screen yet." />
-    </>
-  );
+  return <ComingSoon title="nav.settings" section="nav.sections.system" note="placeholders.settings" icon="settings" />;
 }

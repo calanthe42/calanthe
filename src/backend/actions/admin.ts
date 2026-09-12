@@ -16,6 +16,7 @@ import {
   parseWholeNumber,
   readChecked,
   readText,
+  within,
   type ParsedProduct,
 } from "@backend/domain/product-form";
 import {
@@ -40,11 +41,20 @@ import {
  * Parsing lives in backend/domain (pure, unit-tested). These functions do only
  * what needs a server: who is asking, saving, and refreshing the pages that
  * show what changed.
+ *
+ * MESSAGES. Every result carries an English `message` and, where one exists, a
+ * `code` — a path into the admin dictionary — with its `vars`. The admin shows
+ * the code in the reader's language and falls back to the message. The backend
+ * itself stays free of any knowledge of languages.
  */
 
+export type ActionVars = Record<string, string | number>;
+
 export type ActionResult =
-  | { ok: true; message: string; id?: number; media?: MediaOption }
-  | { ok: false; message: string };
+  | { ok: true; message: string; code?: string; vars?: ActionVars; id?: number; media?: MediaOption }
+  | { ok: false; message: string; code?: string; vars?: ActionVars };
+
+type Failure = Extract<ActionResult, { ok: false }>;
 
 async function authed() {
   const payload = await getPayload({ config });
@@ -55,12 +65,19 @@ async function authed() {
 type ValidationDetail = { message?: unknown; path?: unknown };
 
 /** Turns anything thrown into a sentence a florist can act on. */
-function toMessage(error: unknown, fallback: string): string {
-  if (error instanceof FormInputError) return error.message;
+function failure(error: unknown, fallback: string, fallbackCode: string): Failure {
+  if (error instanceof FormInputError) {
+    return {
+      ok: false,
+      message: error.message,
+      code: error.code ? `actions.validation.${error.code}` : undefined,
+      vars: error.vars,
+    };
+  }
 
   const raw = error instanceof Error ? error.message : "";
   if (/not allowed|forbidden|unauthori[sz]ed/i.test(raw)) {
-    return "You do not have permission to do that.";
+    return { ok: false, message: "You do not have permission to do that.", code: "actions.permission" };
   }
 
   const details = (error as { data?: { errors?: ValidationDetail[] } } | null)?.data?.errors;
@@ -69,13 +86,18 @@ function toMessage(error: unknown, fallback: string): string {
   const combined = `${raw} ${detail} ${typeof first?.path === "string" ? first.path : ""}`;
 
   if ((/slug/i.test(combined) && /unique|duplicate|already/i.test(combined)) || /duplicate key/i.test(raw)) {
-    return "That web address is already in use. Choose a different one.";
+    return {
+      ok: false,
+      message: "That web address is already in use. Choose a different one.",
+      code: "actions.slugTaken",
+    };
   }
-  if (detail && detail.length < 200) return detail;
   /* Validation errors thrown by the collections' hooks are already written
-     for people. Anything long or multi-line is a stack, never shown. */
-  if (raw && raw.length < 300 && !raw.includes("\n")) return raw;
-  return fallback;
+     for people, in English. Anything long or multi-line is a stack, never
+     shown. */
+  if (detail && detail.length < 200) return { ok: false, message: detail };
+  if (raw && raw.length < 300 && !raw.includes("\n")) return { ok: false, message: raw };
+  return { ok: false, message: fallback, code: fallbackCode };
 }
 
 /**
@@ -138,9 +160,15 @@ export async function createProduct(form: FormData): Promise<ActionResult> {
 
     revalidatePath("/admin/products");
     revalidateStorefront();
-    return { ok: true, message: `“${doc.name}” created.`, id: doc.id };
+    return {
+      ok: true,
+      message: `“${doc.name}” created.`,
+      code: "actions.product.created",
+      vars: { name: doc.name },
+      id: doc.id,
+    };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The product could not be created.") };
+    return failure(error, "The product could not be created.", "actions.product.createFailed");
   }
 }
 
@@ -189,9 +217,9 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}/edit`);
     revalidateStorefront();
-    return { ok: true, message: "Changes saved." };
+    return { ok: true, message: "Changes saved.", code: "actions.product.saved" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "Your changes could not be saved.") };
+    return failure(error, "Your changes could not be saved.", "actions.product.saveFailed");
   }
 }
 
@@ -214,16 +242,23 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
     if (ordered > 0) {
       return {
         ok: false,
-        message: `This product is part of ${ordered} order${ordered === 1 ? "" : "s"}, so it is kept for your records. Untick “Available to buy” to hide it instead.`,
+        message: `This product is part of ${ordered} order${ordered === 1 ? "" : "s"}, so it is kept for your records. Turn off “Available to buy” to hide it instead.`,
+        code: "actions.product.ordered",
+        vars: { count: ordered },
       };
     }
 
     const doc = await payload.delete({ collection: "products", id, user, overrideAccess: false });
     revalidatePath("/admin/products");
     revalidateStorefront();
-    return { ok: true, message: `“${doc.name}” deleted.` };
+    return {
+      ok: true,
+      message: `“${doc.name}” deleted.`,
+      code: "actions.product.deleted",
+      vars: { name: doc.name },
+    };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The product could not be deleted.") };
+    return failure(error, "The product could not be deleted.", "actions.product.deleteFailed");
   }
 }
 
@@ -233,6 +268,18 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
 
 const UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_ALT_LENGTH = 200;
+
+const DESCRIBE_FIRST: Failure = {
+  ok: false,
+  message: "Describe the photograph first — for example “Blush peonies in a cream vase”.",
+  code: "actions.media.describe",
+};
+const ALT_TOO_LONG: Failure = {
+  ok: false,
+  message: "Keep the alt text under 200 characters.",
+  code: "actions.media.altTooLong",
+};
 
 /**
  * Upload a photograph.
@@ -250,22 +297,19 @@ export async function uploadMedia(form: FormData): Promise<ActionResult> {
   const alt = readText(form.get("alt"));
 
   if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, message: "Choose a photograph to upload." };
+    return { ok: false, message: "Choose a photograph to upload.", code: "actions.media.chooseFile" };
   }
   if (!UPLOAD_TYPES.includes(file.type)) {
-    return { ok: false, message: "Use a JPEG, PNG, WebP or AVIF photograph." };
+    return { ok: false, message: "Use a JPEG, PNG, WebP or AVIF photograph.", code: "actions.media.badType" };
   }
-  if (!alt) {
+  if (!alt) return DESCRIBE_FIRST;
+  if (alt.length > MAX_ALT_LENGTH) return ALT_TOO_LONG;
+  if (file.size > MAX_UPLOAD_BYTES) {
     return {
       ok: false,
-      message: "Describe the photograph first — for example “Blush peonies in a cream vase”.",
+      message: "That photo is larger than 4 MB. Please use a smaller file.",
+      code: "actions.media.tooLarge",
     };
-  }
-  if (alt.length > 200) {
-    return { ok: false, message: "Keep the description under 200 characters." };
-  }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return { ok: false, message: "That photo is larger than 4 MB. Please use a smaller file." };
   }
 
   try {
@@ -283,9 +327,37 @@ export async function uploadMedia(form: FormData): Promise<ActionResult> {
     });
     revalidatePath("/admin/media");
     const media = toMediaOption(doc);
-    return { ok: true, message: "Photo uploaded.", id: doc.id, ...(media ? { media } : {}) };
+    return {
+      ok: true,
+      message: "Photo uploaded.",
+      code: "actions.media.uploaded",
+      id: doc.id,
+      ...(media ? { media } : {}),
+    };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The upload failed. Please try again.") };
+    return failure(error, "The upload failed. Please try again.", "actions.media.uploadFailed");
+  }
+}
+
+/**
+ * Change a photograph's alt text.
+ *
+ * Staff may do this (media update is staff-level in the permission model).
+ * The storefront shows alt text on product pages, so it is refreshed too.
+ */
+export async function updateMediaAlt(id: number, form: FormData): Promise<ActionResult> {
+  const { payload, user } = await authed();
+  const alt = readText(form.get("alt"));
+  if (!alt) return DESCRIBE_FIRST;
+  if (alt.length > MAX_ALT_LENGTH) return ALT_TOO_LONG;
+
+  try {
+    await payload.update({ collection: "media", id, user, overrideAccess: false, data: { alt } as never });
+    revalidatePath("/admin/media");
+    revalidateStorefront();
+    return { ok: true, message: "Alt text saved.", code: "actions.media.altSaved" };
+  } catch (error) {
+    return failure(error, "The alt text could not be saved.", "actions.media.altFailed");
   }
 }
 
@@ -299,13 +371,15 @@ export async function deleteMedia(id: number): Promise<ActionResult> {
       return {
         ok: false,
         message: `This photo is used by ${listNames(usedBy)}. Remove it there first, then delete it.`,
+        code: "actions.media.inUse",
+        vars: { names: usedBy.join(", ") },
       };
     }
     await payload.delete({ collection: "media", id, user, overrideAccess: false });
     revalidatePath("/admin/media");
-    return { ok: true, message: "Photo deleted." };
+    return { ok: true, message: "Photo deleted.", code: "actions.media.deleted" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The photo could not be deleted.") };
+    return failure(error, "The photo could not be deleted.", "actions.media.deleteFailed");
   }
 }
 
@@ -345,9 +419,14 @@ export async function updateOrderFulfilment(
     });
     revalidatePath("/admin/orders");
     revalidatePath("/admin");
-    return { ok: true, message: FULFILMENT_DONE[fulfilmentStatus] ?? "Status updated." };
+    const known = fulfilmentStatus in FULFILMENT_DONE;
+    return {
+      ok: true,
+      message: FULFILMENT_DONE[fulfilmentStatus] ?? "Status updated.",
+      code: known ? `actions.order.fulfilment.${fulfilmentStatus}` : "actions.order.statusUpdated",
+    };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The status could not be updated.") };
+    return failure(error, "The status could not be updated.", "actions.order.statusFailed");
   }
 }
 
@@ -366,9 +445,9 @@ export async function updateOrderOperations(id: number, form: FormData): Promise
       } as never,
     });
     revalidatePath("/admin/orders");
-    return { ok: true, message: "Order notes saved." };
+    return { ok: true, message: "Order notes saved.", code: "actions.order.notesSaved" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The order could not be updated.") };
+    return failure(error, "The order could not be updated.", "actions.order.updateFailed");
   }
 }
 
@@ -377,15 +456,10 @@ export async function updateOrderOperations(id: number, form: FormData): Promise
 /* ------------------------------------------------------------------ */
 
 function occasionFields(form: FormData) {
-  const name = readText(form.get("name"));
-  if (!name) throw new FormInputError("Give the occasion a name.");
-  if (name.length > 80) throw new FormInputError("The name is too long — keep it under 80 characters.");
+  const name = within(readText(form.get("name")), 80, "The name");
+  if (!name) throw new FormInputError("Give the occasion a name.", "occasionName");
 
-  const description = readText(form.get("description"));
-  if (description.length > 600) {
-    throw new FormInputError("The description is too long — keep it under 600 characters.");
-  }
-
+  const description = within(readText(form.get("description")), 600, "The description");
   const slug = parseSlug(readText(form.get("slug")));
   const [imageId] = parseIdList(form.getAll("imageId"));
 
@@ -411,9 +485,15 @@ export async function createOccasion(form: FormData): Promise<ActionResult> {
     });
     revalidatePath("/admin/occasions");
     revalidateStorefront();
-    return { ok: true, message: `“${doc.name}” created.`, id: doc.id };
+    return {
+      ok: true,
+      message: `“${doc.name}” created.`,
+      code: "actions.occasion.created",
+      vars: { name: doc.name },
+      id: doc.id,
+    };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The occasion could not be created.") };
+    return failure(error, "The occasion could not be created.", "actions.occasion.createFailed");
   }
 }
 
@@ -428,10 +508,11 @@ export async function updateOccasion(id: number, form: FormData): Promise<Action
       data: occasionFields(form) as never,
     });
     revalidatePath("/admin/occasions");
+    revalidatePath(`/admin/occasions/${id}/edit`);
     revalidateStorefront();
-    return { ok: true, message: "Changes saved." };
+    return { ok: true, message: "Changes saved.", code: "actions.occasion.saved" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "Your changes could not be saved.") };
+    return failure(error, "Your changes could not be saved.", "actions.occasion.saveFailed");
   }
 }
 
@@ -453,16 +534,18 @@ export async function deleteOccasion(id: number): Promise<ActionResult> {
     if (used > 0) {
       return {
         ok: false,
-        message: `${used} product${used === 1 ? " uses" : "s use"} this occasion. Remove it from ${used === 1 ? "that product" : "those products"} first, or untick “Show on the website” to hide it.`,
+        message: `${used} product${used === 1 ? " uses" : "s use"} this occasion. Remove it from ${used === 1 ? "that product" : "those products"} first, or turn off “Show on the store” to hide it.`,
+        code: "actions.occasion.used",
+        vars: { count: used },
       };
     }
 
     await payload.delete({ collection: "occasions", id, user, overrideAccess: false });
     revalidatePath("/admin/occasions");
     revalidateStorefront();
-    return { ok: true, message: "Occasion deleted." };
+    return { ok: true, message: "Occasion deleted.", code: "actions.occasion.deleted" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The occasion could not be deleted.") };
+    return failure(error, "The occasion could not be deleted.", "actions.occasion.deleteFailed");
   }
 }
 
@@ -501,9 +584,9 @@ export async function updateEnquiry(id: number, form: FormData): Promise<ActionR
     revalidatePath("/admin/enquiries");
     revalidatePath(`/admin/enquiries/${id}`);
     revalidatePath("/admin");
-    return { ok: true, message: "Enquiry saved." };
+    return { ok: true, message: "Enquiry saved.", code: "actions.enquiry.saved" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The enquiry could not be saved.") };
+    return failure(error, "The enquiry could not be saved.", "actions.enquiry.failed");
   }
 }
 
@@ -528,8 +611,8 @@ export async function updateEvent(id: number, form: FormData): Promise<ActionRes
     });
     revalidatePath("/admin/events");
     revalidatePath(`/admin/events/${id}`);
-    return { ok: true, message: "Event saved." };
+    return { ok: true, message: "Event saved.", code: "actions.event.saved" };
   } catch (error) {
-    return { ok: false, message: toMessage(error, "The event could not be saved.") };
+    return failure(error, "The event could not be saved.", "actions.event.failed");
   }
 }

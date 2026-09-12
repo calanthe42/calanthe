@@ -1,27 +1,33 @@
-import { ActionLink, EmptyState, PageHeader } from "@admin/components/ui";
 import { OccasionForm } from "@admin/components/OccasionForm";
+import { getAdminI18n } from "@admin/i18n/server";
+import { ButtonLink } from "@admin/ui/Button";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { EmptyState } from "@admin/ui/States";
 import { getAdminSession } from "@backend/data/admin-session";
 import { getProductFormOptions } from "@backend/data/product-form";
 
-export const metadata = { title: "Add occasion" };
-
-const BREADCRUMB = [
-  { label: "Shop" },
-  { label: "Occasions", href: "/admin/occasions" },
-  { label: "New" },
-];
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("occasions.new.title") };
+}
 
 export default async function NewOccasionPage() {
-  const session = await getAdminSession();
+  const [{ t }, session] = await Promise.all([getAdminI18n(), getAdminSession()]);
+  const breadcrumbs = [
+    { label: t("nav.sections.catalog") },
+    { label: t("occasions.title"), href: "/admin/occasions" },
+    { label: t("occasions.new.title") },
+  ];
 
   if (!session?.isAdmin) {
     return (
       <>
-        <PageHeader title="Add an occasion" breadcrumb={BREADCRUMB} />
+        <PageHeader title={t("occasions.new.title")} breadcrumbs={breadcrumbs} />
         <EmptyState
-          title="Only the owner can add occasions"
-          message="You can edit the existing occasions from the list."
-          action={<ActionLink href="/admin/occasions">Back to occasions</ActionLink>}
+          icon="occasion"
+          title={t("occasions.new.ownerOnlyTitle")}
+          body={t("occasions.new.ownerOnlyBody")}
+          action={<ButtonLink href="/admin/occasions">{t("occasions.new.back")}</ButtonLink>}
         />
       </>
     );
@@ -31,11 +37,7 @@ export default async function NewOccasionPage() {
 
   return (
     <>
-      <PageHeader
-        title="Add an occasion"
-        breadcrumb={BREADCRUMB}
-        description="Eid, Mother’s Day, a new season — each occasion gets its own page on the shop."
-      />
+      <PageHeader title={t("occasions.new.title")} breadcrumbs={breadcrumbs} description={t("occasions.new.description")} />
       <OccasionForm media={media} isOwner values={{ name: "", sortOrder: 0, active: true }} />
     </>
   );

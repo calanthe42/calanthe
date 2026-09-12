@@ -1,18 +1,21 @@
-import { formatFils } from "@/lib/money";
+import { cn } from "@/lib/cn";
 
 /**
  * Charts drawn as inline SVG.
  *
- * No charting library: the two shapes needed here are a bar series and a
- * proportion bar, and a dependency to draw a rectangle is weight the admin
+ * No charting library: the shapes needed here are a bar series and a
+ * proportion bar, and a dependency to draw rectangles is weight the admin
  * would carry on every page load forever. Server-rendered, so there is no
- * hydration cost and no flash of an empty canvas.
+ * hydration cost and no flash of an empty canvas. Colours come from the
+ * theme tokens, so both themes are correct with no extra code.
  *
- * NOTHING IS SYNTHESISED. Every point comes from a real order. Where a day
- * had no orders it is drawn as zero, because that is what happened.
+ * NOTHING IS SYNTHESISED. Every point comes from a real order. A day with no
+ * orders is drawn as zero, because that is what happened.
+ *
+ * In Arabic the time axis runs right to left, like the text around it.
  */
 
-export type SeriesPoint = { label: string; iso: string; orders: number; revenueFils: number };
+export type ChartBar = { key: string; label: string; value: number; display: string };
 
 function niceMax(value: number): number {
   if (value <= 0) return 1;
@@ -21,164 +24,119 @@ function niceMax(value: number): number {
 }
 
 export function BarChart({
-  points,
-  metric,
-  title,
+  bars,
+  summary,
+  emptyText,
+  tone = "accent",
 }: {
-  points: SeriesPoint[];
-  metric: "orders" | "revenue";
-  title: string;
+  bars: readonly ChartBar[];
+  /** The whole chart in one sentence, for screen readers. */
+  summary: string;
+  emptyText: string;
+  tone?: "accent" | "ink";
 }) {
-  const values = points.map((p) => (metric === "orders" ? p.orders : p.revenueFils));
-  const max = niceMax(Math.max(...values, 0));
-  const total = values.reduce((a, b) => a + b, 0);
-
-  /* A viewBox plus percentage widths keeps this responsive without JS. */
-  const width = 100;
-  const height = 34;
-  const gap = points.length > 40 ? 0.2 : 0.8;
-  const barWidth = Math.max((width - gap * (points.length - 1)) / points.length, 0.4);
-
-  return (
-    <div className="rounded-md border border-hairline/70 bg-white p-5">
-      <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h3 className="font-brand text-[10px] uppercase tracking-brand text-sage">{title}</h3>
-        <p className="font-display text-2xl font-light tabular-nums lining-nums text-olive">
-          {metric === "orders" ? total : formatFils(total)}
-        </p>
-      </div>
-
-      {total === 0 ? (
-        <p className="py-8 text-center text-sm text-sage">
-          No {metric === "orders" ? "orders" : "revenue"} in this period yet.
-        </p>
-      ) : (
-        <>
-          <svg
-            viewBox={`0 0 ${width} ${height}`}
-            preserveAspectRatio="none"
-            role="img"
-            aria-label={`${title}: ${points.length} days, ${
-              metric === "orders" ? `${total} orders` : formatFils(total)
-            } in total`}
-            className="mt-2 h-32 w-full"
-          >
-            {values.map((value, i) => {
-              const h = max === 0 ? 0 : (value / max) * height;
-              return (
-                <rect
-                  key={points[i].iso}
-                  x={i * (barWidth + gap)}
-                  y={height - h}
-                  width={barWidth}
-                  height={h}
-                  rx={0.3}
-                  className={metric === "orders" ? "fill-olive/70" : "fill-[#b55b29]/75"}
-                >
-                  {/* ONE string child. `{label}:{" "}{value}` is four children,
-                      which React 19 refuses for <title> — the dashboard failed
-                      hydration the moment a period contained an order. */}
-                  <title>
-                    {`${points[i].label}: ${metric === "orders" ? `${value} orders` : formatFils(value)}`}
-                  </title>
-                </rect>
-              );
-            })}
-          </svg>
-          <div className="mt-1 flex justify-between text-[11px] text-sage">
-            <span>{points[0]?.label}</span>
-            <span>{points[points.length - 1]?.label}</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/** Order status distribution as a single proportional bar plus a key. */
-export function StatusDistribution({
-  counts,
-  total,
-}: {
-  counts: { label: string; value: number; className: string }[];
-  total: number;
-}) {
-  return (
-    <div className="rounded-md border border-hairline/70 bg-white p-5">
-      <h3 className="font-brand text-[10px] uppercase tracking-brand text-sage">
-        Where orders are
-      </h3>
-
-      {total === 0 ? (
-        <p className="py-8 text-center text-sm text-sage">
-          Nothing in the workshop yet — order statuses will appear here.
-        </p>
-      ) : (
-        <>
-          <div
-            className="mt-3 flex h-3 w-full overflow-hidden rounded-sm"
-            role="img"
-            aria-label={counts
-              .filter((c) => c.value > 0)
-              .map((c) => `${c.label}: ${c.value}`)
-              .join(", ")}
-          >
-            {counts
-              .filter((c) => c.value > 0)
-              .map((c) => (
-                <span
-                  key={c.label}
-                  className={c.className}
-                  style={{ width: `${(c.value / total) * 100}%` }}
-                />
-              ))}
-          </div>
-          <ul className="mt-4 space-y-1.5">
-            {counts
-              .filter((c) => c.value > 0)
-              .map((c) => (
-                <li key={c.label} className="flex items-center gap-2 text-sm">
-                  <span className={`inline-block h-2.5 w-2.5 rounded-sm ${c.className}`} />
-                  <span className="text-olive">{c.label}</span>
-                  <span className="ml-auto tabular-nums text-sage">{c.value}</span>
-                </li>
-              ))}
-          </ul>
-        </>
-      )}
-    </div>
-  );
-}
-
-/** Period-over-period movement, shown only when there is a prior period. */
-export function Comparison({
-  currentFils,
-  previousFils,
-  days,
-}: {
-  currentFils: number;
-  previousFils: number;
-  days: number;
-}) {
-  if (previousFils === 0 && currentFils === 0) return null;
-
-  if (previousFils === 0) {
+  const total = bars.reduce((sum, bar) => sum + bar.value, 0);
+  if (total === 0) {
     return (
-      <p className="mt-1 text-xs text-sage">
-        No revenue in the previous {days} days to compare against.
-      </p>
+      <div className="flex h-44 flex-col items-center justify-center gap-2 rounded-md bg-sunken/50 text-center">
+        <p className="text-sm text-ink-3">{emptyText}</p>
+      </div>
     );
   }
 
-  const change = ((currentFils - previousFils) / previousFils) * 100;
-  const up = change >= 0;
+  const max = niceMax(Math.max(...bars.map((bar) => bar.value)));
+  const width = 100;
+  const height = 40;
+  const gap = bars.length > 40 ? 0.25 : bars.length > 14 ? 0.55 : 1.4;
+  const barWidth = Math.max((width - gap * (bars.length - 1)) / bars.length, 0.3);
+  const middle = bars[Math.floor(bars.length / 2)];
 
   return (
-    <p className="mt-1 text-xs text-sage">
-      <span className={up ? "text-[#3d5636]" : "text-burgundy"}>
-        {up ? "▲" : "▼"} {Math.abs(change).toFixed(0)}%
-      </span>{" "}
-      vs the previous {days} days
-    </p>
+    <div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={summary}
+        className="h-44 w-full rtl:-scale-x-100"
+      >
+        {[0.25, 0.5, 0.75].map((fraction) => (
+          <line
+            key={fraction}
+            x1={0}
+            x2={width}
+            y1={height - fraction * height}
+            y2={height - fraction * height}
+            className="stroke-line"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {bars.map((bar, index) => {
+          const h = (bar.value / max) * height;
+          return (
+            <rect
+              key={bar.key}
+              x={index * (barWidth + gap)}
+              y={height - h}
+              width={barWidth}
+              height={h}
+              rx={0.35}
+              className={cn(
+                "transition-opacity duration-150 hover:opacity-75",
+                tone === "accent" ? "fill-chart-1" : "fill-chart-2",
+              )}
+            >
+              {/* ONE string child: React refuses several children in <title>. */}
+              <title>{`${bar.label}: ${bar.display}`}</title>
+            </rect>
+          );
+        })}
+      </svg>
+      <div className="mt-2 flex justify-between gap-2 text-xs text-ink-3 tabular">
+        <span>{bars[0]?.label}</span>
+        {bars.length > 6 && middle ? <span className="hidden sm:inline">{middle.label}</span> : null}
+        <span>{bars[bars.length - 1]?.label}</span>
+      </div>
+    </div>
+  );
+}
+
+export type StatusSegment = { key: string; label: string; count: number; className: string };
+
+/** Open orders by status: one proportional bar and a key. */
+export function StatusBar({
+  segments,
+  summary,
+  emptyText,
+}: {
+  segments: readonly StatusSegment[];
+  summary: string;
+  emptyText: string;
+}) {
+  const total = segments.reduce((sum, s) => sum + s.count, 0);
+  if (total === 0) {
+    return <p className="rounded-md bg-sunken/50 px-4 py-10 text-center text-sm text-ink-3">{emptyText}</p>;
+  }
+
+  return (
+    <div>
+      <div role="img" aria-label={summary} className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-sm">
+        {segments
+          .filter((s) => s.count > 0)
+          .map((s) => (
+            <span key={s.key} className={cn("h-full", s.className)} style={{ width: `${(s.count / total) * 100}%` }} />
+          ))}
+      </div>
+      <ul className="mt-4 space-y-2">
+        {segments.map((s) => (
+          <li key={s.key} className="flex items-center gap-2.5 text-sm">
+            <span aria-hidden className={cn("h-2.5 w-2.5 shrink-0 rounded-sm", s.className)} />
+            <span className={cn("min-w-0 flex-1 truncate", s.count > 0 ? "text-ink" : "text-ink-3")}>{s.label}</span>
+            <span className="text-ink-2 tabular">{s.count}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

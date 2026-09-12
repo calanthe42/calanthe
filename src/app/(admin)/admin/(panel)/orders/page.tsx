@@ -3,60 +3,61 @@ import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import type { Where } from "payload";
 import config from "@payload-config";
-import { formatFils } from "@/lib/money";
-import {
-  ActionLink,
-  DataList,
-  DataRow,
-  EmptyState,
-  FilterBar,
-  FilterField,
-  FilterSelect,
-  PageHeader,
-  RowAction,
-  StatusBadge,
-  filterInputClass,
-  statusLabel,
-  uaeDate,
-} from "@admin/components/ui";
+import { getAdminI18n } from "@admin/i18n/server";
+import { OPEN_FULFILMENT, toneFor } from "@admin/lib/status";
+import { Badge } from "@admin/ui/Badge";
+import { ButtonLink } from "@admin/ui/Button";
+import { DateRangeFields } from "@admin/ui/DateRange";
+import { FilterBar, FilterSelect } from "@admin/ui/FilterBar";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { Pagination, listHref, parsePage } from "@admin/ui/Pagination";
+import { EmptyState } from "@admin/ui/States";
+import { Table, Td, Tr } from "@admin/ui/Table";
+import { uaeDayStart } from "@backend/domain/dashboard";
+import { uaeMidnight } from "@backend/domain/dates";
 
 /**
  * Orders, newest first, with the filters an operator actually reaches for.
  *
- * Filtering is done in the database query, not in the browser: the shop will
- * eventually have more orders than anyone wants to ship to a page.
+ * Filtering and paging happen in the database query, not in the browser: the
+ * store will eventually have more orders than anyone wants to ship to a page.
  *
  * Two statuses on every row, never merged. Where the money is and where the
  * flowers are are different questions — payment moves only through a provider
  * webhook, fulfilment is the part staff control.
  */
 
-export const metadata = { title: "Orders" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("orders.title") };
+}
 
+const PAGE_SIZE = 25;
 const FULFILMENT = ["NEW", "CONFIRMED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"];
 const PAYMENT = ["PENDING", "AUTHORIZED", "PAID", "FAILED", "REFUNDED", "PARTIALLY_REFUNDED"];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const DAY_MS = 86_400_000;
 
-export default async function AdminOrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; status?: string; payment?: string; from?: string; to?: string }>;
-}) {
-  const { q = "", status = "", payment = "", from = "", to = "" } = await searchParams;
+type Search = { q?: string; status?: string; payment?: string; from?: string; to?: string; attention?: string; page?: string };
 
-  const payload = await getPayload({ config });
+export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const params = await searchParams;
+  const { q = "", status = "", payment = "", from = "", to = "", attention = "" } = params;
+  const page = parsePage(params.page);
+
+  const [i18n, payload] = await Promise.all([getAdminI18n(), getPayload({ config })]);
+  const { t, plural, label, money, date } = i18n;
   const { user } = await payload.auth({ headers: await nextHeaders() });
 
   const and: Where[] = [];
   if (FULFILMENT.includes(status)) and.push({ fulfilmentStatus: { equals: status } });
   if (PAYMENT.includes(payment)) and.push({ paymentStatus: { equals: payment } });
   /* Delivery days are UAE days. */
-  if (DAY.test(from)) {
-    and.push({ deliveryDate: { greater_than_equal: new Date(`${from}T00:00:00+04:00`).toISOString() } });
-  }
-  if (DAY.test(to)) {
-    const end = new Date(new Date(`${to}T00:00:00+04:00`).getTime() + 86_400_000);
-    and.push({ deliveryDate: { less_than: end.toISOString() } });
+  if (DAY.test(from)) and.push({ deliveryDate: { greater_than_equal: uaeMidnight(from).toISOString() } });
+  if (DAY.test(to)) and.push({ deliveryDate: { less_than: new Date(uaeMidnight(to).getTime() + DAY_MS).toISOString() } });
+  if (attention === "overdue") {
+    and.push({ fulfilmentStatus: { in: [...OPEN_FULFILMENT] } });
+    and.push({ deliveryDate: { less_than: uaeDayStart(new Date()).toISOString() } });
   }
   const query = q.trim();
   if (query) {
@@ -75,99 +76,132 @@ export default async function AdminOrdersPage({
     collection: "orders",
     where: and.length > 0 ? { and } : {},
     sort: "-createdAt",
-    limit: 100,
+    limit: PAGE_SIZE,
+    page,
     depth: 0,
     user,
     overrideAccess: false,
   });
 
-  const filtered = Boolean(query || status || payment || from || to);
+  const filtered = Boolean(query || status || payment || from || to || attention);
+  const href = (p: number) => listHref("/admin/orders", { q, status, payment, from, to, attention, page: p });
 
   return (
     <>
       <PageHeader
-        title="Orders"
-        breadcrumb={[{ label: "Orders" }]}
+        title={t("orders.title")}
+        breadcrumbs={[{ label: t("nav.sections.sales") }, { label: t("orders.title") }]}
         description={
           result.totalDocs > 0
-            ? `${result.totalDocs} order${result.totalDocs === 1 ? "" : "s"}${filtered ? " matching your filters" : ""}`
-            : "Every order placed on the shop."
+            ? plural(filtered ? "orders.countFiltered" : "orders.count", result.totalDocs)
+            : t("orders.description")
         }
       />
 
-      <FilterBar action="/admin/orders" active={filtered}>
-        <FilterField label="Search" name="q" wide>
-          <input id="q" name="q" type="search" defaultValue={q} placeholder="Order number, name, email or phone" className={filterInputClass} />
-        </FilterField>
-        <FilterField label="Order status" name="status">
-          <FilterSelect name="status" value={status} options={FULFILMENT.map((s) => ({ value: s, label: statusLabel(s) }))} />
-        </FilterField>
-        <FilterField label="Payment" name="payment">
-          <FilterSelect name="payment" value={payment} options={PAYMENT.map((s) => ({ value: s, label: statusLabel(s, "payment") }))} />
-        </FilterField>
-        <FilterField label="Delivery from" name="from">
-          <input id="from" name="from" type="date" defaultValue={from} className={filterInputClass} />
-        </FilterField>
-        <FilterField label="Delivery to" name="to">
-          <input id="to" name="to" type="date" defaultValue={to} className={filterInputClass} />
-        </FilterField>
+      <FilterBar action="/admin/orders" active={filtered} searchValue={q} searchPlaceholder={t("orders.filters.searchPlaceholder")}>
+        <FilterSelect
+          id="status"
+          label={t("orders.filters.status")}
+          value={status}
+          placeholder={t("common.all")}
+          options={FULFILMENT.map((s) => ({ value: s, label: label("fulfilment", s) }))}
+        />
+        <FilterSelect
+          id="payment"
+          label={t("orders.filters.payment")}
+          value={payment}
+          placeholder={t("common.all")}
+          options={PAYMENT.map((s) => ({ value: s, label: label("payment", s) }))}
+        />
+        <FilterSelect
+          id="attention"
+          label={t("orders.filters.attention")}
+          value={attention}
+          placeholder={t("common.all")}
+          options={[{ value: "overdue", label: t("orders.filters.overdue") }]}
+        />
+        <DateRangeFields
+          legend={t("orders.filters.deliveryDates")}
+          from={{ name: "from", value: from, label: t("common.from") }}
+          to={{ name: "to", value: to, label: t("common.to") }}
+        />
       </FilterBar>
 
       {result.docs.length === 0 ? (
         filtered ? (
           <EmptyState
-            title="Nothing matches those filters"
-            message="Try widening the date range or clearing the search."
-            action={<ActionLink href="/admin/orders">Clear filters</ActionLink>}
+            icon="search"
+            title={t("orders.empty.noMatch")}
+            body={t("orders.empty.noMatchBody")}
+            action={<ButtonLink href="/admin/orders">{t("common.clearFilters")}</ButtonLink>}
           />
         ) : (
-          <EmptyState
-            title="No orders yet"
-            message="Your first order will appear here the moment someone checks out."
-          />
+          <EmptyState icon="bag" title={t("orders.empty.title")} body={t("orders.empty.body")} />
         )
       ) : (
-        <DataList label="Orders">
-          {result.docs.map((order) => {
-            const href = `/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`;
-            const items = (order.items ?? []).reduce((n, item) => n + Number(item.quantity ?? 0), 0);
-            return (
-              <DataRow
-                key={order.id}
-                title={
-                  order.orderNumber ? (
-                    <Link href={href} className="hover:underline">
-                      {order.orderNumber}
+        <>
+          <Table
+            caption={t("orders.title")}
+            columns={[
+              { key: "order", label: t("orders.columns.order") },
+              { key: "customer", label: t("orders.columns.customer") },
+              { key: "total", label: t("orders.columns.total"), align: "end" },
+              { key: "payment", label: t("orders.columns.payment") },
+              { key: "status", label: t("orders.columns.status") },
+              { key: "delivery", label: t("orders.columns.delivery") },
+              { key: "actions", label: t("common.actions"), hidden: true },
+            ]}
+          >
+            {result.docs.map((order) => {
+              const number = order.orderNumber ?? "";
+              const orderHref = `/admin/orders/${encodeURIComponent(number)}`;
+              const items = (order.items ?? []).reduce((n, item) => n + Number(item.quantity ?? 0), 0);
+              return (
+                <Tr key={order.id}>
+                  <Td primary>
+                    <Link href={orderHref} className="font-medium text-ink hover:underline">
+                      {number || t("orders.columns.order")}
                     </Link>
-                  ) : (
-                    "Order"
-                  )
-                }
-                subtitle={`${order.customerName} · ${order.customerType === "guest" ? "Guest" : "Account"} · placed ${uaeDate(order.createdAt)}`}
-                meta={
-                  <>
-                    <span className="font-medium tabular-nums text-olive">{formatFils(Number(order.totalFils))}</span>
-                    <StatusBadge value={order.paymentStatus} kind="payment" />
-                    <StatusBadge value={order.fulfilmentStatus} />
-                    <span>
-                      Delivery {uaeDate(order.deliveryDate, "weekday")} · {order.deliveryTimeSlot}
+                    <span className="block text-xs text-ink-3">
+                      {t("orders.placed", { date: date(order.createdAt, "short") })} · {plural("orders.items", items)}
                     </span>
-                    <span>
-                      {items} item{items === 1 ? "" : "s"}
+                  </Td>
+                  <Td label={t("orders.columns.customer")}>
+                    <span className="block truncate">{order.customerName}</span>
+                    <span className="block text-xs text-ink-3">
+                      {label("customerType", order.customerType === "guest" ? "guest" : "account")}
                     </span>
-                  </>
-                }
-                actions={
-                  order.orderNumber ? (
-                    <RowAction href={href} variant="primary" label={`Open order ${order.orderNumber}`}>
-                      Open
-                    </RowAction>
-                  ) : undefined
-                }
-              />
-            );
-          })}
-        </DataList>
+                  </Td>
+                  <Td label={t("orders.columns.total")} align="end" className="font-medium tabular">
+                    {money(Number(order.totalFils))}
+                  </Td>
+                  <Td label={t("orders.columns.payment")}>
+                    <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+                  </Td>
+                  <Td label={t("orders.columns.status")}>
+                    <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)} dot>
+                      {label("fulfilment", order.fulfilmentStatus)}
+                    </Badge>
+                  </Td>
+                  <Td label={t("orders.columns.delivery")} className="whitespace-nowrap">
+                    <span className="block">{date(order.deliveryDate, "weekday")}</span>
+                    <span dir="ltr" className="block text-xs text-ink-3 tabular">
+                      {order.deliveryTimeSlot}
+                    </span>
+                  </Td>
+                  <Td actions>
+                    {number ? (
+                      <ButtonLink href={orderHref} size="sm" iconEnd="chevronRight" aria-label={t("orders.openLabel", { number })}>
+                        {t("common.open")}
+                      </ButtonLink>
+                    ) : null}
+                  </Td>
+                </Tr>
+              );
+            })}
+          </Table>
+          <Pagination page={result.page ?? page} totalPages={result.totalPages} hrefFor={href} />
+        </>
       )}
     </>
   );

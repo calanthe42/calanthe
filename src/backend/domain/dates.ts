@@ -32,6 +32,11 @@ export function dubaiDateInputValue(iso: string | null | undefined): string {
   }).format(date);
 }
 
+/** Midnight in the UAE at the start of the given YYYY-MM-DD day. */
+export function uaeMidnight(day: string): Date {
+  return new Date(`${day}T00:00:00${UAE_OFFSET}`);
+}
+
 /**
  * A chosen follow-up day as a timestamp: 09:00 UAE on that day.
  *
@@ -41,14 +46,17 @@ export function dubaiDateInputValue(iso: string | null | undefined): string {
  */
 export function followUpIsoFromDateInput(value: string, now: Date): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new FormInputError("Choose a follow-up date from the calendar.");
+    throw new FormInputError("Choose a follow-up date from the calendar.", "followUpFormat");
   }
   const at = new Date(`${value}T09:00:00${UAE_OFFSET}`);
   if (Number.isNaN(at.getTime()) || dubaiDateInputValue(at.toISOString()) !== value) {
-    throw new FormInputError("That follow-up date is not a real date.");
+    throw new FormInputError("That follow-up date is not a real date.", "followUpInvalid");
   }
   if (value < dubaiDateInputValue(now.toISOString())) {
-    throw new FormInputError("The follow-up date is in the past. Choose today or a later day.");
+    throw new FormInputError(
+      "The follow-up date is in the past. Choose today or a later day.",
+      "followUpPast",
+    );
   }
   return at.getTime() > now.getTime()
     ? at.toISOString()

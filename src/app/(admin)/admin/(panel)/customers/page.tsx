@@ -1,19 +1,14 @@
 import Link from "next/link";
-import { formatFils } from "@/lib/money";
-import {
-  DataList,
-  DataRow,
-  EmptyState,
-  FilterBar,
-  FilterField,
-  PageHeader,
-  Pill,
-  RowAction,
-  filterInputClass,
-  uaeDate,
-} from "@admin/components/ui";
+import { getAdminI18n } from "@admin/i18n/server";
+import { Badge } from "@admin/ui/Badge";
+import { ButtonLink } from "@admin/ui/Button";
+import { FilterBar } from "@admin/ui/FilterBar";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { Pagination, listHref, parsePage } from "@admin/ui/Pagination";
+import { EmptyState } from "@admin/ui/States";
+import { Table, Td, Tr } from "@admin/ui/Table";
 import { getAdminCustomers, getCustomerOrderStats } from "@backend/data/admin-metrics";
-import { getAdminSession } from "@backend/data/admin-session";
+import { displayName, getAdminSession } from "@backend/data/admin-session";
 
 /**
  * Customers — registered accounts only.
@@ -25,109 +20,124 @@ import { getAdminSession } from "@backend/data/admin-session";
  * Order counts and spend are COMPUTED from orders rather than stored on the
  * user, so they cannot drift after a refund.
  *
- * This screen runs under Payload's access control, so a staff member sees
- * nothing here — the customer list is admin-only by design (docs/SECURITY.md §3).
+ * Runs under Payload's access control: a staff member sees nothing here — the
+ * customer list is admin-only by design (docs/SECURITY.md §3).
  */
 
-export const metadata = { title: "Customers" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("customers.title") };
+}
+
+const PAGE_SIZE = 25;
 
 export default async function AdminCustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q = "" } = await searchParams;
-  const [session, all, stats] = await Promise.all([
-    getAdminSession(),
-    getAdminCustomers(),
-    getCustomerOrderStats(),
-  ]);
+  const params = await searchParams;
+  const q = params.q ?? "";
+  const [i18n, session] = await Promise.all([getAdminI18n(), getAdminSession()]);
+  const { t, plural, money, date } = i18n;
+  const breadcrumbs = [{ label: t("nav.sections.sales") }, { label: t("customers.title") }];
 
   if (!session?.isAdmin) {
     return (
       <>
-        <PageHeader title="Customers" breadcrumb={[{ label: "Orders" }, { label: "Customers" }]} />
-        <EmptyState
-          title="Customer details are for the owner"
-          message="Everything needed to fulfil an order — names, phone numbers, addresses — is on the order itself."
-        />
+        <PageHeader title={t("customers.title")} breadcrumbs={breadcrumbs} />
+        <EmptyState icon="users" title={t("customers.ownerOnlyTitle")} body={t("customers.ownerOnlyBody")} />
       </>
     );
   }
 
+  const [all, stats] = await Promise.all([getAdminCustomers(), getCustomerOrderStats()]);
+
   const query = q.trim().toLowerCase();
-  const customers = query
+  const matching = query
     ? all.filter((c) =>
-        [c.firstName, c.lastName, c.name, c.email, c.phone]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(query)),
+        [c.firstName, c.lastName, c.name, c.email, c.phone].filter(Boolean).some((v) => String(v).toLowerCase().includes(query)),
       )
     : all;
+  const totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  const page = Math.min(parsePage(params.page), totalPages);
+  const rows = matching.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <>
       <PageHeader
-        title="Customers"
-        breadcrumb={[{ label: "Orders" }, { label: "Customers" }]}
-        description={
-          all.length > 0
-            ? `${all.length} customer account${all.length === 1 ? "" : "s"}. Guests who bought without an account are on their orders.`
-            : "People who have created an account on the shop."
-        }
+        title={t("customers.title")}
+        breadcrumbs={breadcrumbs}
+        description={all.length > 0 ? plural("customers.count", all.length) : t("customers.description")}
       />
 
       {all.length === 0 ? (
-        <EmptyState
-          title="No customer accounts yet"
-          message="Customers can buy as guests without an account, so orders may arrive before anyone appears here."
-        />
+        <EmptyState icon="users" title={t("customers.empty.title")} body={t("customers.empty.body")} />
       ) : (
         <>
-          <FilterBar action="/admin/customers" active={Boolean(query)}>
-            <FilterField label="Search" name="q" wide>
-              <input id="q" name="q" type="search" defaultValue={q} placeholder="Name, email or phone" className={filterInputClass} />
-            </FilterField>
-          </FilterBar>
+          <FilterBar action="/admin/customers" active={Boolean(query)} searchValue={q} searchPlaceholder={t("customers.searchPlaceholder")} />
 
-          {customers.length === 0 ? (
-            <EmptyState title="Nobody matches that search" message={`No customer matches “${q}”.`} />
+          {matching.length === 0 ? (
+            <EmptyState
+              icon="search"
+              title={t("customers.empty.noMatch")}
+              body={t("customers.empty.noMatchBody", { query: q })}
+              action={<ButtonLink href="/admin/customers">{t("common.clearFilters")}</ButtonLink>}
+            />
           ) : (
-            <DataList label="Customers">
-              {customers.map((customer) => {
-                const stat = stats.get(customer.id) ?? { orders: 0, spentFils: 0, lastOrderAt: null };
-                const name =
-                  [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
-                  customer.name ||
-                  customer.email;
-                const href = `/admin/customers/${customer.id}`;
-                return (
-                  <DataRow
-                    key={customer.id}
-                    title={
-                      <Link href={href} className="hover:underline">
-                        {name}
-                      </Link>
-                    }
-                    subtitle={[customer.email, customer.phone].filter(Boolean).join(" · ")}
-                    meta={
-                      <>
-                        <span className="tabular-nums">
-                          {stat.orders} order{stat.orders === 1 ? "" : "s"}
+            <>
+              <Table
+                caption={t("customers.title")}
+                columns={[
+                  { key: "customer", label: t("customers.columns.customer") },
+                  { key: "orders", label: t("customers.columns.orders"), align: "end" },
+                  { key: "spent", label: t("customers.columns.spent"), align: "end" },
+                  { key: "last", label: t("customers.columns.lastOrder") },
+                  { key: "marketing", label: t("customers.columns.marketing") },
+                  { key: "actions", label: t("common.actions"), hidden: true },
+                ]}
+              >
+                {rows.map((customer) => {
+                  const stat = stats.get(customer.id) ?? { orders: 0, spentFils: 0, lastOrderAt: null };
+                  const name = displayName(customer);
+                  const href = `/admin/customers/${customer.id}`;
+                  return (
+                    <Tr key={customer.id}>
+                      <Td primary>
+                        <Link href={href} className="font-medium text-ink hover:underline">
+                          {name}
+                        </Link>
+                        <span className="block truncate text-xs text-ink-3" dir="ltr">
+                          {[customer.email, customer.phone].filter(Boolean).join(" · ")}
                         </span>
-                        <span className="tabular-nums text-olive">Spent {formatFils(stat.spentFils)}</span>
-                        <span>Last order {stat.lastOrderAt ? uaeDate(stat.lastOrderAt, "long") : "never"}</span>
-                        {customer.marketing?.subscribed ? <Pill tone="done">Subscribed</Pill> : null}
-                      </>
-                    }
-                    actions={
-                      <RowAction href={href} variant="primary" label={`Open customer ${name}`}>
-                        Open
-                      </RowAction>
-                    }
-                  />
-                );
-              })}
-            </DataList>
+                      </Td>
+                      <Td label={t("customers.columns.orders")} align="end" className="tabular">
+                        {stat.orders}
+                      </Td>
+                      <Td label={t("customers.columns.spent")} align="end" className="tabular">
+                        {money(stat.spentFils)}
+                      </Td>
+                      <Td label={t("customers.columns.lastOrder")} className="text-ink-2">
+                        {stat.lastOrderAt ? date(stat.lastOrderAt, "long") : t("common.never")}
+                      </Td>
+                      <Td label={t("customers.columns.marketing")}>
+                        {customer.marketing?.subscribed ? (
+                          <Badge tone="success">{t("customers.subscribed")}</Badge>
+                        ) : (
+                          <span className="text-xs text-ink-3">{t("customers.notSubscribed")}</span>
+                        )}
+                      </Td>
+                      <Td actions>
+                        <ButtonLink href={href} size="sm" iconEnd="chevronRight" aria-label={t("customers.openLabel", { name })}>
+                          {t("common.open")}
+                        </ButtonLink>
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </Table>
+              <Pagination page={page} totalPages={totalPages} hrefFor={(p) => listHref("/admin/customers", { q, page: p })} />
+            </>
           )}
         </>
       )}

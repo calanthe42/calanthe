@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { adminLogin } from "@backend/actions/admin-auth";
+import { useI18n } from "@admin/i18n/client";
+import { Button } from "@admin/ui/Button";
+import { Field, Input } from "@admin/ui/Field";
+import { Icon } from "@admin/ui/icons";
 
 /**
  * The sign-in form. The password goes to a server action and nowhere else;
@@ -10,15 +14,16 @@ import { adminLogin } from "@backend/actions/admin-auth";
  * page can read it.
  */
 export function AdminLoginForm({ next }: { next: string }) {
+  const { t, resolve } = useI18n();
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const data = new FormData(e.currentTarget);
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
         setError(null);
         startTransition(async () => {
           const result = await adminLogin(data);
@@ -26,59 +31,36 @@ export function AdminLoginForm({ next }: { next: string }) {
             router.replace(result.redirectTo);
             router.refresh();
           } else {
-            setError(result.message);
+            setError(resolve(result.code, undefined, result.message));
           }
         });
       }}
-      className="mt-6 space-y-4"
+      className="mt-6 space-y-5"
       noValidate
     >
       <input type="hidden" name="next" value={next} />
 
-      <div>
-        <label htmlFor="admin-email" className="mb-1.5 block text-sm font-medium text-olive">
-          Email
-        </label>
-        <input
-          id="admin-email"
-          name="email"
-          type="email"
-          autoComplete="username"
-          required
-          className="min-h-11 w-full rounded-md border border-hairline bg-white px-3 text-base text-olive"
-        />
-      </div>
+      <Field id="admin-email" label={t("auth.email")}>
+        <Input id="admin-email" name="email" type="email" autoComplete="username" required dir="ltr" />
+      </Field>
 
-      <div>
-        <label htmlFor="admin-password" className="mb-1.5 block text-sm font-medium text-olive">
-          Password
-        </label>
-        <input
-          id="admin-password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="min-h-11 w-full rounded-md border border-hairline bg-white px-3 text-base text-olive"
-        />
-      </div>
+      <Field id="admin-password" label={t("auth.password")}>
+        <Input id="admin-password" name="password" type="password" autoComplete="current-password" required dir="ltr" />
+      </Field>
 
       {error ? (
-        <p
+        <div
           role="alert"
-          className="rounded-md border border-burgundy/30 bg-burgundy/5 px-3 py-2 text-sm leading-relaxed text-burgundy"
+          className="flex items-start gap-2.5 rounded-md border border-danger/30 bg-danger/[0.08] px-3 py-2.5 text-sm leading-relaxed text-ink"
         >
+          <Icon name="alert" className="mt-0.5 h-4 w-4 text-danger" />
           {error}
-        </p>
+        </div>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-burnt-orange px-5 text-sm font-medium text-cream transition-opacity disabled:opacity-60"
-      >
-        {pending ? "Signing in…" : "Sign in"}
-      </button>
+      <Button type="submit" variant="primary" block loading={pending} loadingText={t("auth.pending")}>
+        {t("auth.submit")}
+      </Button>
     </form>
   );
 }

@@ -21,12 +21,20 @@ import config from "@payload-config";
  * the cleaner refusal.
  */
 
-export type AdminAuthResult = { ok: true; redirectTo: string } | { ok: false; message: string };
+/* `code` is a path into the admin dictionary, so the sign-in screen can show
+   the message in the reader's language; `message` is the English fallback. */
+export type AdminAuthResult =
+  | { ok: true; redirectTo: string }
+  | { ok: false; message: string; code: string };
 
 /* One message for a wrong password, an unknown address, a locked account
    and an unverified one. Distinguishing them tells a stranger which email
    addresses belong to the business. */
-const GENERIC_FAILURE = "That email and password did not match an admin account.";
+const GENERIC_FAILURE = {
+  ok: false,
+  message: "That email and password did not match an admin account.",
+  code: "auth.failed",
+} as const;
 
 /**
  * Where to go after signing in.
@@ -48,7 +56,7 @@ export async function adminLogin(form: FormData): Promise<AdminAuthResult> {
   const password = String(form.get("password") ?? "");
 
   if (!email || !password) {
-    return { ok: false, message: "Enter your email and password." };
+    return { ok: false, message: "Enter your email and password.", code: "auth.missing" };
   }
 
   const payload = await getPayload({ config });
@@ -60,10 +68,10 @@ export async function adminLogin(form: FormData): Promise<AdminAuthResult> {
     token = result.token;
     role = (result.user as { role?: string } | undefined)?.role;
   } catch {
-    return { ok: false, message: GENERIC_FAILURE };
+    return GENERIC_FAILURE;
   }
 
-  if (!token) return { ok: false, message: GENERIC_FAILURE };
+  if (!token) return GENERIC_FAILURE;
 
   /* The password was right, so saying why they cannot enter reveals
      nothing a stranger could use. */
@@ -71,6 +79,7 @@ export async function adminLogin(form: FormData): Promise<AdminAuthResult> {
     return {
       ok: false,
       message: "This account does not have access to the Calanthe admin.",
+      code: "auth.noAccess",
     };
   }
 

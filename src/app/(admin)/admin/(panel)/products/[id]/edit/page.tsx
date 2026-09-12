@@ -2,13 +2,20 @@ import { notFound } from "next/navigation";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { Banner, PageHeader, Pill, RowAction } from "@admin/components/ui";
 import { ProductForm } from "@admin/components/ProductForm";
+import { getAdminI18n } from "@admin/i18n/server";
+import { Badge } from "@admin/ui/Badge";
+import { ButtonLink } from "@admin/ui/Button";
+import { PageHeader } from "@admin/ui/PageHeader";
+import { Notice } from "@admin/ui/States";
 import { getAdminSession } from "@backend/data/admin-session";
 import { getProductFormOptions } from "@backend/data/product-form";
 import { lexicalToPlainText } from "@backend/domain/richtext";
 
-export const metadata = { title: "Edit product" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("products.title") };
+}
 
 /** Integer fils to the dirham string an input shows: 48000 -> "480". */
 const toAedInput = (fils: number | null | undefined) =>
@@ -26,7 +33,7 @@ export default async function EditProductPage({
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0) notFound();
 
-  const [session, payload] = await Promise.all([getAdminSession(), getPayload({ config })]);
+  const [{ t }, session, payload] = await Promise.all([getAdminI18n(), getAdminSession(), getPayload({ config })]);
   const { user } = await payload.auth({ headers: await nextHeaders() });
 
   /* Read under the caller's own permissions — no overrideAccess. */
@@ -43,51 +50,44 @@ export default async function EditProductPage({
   const live = Boolean(product.available) && imageIds.length > 0;
   const importedWithoutPhoto = imageIds.length === 0 && (product.legacyImages ?? []).length > 0;
   const isOwner = Boolean(session?.isAdmin);
+  const storeHref = `/product/${product.slug}`;
 
   return (
     <>
       <PageHeader
         title={product.name}
-        breadcrumb={[
-          { label: "Shop" },
-          { label: "Products", href: "/admin/products" },
+        breadcrumbs={[
+          { label: t("nav.sections.catalog") },
+          { label: t("products.title"), href: "/admin/products" },
           { label: product.name },
         ]}
-        description={live ? "Live on the shop." : "Hidden from the shop."}
-        action={
+        badge={
           live ? (
-            <RowAction href={`/product/${product.slug}`} external>
-              View on shop ↗
-            </RowAction>
+            <Badge tone="success" dot>
+              {t("products.edit.live")}
+            </Badge>
           ) : (
-            <Pill>Hidden</Pill>
+            <Badge dot>{t("products.edit.hidden")}</Badge>
           )
+        }
+        actions={
+          live ? (
+            <ButtonLink href={storeHref} external icon="store">
+              {t("common.viewOnStore")}
+            </ButtonLink>
+          ) : undefined
         }
       />
 
-      {created ? (
-        <Banner>
-          Product created. It stays hidden from the shop until it has a photo and “Available to
-          buy” is ticked.
-        </Banner>
-      ) : null}
-
-      {!isOwner ? (
-        <Banner tone="info">Only the owner can change products. Every detail is shown here.</Banner>
-      ) : null}
-
-      {importedWithoutPhoto ? (
-        <Banner tone="warning">
-          This product came from the old website without a photo of its own. Add its real
-          photograph under Photos, then tick “Available to buy” to put it on sale.
-        </Banner>
-      ) : null}
+      {created ? <Notice tone="success">{t("products.edit.created")}</Notice> : null}
+      {!isOwner ? <Notice>{t("products.edit.readOnly")}</Notice> : null}
+      {importedWithoutPhoto ? <Notice tone="warning">{t("products.edit.importedNoPhoto")}</Notice> : null}
 
       <ProductForm
         occasions={occasions}
         media={media}
         readOnly={!isOwner}
-        viewHref={live ? `/product/${product.slug}` : undefined}
+        viewHref={live ? storeHref : undefined}
         values={{
           id: product.id,
           name: product.name,
@@ -99,9 +99,7 @@ export default async function EditProductPage({
           compareAtPriceAed: toAedInput(product.compareAtPriceFils),
           category: product.category,
           flowers: (product.flowers ?? []) as string[],
-          occasionIds: (product.occasions ?? []).map((o) =>
-            String(typeof o === "object" && o ? o.id : o),
-          ),
+          occasionIds: (product.occasions ?? []).map((o) => String(typeof o === "object" && o ? o.id : o)),
           imageIds,
           available: Boolean(product.available),
           featured: Boolean(product.featured),

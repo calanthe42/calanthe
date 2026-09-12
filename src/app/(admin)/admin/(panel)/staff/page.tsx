@@ -1,16 +1,11 @@
-import { ComingSoon, PageHeader } from "@admin/components/ui";
+import { ComingSoon } from "@admin/components/ComingSoon";
+import { getAdminI18n } from "@admin/i18n/server";
 
-export const metadata = { title: "Staff" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("nav.staff") };
+}
 
 export default function StaffPage() {
-  return (
-    <>
-      <PageHeader
-        title="Staff"
-        breadcrumb={[{ label: "System" }, { label: "Staff" }]}
-      />
-      <ComingSoon area="Staff"
-        note="Staff accounts are managed in the CMS today. Only an owner can create one or change a role." />
-    </>
-  );
+  return <ComingSoon title="nav.staff" section="nav.sections.system" note="placeholders.staff" icon="staff" />;
 }

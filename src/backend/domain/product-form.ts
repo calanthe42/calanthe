@@ -13,9 +13,9 @@ import { FormInputError } from "@backend/domain/form-error";
  * write a raw database amount through the editor.
  *
  * Everything that can be wrong is reported as a FormInputError in a sentence
- * the owner can act on. The collection's own hooks re-check the rules that
- * matter (a product cannot go live without a photograph), so this is the
- * friendly first line, not the only one.
+ * the owner can act on, with a code the admin translates. The collection's own
+ * hooks re-check the rules that matter (a product cannot go live without a
+ * photograph), so this is the friendly first line, not the only one.
  */
 
 export const PRODUCT_CATEGORIES = [
@@ -66,11 +66,17 @@ export function parseAedToFils(raw: string, label: string): number | null {
   const cleaned = raw.replace(/^aed/i, "").replace(/[\s,]/g, "");
   if (cleaned === "") return null;
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) {
-    throw new FormInputError(`${label}: enter an amount in dirhams, like 480 or 480.50.`);
+    throw new FormInputError(
+      `${label}: enter an amount in dirhams, like 480 or 480.50.`,
+      "amountFormat",
+      { label },
+    );
   }
   const aed = Number(cleaned);
   if (aed > MAX_PRICE_AED) {
-    throw new FormInputError(`${label} looks too high — please check the amount.`);
+    throw new FormInputError(`${label} looks too high — please check the amount.`, "amountTooHigh", {
+      label,
+    });
   }
   /* Rounded once, here. 0.29 * 100 is 28.999… in floating point. */
   return Math.round(aed * 100);
@@ -82,6 +88,8 @@ export function parseWholeNumber(raw: string, label: string, allowNegative = fal
   if (!pattern.test(raw)) {
     throw new FormInputError(
       `${label} must be a whole number${allowNegative ? "" : ", 0 or more"}.`,
+      allowNegative ? "wholeNumberSigned" : "wholeNumber",
+      { label },
     );
   }
   return Number(raw);
@@ -104,14 +112,18 @@ export function parseSlug(raw: string): string | undefined {
   if (!SLUG.test(slug)) {
     throw new FormInputError(
       "The web address can only use lowercase letters, numbers and single hyphens — for example amber-hour.",
+      "slugFormat",
     );
   }
   return slug;
 }
 
-function within(value: string, max: number, label: string): string {
+export function within(value: string, max: number, label: string): string {
   if (value.length > max) {
-    throw new FormInputError(`${label} is too long — keep it under ${max} characters.`);
+    throw new FormInputError(`${label} is too long — keep it under ${max} characters.`, "tooLong", {
+      label,
+      max,
+    });
   }
   return value;
 }
@@ -142,11 +154,11 @@ export type ParsedProduct = {
 
 export function parseProductForm(form: FormReader): ParsedProduct {
   const name = within(readText(form.get("name")), 140, "The name");
-  if (!name) throw new FormInputError("Give the product a name.");
+  if (!name) throw new FormInputError("Give the product a name.", "nameRequired");
 
   const priceFils = parseAedToFils(readText(form.get("priceAed")), "Price");
-  if (priceFils === null) throw new FormInputError("Enter the price in dirhams.");
-  if (priceFils === 0) throw new FormInputError("The price cannot be zero.");
+  if (priceFils === null) throw new FormInputError("Enter the price in dirhams.", "priceRequired");
+  if (priceFils === 0) throw new FormInputError("The price cannot be zero.", "priceZero");
 
   /* Empty means "not on offer" and CLEARS a previous compare-at price. It
      used to mean "leave it alone", which made an offer impossible to end. */
@@ -157,12 +169,15 @@ export function parseProductForm(form: FormReader): ParsedProduct {
   if (compareAtPriceFils !== null && compareAtPriceFils <= priceFils) {
     throw new FormInputError(
       "The compare-at price must be higher than the price. Leave it empty if the product is not on offer.",
+      "compareAtLow",
     );
   }
 
   const categoryRaw = readText(form.get("category"));
   const category = PRODUCT_CATEGORIES.find((c) => c.value === categoryRaw)?.value;
-  if (categoryRaw && !category) throw new FormInputError("Choose a category from the list.");
+  if (categoryRaw && !category) {
+    throw new FormInputError("Choose a category from the list.", "categoryUnknown");
+  }
 
   const knownFlowers = new Set<string>(PRODUCT_FLOWERS.map((f) => f.value));
   const flowers = [...new Set(form.getAll("flowers").map(String))].filter(
@@ -171,24 +186,32 @@ export function parseProductForm(form: FormReader): ParsedProduct {
 
   const imageIds = parseIdList(form.getAll("imageIds"));
   if (imageIds.length > MAX_PRODUCT_IMAGES) {
-    throw new FormInputError(`A product can have up to ${MAX_PRODUCT_IMAGES} photos.`);
+    throw new FormInputError(
+      `A product can have up to ${MAX_PRODUCT_IMAGES} photos.`,
+      "tooManyPhotos",
+      { max: MAX_PRODUCT_IMAGES },
+    );
   }
 
   const available = readChecked(form.get("available"));
-  if (available && imageIds.length === 0) throw new FormInputError(PUBLISH_NEEDS_PHOTO);
+  if (available && imageIds.length === 0) {
+    throw new FormInputError(PUBLISH_NEEDS_PHOTO, "publishNeedsPhoto");
+  }
 
   const trackStock = readChecked(form.get("trackStock"));
   const stock = parseWholeNumber(readText(form.get("stock")), "Stock") ?? undefined;
   if (trackStock && available && (stock ?? 0) <= 0) {
     throw new FormInputError(
       "This product tracks stock but has none. Add stock, stop tracking stock, or keep it hidden.",
+      "stockNone",
     );
   }
 
   return {
     name,
     slug: parseSlug(readText(form.get("slug"))),
-    shortDescription: within(readText(form.get("shortDescription")), 200, "The short description") || null,
+    shortDescription:
+      within(readText(form.get("shortDescription")), 200, "The short description") || null,
     descriptionText: within(readText(form.get("descriptionText")), 10_000, "The full description"),
     priceFils,
     compareAtPriceFils,
@@ -205,7 +228,8 @@ export function parseProductForm(form: FormReader): ParsedProduct {
     stock,
     sortOrder: parseWholeNumber(readText(form.get("sortOrder")), "Shop order", true) ?? 0,
     seoTitle: within(readText(form.get("seoTitle")), 70, "The search title") || null,
-    seoDescription: within(readText(form.get("seoDescription")), 180, "The search description") || null,
+    seoDescription:
+      within(readText(form.get("seoDescription")), 180, "The search description") || null,
     noIndex: readChecked(form.get("noIndex")),
   };
 }
