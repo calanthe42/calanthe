@@ -17,9 +17,9 @@ Related: [ARCHITECTURE](./ARCHITECTURE.md) · [SECURITY](./SECURITY.md) ·
 | `DATABASE_URL` | M | Neon Postgres. Must start `postgres`. Separate branch per environment. |
 | `PAYLOAD_SECRET` | M | ≥ 32 chars. Rotating it invalidates every session. |
 | `NEXT_PUBLIC_SERVER_URL` | M, PUB | Absolute origin. Wrong value breaks emails and Stripe returns. |
-| `SENTRY_DSN` | M in prod | Optional in dev; production **boot** fails without it. |
-| `UPSTASH_REDIS_REST_URL` | M in prod | Rate limits, OTP, webhook idempotency. |
-| `UPSTASH_REDIS_REST_TOKEN` | M in prod | |
+| `SENTRY_DSN` | O | Error tracking. Missing in production logs a warning; never blocks boot. |
+| `UPSTASH_REDIS_REST_URL` | O | Rate limits, OTP, webhook idempotency — none built yet. Missing in production logs a warning; the feature that first uses Redis must require it. |
+| `UPSTASH_REDIS_REST_TOKEN` | O | Paired with the URL. |
 | `NODE_ENV` | auto | |
 
 ### To be added

@@ -20,7 +20,7 @@ const schema = z.object({
   /* --- Public --- */
   NEXT_PUBLIC_SERVER_URL: z.string().url().default("http://localhost:3000"),
 
-  /* --- Observability / infra (required in production) --- */
+  /* --- Observability / infra (optional; a warning is logged in production) --- */
   SENTRY_DSN: z.string().url().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
@@ -44,25 +44,32 @@ if (!parsed.success) {
   );
 }
 
-/* Production RUNTIME additionally requires the infra vars — fail
-   closed. (`next build` also runs with NODE_ENV=production; the build
-   phase itself makes no network calls, so it is exempt — the server
-   still refuses to BOOT without these via instrumentation.ts.) */
+/* Production RUNTIME.
+   - DATABASE_URL and PAYLOAD_SECRET are hard requirements, enforced by the
+     schema above in every environment.
+   - BLOB_READ_WRITE_TOKEN is a hard requirement. Without it, uploads land on
+     Vercel's ephemeral filesystem and are lost on the next deploy, so the
+     server refuses to boot (backend/payload/storage.ts enforces the same).
+   - Sentry (error tracking) and Upstash (rate limiting) are OPTIONAL.
+     Nothing depends on them yet, and refusing to boot without them took the
+     whole production site down. A missing value is logged, never fatal.
+     Whatever first depends on Redis must require it at that point
+     (lib/redis.ts returns null without credentials; callers fail closed).
+   (`next build` also runs with NODE_ENV=production; the build phase makes no
+   network calls, so it is exempt.) */
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 if (process.env.VERCEL_ENV === "production" && !isBuildPhase) {
-    const missing = (
-    [
-      "SENTRY_DSN",
-      "UPSTASH_REDIS_REST_URL",
-      "UPSTASH_REDIS_REST_TOKEN",
-      /* Without this, uploads silently land on an ephemeral filesystem and
-         are lost on the next deploy. Fail closed. */
-      "BLOB_READ_WRITE_TOKEN",
-    ] as const
+  if (!parsed.data.BLOB_READ_WRITE_TOKEN) {
+    throw new Error("Missing required production environment variables: BLOB_READ_WRITE_TOKEN");
+  }
+  const unset = (
+    ["SENTRY_DSN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"] as const
   ).filter((k) => !parsed.data[k]);
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required production environment variables: ${missing.join(", ")}`,
+  if (unset.length > 0) {
+    console.warn(
+      `[env] Optional production services are not configured: ${unset.join(", ")}. ` +
+        "The site runs normally; error tracking (Sentry) and rate limiting (Upstash) " +
+        "stay disabled until these are set.",
     );
   }
 }
