@@ -24,9 +24,12 @@
 ## Deploying
 
 - Vercel project `calanthe` (account nateliya420-6290).
-- Set env vars in Vercel (Production): DATABASE_URL (Neon prod branch),
-  PAYLOAD_SECRET, SENTRY_DSN, UPSTASH_REDIS_REST_URL/TOKEN,
-  NEXT_PUBLIC_SERVER_URL=https://calanthe.vercel.app
+- Set env vars in Vercel (Production). Required — the server will not
+  boot without them: DATABASE_URL (Neon prod branch), PAYLOAD_SECRET.
+  Also set NEXT_PUBLIC_SERVER_URL=https://calanthe.vercel.app
+- Optional — a warning is logged when missing, never fatal: SENTRY_DSN
+  (error tracking), UPSTASH_REDIS_REST_URL/TOKEN (rate limiting; the
+  feature that first uses Redis must require them).
 - `vercel deploy --prod --yes` (build runs `next build` — webpack;
   Payload does not support Turbopack builds on Next 15).
 - Run migrations against prod BEFORE promoting a schema-changing deploy:
