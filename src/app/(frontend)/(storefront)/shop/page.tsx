@@ -4,6 +4,7 @@ import { ShopGrid } from "@/components/commerce/ShopGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getAvailableProducts } from "@backend/data/products";
+import { SAME_DAY_CUTOFF_HOUR } from "@/lib/data";
 
 /* The catalogue is now database-backed, so these pages must be allowed to
    change without a redeploy — otherwise an edit in /admin would never reach
@@ -33,12 +34,14 @@ export default async function ShopPage({
   /* Availability is enforced by the query, not here: getAvailableProducts
      only ever returns products the public may buy. */
   const available = await getAvailableProducts();
-  const list = readyToday ? available.filter((p) => p.featured || p.newArrival) : available;
+  const list = readyToday
+    ? available.filter((p) => p.featured || p.newArrival)
+    : available;
 
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
       <Reveal className="mb-10 max-w-2xl lg:mb-14">
-<Eyebrow>{readyToday ? "Ready made for today" : "The Collection"}</Eyebrow>
+        <Eyebrow>{readyToday ? "Ready made for today" : "The Collection"}</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">
           {readyToday
             ? "Made this morning, gone by evening."
@@ -46,7 +49,7 @@ export default async function ShopPage({
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
           {readyToday
-            ? "Arrangements the atelier can compose and deliver today. Order before 2pm."
+            ? `Arrangements the atelier can compose and deliver today. Order before ${SAME_DAY_CUTOFF_HOUR}:00.`
             : "Every arrangement is built stem by stem in the atelier — no two ever quite the same."}
         </p>
       </Reveal>

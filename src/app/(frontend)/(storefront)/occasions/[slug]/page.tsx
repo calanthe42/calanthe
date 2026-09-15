@@ -4,10 +4,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { ShopGrid } from "@/components/commerce/ShopGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
-import {
-  getActiveOccasionBySlug,
-  getActiveOccasionSlugs,
-} from "@backend/data/occasions";
+import { getActiveOccasionBySlug, getActiveOccasionSlugs } from "@backend/data/occasions";
 import { getProductsForOccasion } from "@backend/data/products";
 
 /* The catalogue is now database-backed, so these pages must be allowed to
@@ -81,8 +78,8 @@ export default async function OccasionPage({
 
       {matches.length === 0 ? (
         <CatalogueEmpty
-          title={`No ${occasion.name.toLowerCase()} arrangements just yet.`}
-          message="This collection is being composed. Do come back shortly."
+          title={`The ${occasion.name.toLowerCase()} collection is being composed.`}
+          message="Until it arrives, a florist can compose one for this moment. Tell us who it is for, the colours and your budget."
         />
       ) : (
         <ShopGrid products={matches} showOccasionFilter={false} />

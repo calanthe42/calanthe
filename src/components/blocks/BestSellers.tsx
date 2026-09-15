@@ -11,6 +11,11 @@ import { PHOTOS } from "@/lib/data";
 export async function BestSellers() {
   const sellers = await getBestSellers(4);
 
+  /* Nothing to rank. New Arrivals already carries the made-to-order
+     invitation when the catalogue is empty; a second one here, or the
+     editorial tile standing alone beside nothing, would say it twice. */
+  if (sellers.length === 0) return null;
+
   return (
     <section className="section-pad">
       <div className="mx-auto max-w-7xl gutter">

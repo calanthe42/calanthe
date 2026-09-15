@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
@@ -9,6 +9,8 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import { cn } from "@/lib/cn";
 import { useToast } from "@/lib/toast";
+import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
+import { useLenisInstance } from "@/lib/lenis-context";
 import {
   BYO_VASE_PRICE_AED,
   byoBudgetNote,
@@ -38,6 +40,7 @@ import {
 
 export function BuildYourOwnForm() {
   const { toast } = useToast();
+  const lenis = useLenisInstance();
 
   const [budget, setBudget] = useState<number | "other" | null>(null);
   const [customBudget, setCustomBudget] = useState("");
@@ -60,7 +63,19 @@ export function BuildYourOwnForm() {
     return budget ?? 0;
   }, [budget, customBudget]);
 
-  const totalAed = budgetValue + (vase ? BYO_VASE_PRICE_AED : 0);
+  const request: BespokeRequest = {
+    budgetAed: budgetValue,
+    colours,
+    floristChoosesColours: colourOther,
+    vase,
+    vasePriceAed: BYO_VASE_PRICE_AED,
+    occasion: occasion ?? "",
+    cardMessage: message,
+    leaveCardBlank: leaveBlank,
+    notes,
+  };
+  const totalAed = bespokeTotalAed(request);
+  const whatsappHref = bespokeWhatsAppHref(request);
 
   /* The monogram dot sits at the first step still waiting on you. */
   const activeStep = useMemo(() => {
@@ -85,25 +100,56 @@ export function BuildYourOwnForm() {
       toast("Tell us the occasion — it shapes the arrangement");
       return;
     }
+    /* Opened from the click itself so no popup blocker intervenes. The
+       confirmation below keeps a link in case the new tab was closed. */
+    window.open(whatsappHref, "_blank", "noopener,noreferrer");
     setSubmitted(true);
   }
+
+  /* The button that submits sits at the foot of a long form, and the
+     confirmation that replaces the form is short — without this a phone is
+     left looking at the footer, and the customer never reads what to do
+     next. Instant jump: the view changed, not the page's position in it. */
+  useEffect(() => {
+    if (!submitted) return;
+    if (lenis) lenis.scrollTo(0, { immediate: true });
+    else window.scrollTo({ top: 0 });
+  }, [submitted, lenis]);
 
   if (submitted) {
     return (
       <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-6 text-center">
         <Monogram className="w-16 text-burnt-orange" />
         <h2 className="max-w-md font-display text-3xl font-light text-olive lg:text-4xl">
-          Your arrangement is in our hands.
+          Your request is written. Send it on WhatsApp.
         </h2>
         <p className="max-w-sm text-base leading-relaxed text-sage">
-          A florist will review your preferences and confirm on WhatsApp before composing.
-          Total {formatAed(totalAed)}.
+          We opened a WhatsApp message to the atelier with everything you chose. Once you
+          send it, a florist replies to confirm the arrangement, delivery and the total of{" "}
+          {formatAed(totalAed)} before composing.
         </p>
-        <p className="max-w-sm text-xs leading-relaxed text-sage">
-          (UI preview — this will create a real request once the backend arrives.)
-        </p>
-        <Link href="/shop" className={cn(buttonClasses("secondary"), "mt-2")}>
-          Continue Shopping
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonClasses("primary")}
+          >
+            Open WhatsApp Again
+          </a>
+          <button
+            type="button"
+            onClick={() => setSubmitted(false)}
+            className={buttonClasses("secondary")}
+          >
+            Edit My Choices
+          </button>
+        </div>
+        <Link
+          href="/shop"
+          className="min-h-11 content-center text-sm text-sage underline decoration-hairline underline-offset-4 hover:text-olive"
+        >
+          Continue shopping
         </Link>
       </div>
     );
@@ -331,7 +377,7 @@ export function BuildYourOwnForm() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3">
         <div className="mx-auto max-w-3xl">
           <Button variant="primary" className="w-full" onClick={handleSubmit}>
-            Create My Arrangement{totalAed > 0 && <> — {formatAed(totalAed)}</>}
+            Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
           </Button>
         </div>
       </div>

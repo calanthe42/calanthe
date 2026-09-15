@@ -34,9 +34,7 @@ export function Hero({ media }: HeroProps) {
           scroll-linked animation on this screen, and it keeps every
           frame it can get. */}
       <Parallax speed={0.93} desktopOnly className="absolute inset-0">
-        <div className="hero-kenburns h-full w-full">
-          {media ?? <HeroMedia />}
-        </div>
+        <div className="hero-kenburns h-full w-full">{media ?? <HeroMedia />}</div>
       </Parallax>
 
       {/* Two soft scrims, both fading to nothing so the photograph keeps
@@ -49,7 +47,10 @@ export function Hero({ media }: HeroProps) {
         style={{
           background: [
             "radial-gradient(58% 44% at 50% 48%, rgba(28,30,18,0.5) 0%, rgba(28,30,18,0.22) 50%, rgba(28,30,18,0) 78%)",
-            "radial-gradient(130% 100% at 12% 100%, rgba(43,47,27,0.64) 0%, rgba(43,47,27,0.32) 32%, rgba(43,47,27,0.08) 58%, rgba(43,47,27,0) 78%)",
+            /* The words' pocket. Denser than the centre scrim because on a
+               wide screen the bouquet's brightest daisies sit directly
+               behind "Where feelings" — the headline must read on them. */
+            "radial-gradient(120% 100% at 8% 100%, rgba(43,47,27,0.78) 0%, rgba(43,47,27,0.46) 30%, rgba(43,47,27,0.12) 56%, rgba(43,47,27,0) 76%)",
           ].join(", "),
         }}
       />

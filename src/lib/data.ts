@@ -692,18 +692,18 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
 /* ------------------------------------------------------------------ */
 
 export const instagramTiles: readonly ProductImage[] = [
-  img("ig-1", "warm", "Calanthe on Instagram", PHOTOS.terracotta),
-  img("ig-2", "olive", "Calanthe on Instagram", PHOTOS.peachRoses),
-  img("ig-3", "burgundy", "Calanthe on Instagram", PHOTOS.moodyProtea),
-  img("ig-4", "warm", "Calanthe on Instagram", PHOTOS.blushKraft),
-  img("ig-5", "olive", "Calanthe on Instagram", PHOTOS.roseMauveWall),
-  img("ig-6", "warm", "Calanthe on Instagram", PHOTOS.poppyMeadow),
-  img("ig-7", "olive", "Calanthe on Instagram", PHOTOS.dahliaDark),
-  img("ig-8", "warm", "Calanthe on Instagram", PHOTOS.whiteOrchid),
-  img("ig-9", "burgundy", "Calanthe on Instagram", PHOTOS.callaLilies),
-  img("ig-10", "olive", "Calanthe on Instagram", PHOTOS.stargazer),
-  img("ig-11", "warm", "Calanthe on Instagram", PHOTOS.whiteRoseWood),
-  img("ig-12", "olive", "Calanthe on Instagram", PHOTOS.pinkTulip),
+  img("ig-1", "warm", "Floral photography", PHOTOS.terracotta),
+  img("ig-2", "olive", "Floral photography", PHOTOS.peachRoses),
+  img("ig-3", "burgundy", "Floral photography", PHOTOS.moodyProtea),
+  img("ig-4", "warm", "Floral photography", PHOTOS.blushKraft),
+  img("ig-5", "olive", "Floral photography", PHOTOS.roseMauveWall),
+  img("ig-6", "warm", "Floral photography", PHOTOS.poppyMeadow),
+  img("ig-7", "olive", "Floral photography", PHOTOS.dahliaDark),
+  img("ig-8", "warm", "Floral photography", PHOTOS.whiteOrchid),
+  img("ig-9", "burgundy", "Floral photography", PHOTOS.callaLilies),
+  img("ig-10", "olive", "Floral photography", PHOTOS.stargazer),
+  img("ig-11", "warm", "Floral photography", PHOTOS.whiteRoseWood),
+  img("ig-12", "olive", "Floral photography", PHOTOS.pinkTulip),
 ] as const;
 
 /* ------------------------------------------------------------------ */
@@ -749,13 +749,22 @@ export const helpNavLinks = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Trust layer (ALL numbers/logos are placeholders — client to confirm) */
+/* Trust layer                                                         */
 /* ------------------------------------------------------------------ */
 
-/** FLAGGED placeholder — replace with the client's real count/rating. */
+/**
+ * Service promises only — things the atelier does on every order.
+ *
+ * There is deliberately no customer count, star rating, review quote or
+ * press strip here. The site carried "14,000+ happy customers", "Rated 5
+ * stars" and four "Press One…" wordmarks as placeholders, and they were
+ * live. Invented social proof is worse than none: it is the first thing a
+ * sceptical buyer checks, and it contradicts lib/seo.ts, which refuses to
+ * publish ratings for the same reason. Add real numbers or press here only
+ * once the client supplies them.
+ */
 export const TRUST = {
-  customersLine: "14,000+ happy customers",
-  ratingLine: "Rated 5 stars by our clients",
+  headline: "Promised on every order.",
   guarantees: [
     { title: "Same-day delivery", copy: "Ordered before 5pm, at their door today." },
     {
@@ -768,8 +777,6 @@ export const TRUST = {
     },
     { title: "All seven Emirates", copy: "One atelier, delivering across the UAE." },
   ],
-  /** FLAGGED placeholders — swap for real press logos when provided. */
-  pressPlaceholders: ["Press One", "Press Two", "Press Three", "Press Four"],
 } as const;
 
 export const VIDEO_APPROVAL = {

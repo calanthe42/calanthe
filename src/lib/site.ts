@@ -10,7 +10,10 @@
  *
  * Moves to shared/constants/ in step 2 of the structure migration.
  */
-const CANONICAL_ORIGIN = "https://calanthe.ae";
+/* The www host is the one that serves the site: the bare domain answers with
+   a 308 redirect to it, so canonical URLs and sitemap entries on the bare
+   domain would each point search engines at a redirect. */
+const CANONICAL_ORIGIN = "https://www.calanthe.ae";
 
 function resolveOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_SERVER_URL;

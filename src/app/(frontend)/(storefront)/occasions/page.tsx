@@ -44,16 +44,13 @@ export default async function OccasionsPage() {
           For every unspoken thing.
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
-          Some things are easier handed over than said. Begin with the moment,
-          and we will compose the rest.
+          Some things are easier handed over than said. Begin with the moment, and we will
+          compose the rest.
         </p>
       </Reveal>
 
       {!lead ? (
-        <CatalogueEmpty
-          title="The collections are being composed."
-          message="Occasions will appear here as soon as they are ready."
-        />
+        <CatalogueEmpty />
       ) : (
         <Stagger className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
           {/* The lead occasion: full width on a phone, two-thirds and
@@ -62,38 +59,77 @@ export default async function OccasionsPage() {
           <StaggerItem className="col-span-2 lg:col-span-2 lg:row-span-2">
             <OccasionTile occasion={lead} lead />
           </StaggerItem>
-          {rest.map((occasion) => (
-            <StaggerItem key={occasion.slug}>
-              <OccasionTile occasion={occasion} />
-            </StaggerItem>
-          ))}
+          {rest.map((occasion, i) => {
+            const span = finalTileSpan(rest.length, i);
+            return (
+              <StaggerItem
+                key={occasion.slug}
+                className={cn(
+                  span.mobile && "col-span-2",
+                  span.desktop === 2 && "lg:col-span-2",
+                  span.desktop === 3 && "lg:col-span-3",
+                )}
+              >
+                <OccasionTile occasion={occasion} span={span} />
+              </StaggerItem>
+            );
+          })}
         </Stagger>
       )}
     </main>
   );
 }
 
+type TileSpan = { mobile: boolean; desktop: 1 | 2 | 3 };
+
+/**
+ * How wide the tile at `index` (among the occasions after the lead) must be
+ * so the grid ends flush instead of leaving an empty cell.
+ *
+ * Desktop: the first two tiles sit beside the lead, then rows of three; the
+ * last tile stretches over whatever that final row leaves. Phone: rows of two,
+ * so an odd count stretches the last tile across both columns.
+ */
+function finalTileSpan(count: number, index: number): TileSpan {
+  if (index !== count - 1) return { mobile: false, desktop: 1 };
+  const beyondLead = Math.max(0, count - 2);
+  const leftover = beyondLead % 3;
+  return {
+    mobile: count % 2 === 1,
+    desktop: beyondLead === 0 ? 1 : leftover === 1 ? 3 : leftover === 2 ? 2 : 1,
+  };
+}
+
 type OccasionTileProps = {
   occasion: Awaited<ReturnType<typeof getActiveOccasions>>[number];
   lead?: boolean;
+  span?: TileSpan;
 };
 
-function OccasionTile({ occasion, lead = false }: OccasionTileProps) {
+function OccasionTile({
+  occasion,
+  lead = false,
+  span = { mobile: false, desktop: 1 },
+}: OccasionTileProps) {
   return (
     <Link
       href={`/occasions/${occasion.slug}`}
       className={cn(
         "group relative block h-full overflow-hidden rounded-media shadow-soft",
-        lead ? "aspect-[4/3] lg:aspect-auto lg:min-h-[30rem]" : "aspect-[4/5]",
+        lead && "aspect-[4/3] lg:aspect-auto lg:min-h-[30rem]",
+        !lead && (span.mobile ? "aspect-[2/1]" : "aspect-[4/5]"),
+        /* A stretched tile shares its row with a 4:5 tile (span 2) and takes
+           that tile's height, or owns the row alone (span 3) as a band. */
+        !lead && span.desktop === 2 && "lg:aspect-auto",
+        !lead && span.desktop === 3 && "lg:aspect-[3/1]",
+        !lead && span.mobile && span.desktop === 1 && "lg:aspect-[4/5]",
       )}
     >
       <ClipReveal className="absolute inset-0">
         <FloralImage
           image={occasion.image}
           sizes={
-            lead
-              ? "(max-width: 1024px) 100vw, 62vw"
-              : "(max-width: 1024px) 48vw, 31vw"
+            lead ? "(max-width: 1024px) 100vw, 62vw" : "(max-width: 1024px) 48vw, 31vw"
           }
         />
       </ClipReveal>
