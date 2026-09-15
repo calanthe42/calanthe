@@ -92,26 +92,24 @@ function CompleteTheGift() {
       <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
         Complete the gift
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      {/* Named, priced choices rather than image tiles: the add-ons have no
+          photographs, and generated art captioned "chocolates" showed
+          something other than what was being added. */}
+      <ul className="flex flex-col gap-2">
         {suggestions.map((addon) => (
-          <button
-            key={addon.id}
-            type="button"
-            onClick={() => addAddonToItem(last.key, addon.id)}
-            className="flex flex-col overflow-hidden rounded-media-sm border border-hairline text-left transition-colors duration-200 ease-bloom hover:border-sage"
-          >
-            <span className="block aspect-square w-full overflow-hidden">
-              <FloralImage image={addon.image} sizes="110px" />
-            </span>
-            <span className="px-2 pt-1.5 text-xs leading-tight text-olive">
-              {addon.name}
-            </span>
-            <span className="px-2 pb-2 pt-0.5 text-[0.6875rem] text-sage">
-              +{formatAed(addon.priceAed)}
-            </span>
-          </button>
+          <li key={addon.id}>
+            <button
+              type="button"
+              onClick={() => addAddonToItem(last.key, addon.id)}
+              aria-label={`Add ${addon.name} to ${last.name}, ${formatAed(addon.priceAed)}`}
+              className="flex min-h-11 w-full items-center justify-between gap-3 rounded-sm border border-hairline px-4 text-left transition-colors duration-200 ease-bloom hover:border-sage"
+            >
+              <span className="text-sm text-olive">{addon.name}</span>
+              <span className="text-sm text-sage">+{formatAed(addon.priceAed)}</span>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -172,13 +170,22 @@ export function CartDrawer() {
                 <p className="font-display text-2xl font-light italic text-olive">
                   Your cart is waiting to bloom.
                 </p>
-                <Link
-                  href="/shop"
-                  onClick={closeCart}
-                  className={buttonClasses("secondary")}
-                >
-                  Shop Flowers
-                </Link>
+                <div className="flex w-full max-w-xs flex-col gap-3">
+                  <Link
+                    href="/shop"
+                    onClick={closeCart}
+                    className={buttonClasses("primary", "whitespace-nowrap")}
+                  >
+                    Shop Flowers
+                  </Link>
+                  <Link
+                    href="/build-your-own"
+                    onClick={closeCart}
+                    className={buttonClasses("secondary", "whitespace-nowrap")}
+                  >
+                    Build Your Own
+                  </Link>
+                </div>
               </div>
             ) : (
               <>

@@ -96,6 +96,8 @@ export type Product = {
   flowers: readonly FlowerType[];
   featured: boolean;
   newArrival: boolean;
+  /** The owner's short description from /admin. Absent until she writes one. */
+  description?: string;
 };
 
 export const flowerTypes: readonly { slug: FlowerType; name: string }[] = [
@@ -686,25 +688,6 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   "out-for-delivery": "Out for delivery",
   delivered: "Delivered",
 };
-
-/* ------------------------------------------------------------------ */
-/* Instagram                                                           */
-/* ------------------------------------------------------------------ */
-
-export const instagramTiles: readonly ProductImage[] = [
-  img("ig-1", "warm", "Floral photography", PHOTOS.terracotta),
-  img("ig-2", "olive", "Floral photography", PHOTOS.peachRoses),
-  img("ig-3", "burgundy", "Floral photography", PHOTOS.moodyProtea),
-  img("ig-4", "warm", "Floral photography", PHOTOS.blushKraft),
-  img("ig-5", "olive", "Floral photography", PHOTOS.roseMauveWall),
-  img("ig-6", "warm", "Floral photography", PHOTOS.poppyMeadow),
-  img("ig-7", "olive", "Floral photography", PHOTOS.dahliaDark),
-  img("ig-8", "warm", "Floral photography", PHOTOS.whiteOrchid),
-  img("ig-9", "burgundy", "Floral photography", PHOTOS.callaLilies),
-  img("ig-10", "olive", "Floral photography", PHOTOS.stargazer),
-  img("ig-11", "warm", "Floral photography", PHOTOS.whiteRoseWood),
-  img("ig-12", "olive", "Floral photography", PHOTOS.pinkTulip),
-] as const;
 
 /* ------------------------------------------------------------------ */
 /* Navigation (single source for header + footer)                      */

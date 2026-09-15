@@ -163,6 +163,16 @@ describe("document mapping", () => {
     );
   });
 
+  it("carries the owner's short description only when she has written one", () => {
+    expect(
+      __internal.toStorefrontProduct(doc({ shortDescription: "  Garden roses, loosely tied.  " }))
+        .description,
+    ).toBe("Garden roses, loosely tied.");
+    expect(__internal.toStorefrontProduct(doc({ shortDescription: "   " }))).not.toHaveProperty(
+      "description",
+    );
+  });
+
   it("always yields exactly two images, even from one", () => {
     const mapped = __internal.toStorefrontProduct(
       doc({ legacyImages: [{ alt: "only", src: null, placeholderSeed: "x", placeholderPalette: "warm" }] }),

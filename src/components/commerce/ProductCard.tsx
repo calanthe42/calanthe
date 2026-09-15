@@ -96,7 +96,7 @@ export function ProductCard({
         </div>
         {showView && (
           <p className="mt-1.5 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage transition-colors duration-200 ease-bloom group-hover:text-burnt-orange">
-            View —
+            View arrangement
           </p>
         )}
       </TransitionLink>

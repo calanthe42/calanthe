@@ -121,6 +121,10 @@ function toStorefrontProduct(doc: PayloadProduct): Product {
     flowers: (doc.flowers ?? []) as Product["flowers"],
     featured: Boolean(doc.featured),
     newArrival: Boolean(doc.newArrival),
+    /* The short description only — the rich-text body is not rendered on the
+       storefront yet, and a sentence the owner wrote is what a customer
+       should read before choosing a size. */
+    ...(doc.shortDescription?.trim() ? { description: doc.shortDescription.trim() } : {}),
   };
 }
 
