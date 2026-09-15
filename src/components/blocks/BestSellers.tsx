@@ -4,11 +4,17 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { getBestSellers, PHOTOS } from "@/lib/data";
+import { getBestSellers } from "@backend/data/products";
+import { PHOTOS } from "@/lib/data";
 
 /** Same grammar as New Arrivals; the first tile is a 2x editorial moment. */
-export function BestSellers() {
-  const sellers = getBestSellers().slice(0, 4);
+export async function BestSellers() {
+  const sellers = await getBestSellers(4);
+
+  /* Nothing to rank. New Arrivals already carries the made-to-order
+     invitation when the catalogue is empty; a second one here, or the
+     editorial tile standing alone beside nothing, would say it twice. */
+  if (sellers.length === 0) return null;
 
   return (
     <section className="section-pad">

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { fieldClasses } from "@/components/ui/form-classes";
-import { formatAed, occasions, products } from "@/lib/data";
+import { formatAed } from "@/lib/data";
+import type { Occasion, Product } from "@/lib/data";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 type SearchOverlayProps = {
@@ -13,7 +14,15 @@ type SearchOverlayProps = {
   onClose: () => void;
 };
 
-export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
+export function SearchOverlay({
+  open,
+  onClose,
+  products = [],
+  occasions = [],
+}: SearchOverlayProps & {
+  products?: readonly Product[];
+  occasions?: readonly Occasion[];
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,7 +61,7 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
           ),
       )
       .slice(0, 6);
-  }, [query]);
+  }, [query, products, occasions]);
 
   function viewAll() {
     onClose();

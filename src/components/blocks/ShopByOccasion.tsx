@@ -4,7 +4,7 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { occasions } from "@/lib/data";
+import { getActiveOccasions } from "@backend/data/occasions";
 import { cn } from "@/lib/cn";
 
 /* Bento shapes per tile, in the client's exact order. */
@@ -23,7 +23,8 @@ const tileLayout = [
 
 const parallaxSpeeds = [0.9, 1, 1.1, 0.9, 1.1] as const;
 
-export function ShopByOccasion() {
+export async function ShopByOccasion() {
+  const occasions = await getActiveOccasions();
   return (
     <section className="section-pad">
       <div className="mx-auto max-w-7xl gutter">

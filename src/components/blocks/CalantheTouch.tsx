@@ -21,7 +21,10 @@ const pillars = [
 /** Quiet cream section — quality, presentation, attention to detail. */
 export function CalantheTouch() {
   return (
-    <section className="bg-cream section-pad">
+    /* The hairline matters when Best Sellers has nothing to show: this
+       section then follows the equally cream video-approval section, and
+       without it the two read as one long block. */
+    <section className="border-t border-hairline/70 bg-cream section-pad">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal className="flex flex-col items-center text-center">
           <MonogramBloom className="w-14 text-olive" />

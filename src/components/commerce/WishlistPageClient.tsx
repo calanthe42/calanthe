@@ -4,10 +4,14 @@ import Link from "next/link";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
-import { products } from "@/lib/data";
+import type { Product } from "@/lib/data";
 import { useWishlist } from "@/lib/wishlist";
 
-export function WishlistPageClient() {
+export function WishlistPageClient({
+  products = [],
+}: {
+  products?: readonly Product[];
+}) {
   const { ids } = useWishlist();
   const saved = products.filter((p) => ids.includes(p.id));
 

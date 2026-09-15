@@ -9,12 +9,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const KEYS = [
   "NODE_ENV",
+  "VERCEL_ENV",
   "NEXT_PHASE",
   "DATABASE_URL",
   "PAYLOAD_SECRET",
   "SENTRY_DSN",
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
+  "BLOB_READ_WRITE_TOKEN",
 ] as const;
 
 const env = process.env as Record<string, string | undefined>;
@@ -30,6 +32,9 @@ const OPTIONAL = {
   UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "token",
 };
+
+const BLOB = { BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_test" };
+const PRODUCTION = { NODE_ENV: "production", VERCEL_ENV: "production" };
 
 function set(values: Record<string, string>) {
   for (const [key, value] of Object.entries(values)) env[key] = value;
@@ -55,7 +60,7 @@ afterEach(() => {
 
 describe("production boot", () => {
   it("boots without Sentry and Upstash, and warns once naming what is missing", async () => {
-    set({ ...REQUIRED, NODE_ENV: "production" });
+    set({ ...REQUIRED, ...BLOB, ...PRODUCTION });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     await expect(load()).resolves.toBeDefined();
     expect(warn).toHaveBeenCalledOnce();
@@ -65,26 +70,46 @@ describe("production boot", () => {
   });
 
   it("does not warn when the optional services are configured", async () => {
-    set({ ...REQUIRED, ...OPTIONAL, NODE_ENV: "production" });
+    set({ ...REQUIRED, ...BLOB, ...OPTIONAL, ...PRODUCTION });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     await load();
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("does not warn during `next build`", async () => {
-    set({ ...REQUIRED, NODE_ENV: "production", NEXT_PHASE: "phase-production-build" });
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    await load();
-    expect(warn).not.toHaveBeenCalled();
+  it("still refuses to boot without persistent media storage, naming only that", async () => {
+    set({ ...REQUIRED, ...PRODUCTION });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = await load().then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect(String(error)).toContain("BLOB_READ_WRITE_TOKEN");
+    expect(String(error)).not.toContain("SENTRY_DSN");
   });
 
   it("still refuses to boot without DATABASE_URL", async () => {
-    set({ PAYLOAD_SECRET: REQUIRED.PAYLOAD_SECRET, NODE_ENV: "production" });
+    set({ PAYLOAD_SECRET: REQUIRED.PAYLOAD_SECRET, ...BLOB, ...PRODUCTION });
     await expect(load()).rejects.toThrow(/DATABASE_URL/);
   });
 
   it("still refuses to boot without PAYLOAD_SECRET", async () => {
-    set({ DATABASE_URL: REQUIRED.DATABASE_URL, NODE_ENV: "production" });
+    set({ DATABASE_URL: REQUIRED.DATABASE_URL, ...BLOB, ...PRODUCTION });
     await expect(load()).rejects.toThrow(/PAYLOAD_SECRET/);
+  });
+});
+
+describe("outside production", () => {
+  it("boots a preview deployment with no optional services and no Blob store, silently", async () => {
+    set({ ...REQUIRED, NODE_ENV: "production", VERCEL_ENV: "preview" });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await expect(load()).resolves.toBeDefined();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("requires nothing extra during `next build`", async () => {
+    set({ ...REQUIRED, ...PRODUCTION, NEXT_PHASE: "phase-production-build" });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await expect(load()).resolves.toBeDefined();
+    expect(warn).not.toHaveBeenCalled();
   });
 });

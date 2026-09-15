@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function BuildYourOwnPage() {
   return (
-    <main className="mx-auto max-w-3xl gutter section-pad">
-      <Reveal className="mb-12">
+    <main className="mx-auto max-w-6xl gutter section-pad">
+      <Reveal className="mb-12 max-w-2xl lg:mb-16">
         <Eyebrow>Bespoke</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">
           Made for them, by you.

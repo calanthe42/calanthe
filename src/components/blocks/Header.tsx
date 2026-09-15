@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SearchOverlay } from "@/components/blocks/SearchOverlay";
+import type { Occasion, Product } from "@/lib/data";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
@@ -36,6 +37,124 @@ function IconSearch({ className }: { className?: string }) {
   );
 }
 
+type NavGroup = (typeof navTree)[number];
+
+/**
+ * A desktop heading from the client's menu tree, with what sits under it.
+ *
+ * The children used to exist only in the phone menu, so on a laptop there was
+ * no way to reach Shop by Occasion or Build Your Own from the header at all.
+ * The panel opens on hover and on keyboard focus (focus-within), so tabbing
+ * through the header walks straight into it; Escape returns focus to the
+ * heading. It is a plain list of links, not an ARIA menu — nothing about it
+ * behaves like an application menu, and announcing one would mislead.
+ */
+function DesktopNavItem({
+  group,
+  onDark,
+  occasions,
+}: {
+  group: NavGroup;
+  onDark: boolean;
+  occasions: readonly Occasion[];
+}) {
+  const triggerRef = useRef<HTMLAnchorElement>(null);
+  /* Escape closes the panel while focus returns to the heading. Hover and
+     focus-within would otherwise reopen it immediately, so it stays shut
+     until the pointer or focus actually leaves the item. */
+  const [dismissed, setDismissed] = useState(false);
+  const showOccasions = group.href === "/shop" && occasions.length > 0;
+  const linkClasses = cn(
+    "relative flex h-11 items-center font-brand text-xs font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom",
+    onDark ? "text-cream" : "text-olive",
+  );
+
+  if (group.children.length === 0) {
+    return (
+      <Link href={group.href} className={cn(linkClasses, "hover:opacity-60")}>
+        {group.label}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      className="group/nav relative"
+      onKeyDown={(e) => {
+        if (e.key !== "Escape") return;
+        setDismissed(true);
+        triggerRef.current?.focus();
+      }}
+      onMouseLeave={() => setDismissed(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+          setDismissed(false);
+      }}
+    >
+      <Link ref={triggerRef} href={group.href} className={linkClasses}>
+        {group.label}
+        {/* A hairline under the open heading, drawing from the left. */}
+        <span
+          aria-hidden
+          className="absolute inset-x-0 bottom-2 h-px origin-left scale-x-0 bg-burnt-orange transition-transform duration-300 ease-bloom group-focus-within/nav:scale-x-100 group-hover/nav:scale-x-100"
+        />
+      </Link>
+
+      {/* pt bridges the gap so the pointer can travel into the panel. */}
+      <div
+        className={cn(
+          "invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition-[opacity,visibility] duration-300 ease-bloom",
+          !dismissed &&
+            "group-focus-within/nav:visible group-focus-within/nav:opacity-100 group-hover/nav:visible group-hover/nav:opacity-100",
+        )}
+      >
+        <div className="flex translate-y-1 gap-12 rounded-sm border border-hairline bg-canvas px-8 py-7 text-left shadow-[0_18px_40px_-24px_rgba(43,47,27,0.35)] transition-transform duration-300 ease-bloom group-focus-within/nav:translate-y-0 group-hover/nav:translate-y-0">
+          <ul className="flex min-w-48 flex-col gap-1">
+            {group.children.map((child) => (
+              <li key={child.href}>
+                <Link
+                  href={child.href}
+                  className="block whitespace-nowrap py-1.5 font-display text-xl font-light text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
+                >
+                  {child.label}
+                </Link>
+              </li>
+            ))}
+            <li className="mt-3 border-t border-hairline pt-3">
+              <Link
+                href={group.href}
+                className="block whitespace-nowrap py-1 text-sm text-sage transition-colors duration-200 ease-bloom hover:text-olive"
+              >
+                View all
+              </Link>
+            </li>
+          </ul>
+
+          {showOccasions && (
+            <div className="border-l border-hairline pl-12">
+              <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+                By occasion
+              </p>
+              <ul className="flex min-w-40 flex-col gap-1">
+                {occasions.map((occasion) => (
+                  <li key={occasion.slug}>
+                    <Link
+                      href={`/occasions/${occasion.slug}`}
+                      className="block whitespace-nowrap py-1 text-base text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
+                    >
+                      {occasion.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * One thin row, always. Transparent over the hero, a soft translucent
  * blur once scrolled — never a second row, never a solid block. The
@@ -43,7 +162,13 @@ function IconSearch({ className }: { className?: string }) {
  * on the homepage, motion allowed — ceded entirely to `HeroLogoDock`,
  * which is the exact same mark travelling in from the hero's centre.
  */
-export function Header() {
+export function Header({
+  products = [],
+  occasions = [],
+}: {
+  products?: readonly Product[];
+  occasions?: readonly Occasion[];
+} = {}) {
   const pathname = usePathname();
   const overlay = OVERLAY_ROUTES.has(pathname);
   const reducedMotion = useReducedMotionPref();
@@ -155,18 +280,14 @@ export function Header() {
             </span>
           </button>
 
-          <nav aria-label="Shop" className="hidden items-center gap-8 lg:flex">
-            {NAV_LEFT.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "flex h-11 items-center font-brand text-xs font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom hover:opacity-60",
-                  onDark ? "text-cream" : "text-olive",
-                )}
-              >
-                {link.label}
-              </Link>
+          <nav aria-label="Main" className="hidden items-center gap-8 lg:flex">
+            {NAV_LEFT.map((group) => (
+              <DesktopNavItem
+                key={group.href}
+                group={group}
+                onDark={onDark}
+                occasions={occasions}
+              />
             ))}
           </nav>
         </div>
@@ -193,18 +314,17 @@ export function Header() {
 
         {/* Right — Occasions + Membership (desktop), icons (always) */}
         <div className="flex items-center gap-1">
-          <nav aria-label="More" className="mr-2 hidden items-center gap-8 lg:flex">
-            {NAV_RIGHT.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "flex h-11 items-center font-brand text-xs font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom hover:opacity-60",
-                  onDark ? "text-cream" : "text-olive",
-                )}
-              >
-                {link.label}
-              </Link>
+          <nav
+            aria-label="Membership and events"
+            className="mr-2 hidden items-center gap-8 lg:flex"
+          >
+            {NAV_RIGHT.map((group) => (
+              <DesktopNavItem
+                key={group.href}
+                group={group}
+                onDark={onDark}
+                occasions={occasions}
+              />
             ))}
           </nav>
 
@@ -356,7 +476,12 @@ export function Header() {
         </div>
       )}
 
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        products={products}
+        occasions={occasions}
+      />
     </header>
   );
 }

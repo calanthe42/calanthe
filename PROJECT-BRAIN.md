@@ -6,8 +6,10 @@ Living state document. Update at the end of every working pass.
 
 - Project HOME is now C:\dev\calanthe (moved out of OneDrive, which
   corrupted .next; the OneDrive copy is dead).
-- Payload CMS 3 lives in the same app: /admin panel, REST /api/*,
-  GraphQL /api/graphql. Storefront moved under src/app/(frontend).
+- Payload CMS 3 lives in the same app: its own panel at /cms, REST
+  /api/*, GraphQL /api/graphql. The BUSINESS works in the custom Calanthe
+  admin at /admin (src/admin + src/app/(admin)); /cms is developer-only.
+  Storefront moved under src/app/(frontend).
 - Postgres (Neon) via Payload's Drizzle adapter, MIGRATIONS ONLY
   (push disabled everywhere). PAYLOAD_SECRET + DATABASE_URL required
   to boot; env is Zod-validated at boot and fails closed in prod
@@ -19,8 +21,37 @@ Living state document. Update at the end of every working pass.
   Turbopack builds on Next 15. Dev keeps Turbopack.
 - Spec: brand/backend-architecture.md (locked). Progress diary:
   docs/PROGRESS/. Security state: docs/SECURITY.md.
-- AWAITING: real Neon DATABASE_URL (placeholder in .env.local) — live
-  /admin login verification is the first act of B1.
+- RESOLVED: real Neon DATABASE_URL is in .env.local; sign-in runs on
+  Payload's own login through the Calanthe screen at /admin/login.
+
+## ADMIN FOUNDATION (2026-09-12)
+
+- /admin is now a complete business application, not a themed CMS. One
+  design system in src/admin/ui (Button, Field set, Table, Dialog,
+  Dropdown, Tabs, Toast, ActionForm, states), a shell with desktop sidebar
+  and phone drawer (src/admin/shell), and every screen rebuilt on it.
+- LIGHT + DARK and ENGLISH + ARABIC, both decided on the SERVER from
+  cookies (calanthe-admin-theme / calanthe-admin-locale) and stamped on
+  <html>, so there is no flash and no layout shift. Dark is designed, not
+  inverted; contrast checked both ways.
+- Arabic is a real RTL layout, not text in an LTR shell: logical CSS only,
+  enforced by src/admin/rtl-guard.test.ts. Dictionary in src/admin/i18n —
+  en.ts is the schema, ar.ts is typed against it, six CLDR plural forms.
+- Server actions return an English message PLUS a dictionary code and the
+  admin translates it, so @backend still imports nothing from @admin.
+- Dashboard rebuilt on a pure, tested module (backend/domain/dashboard.ts).
+  Revenue counts PLACED orders — cash on delivery never becomes "paid" —
+  with paid shown beside it. "Needs attention" lists only true conditions.
+- No new dependencies. Admin routes are 108-139 kB first load; Payload's
+  own /cms panel is 756 kB.
+- VERIFIED: tsc clean, eslint 0 errors, 142/142 unit tests (13 files),
+  next build exit 0 with no warnings.
+- NOT VERIFIED: the browser acceptance test. scripts/admin-qa.mjs (sweep)
+  and scripts/qa-fixtures.mts (temporary data, self-cleaning) are ready;
+  the run was stopped to save resources. So the 320-1440 responsive sweep,
+  Arabic/dark rendering, keyboard flows and staff-role refusals are
+  unproven. Arabic wording also needs a native-speaker review.
+- Landed in commit 9bc0791 (message "ggffddffgg" was not ours) and pushed.
 
 ## Current state (2026-08-28)
 
@@ -87,6 +118,15 @@ these images are mood-matched stand-ins, not the client's arrangements.
 - Pricing calls: same-day cutoff hour (currently 17:00), premium
   exact-hour delivery slot (not built — TODO), delivery fees per emirate.
 - Legal copy: T&C, privacy, refund pages.
+
+## Media storage (resolved 2026-09-07)
+
+- Uploads go to **Vercel Blob** (`@payloadcms/storage-vercel-blob`), wired
+  in src/backend/payload/storage.ts. Production refuses to boot without
+  BLOB_READ_WRITE_TOKEN rather than writing to Vercel's ephemeral disk.
+- Local development falls back to ./uploads with an explicit warning.
+- 4 MB upload cap (Vercel's serverless body limit is 4.5 MB); raster images
+  only, SVG excluded. Details: docs/DEPLOYMENT.md §4.
 
 ## Known debt
 

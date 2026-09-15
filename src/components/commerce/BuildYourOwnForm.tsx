@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
-import { Reveal } from "@/components/motion/Reveal";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
+import {
+  chipClasses as chip,
+  chipOffClasses as chipOff,
+  chipOnClasses as chipOn,
+  fieldClasses,
+  fieldErrorClasses,
+} from "@/components/ui/form-classes";
+import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
 import { cn } from "@/lib/cn";
-import { useToast } from "@/lib/toast";
+import { useLenisInstance } from "@/lib/lenis-context";
 import {
   BYO_VASE_PRICE_AED,
   byoBudgetNote,
@@ -20,35 +27,42 @@ import {
   seasonalDisclaimer,
 } from "@/lib/data";
 
+/**
+ * Build Your Own, as a consultation rather than a form.
+ *
+ * The occasion comes first because it is how a person thinks about the gift,
+ * and everything after it (budget, colours, vase, card) is shaped by it. Each
+ * choice lands in "Your arrangement" as it is made — beside the steps on
+ * desktop, as a review step on a phone — so the request she sends is one she
+ * has already read. Sending opens WhatsApp with it written out (lib/bespoke.ts).
+ */
+
 const STEPS = [
-  "Budget",
-  "Colours",
-  "Vase",
-  "Occasion",
-  "Card Message",
-  "For the Florist",
+  { id: "occasion", title: "What is the occasion?" },
+  { id: "budget", title: "Your budget" },
+  { id: "colours", title: "Colours" },
+  { id: "vase", title: "A vase?" },
+  { id: "card", title: "The card" },
+  { id: "notes", title: "For the florist" },
 ] as const;
 
-import {
-  chipClasses as chip,
-  chipOffClasses as chipOff,
-  chipOnClasses as chipOn,
-  fieldClasses,
-} from "@/components/ui/form-classes";
+type StepId = (typeof STEPS)[number]["id"];
 
 export function BuildYourOwnForm() {
-  const { toast } = useToast();
+  const lenis = useLenisInstance();
 
+  const [occasion, setOccasion] = useState<string | null>(null);
   const [budget, setBudget] = useState<number | "other" | null>(null);
   const [customBudget, setCustomBudget] = useState("");
   const [colours, setColours] = useState<readonly string[]>([]);
   const [colourOther, setColourOther] = useState(false);
   const [vase, setVase] = useState<boolean | null>(null);
-  const [occasion, setOccasion] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [leaveBlank, setLeaveBlank] = useState(false);
   const [notes, setNotes] = useState("");
+  const [attempted, setAttempted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const stepRefs = useRef<Partial<Record<StepId, HTMLLIElement | null>>>({});
 
   const budgetValue = useMemo(() => {
     if (budget === "other") {
@@ -60,76 +74,173 @@ export function BuildYourOwnForm() {
     return budget ?? 0;
   }, [budget, customBudget]);
 
-  const totalAed = budgetValue + (vase ? BYO_VASE_PRICE_AED : 0);
+  const request: BespokeRequest = {
+    budgetAed: budgetValue,
+    colours,
+    floristChoosesColours: colourOther,
+    vase,
+    vasePriceAed: BYO_VASE_PRICE_AED,
+    occasion: occasion ?? "",
+    cardMessage: message,
+    leaveCardBlank: leaveBlank,
+    notes,
+  };
+  const totalAed = bespokeTotalAed(request);
+  const whatsappHref = bespokeWhatsAppHref(request);
 
-  /* The monogram dot sits at the first step still waiting on you. */
-  const activeStep = useMemo(() => {
-    if (budgetValue === 0) return 0;
-    if (colours.length === 0 && !colourOther) return 1;
-    if (vase === null) return 2;
-    if (!occasion) return 3;
+  /* The monogram on the rail sits at the first step still waiting on you. */
+  const activeIndex = useMemo(() => {
+    if (!occasion) return 0;
+    if (budgetValue === 0) return 1;
+    if (colours.length === 0 && !colourOther) return 2;
+    if (vase === null) return 3;
     if (!message.trim() && !leaveBlank) return 4;
     return 5;
-  }, [budgetValue, colours, colourOther, vase, occasion, message, leaveBlank]);
+  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank]);
+
+  const errors: Partial<Record<StepId, string>> = attempted
+    ? {
+        ...(!occasion
+          ? { occasion: "Choose the occasion. It shapes the arrangement." }
+          : {}),
+        ...(budgetValue === 0
+          ? {
+              budget:
+                budget === "other" && customBudget
+                  ? `The smallest arrangement we compose is ${formatAed(BYO_MIN_BUDGET_AED)}.`
+                  : "Choose a budget so the florist knows where to begin.",
+            }
+          : {}),
+      }
+    : {};
 
   function handleSubmit() {
-    if (budgetValue === 0) {
-      toast(
-        budget === "other" && customBudget
-          ? `The smallest arrangement we compose is AED ${BYO_MIN_BUDGET_AED}`
-          : "Choose a budget so our florists know where to begin",
-      );
+    setAttempted(true);
+    const missing: StepId | null = !occasion
+      ? "occasion"
+      : budgetValue === 0
+        ? "budget"
+        : null;
+    if (missing) {
+      const step = stepRefs.current[missing];
+      step?.scrollIntoView({ block: "center" });
+      step?.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
       return;
     }
-    if (!occasion) {
-      toast("Tell us the occasion — it shapes the arrangement");
-      return;
-    }
+    /* Opened from the click itself so no popup blocker intervenes. The
+       confirmation below keeps a link in case the new tab was closed. */
+    window.open(whatsappHref, "_blank", "noopener,noreferrer");
     setSubmitted(true);
   }
 
+  /* The send button sits at the foot of a long form, and the confirmation
+     that replaces it is short — without this a phone is left looking at the
+     footer. Instant jump: the view changed, not the page's position in it. */
+  useEffect(() => {
+    if (!submitted) return;
+    if (lenis) lenis.scrollTo(0, { immediate: true });
+    else window.scrollTo({ top: 0 });
+  }, [submitted, lenis]);
+
   if (submitted) {
     return (
-      <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-6 text-center">
+      <div className="mx-auto flex min-h-[60svh] max-w-xl flex-col items-center justify-center gap-6 text-center">
         <Monogram className="w-16 text-burnt-orange" />
-        <h2 className="max-w-md font-display text-3xl font-light text-olive lg:text-4xl">
-          Your arrangement is in our hands.
+        <h2 className="font-display text-3xl font-light leading-tight text-olive lg:text-4xl">
+          Your request is written. Send it on WhatsApp.
         </h2>
-        <p className="max-w-sm text-base leading-relaxed text-sage">
-          A florist will review your preferences and confirm on WhatsApp before composing.
-          Total {formatAed(totalAed)}.
+        <p className="max-w-md text-base leading-relaxed text-sage">
+          We opened a WhatsApp message to the atelier with everything you chose. Once you
+          send it, a florist replies to confirm the arrangement, delivery and the total of{" "}
+          {formatAed(totalAed)} before composing.
         </p>
-        <p className="max-w-sm text-xs leading-relaxed text-sage">
-          (UI preview — this will create a real request once the backend arrives.)
-        </p>
-        <Link href="/shop" className={cn(buttonClasses("secondary"), "mt-2")}>
-          Continue Shopping
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonClasses("primary", "whitespace-nowrap")}
+          >
+            Open WhatsApp Again
+          </a>
+          <button
+            type="button"
+            onClick={() => setSubmitted(false)}
+            className={buttonClasses("secondary", "whitespace-nowrap")}
+          >
+            Edit My Choices
+          </button>
+        </div>
+        <Link
+          href="/shop"
+          className="min-h-11 content-center text-sm text-sage underline decoration-hairline underline-offset-4 hover:text-olive"
+        >
+          Continue shopping
         </Link>
       </div>
     );
   }
 
-  return (
-    <div className="relative pb-32">
-      {/* Olive progress line + travelling monogram dot */}
-      <div aria-hidden className="absolute bottom-0 left-[7px] top-2 w-px bg-hairline">
-        <motion.div
-          className="absolute -left-[7px] flex h-[15px] w-[15px] items-center justify-center"
-          animate={{ top: `${(activeStep / (STEPS.length - 1)) * 92}%` }}
-          transition={{ duration: 0.6, ease: EASE_BLOOM }}
-        >
-          <Monogram className="w-full text-burnt-orange" />
-        </motion.div>
-      </div>
+  const summary = (
+    <Summary
+      occasion={occasion}
+      budgetAed={budgetValue}
+      colours={colourOther ? [...colours, "Florist's choice"] : colours}
+      vase={vase}
+      message={message}
+      leaveBlank={leaveBlank}
+      notes={notes}
+      totalAed={totalAed}
+    />
+  );
 
-      <ol className="flex flex-col gap-14 pl-10 lg:gap-16">
-        {/* 01 — Budget */}
-        <Reveal>
-          <li>
-            <StepHeading index={1} active={activeStep === 0}>
-              {STEPS[0]}
-            </StepHeading>
-            <div className="mt-4 flex flex-wrap gap-3">
+  return (
+    <div className="grid grid-cols-1 gap-12 pb-28 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16 lg:pb-0">
+      <div className="relative">
+        {/* The rail and the monogram travelling down it. */}
+        <div aria-hidden className="absolute bottom-6 left-[7px] top-3 w-px bg-hairline">
+          <motion.div
+            className="absolute -left-[7px] flex h-[15px] w-[15px] items-center justify-center"
+            animate={{ top: `${(activeIndex / (STEPS.length - 1)) * 96}%` }}
+            transition={{ duration: 0.6, ease: EASE_BLOOM }}
+          >
+            <Monogram className="w-full text-burnt-orange" />
+          </motion.div>
+        </div>
+
+        <ol className="flex flex-col gap-14 pl-10 lg:gap-16">
+          <Step
+            index={0}
+            active={activeIndex === 0}
+            error={errors.occasion}
+            stepRef={(el) => {
+              stepRefs.current.occasion = el;
+            }}
+          >
+            <div className="flex flex-wrap gap-2.5">
+              {byoOccasionOptions.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  aria-pressed={occasion === o}
+                  onClick={() => setOccasion(o)}
+                  className={cn(chip, occasion === o ? chipOn : chipOff)}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          </Step>
+
+          <Step
+            index={1}
+            active={activeIndex === 1}
+            error={errors.budget}
+            stepRef={(el) => {
+              stepRefs.current.budget = el;
+            }}
+          >
+            <div className="flex flex-wrap gap-2.5">
               {byoBudgetsAed.map((b) => (
                 <button
                   key={b}
@@ -147,7 +258,7 @@ export function BuildYourOwnForm() {
                 onClick={() => setBudget("other")}
                 className={cn(chip, budget === "other" ? chipOn : chipOff)}
               >
-                Other
+                Another amount
               </button>
             </div>
             <AnimatePresence>
@@ -168,6 +279,7 @@ export function BuildYourOwnForm() {
                       value={customBudget}
                       onChange={(e) => setCustomBudget(e.target.value)}
                       placeholder={`From ${BYO_MIN_BUDGET_AED}`}
+                      aria-label="Your budget in AED"
                       className={cn(fieldClasses, "w-36 px-3 py-2.5")}
                     />
                   </label>
@@ -177,17 +289,10 @@ export function BuildYourOwnForm() {
             <p className="mt-3 max-w-md text-sm italic leading-relaxed text-sage">
               {byoBudgetNote}
             </p>
-          </li>
-        </Reveal>
+          </Step>
 
-        {/* 02 — Colours */}
-        <Reveal>
-          <li>
-            <StepHeading index={2} active={activeStep === 1}>
-              {STEPS[1]}
-            </StepHeading>
-            <p className="mt-1 text-sm text-sage">Choose as many as you like.</p>
-            <div className="mt-4 flex flex-wrap gap-3">
+          <Step index={2} active={activeIndex === 2} hint="Choose as many as you like.">
+            <div className="flex flex-wrap gap-2.5">
               {byoColours.map((c) => {
                 const on = colours.includes(c);
                 return (
@@ -212,30 +317,24 @@ export function BuildYourOwnForm() {
                 onClick={() => setColourOther((v) => !v)}
                 className={cn(chip, colourOther ? chipOn : chipOff)}
               >
-                Other — florist&apos;s choice
+                Let the florist choose
               </button>
             </div>
-          </li>
-        </Reveal>
+          </Step>
 
-        {/* 03 — Vase */}
-        <Reveal>
-          <li>
-            <StepHeading index={3} active={activeStep === 2}>
-              {STEPS[2]}
-            </StepHeading>
-            <div className="mt-4 flex gap-3">
+          <Step index={3} active={activeIndex === 3}>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <button
                 type="button"
                 aria-pressed={vase === true}
                 onClick={() => setVase(true)}
                 className={cn(
                   chip,
-                  "flex-col gap-0.5 px-6 py-3",
+                  "flex-col gap-0.5 py-3",
                   vase === true ? chipOn : chipOff,
                 )}
               >
-                <span>Yes, include a vase</span>
+                <span>Yes, in a vase</span>
                 <span className="text-xs text-sage">
                   +{formatAed(BYO_VASE_PRICE_AED)}
                 </span>
@@ -244,42 +343,19 @@ export function BuildYourOwnForm() {
                 type="button"
                 aria-pressed={vase === false}
                 onClick={() => setVase(false)}
-                className={cn(chip, "px-6", vase === false ? chipOn : chipOff)}
+                className={cn(
+                  chip,
+                  "flex-col gap-0.5 py-3",
+                  vase === false ? chipOn : chipOff,
+                )}
               >
-                No, hand-tied only
+                <span>No, hand-tied</span>
+                <span className="text-xs text-sage">Wrapped in paper</span>
               </button>
             </div>
-          </li>
-        </Reveal>
+          </Step>
 
-        {/* 04 — Occasion */}
-        <Reveal>
-          <li>
-            <StepHeading index={4} active={activeStep === 3}>
-              {STEPS[3]}
-            </StepHeading>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {byoOccasionOptions.map((o) => (
-                <button
-                  key={o}
-                  type="button"
-                  aria-pressed={occasion === o}
-                  onClick={() => setOccasion(o)}
-                  className={cn(chip, occasion === o ? chipOn : chipOff)}
-                >
-                  {o}
-                </button>
-              ))}
-            </div>
-          </li>
-        </Reveal>
-
-        {/* 05 — Card message */}
-        <Reveal>
-          <li>
-            <StepHeading index={5} active={activeStep === 4}>
-              {STEPS[4]}
-            </StepHeading>
+          <Step index={4} active={activeIndex === 4}>
             <textarea
               value={message}
               onChange={(e) => {
@@ -288,50 +364,61 @@ export function BuildYourOwnForm() {
               }}
               rows={3}
               disabled={leaveBlank}
+              aria-label="Card message"
               placeholder="Write the words they'll keep…"
-              className={cn(fieldClasses, "mt-4 disabled:opacity-50")}
+              className={cn(fieldClasses, "disabled:opacity-50")}
             />
-            <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-3 text-sm text-sage">
-              <input
-                type="checkbox"
-                checked={leaveBlank}
-                onChange={(e) => {
-                  setLeaveBlank(e.target.checked);
-                  if (e.target.checked) setMessage("");
-                }}
-                className="h-4 w-4 accent-[#2b2f1b]"
-              />
-              Leave the card blank
-            </label>
-          </li>
-        </Reveal>
+            <div className="mt-2 flex items-center justify-between gap-4">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-sage">
+                <input
+                  type="checkbox"
+                  checked={leaveBlank}
+                  onChange={(e) => {
+                    setLeaveBlank(e.target.checked);
+                    if (e.target.checked) setMessage("");
+                  }}
+                  className="h-4 w-4 accent-[#2b2f1b]"
+                />
+                Leave the card blank
+              </label>
+              <span className="text-xs text-sage">{message.length}/220</span>
+            </div>
+          </Step>
 
-        {/* 06 — Florist notes */}
-        <Reveal>
-          <li>
-            <StepHeading index={6} active={activeStep === 5}>
-              {STEPS[5]}
-            </StepHeading>
+          <Step index={5} active={activeIndex === 5} hint="Optional.">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
               rows={3}
+              aria-label="Notes for the florist"
               placeholder="Allergies, flowers to avoid, a style you love — anything that helps."
-              className={cn(fieldClasses, "mt-4")}
+              className={fieldClasses}
             />
-          </li>
-        </Reveal>
-      </ol>
+          </Step>
+        </ol>
 
-      <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-sage">
-        {seasonalDisclaimer}
-      </p>
+        <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-sage">
+          {seasonalDisclaimer}
+        </p>
 
-      {/* Sticky CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3">
-        <div className="mx-auto max-w-3xl">
+        {/* Phone: review before the sticky send button. */}
+        <div className="mt-12 lg:hidden">{summary}</div>
+      </div>
+
+      {/* Desktop: the arrangement builds beside the steps, with the send
+          button where she reads the total. */}
+      <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
+        {summary}
+        <Button variant="primary" className="mt-5 w-full" onClick={handleSubmit}>
+          Send to a Florist
+        </Button>
+        <SendNote />
+      </aside>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
+        <div className="mx-auto max-w-xl">
           <Button variant="primary" className="w-full" onClick={handleSubmit}>
-            Create My Arrangement{totalAed > 0 && <> — {formatAed(totalAed)}</>}
+            Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
           </Button>
         </div>
       </div>
@@ -339,24 +426,136 @@ export function BuildYourOwnForm() {
   );
 }
 
-function StepHeading({
+function SendNote() {
+  return (
+    <p className="mt-3 text-sm leading-relaxed text-sage">
+      Opens WhatsApp with your request written out. Nothing is ordered until a florist
+      confirms it with you.
+    </p>
+  );
+}
+
+function Step({
   index,
   active,
+  hint,
+  error,
+  stepRef,
   children,
 }: {
   index: number;
   active: boolean;
+  hint?: string;
+  error?: string;
+  stepRef?: (el: HTMLLIElement | null) => void;
   children: React.ReactNode;
 }) {
+  const step = STEPS[index];
+  const headingId = `byo-${step.id}`;
   return (
-    <h2
-      className={cn(
-        "font-brand text-xs font-medium uppercase tracking-brand transition-colors duration-300 ease-bloom",
-        active ? "text-burnt-orange" : "text-olive",
+    <li ref={stepRef} aria-labelledby={headingId} className="scroll-mt-32">
+      <h2
+        id={headingId}
+        className="flex items-baseline gap-3 font-display text-2xl font-light text-olive lg:text-[1.75rem]"
+      >
+        <span
+          className={cn(
+            "font-sans text-sm transition-colors duration-300 ease-bloom",
+            active ? "text-burnt-orange" : "text-sage",
+          )}
+        >
+          {index + 1}
+        </span>
+        {step.title}
+      </h2>
+      {hint && <p className="mt-1 text-sm text-sage">{hint}</p>}
+      <div className="mt-4">{children}</div>
+      {error && (
+        <p role="alert" className={fieldErrorClasses}>
+          <span aria-hidden className="mt-2 h-px w-3 shrink-0 bg-burnt-orange" />
+          {error}
+        </p>
       )}
+    </li>
+  );
+}
+
+function Summary({
+  occasion,
+  budgetAed,
+  colours,
+  vase,
+  message,
+  leaveBlank,
+  notes,
+  totalAed,
+}: {
+  occasion: string | null;
+  budgetAed: number;
+  colours: readonly string[];
+  vase: boolean | null;
+  message: string;
+  leaveBlank: boolean;
+  notes: string;
+  totalAed: number;
+}) {
+  const rows: { label: string; value: string | null; optional?: boolean }[] = [
+    { label: "Occasion", value: occasion },
+    { label: "Budget", value: budgetAed > 0 ? formatAed(budgetAed) : null },
+    { label: "Colours", value: colours.length > 0 ? colours.join(", ") : null },
+    {
+      label: "Vase",
+      value:
+        vase === null
+          ? null
+          : vase
+            ? `In a vase, +${formatAed(BYO_VASE_PRICE_AED)}`
+            : "Hand-tied",
+    },
+    {
+      label: "Card",
+      value: leaveBlank ? "Left blank" : message.trim() ? `“${message.trim()}”` : null,
+    },
+    { label: "Notes", value: notes.trim() || null, optional: true },
+  ];
+
+  return (
+    <section
+      aria-labelledby="byo-summary"
+      className="rounded-sm border border-hairline bg-cream/70 p-6"
     >
-      <span className="mr-2 text-sage">0{index}</span>
-      {children}
-    </h2>
+      <h2 id="byo-summary" className="font-display text-2xl font-light text-olive">
+        Your arrangement
+      </h2>
+      <dl className="mt-5 flex flex-col divide-y divide-hairline/70">
+        {rows.map((row) => (
+          <div key={row.label} className="flex gap-4 py-3">
+            <dt className="w-20 shrink-0 font-brand text-[0.625rem] font-medium uppercase leading-6 tracking-brand text-sage">
+              {row.label}
+            </dt>
+            <dd
+              className={cn(
+                "min-w-0 flex-1 break-words text-base leading-6",
+                row.value ? "text-olive" : "text-sage/80",
+              )}
+            >
+              {row.value ?? (row.optional ? "None" : "Not chosen yet")}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-2 flex items-baseline justify-between border-t border-hairline pt-4">
+        <p className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
+          Estimated total
+        </p>
+        <p className="font-display text-3xl text-olive" aria-live="polite">
+          {totalAed > 0 ? formatAed(totalAed) : "—"}
+        </p>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-sage lg:hidden">
+        Opens WhatsApp with your request written out. Nothing is ordered until a florist
+        confirms it with you.
+      </p>
+    </section>
   );
 }

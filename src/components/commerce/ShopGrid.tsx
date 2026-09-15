@@ -193,7 +193,14 @@ export function ShopGrid({
         <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-9 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-10">
           {visible.map((product) => (
             <li key={product.id}>
-              <ProductCard product={product} showView />
+              {/* Two columns on a phone, four on desktop — say so, or
+                  every phone downloads a near-full-width image for a
+                  half-width slot. */}
+              <ProductCard
+                product={product}
+                showView
+                sizes="(max-width: 1024px) 46vw, 23vw"
+              />
             </li>
           ))}
         </ul>
