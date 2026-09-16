@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasSecondView, productBadge, uniqueProductViews } from "./catalogue";
+import { hasSecondView, leadWithOccasion, productBadge, uniqueProductViews } from "./catalogue";
 import type { ProductImage } from "./data";
 
 const img = (src?: string, seed = "s"): ProductImage => ({
@@ -58,5 +58,40 @@ describe("hasSecondView — no hover crossfade between an image and itself", () 
 
   it("is true when the product really has two", () => {
     expect(hasSecondView([img("/a.jpg"), img("/b.jpg")])).toBe(true);
+  });
+});
+
+describe("leadWithOccasion — the gallery's featured tile", () => {
+  const list = [
+    { slug: "birthday" },
+    { slug: "graduation" },
+    { slug: "new-born" },
+    { slug: "love" },
+    { slug: "just-because" },
+  ];
+
+  it("swaps the featured occasion into the lead tile", () => {
+    expect(leadWithOccasion(list).map((o) => o.slug)).toEqual([
+      "just-because",
+      "graduation",
+      "new-born",
+      "love",
+      "birthday",
+    ]);
+  });
+
+  it("puts the displaced occasion exactly where the featured one was", () => {
+    expect(leadWithOccasion(list)[4]).toEqual({ slug: "birthday" });
+  });
+
+  it("leaves the order alone when the occasion is missing or already first", () => {
+    expect(leadWithOccasion(list, "weddings").map((o) => o.slug)).toEqual(list.map((o) => o.slug));
+    expect(leadWithOccasion(list, "birthday").map((o) => o.slug)).toEqual(list.map((o) => o.slug));
+  });
+
+  it("does not mutate the caller's array", () => {
+    const original = [...list];
+    leadWithOccasion(list);
+    expect(list).toEqual(original);
   });
 });

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { isOverUploadLimit } from "@/lib/uploads";
 import { uploadMedia } from "@backend/actions/admin";
 import type { MediaOption } from "@backend/domain/media-option";
 import { useI18n } from "@admin/i18n/client";
@@ -73,6 +74,12 @@ export function MediaPickerDialog({ title, library, initialSelected, multiple, m
     if (!alt) {
       setNotice({ ok: false, text: t("media.picker.describeFirst") });
       altRef.current?.focus();
+      return;
+    }
+    /* Same rule as the server, checked before sending: past the limit the
+       framework answers a bare 413 and this message never runs. */
+    if (isOverUploadLimit(file)) {
+      setNotice({ ok: false, text: t("actions.media.tooLarge") });
       return;
     }
 

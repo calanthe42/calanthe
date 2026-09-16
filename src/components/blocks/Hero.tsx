@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HeroLogoDock } from "@/components/motion/HeroLogoDock";
 import { Parallax } from "@/components/motion/Parallax";
+import { PetalDrift } from "@/components/motion/PetalDrift";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { StackedLogo } from "@/components/ui/StackedLogo";
@@ -36,6 +37,12 @@ export function Hero({ media }: HeroProps) {
       <Parallax speed={0.93} desktopOnly className="absolute inset-0">
         <div className="hero-kenburns h-full w-full">{media ?? <HeroMedia />}</div>
       </Parallax>
+
+      {/* Petals crossing the frame — the one piece of ambient motion on the
+          page. Above the photograph so they catch its light, below the
+          scrims and the words so nothing they pass behind becomes harder to
+          read. CSS only; removed entirely under reduced motion. */}
+      <PetalDrift />
 
       {/* Two soft scrims, both fading to nothing so the photograph keeps
           its own colour: one behind the centred mark (the bouquet's

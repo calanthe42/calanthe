@@ -5,12 +5,15 @@ import type { IconName } from "@admin/ui/icons";
  * The admin's navigation, grouped by what the owner is doing — not by
  * database collection, which is the whole difference between this and a CMS.
  *
- * `soon` marks a section that exists in the business's vocabulary but has no
- * working screen yet. It is shown, labelled honestly, and opens a page that
- * says so. No route is invented here: every href is a real page.
+ * EVERY ITEM HERE IS A WORKING SCREEN. Sections that exist in the business's
+ * vocabulary but have no screen yet (discounts, delivery settings,
+ * memberships, campaigns, staff administration, settings) are deliberately
+ * absent rather than listed behind a "Soon" badge: a navigation item that
+ * leads to an apology is worse than one the owner never sees. They return
+ * here, each in one line, when the screen behind them is real.
  */
 
-export type NavItem = { href: string; label: MessageKey; icon: IconName; soon?: boolean };
+export type NavItem = { href: string; label: MessageKey; icon: IconName };
 export type NavGroup = { heading: MessageKey; items: readonly NavItem[] };
 
 export const NAV_GROUPS: readonly NavGroup[] = [
@@ -24,7 +27,6 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { href: "/admin/products", label: "nav.products", icon: "flower" },
       { href: "/admin/occasions", label: "nav.occasions", icon: "occasion" },
       { href: "/admin/media", label: "nav.media", icon: "image" },
-      { href: "/admin/discounts", label: "nav.discounts", icon: "tag", soon: true },
     ],
   },
   {
@@ -37,22 +39,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   },
   {
     heading: "nav.sections.operations",
-    items: [
-      { href: "/admin/events", label: "nav.events", icon: "sparkles" },
-      { href: "/admin/delivery", label: "nav.delivery", icon: "truck", soon: true },
-      { href: "/admin/memberships", label: "nav.memberships", icon: "star", soon: true },
-    ],
-  },
-  {
-    heading: "nav.sections.marketing",
-    items: [{ href: "/admin/marketing", label: "nav.campaigns", icon: "megaphone", soon: true }],
-  },
-  {
-    heading: "nav.sections.system",
-    items: [
-      { href: "/admin/staff", label: "nav.staff", icon: "staff", soon: true },
-      { href: "/admin/settings", label: "nav.settings", icon: "settings", soon: true },
-    ],
+    items: [{ href: "/admin/events", label: "nav.events", icon: "sparkles" }],
   },
 ];
 

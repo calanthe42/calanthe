@@ -577,9 +577,27 @@ body::after {
 .hero-logo-dock {
   transition: opacity 0.2s var(--ease-bloom);
 }
-body.overlay-open .hero-logo-dock {
+
+/* EVERY PIECE OF FIXED PAGE CHROME STANDS DOWN WHILE A FULL-SCREEN OVERLAY
+   IS OPEN (the mobile menu, search).
+
+   All three of these are `position: fixed`, so they are siblings of the
+   overlay in the viewport, not children of the page it covers. The hero's
+   brand mark sits at z-45 and the floating WhatsApp button at z-40: the mark
+   used to be painted straight over the menu, and the WhatsApp button — later
+   in the DOM at the same level — landed on top of the language control at the
+   foot of it. Hiding them here is not a z-index race: the overlay carries its
+   own brand mark and its own WhatsApp link, so nothing is lost while it is
+   open, and both return the moment it closes. */
+body.overlay-open .hero-logo-dock,
+body.overlay-open .hero-mark-inline,
+body.overlay-open .floating-whatsapp {
   opacity: 0;
   pointer-events: none;
+}
+.hero-mark-inline,
+.floating-whatsapp {
+  transition: opacity 0.2s var(--ease-bloom);
 }
 
 /* Original ribbon motif: settles in once, just after the monogram
@@ -599,6 +617,26 @@ body.overlay-open .hero-logo-dock {
   }
 }
 
+/* Petals crossing the hero (components/motion/PetalDrift.tsx).
+   Compositor-only: `transform` and `opacity`, nothing else, so five of these
+   running for half a minute each cost a phone nothing. Each petal carries its
+   own drift, duration, delay and spin as custom properties, so one keyframe
+   set serves all five without any of them moving in step. */
+.petal {
+  top: -12%;
+  will-change: transform;
+  animation: petal-drift var(--petal-duration, 28s) linear var(--petal-delay, 0s) infinite;
+}
+
+@keyframes petal-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(var(--petal-drift, 6vw), 128vh, 0) rotate(var(--petal-spin, 180deg));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -613,6 +651,11 @@ body.overlay-open .hero-logo-dock {
   .splitline-rise,
   .menu-in .menu-links > li {
     animation: none;
+  }
+  /* Drifting petals are atmosphere, not information: with reduced motion
+     asked for, they leave rather than freeze mid-fall. */
+  .petal-drift {
+    display: none;
   }
   .toast-in {
     animation-name: menu-fade;

@@ -119,9 +119,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             {t("dashboard.quick.addProduct")}
           </ButtonLink>
         ) : null}
-        <ButtonLink href="/admin/discounts" icon="tag">
-          {t("dashboard.quick.createDiscount")}
-          <Badge className="ms-0.5">{t("common.soon")}</Badge>
+        <ButtonLink href="/admin/media" icon="image">
+          {t("dashboard.quick.addPhoto")}
         </ButtonLink>
         <ButtonLink href="/admin/orders" icon="bag">
           {t("dashboard.quick.viewOrders")}

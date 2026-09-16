@@ -145,7 +145,7 @@ export const ar: Messages = {
     quick: {
       label: "إجراءات سريعة",
       addProduct: "إضافة منتج",
-      createDiscount: "إنشاء خصم",
+      addPhoto: "إضافة صورة",
       viewOrders: "عرض الطلبات",
       viewEnquiries: "عرض الاستفسارات",
     },

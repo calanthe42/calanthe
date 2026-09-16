@@ -104,7 +104,10 @@ export function WhatsAppButton() {
       aria-hidden={visible ? undefined : true}
       tabIndex={visible ? undefined : -1}
       className={cn(
-        "fixed right-5 z-40 flex h-12 w-12 items-center justify-center rounded-sm bg-olive text-cream shadow-[0_4px_20px_rgba(43,47,27,0.35)] transition-[opacity,transform] duration-500 ease-bloom hover:opacity-85",
+        /* `floating-whatsapp` lets globals.css stand this down while a
+           full-screen overlay is open — the menu carries its own WhatsApp
+           link, so the two can never overlap. */
+        "floating-whatsapp fixed right-5 z-40 flex h-12 w-12 items-center justify-center rounded-sm bg-olive text-cream shadow-[0_4px_20px_rgba(43,47,27,0.35)] transition-[opacity,transform] duration-500 ease-bloom hover:opacity-85",
         hasStickyBar
           ? "bottom-[calc(max(env(safe-area-inset-bottom),0.75rem)+5rem)] lg:bottom-[max(env(safe-area-inset-bottom),1.25rem)]"
           : "bottom-[max(env(safe-area-inset-bottom),1.25rem)]",

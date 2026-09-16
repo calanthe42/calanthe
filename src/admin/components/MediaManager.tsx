@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
+import { isOverUploadLimit } from "@/lib/uploads";
 import { deleteMedia, updateMediaAlt, uploadMedia } from "@backend/actions/admin";
 import type { MediaOption } from "@backend/domain/media-option";
 import { useI18n } from "@admin/i18n/client";
@@ -158,6 +159,20 @@ export function MediaManager({ items, canDelete }: { items: MediaItem[]; canDele
   function onUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+
+    /* Checked here as well as on the server: an oversized photo would
+       otherwise be refused by the framework with a bare 413 before any of our
+       code — including the sentence explaining the limit — ever runs. */
+    const chosen = data.get("file");
+    if (chosen instanceof File && isOverUploadLimit(chosen)) {
+      void upload.run(async () => ({
+        ok: false,
+        message: "That photo is larger than 4 MB. Please use a smaller file.",
+        code: "actions.media.tooLarge",
+      }));
+      return;
+    }
+
     void upload.run(() => uploadMedia(data), {
       onSuccess: () => {
         setFormKey((key) => key + 1);

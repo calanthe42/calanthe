@@ -5,6 +5,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getActiveOccasions } from "@backend/data/occasions";
+import { leadWithOccasion } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 
 /* Bento shapes per tile, in the client's exact order. */
@@ -24,7 +25,9 @@ const tileLayout = [
 const parallaxSpeeds = [0.9, 1, 1.1, 0.9, 1.1] as const;
 
 export async function ShopByOccasion() {
-  const occasions = await getActiveOccasions();
+  /* Just Because leads the bento; the occasion it displaces takes its small
+     tile. One rule, shared with /occasions — see lib/catalogue.ts. */
+  const occasions = leadWithOccasion(await getActiveOccasions());
   return (
     <section className="section-pad">
       <div className="mx-auto max-w-7xl gutter">

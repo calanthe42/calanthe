@@ -13,6 +13,22 @@ const nextConfig: NextConfig = {
     // routes bypass both — global-not-found.tsx is the only way to give
     // them the brand 404 instead of Next's bare default.
     globalNotFound: true,
+
+    /* THE MEDIA UPLOAD 413.
+       Photographs reach the server through a Server Action (the admin's
+       upload form and Payload's own `/cms` upload both post the file in the
+       request body). Next.js caps a Server Action body at 1 MB by default and
+       answers 413 "Body exceeded 1mb limit" *inside the framework*, before any
+       route code runs — so the admin's own 4 MB rule and its readable error
+       message were unreachable, and every real photograph failed.
+       4.5 MB is Vercel's own hard cap on a serverless request body; anything
+       larger is refused by the platform no matter what is configured here.
+       Sitting just under it makes MAX_UPLOAD_BYTES (4 MB, enforced in
+       backend/payload/storage.ts and Media.upload.limits) the limit a person
+       actually meets, with a sentence explaining it.
+       Raising the ceiling ABOVE 4.5 MB needs browser-to-Blob uploads, which
+       is a different piece of work — see docs/DEPLOYMENT.md §4. */
+    serverActions: { bodySizeLimit: "4.5mb" },
   },
   images: {
     // Curated placeholder photography until the client's own arrives.

@@ -27,9 +27,11 @@ import { vercelBlobOidcAdapter } from "./vercel-blob-oidc";
 /**
  * Vercel caps a serverless request body at 4.5 MB. Staying under it keeps a
  * too-large upload a readable validation error instead of an opaque platform
- * 413 that looks like a bug.
+ * 413 that looks like a bug. Defined in lib/uploads.ts so the admin's own
+ * forms can check the same number before sending; re-exported here because
+ * payload.config.ts has always read it from this module.
  */
-export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+export { MAX_UPLOAD_BYTES } from "@/lib/uploads";
 
 export type StorageMode = "vercel-blob" | "local-disk";
 

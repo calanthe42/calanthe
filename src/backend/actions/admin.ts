@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { getMediaUsage } from "@backend/data/media-usage";
+import { MAX_UPLOAD_BYTES, UPLOAD_MIME_TYPES } from "@/lib/uploads";
 import { followUpIsoFromDateInput } from "@backend/domain/dates";
 import { FormInputError } from "@backend/domain/form-error";
 import { listNames, toMediaOption, type MediaOption } from "@backend/domain/media-option";
@@ -266,8 +267,9 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
 /* Media                                                               */
 /* ------------------------------------------------------------------ */
 
-const UPLOAD_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+/* One source of truth, shared with the admin's upload forms (lib/uploads.ts):
+   a browser check the server does not repeat is not a rule. */
+const UPLOAD_TYPES: readonly string[] = UPLOAD_MIME_TYPES;
 const MAX_ALT_LENGTH = 200;
 
 const DESCRIBE_FIRST: Failure = {

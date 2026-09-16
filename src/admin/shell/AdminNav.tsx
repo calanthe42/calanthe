@@ -71,11 +71,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     ) : null}
                     <Icon name={item.icon} className="h-[18px] w-[18px]" />
                     <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
-                    {item.soon ? (
-                      <span className="shrink-0 rounded-sm border border-nav-ink-2/35 px-1.5 text-[10px] leading-4 text-nav-ink-2">
-                        {t("common.soon")}
-                      </span>
-                    ) : null}
                   </Link>
                 </li>
               );

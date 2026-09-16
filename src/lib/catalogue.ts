@@ -58,3 +58,31 @@ export function uniqueProductViews(
 export function hasSecondView(images: readonly ProductImage[]): boolean {
   return uniqueProductViews(images).length > 1;
 }
+
+/**
+ * The occasion the gallery leads with.
+ *
+ * The bento grid gives its first tile twice the size, so whichever occasion
+ * sits at index 0 is the one a visitor meets first. The client chose **Just
+ * Because** for that position, and the occasion it displaces takes its old
+ * small tile — a swap, not a re-sort, so the rest of the row keeps the order
+ * set in /admin.
+ *
+ * A pure function on purpose: the same rule runs on the homepage band and on
+ * the occasions index, and it cannot drift between them.
+ */
+export const FEATURED_OCCASION_SLUG = "just-because";
+
+export function leadWithOccasion<T extends { slug: string }>(
+  occasions: readonly T[],
+  slug: string = FEATURED_OCCASION_SLUG,
+): T[] {
+  const ordered = [...occasions];
+  const index = ordered.findIndex((occasion) => occasion.slug === slug);
+  /* Absent, or already leading: the client's order is whatever /admin says. */
+  if (index <= 0) return ordered;
+  const lead = ordered[index]!;
+  ordered[index] = ordered[0]!;
+  ordered[0] = lead;
+  return ordered;
+}

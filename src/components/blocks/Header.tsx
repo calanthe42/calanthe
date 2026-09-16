@@ -10,7 +10,7 @@ import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
-import { navTree } from "@/lib/data";
+import { CONTACT, navTree } from "@/lib/data";
 import { LanguageToggle } from "@/components/blocks/LanguageToggle";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -125,7 +125,7 @@ function DesktopNavItem({
                 href={group.href}
                 className="block whitespace-nowrap py-1 text-sm text-sage transition-colors duration-200 ease-bloom hover:text-olive"
               >
-                View all
+                {group.label} all
               </Link>
             </li>
           </ul>
@@ -231,12 +231,26 @@ export function Header({
   }
 
   const onDark = (overlay && !scrolled) || menuOpen;
-  const solid = scrolled && !menuOpen;
+  /* Only a route with a full-bleed hero behind the bar may be transparent,
+     and only until the page moves. Everywhere else the bar is opaque from
+     the first pixel — a transparent bar over ordinary page content let
+     photographs and headings slide visibly through it while scrolling. */
+  const solid = (!overlay || scrolled) && !menuOpen;
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        /* THE STACKING CONTEXT IS THE BUG, NOT THE NUMBER.
+           `sticky` + a z-index makes this element a stacking context, so the
+           mobile menu and the search overlay inside it are sealed at the
+           header's level no matter what z-index they carry. At z-40 the header
+           tied with the floating WhatsApp button and lost to the hero's brand
+           mark at z-45 — both body-level siblings later in the DOM — which is
+           exactly the bleed-through: page chrome painted over a full-screen
+           overlay. While an overlay is open the whole header is promoted above
+           them; the layers inside it keep working unchanged. */
+        "sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        menuOpen || searchOpen ? "z-[70]" : "z-40",
         /* Blur is desktop-only: on a phone, backdrop-blur re-renders
            every frame as content moves under it, which is one of the
            most expensive things a mobile GPU can do while scrolling.
@@ -385,6 +399,13 @@ export function Header({
       {menuState !== "closed" && (
         <div
           className={cn(
+            /* z-40 INSIDE the header's own stacking context, deliberately
+               left alone: the close button above it is z-50, and raising this
+               above that locks a visitor inside the menu. What lifts this
+               clear of the rest of the page is the header's z-index (see
+               below), because `sticky` + `z-40` on <header> makes this a
+               child layer that can never outrank a body-level sibling on its
+               own, however large a number is written here. */
             "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden",
             menuState === "closing" ? "menu-out" : "menu-in",
           )}
@@ -393,6 +414,15 @@ export function Header({
 
           <nav aria-label="Mobile" className="mt-8 flex-1">
             <ul className="menu-links flex flex-col">
+              <li className="border-b border-cream/10">
+                <Link
+                  href="/"
+                  onClick={closeMenu}
+                  className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                >
+                  Home
+                </Link>
+              </li>
               <li className="border-b border-cream/10">
                 <button
                   type="button"
@@ -426,7 +456,7 @@ export function Header({
                             onClick={closeMenu}
                             className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                           >
-                            All {group.label}
+                            {group.label} all
                           </Link>
                         </li>
                         {group.children.map((link) => (
@@ -467,11 +497,30 @@ export function Header({
             </ul>
           </nav>
 
-          <div className="menu-footnote mt-6 flex shrink-0 items-center justify-between gap-4">
+          {/* The foot of the menu owns its own WhatsApp link. The floating
+              button is page chrome and is hidden while the menu is open (see
+              globals.css `.overlay-open`), which is what used to sit on top
+              of the language control here. Both controls are laid out in one
+              row, so they cannot collide at any width. */}
+          <div className="menu-footnote mt-6 flex shrink-0 flex-col gap-4 border-t border-cream/10 pt-5">
+            <div className="flex items-center justify-between gap-3">
+              <a
+                href={CONTACT.whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                onClick={closeMenu}
+                className="inline-flex min-h-11 items-center gap-2.5 font-brand text-xs font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
+                  <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2.05 22l5.3-1.39a9.87 9.87 0 0 0 4.69 1.19h.01c5.46 0 9.9-4.44 9.9-9.9a9.83 9.83 0 0 0-2.9-7A9.83 9.83 0 0 0 12.04 2Zm0 18.13h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.17-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.22-8.23 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.73-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.16-.48-.29Z" />
+                </svg>
+                WhatsApp
+              </a>
+              <LanguageToggle tone="cream" />
+            </div>
             <p className="font-brand text-[0.625rem] uppercase tracking-brand text-sage">
               Flower Atelier — UAE
             </p>
-            <LanguageToggle tone="cream" />
           </div>
         </div>
       )}

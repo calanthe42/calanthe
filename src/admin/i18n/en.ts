@@ -141,7 +141,7 @@ export const en = {
     quick: {
       label: "Quick actions",
       addProduct: "Add product",
-      createDiscount: "Create discount",
+      addPhoto: "Add a photo",
       viewOrders: "View orders",
       viewEnquiries: "View enquiries",
     },

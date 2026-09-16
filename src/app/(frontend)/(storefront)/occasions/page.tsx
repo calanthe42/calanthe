@@ -7,6 +7,7 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getActiveOccasions } from "@backend/data/occasions";
+import { leadWithOccasion } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 
 /* The catalogue is now database-backed, so these pages must be allowed to
@@ -33,7 +34,8 @@ export const metadata: Metadata = {
  * the size, so the page has a hierarchy instead of a repetition.
  */
 export default async function OccasionsPage() {
-  const occasions = await getActiveOccasions();
+  /* The same featured occasion as the homepage band — one rule, one place. */
+  const occasions = leadWithOccasion(await getActiveOccasions());
   const [lead, ...rest] = occasions;
 
   return (
