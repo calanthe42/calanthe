@@ -17,6 +17,7 @@ const KEYS = [
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
   "BLOB_READ_WRITE_TOKEN",
+  "BLOB_STORE_ID",
 ] as const;
 
 const env = process.env as Record<string, string | undefined>;
@@ -83,8 +84,16 @@ describe("production boot", () => {
       () => null,
       (reason: unknown) => reason,
     );
+    expect(String(error)).toContain("BLOB_STORE_ID");
     expect(String(error)).toContain("BLOB_READ_WRITE_TOKEN");
     expect(String(error)).not.toContain("SENTRY_DSN");
+  });
+
+  it("boots on an OIDC Blob connection, which issues no long-lived token", async () => {
+    /* BLOB_STORE_ID with no token is what Vercel sets up today. */
+    set({ ...REQUIRED, ...PRODUCTION, BLOB_STORE_ID: "store_2HiX9XW4ECpo" });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await expect(load()).resolves.toBeDefined();
   });
 
   it("still refuses to boot without DATABASE_URL", async () => {

@@ -10,20 +10,45 @@ import { MAX_UPLOAD_BYTES, resolveStorageMode } from "./storage";
 describe("storage mode resolution", () => {
   it("uses Vercel Blob whenever a token is present", () => {
     expect(
-      resolveStorageMode({ token: "vercel_blob_rw_test", vercelEnv: "production", isBuildPhase: false }),
+      resolveStorageMode({
+        token: "vercel_blob_rw_test",
+        vercelEnv: "production",
+        isBuildPhase: false,
+      }),
     ).toBe("vercel-blob");
   });
 
-  it("refuses to run in production without a token rather than losing uploads", () => {
+  it("uses Vercel Blob on an OIDC connection, which issues no token", () => {
+    /* BLOB_STORE_ID with no token is what Vercel sets up today; the SDK pairs
+       it with the per-request OIDC credential. */
+    expect(
+      resolveStorageMode({
+        token: undefined,
+        vercelEnv: "production",
+        isBuildPhase: false,
+        storeId: "store_2HiX9XW4ECpo",
+      }),
+    ).toBe("vercel-blob");
+  });
+
+  it("refuses to run in production with no credential of either kind", () => {
     expect(() =>
-      resolveStorageMode({ token: undefined, vercelEnv: "production", isBuildPhase: false }),
-    ).toThrow(/BLOB_READ_WRITE_TOKEN is missing in production/);
+      resolveStorageMode({
+        token: undefined,
+        vercelEnv: "production",
+        isBuildPhase: false,
+      }),
+    ).toThrow(/No Vercel Blob credentials in production[\s\S]*BLOB_STORE_ID/);
   });
 
   it("production never silently falls back to the local filesystem", () => {
     let mode: string | undefined;
     try {
-      mode = resolveStorageMode({ token: undefined, vercelEnv: "production", isBuildPhase: false });
+      mode = resolveStorageMode({
+        token: undefined,
+        vercelEnv: "production",
+        isBuildPhase: false,
+      });
     } catch {
       mode = "threw";
     }
@@ -32,26 +57,34 @@ describe("storage mode resolution", () => {
 
   it("does not require the token during next build", () => {
     expect(
-      resolveStorageMode({ token: undefined, vercelEnv: "production", isBuildPhase: true }),
+      resolveStorageMode({
+        token: undefined,
+        vercelEnv: "production",
+        isBuildPhase: true,
+      }),
     ).toBe("local-disk");
   });
 
   it("falls back to local disk in development", () => {
-    expect(resolveStorageMode({ token: undefined, vercelEnv: undefined, isBuildPhase: false })).toBe(
-      "local-disk",
-    );
+    expect(
+      resolveStorageMode({ token: undefined, vercelEnv: undefined, isBuildPhase: false }),
+    ).toBe("local-disk");
   });
 
   it("uses Blob on preview deployments when the store is connected", () => {
     expect(
-      resolveStorageMode({ token: "vercel_blob_rw_test", vercelEnv: "preview", isBuildPhase: false }),
+      resolveStorageMode({
+        token: "vercel_blob_rw_test",
+        vercelEnv: "preview",
+        isBuildPhase: false,
+      }),
     ).toBe("vercel-blob");
   });
 
   it("allows a preview without a token, since preview data is disposable", () => {
-    expect(resolveStorageMode({ token: undefined, vercelEnv: "preview", isBuildPhase: false })).toBe(
-      "local-disk",
-    );
+    expect(
+      resolveStorageMode({ token: undefined, vercelEnv: "preview", isBuildPhase: false }),
+    ).toBe("local-disk");
   });
 });
 
@@ -77,7 +110,12 @@ describe("upload configuration", () => {
 
   it("keeps the responsive sizes the storefront renders", () => {
     const sizes = (Media.upload as { imageSizes?: { name: string }[] }).imageSizes ?? [];
-    expect(sizes.map((size) => size.name).sort()).toEqual(["card", "hero", "og", "thumbnail"]);
+    expect(sizes.map((size) => size.name).sort()).toEqual([
+      "card",
+      "hero",
+      "og",
+      "thumbnail",
+    ]);
   });
 
   it("keeps the local fallback directory outside the source tree", () => {

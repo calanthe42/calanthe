@@ -21,11 +21,12 @@
   "dependencies": {
     "@payloadcms/db-postgres": "^3.88.0",
     "@payloadcms/next": "^3.88.0",
+    "@payloadcms/plugin-cloud-storage": "^3.88.0",
     "@payloadcms/richtext-lexical": "^3.88.0",
-    "@payloadcms/storage-vercel-blob": "^3.88.0",
     "@sentry/nextjs": "^10.71.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.3",
+    "@vercel/blob": "^2.8.0",
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
     "graphql": "^17.0.2",

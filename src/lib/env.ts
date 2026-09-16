@@ -25,10 +25,13 @@ const schema = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 
-  /* --- Media storage (required in production) ---
-     Server-side only. Vercel injects this when a Blob store is connected.
-     Absent locally = uploads fall back to ./uploads (see
+  /* --- Media storage (one of these is required in production) ---
+     Server-side only. Vercel sets BLOB_STORE_ID when a Blob store is connected;
+     that connection authenticates by OIDC and issues no long-lived token, so
+     the store id is the credential. BLOB_READ_WRITE_TOKEN remains for hosts
+     outside Vercel. With neither, uploads fall back to ./uploads (see
      backend/payload/storage.ts), which is development-only. */
+  BLOB_STORE_ID: z.string().min(1).optional(),
   BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 });
 
@@ -47,9 +50,11 @@ if (!parsed.success) {
 /* Production RUNTIME.
    - DATABASE_URL and PAYLOAD_SECRET are hard requirements, enforced by the
      schema above in every environment.
-   - BLOB_READ_WRITE_TOKEN is a hard requirement. Without it, uploads land on
-     Vercel's ephemeral filesystem and are lost on the next deploy, so the
-     server refuses to boot (backend/payload/storage.ts enforces the same).
+   - Blob storage is a hard requirement, satisfied by EITHER an OIDC connection
+     (BLOB_STORE_ID, what Vercel sets today) or a legacy BLOB_READ_WRITE_TOKEN
+     for a host outside Vercel. With neither, uploads land on Vercel's ephemeral
+     filesystem and are lost on the next deploy, so the server refuses to boot
+     (backend/payload/storage.ts enforces the same rule and explains it).
    - Sentry (error tracking) and Upstash (rate limiting) are OPTIONAL.
      Nothing depends on them yet, and refusing to boot without them took the
      whole production site down. A missing value is logged, never fatal.
@@ -59,8 +64,12 @@ if (!parsed.success) {
    network calls, so it is exempt.) */
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 if (process.env.VERCEL_ENV === "production" && !isBuildPhase) {
-  if (!parsed.data.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("Missing required production environment variables: BLOB_READ_WRITE_TOKEN");
+  if (!parsed.data.BLOB_STORE_ID && !parsed.data.BLOB_READ_WRITE_TOKEN) {
+    throw new Error(
+      "Missing production media storage: connect a Vercel Blob store (which sets " +
+        "BLOB_STORE_ID and authenticates by OIDC), or set BLOB_READ_WRITE_TOKEN " +
+        "when running outside Vercel.",
+    );
   }
   const unset = (
     ["SENTRY_DSN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"] as const

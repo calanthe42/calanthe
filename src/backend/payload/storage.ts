@@ -1,6 +1,7 @@
-import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
+import { cloudStoragePlugin } from "@payloadcms/plugin-cloud-storage";
 import type { Plugin } from "payload";
 import { isStaff } from "./access";
+import { vercelBlobOidcAdapter } from "./vercel-blob-oidc";
 
 /**
  * Where uploaded photographs physically live.
@@ -36,96 +37,125 @@ export type StorageEnvironment = {
   token: string | undefined;
   vercelEnv: string | undefined;
   isBuildPhase: boolean;
+  /**
+   * `BLOB_STORE_ID`, which Vercel injects whenever a Blob store is connected.
+   * On an OIDC connection it is the only durable credential there is: the
+   * runtime supplies the short-lived token itself, per request.
+   */
+  storeId?: string | undefined;
 };
 
 /**
- * Decides where uploads go — pure, so the rule can be tested without a
- * database, a network or a real token.
+ * EITHER CREDENTIAL IS REAL STORAGE; NEITHER IS NOT.
  *
- * Production without a token THROWS rather than falling back. A silent
- * fallback there would write the client's photography to an ephemeral disk
- * and lose it on the next deploy, which is the precise failure this whole
- * module exists to prevent. Failing to boot is loud, immediate and fixable;
- * losing a season of photographs is none of those.
+ * `@vercel/blob` resolves credentials in a fixed order — an explicit `token`,
+ * then OIDC (`VERCEL_OIDC_TOKEN` paired with `BLOB_STORE_ID`), then
+ * `BLOB_READ_WRITE_TOKEN`. Connections made today are OIDC and issue no
+ * long-lived token at all, so requiring one would reject a perfectly good
+ * store; `backend/payload/vercel-blob-oidc.ts` passes no token precisely so
+ * that OIDC is chosen.
+ *
+ * What must never change is the guarantee underneath: production has to be
+ * writing to the store. With no credential of either kind, Payload falls back
+ * to `Media.upload.staticDir` on Vercel's ephemeral filesystem, where a
+ * season's photography survives until the next deployment and then vanishes,
+ * silently. So production refuses to start instead. Failing to boot is loud,
+ * immediate and fixable; losing the client's photographs is none of those.
  */
 export function resolveStorageMode(environment: StorageEnvironment): StorageMode {
-  if (environment.token) return "vercel-blob";
+  if (environment.token || environment.storeId) return "vercel-blob";
 
   const isProductionRuntime =
     environment.vercelEnv === "production" && !environment.isBuildPhase;
 
   if (isProductionRuntime) {
     throw new Error(
-      "BLOB_READ_WRITE_TOKEN is missing in production. Refusing to start: " +
-        "uploads would be written to Vercel's ephemeral filesystem and lost on " +
-        "the next deployment. Connect a Vercel Blob store to this project.",
+      "No Vercel Blob credentials in production. Refusing to start: uploads " +
+        "would be written to Vercel's ephemeral filesystem and lost on the next " +
+        "deployment. Connect a Blob store to this project — which sets " +
+        "BLOB_STORE_ID and authenticates by OIDC — or, for a host outside " +
+        "Vercel, set BLOB_READ_WRITE_TOKEN.",
     );
   }
 
   return "local-disk";
 }
 
-/** The one server-side secret this module needs. Never `NEXT_PUBLIC_`. */
+/** Legacy long-lived credential. Never `NEXT_PUBLIC_`. */
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
+
+/** Set by Vercel whenever a Blob store is connected, OIDC included. */
+const BLOB_STORE_ID = process.env.BLOB_STORE_ID;
 
 /** `next build` makes no network calls, so it must not require runtime secrets. */
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
 /**
+ * Images are immutable once uploaded — a new photograph gets a new filename —
+ * so they can be cached hard.
+ */
+const CACHE_CONTROL_MAX_AGE = 365 * 24 * 60 * 60;
+
+/**
  * Storage plugins for the Payload config.
  *
- * The adapter disables itself when the token is absent and Payload falls back
- * to `Media.upload.staticDir`. That fallback is deliberate and local-only —
- * `assertStorageIsSafe` guarantees production can never reach it.
+ * With no credentials the plugin is left disabled and Payload falls back to
+ * `Media.upload.staticDir`. That fallback is deliberate and local-only —
+ * `resolveStorageMode` above guarantees production can never reach it.
+ *
+ * `cloudStoragePlugin` is the same plugin Payload's own storage packages wrap,
+ * so the collection schema is identical to what the vendor adapter produced:
+ * the `url` and `prefix` fields, and no migration.
+ *
+ * CLIENT UPLOADS ARE DELIBERATELY OFF. They exist to bypass Vercel's 4.5 MB
+ * request-body limit by uploading straight from the browser, and they are the
+ * right answer eventually — but they need an explicit access rule (a signed-in
+ * CUSTOMER must never be able to mint an upload) plus real testing against a
+ * live store. Until then the 4.5 MB limit stands and is enforced as a readable
+ * validation error by `upload.limits` in payload.config.ts.
  */
 export function buildStoragePlugins(): Plugin[] {
   const mode = resolveStorageMode({
     token: BLOB_TOKEN,
     vercelEnv: process.env.VERCEL_ENV,
     isBuildPhase,
+    storeId: BLOB_STORE_ID,
   });
 
   if (mode === "local-disk" && !isBuildPhase) {
     console.warn(
-      "[media] BLOB_READ_WRITE_TOKEN is not set — uploads will be written to " +
-        "./uploads on the local disk. This is fine for development and is NOT " +
-        "production storage. See docs/DEPLOYMENT.md §4.",
+      "[media] No Vercel Blob credentials (neither BLOB_STORE_ID for OIDC nor " +
+        "BLOB_READ_WRITE_TOKEN) — uploads will be written to ./uploads on the " +
+        "local disk. This is fine for development and is NOT production " +
+        "storage. See docs/DEPLOYMENT.md §4.",
     );
   }
 
   return [
-    vercelBlobStorage({
-      enabled: Boolean(BLOB_TOKEN),
-      token: BLOB_TOKEN,
-      collections: { media: true },
+    cloudStoragePlugin({
+      enabled: mode === "vercel-blob",
+      collections: {
+        media: {
+          adapter: vercelBlobOidcAdapter({ cacheControlMaxAge: CACHE_CONTROL_MAX_AGE }),
+          /* An empty collection prefix, stated rather than left undefined.
+             `alwaysInsertFields` is only consulted on the DISABLED path; when
+             the plugin is enabled the `prefix` field is inserted only if this
+             option is defined. Without it the media schema would gain the
+             field with no credentials and lose it with them — and the column
+             `20260907_071945_media_storage` created would look droppable to the
+             next generated migration. "" keeps both states identical and file
+             keys exactly where they are. */
+          prefix: "",
+        },
+      },
 
       /* SCHEMA CONSISTENCY, and the reason this flag is not left at its
          default. The plugin injects its own fields (a `prefix`) only when it
-         is enabled. Without this, a developer with no token would generate
-         migrations from a different schema than production runs — the exact
-         drift that makes a deploy fail at 2am. Fields are now always present,
-         enabled or not. */
+         is enabled. Without this, a developer with no credentials would
+         generate migrations from a different schema than production runs — the
+         exact drift that makes a deploy fail at 2am. Fields are now always
+         present, enabled or not. */
       alwaysInsertFields: true,
-
-      /* Vercel Blob supports `public` only. Stated explicitly so that the day
-         private blobs exist, this line is the one to revisit. */
-      access: "public",
-
-      /* Images are immutable once uploaded — a new photograph gets a new
-         filename — so they can be cached hard. */
-      cacheControlMaxAge: 365 * 24 * 60 * 60,
-
-      /* clientUploads is DELIBERATELY OFF. It exists to bypass Vercel's
-         4.5 MB request-body limit by uploading straight from the browser, and
-         it is the right answer eventually — but as shipped it defaults to
-         `access: ({ req }) => !!req.user`, which would let any signed-in
-         CUSTOMER mint an upload token, and it hardcodes `allowOverwrite: true`
-         on a caller-chosen pathname. Turning it on safely needs the explicit
-         access rule below plus real testing against a live Blob store, which
-         cannot be done without production credentials.
-         Until then the 4.5 MB limit stands and is enforced as a readable
-         validation error by `upload.limits` in payload.config.ts. */
-      // clientUploads: { access: clientUploadAccess },
     }),
   ];
 }
@@ -137,11 +167,21 @@ export function buildStoragePlugins(): Plugin[] {
  * the reason rather than reinvented under time pressure later. It mirrors
  * `Media.create` — internal staff only, never a customer.
  */
-export const clientUploadAccess = ({ req }: { req: Parameters<typeof isStaff>[0]["req"] }) =>
-  req.user?.role === "admin" || req.user?.role === "staff";
+export const clientUploadAccess = ({
+  req,
+}: {
+  req: Parameters<typeof isStaff>[0]["req"];
+}) => req.user?.role === "admin" || req.user?.role === "staff";
 
-/** Exposed for tests and diagnostics; never logs the token itself. */
+/** Exposed for tests and diagnostics; never logs the credential itself. */
 export const storageDiagnostics = {
-  provider: BLOB_TOKEN ? ("vercel-blob" as const) : ("local-disk" as const),
-  isConfigured: Boolean(BLOB_TOKEN),
+  provider:
+    BLOB_TOKEN || BLOB_STORE_ID ? ("vercel-blob" as const) : ("local-disk" as const),
+  /** How the store authenticates, so a log line can say which path is live. */
+  auth: BLOB_TOKEN
+    ? ("read-write-token" as const)
+    : BLOB_STORE_ID
+      ? ("oidc" as const)
+      : null,
+  isConfigured: Boolean(BLOB_TOKEN || BLOB_STORE_ID),
 };
