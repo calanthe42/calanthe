@@ -163,7 +163,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   return (
     <div className="mx-auto max-w-7xl gutter pb-32 pt-6 lg:pb-20 lg:pt-12">
       <nav aria-label="Breadcrumb" className="mb-6 lg:mb-10">
-        <ol className="flex flex-wrap items-center gap-2 text-sm text-sage">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <li>
             <Link
               href="/shop"
@@ -253,12 +253,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
               {product.name}
             </h1>
             {product.description && (
-              <p className="mt-5 max-w-md text-lg leading-relaxed text-sage">
+              <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-muted">
                 {product.description}
               </p>
             )}
             {product.occasions.length > 0 && (
-              <p className="mt-4 text-sm text-sage">
+              <p className="mt-4 text-sm text-ink-muted">
                 Composed for{" "}
                 {product.occasions.map((slug, i) => (
                   <span key={slug}>
@@ -281,7 +281,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <p className="font-display text-4xl text-olive" aria-live="polite">
                 {formatAed(totalAed)}
               </p>
-              <p className="text-sm text-sage">
+              <p className="text-sm text-ink-muted">
                 {size?.name}
                 {addonIds.length > 0 &&
                   ` with ${addonIds.length} extra${addonIds.length === 1 ? "" : "s"}`}
@@ -331,7 +331,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     )}
                   >
                     <span className="text-base text-olive">{s.name}</span>
-                    <span className="text-xs text-sage">
+                    <span className="text-xs text-ink-muted">
                       {s.priceDeltaAed > 0 ? `+${formatAed(s.priceDeltaAed)}` : s.note}
                     </span>
                   </button>
@@ -386,7 +386,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                         )}
                       </span>
                       <span className="flex-1 text-base text-olive">{addon.name}</span>
-                      <span className="text-sm text-sage">
+                      <span className="text-sm text-ink-muted">
                         +{formatAed(addon.priceAed)}
                       </span>
                     </button>
@@ -414,7 +414,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     )}
                   >
                     <span className="text-sm text-olive">{day.label}</span>
-                    <span className="text-xs text-sage">{day.sub}</span>
+                    <span className="text-xs text-ink-muted">{day.sub}</span>
                   </button>
                 ))}
               </div>
@@ -443,7 +443,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   <span className="block font-brand text-xs font-medium uppercase tracking-brand text-olive">
                     Card and recipient
                   </span>
-                  <span className="mt-1 block text-sm text-sage">
+                  <span className="mt-1 block text-sm text-ink-muted">
                     {cardDetailsCount > 0
                       ? "Added. You can change it at checkout too."
                       : "Optional. Add a handwritten card and who is receiving it."}
@@ -451,7 +451,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 </span>
                 <span
                   aria-hidden
-                  className="text-xl text-sage transition-transform duration-300 ease-bloom group-open/card:rotate-45"
+                  className="text-xl text-ink-muted transition-transform duration-300 ease-bloom group-open/card:rotate-45"
                 >
                   +
                 </span>
@@ -470,7 +470,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     placeholder="Write the words they'll keep…"
                     className={fieldClasses}
                   />
-                  <p className="mt-1.5 text-right text-xs text-sage">
+                  <p className="mt-1.5 text-right text-xs text-ink-muted">
                     {giftMessage.length}/220
                   </p>
                   <AnimatePresence>
@@ -521,7 +521,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     />
                   </div>
                 </div>
-                <p className="-mt-1 text-sm text-sage">
+                <p className="-mt-1 text-sm text-ink-muted">
                   Used only to coordinate delivery. The price is never shown to them.
                 </p>
               </div>
@@ -545,7 +545,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <p className="truncate font-display text-lg leading-tight text-olive">
               {product.name}
             </p>
-            <p className="text-sm text-sage">{formatAed(totalAed)}</p>
+            <p className="text-sm text-ink-muted">{formatAed(totalAed)}</p>
           </div>
           <Button variant="primary" className="shrink-0 px-6" onClick={handleAdd}>
             Add to Cart

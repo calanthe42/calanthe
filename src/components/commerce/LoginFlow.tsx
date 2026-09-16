@@ -95,7 +95,7 @@ export function LoginFlow() {
             <h1 className="font-display text-3xl font-light text-olive">
               Sign in with your phone.
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-sage">
+            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
               We&apos;ll send a one-time code to your WhatsApp.
             </p>
             <div className="mt-8 flex w-full items-stretch gap-2">
@@ -110,7 +110,7 @@ export function LoginFlow() {
                 onChange={(e) => setPhone(e.target.value.replace(/[^\d\s]/g, ""))}
                 onKeyDown={(e) => e.key === "Enter" && sendCode()}
                 placeholder="50 123 4567"
-                className="min-w-0 flex-1 rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-sage/70 focus:border-olive focus:outline-none"
+                className="min-w-0 flex-1 rounded-sm border border-hairline bg-canvas px-4 py-3 text-base text-olive placeholder:text-ink-muted/70 focus:border-olive focus:outline-none"
               />
             </div>
             <Button variant="primary" className="mt-4 w-full" onClick={sendCode}>
@@ -129,7 +129,7 @@ export function LoginFlow() {
             <h1 className="font-display text-3xl font-light text-olive">
               Enter the code.
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-sage">
+            <p className="mt-3 text-sm leading-relaxed text-ink-muted">
               Sent to +971 {phone || "…"} on WhatsApp.
             </p>
             <div className="mt-8 flex justify-center gap-2">
@@ -162,7 +162,7 @@ export function LoginFlow() {
             </div>
             <div className="mt-6 flex flex-col items-center gap-3">
               {resendIn > 0 ? (
-                <p className="text-sm text-sage">Resend code in {resendIn}s</p>
+                <p className="text-sm text-ink-muted">Resend code in {resendIn}s</p>
               ) : (
                 <button
                   type="button"
@@ -175,7 +175,7 @@ export function LoginFlow() {
               <button
                 type="button"
                 onClick={() => setStage("phone")}
-                className="min-h-11 text-sm text-sage transition-colors duration-200 ease-bloom hover:text-olive"
+                className="min-h-11 text-sm text-ink-muted transition-colors duration-200 ease-bloom hover:text-olive"
               >
                 Use a different number
               </button>

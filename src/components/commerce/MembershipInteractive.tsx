@@ -70,7 +70,7 @@ export function FaqAccordion({ items = membershipFaq }: { items?: readonly FaqIt
               <span
                 aria-hidden
                 className={cn(
-                  "shrink-0 text-sage transition-transform duration-300 ease-bloom",
+                  "shrink-0 text-ink-muted transition-transform duration-300 ease-bloom",
                   isOpen && "rotate-45",
                 )}
               >
@@ -86,7 +86,7 @@ export function FaqAccordion({ items = membershipFaq }: { items?: readonly FaqIt
                   transition={{ duration: 0.4, ease: EASE_BLOOM }}
                   className="overflow-hidden"
                 >
-                  <p className="max-w-xl pb-5 text-base leading-relaxed text-sage">
+                  <p className="max-w-xl pb-5 text-base leading-relaxed text-ink-muted">
                     {item.a}
                   </p>
                 </motion.div>

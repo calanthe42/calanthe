@@ -74,7 +74,7 @@ export function CustomerLogin() {
         {pending ? "Signing in…" : "Sign in"}
       </Button>
 
-      <p className="text-xs leading-relaxed text-sage">
+      <p className="text-xs leading-relaxed text-ink-muted">
         You do not need an account to order — every arrangement can be bought as a guest.
       </p>
     </form>

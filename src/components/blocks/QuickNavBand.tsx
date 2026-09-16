@@ -65,7 +65,7 @@ export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion
       <div className="mx-auto max-w-7xl gutter py-8 lg:py-11">
         <div className="flex flex-col items-center gap-1.5 lg:gap-2">
           <Monogram className="h-6 w-6 text-burnt-orange/70 lg:h-7 lg:w-7" />
-          <p className="font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-sage/80 lg:text-[0.625rem]">
+          <p className="font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-ink-muted/80 lg:text-[0.625rem]">
             Send flowers for
           </p>
         </div>

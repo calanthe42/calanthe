@@ -31,7 +31,7 @@ export async function ShopByOccasion() {
   const [list, { t }] = await Promise.all([getActiveOccasions(), getDictionary()]);
   const occasions = leadWithOccasion(list);
   return (
-    <section className="section-pad">
+    <section className="section-pad-xl">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal>
           <Eyebrow>{t.sections.occasionsEyebrow}</Eyebrow>

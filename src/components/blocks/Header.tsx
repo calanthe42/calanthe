@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AnnouncementBar } from "@/components/blocks/AnnouncementBar";
 import { SearchOverlay } from "@/components/blocks/SearchOverlay";
 import type { Occasion, Product } from "@/lib/data";
-import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { Monogram } from "@/components/ui/Monogram";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
@@ -14,7 +14,6 @@ import { useCart } from "@/lib/cart";
 import { useT } from "@/lib/locale";
 import { CONTACT, navTree } from "@/lib/data";
 import { LanguageToggle } from "@/components/blocks/LanguageToggle";
-import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 /** Routes whose hero sits full-bleed behind a transparent header. */
@@ -122,30 +121,33 @@ function DesktopNavItem({
         />
       </Link>
 
-      {/* pt bridges the gap so the pointer can travel into the panel. */}
+      {/* pt bridges the gap so the pointer can travel into the panel.
+          `text-start` is explicit: the panel inherits an alignment from the
+          bar above it, and in Arabic that left the whole dropdown ranged
+          left inside an RTL document. */}
       <div
         className={cn(
-          "invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition-[opacity,visibility] duration-300 ease-bloom",
+          "invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 text-start opacity-0 transition-[opacity,visibility] duration-300 ease-bloom",
           !dismissed &&
             "group-focus-within/nav:visible group-focus-within/nav:opacity-100 group-hover/nav:visible group-hover/nav:opacity-100",
         )}
       >
-        <div className="flex translate-y-1 gap-12 rounded-sm border border-hairline bg-canvas px-8 py-7 text-left shadow-[0_18px_40px_-24px_rgba(43,47,27,0.35)] transition-transform duration-300 ease-bloom group-focus-within/nav:translate-y-0 group-hover/nav:translate-y-0">
-          <ul className="flex min-w-48 flex-col gap-1">
+        <div className="flex translate-y-1 gap-12 rounded-sm border border-hairline bg-canvas px-8 py-7 text-start shadow-[0_18px_40px_-24px_rgba(43,47,27,0.35)] transition-transform duration-300 ease-bloom group-focus-within/nav:translate-y-0 group-hover/nav:translate-y-0">
+          <ul className="flex min-w-48 flex-col">
             {group.children.map((child) => (
               <li key={child.href}>
                 <Link
                   href={child.href}
-                  className="block whitespace-nowrap py-1.5 font-display text-xl font-light text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
+                  className="flex min-h-11 items-center whitespace-nowrap font-display text-xl font-light text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
                 >
                   {navLabel(t, child.href, child.label)}
                 </Link>
               </li>
             ))}
-            <li className="mt-3 border-t border-hairline pt-3">
+            <li className="mt-2 border-t border-hairline pt-2">
               <Link
                 href={group.href}
-                className="block whitespace-nowrap py-1 text-sm text-sage transition-colors duration-200 ease-bloom hover:text-olive"
+                className="flex min-h-11 items-center whitespace-nowrap text-sm text-ink-muted transition-colors duration-200 ease-bloom hover:text-olive"
               >
                 {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
               </Link>
@@ -153,16 +155,19 @@ function DesktopNavItem({
           </ul>
 
           {showOccasions && (
-            <div className="border-l border-hairline pl-12">
-              <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
-                By occasion
+            /* Logical properties, not physical: `border-l`/`pl-12` kept the
+               rule and the indent on the visual LEFT in Arabic, so the column
+               divider landed on the wrong side of an RTL panel. */
+            <div className="border-s border-hairline ps-12">
+              <p className="mb-2 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted">
+                {t.nav.byOccasion}
               </p>
-              <ul className="flex min-w-40 flex-col gap-1">
+              <ul className="flex min-w-40 flex-col">
                 {occasions.map((occasion) => (
                   <li key={occasion.slug}>
                     <Link
                       href={`/occasions/${occasion.slug}`}
-                      className="block whitespace-nowrap py-1 text-base text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
+                      className="flex min-h-11 items-center whitespace-nowrap text-base text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
                     >
                       {occasion.name}
                     </Link>
@@ -178,11 +183,12 @@ function DesktopNavItem({
 }
 
 /**
- * One thin row, always. Transparent over the hero, a soft translucent
- * blur once scrolled — never a second row, never a solid block. The
- * centered mark is either this component's own static `Logotype`, or —
- * on the homepage, motion allowed — ceded entirely to `HeroLogoDock`,
- * which is the exact same mark travelling in from the hero's centre.
+ * The whole top of the page, as one element: the service strip and the
+ * navigation row on a single surface.
+ *
+ * Transparent over the hero — where a soft fade, not a coloured band, is
+ * what the type sits on — and a solid bar everywhere else. The mark is
+ * centred on the row on every route, homepage included.
  */
 export function Header({
   products = [],
@@ -193,8 +199,6 @@ export function Header({
 } = {}) {
   const pathname = usePathname();
   const overlay = OVERLAY_ROUTES.has(pathname);
-  const reducedMotion = useReducedMotionPref();
-  const markOwnedByHero = overlay && !reducedMotion;
   const [scrolled, setScrolled] = useState(false);
   const [menuState, setMenuState] = useState<"closed" | "open" | "closing">("closed");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -297,15 +301,37 @@ export function Header({
            most expensive things a mobile GPU can do while scrolling.
            Phones get a near-solid bar instead — same look, no cost. */
         solid
-          ? "border-b border-hairline/60 bg-canvas lg:bg-canvas/75 lg:backdrop-blur-md"
+          ? "border-b border-hairline/60 bg-canvas lg:bg-canvas/85 lg:backdrop-blur-md"
           : "border-b border-transparent bg-transparent",
       )}
     >
-      {/* `data-nav-row` is measured by HeroLogoDock so the traveling
-          mark lands dead-centre on this exact line — no magic numbers. */}
+      {/* Over the hero the whole header is one soft fade into the
+          photograph, so the service strip and the navigation row read as a
+          single pane of air rather than two stacked bands with an edge
+          between them. Nothing paints a rectangle; the gradient ends at
+          nothing. */}
+      {!solid && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[190%] bg-gradient-to-b from-olive/70 via-olive/35 to-transparent"
+        />
+      )}
+
+      <AnnouncementBar onDark={onDark} />
+
+      {/* A hairline between the strip and the navigation — but only on a
+          solid bar, where it divides two areas of one surface. Over the
+          photograph there is nothing to divide. */}
+      <div
+        className={cn(
+          "mx-auto h-px max-w-7xl transition-colors duration-300 ease-bloom",
+          solid ? "bg-hairline/50" : "bg-transparent",
+        )}
+      />
+
       <div
         data-nav-row
-        className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-20 lg:px-8"
+        className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-[4.5rem] lg:px-8"
       >
         {/* Left — hamburger (mobile) / Shop + Build Your Own (desktop) */}
         <div className="flex items-center">
@@ -347,25 +373,47 @@ export function Header({
           </nav>
         </div>
 
-        {/* Centre — the mark. Suppressed on the hero route (motion
-            allowed): HeroLogoDock renders the same mark here once it
-            finishes traveling in. */}
-        {!markOwnedByHero && (
-          <Link
-            href="/"
-            aria-label="Calanthe — home"
-            /* top-1/2 + -translate-y-1/2: dead centre on this line,
-               same as every other item in the row. */
-            className="absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] -translate-x-1/2 -translate-y-1/2"
-          >
-            {/* Same lockup, same two colourways the hero mark lands on
-                — so every route's navbar reads identically. */}
-            <StackedLogo
-              tone={onDark ? "cream" : "olive"}
-              sizes="(min-width: 1024px) 78px, 64px"
-            />
-          </Link>
-        )}
+        {/*
+          THE MARK, ON EVERY ROUTE, INCLUDING HOME.
+
+          This used to be suppressed on the homepage and handed to
+          `HeroLogoDock` — a `position: fixed` copy of the lockup that a
+          scrubbed GSAP timeline flew up into the bar as you scrolled. One
+          decision caused four separate faults:
+
+            · the header's middle was genuinely EMPTY at rest, which is what
+              read as "the logo is not centred" — there was no logo to centre;
+            · being fixed at z-45 it painted OVER the sticky header (z-40),
+              which is the bleed-through;
+            · its offset from this row ran 223 → 231 → 178 → 18 → 0 as you
+              scrolled, moving DOWN before it moved up, because the service
+              strip leaves the sticky flow at ~32px and the scrubbed timeline
+              had not accounted for it. That non-monotonic step is the jump;
+            · and it put a large cream wordmark directly over the brightest,
+              busiest part of the bouquet.
+
+          A mark that simply lives in the bar has none of those problems, and
+          the top of the page becomes one composition. The hero keeps its own
+          brand presence on its own axis (see Hero.tsx).
+        */}
+        <Link
+          href="/"
+          aria-label="Calanthe — home"
+          /* Centred on the ROW, and the row is centred on the viewport, so
+             the mark is centred on the viewport at every width. */
+          /* `block`, NOT flex: StackedLogo stacks two absolutely-positioned
+             images inside this box, so a flex container collapses both to
+             0x0 and the wordmark disappears entirely. The 44px tap target
+             comes from an invisible overlay instead, which expands the hit
+             area without touching the logo's own geometry. */
+          className="absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] -translate-x-1/2 -translate-y-1/2 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
+        >
+          <StackedLogo
+            tone={onDark ? "cream" : "olive"}
+            priority
+            sizes="(min-width: 1024px) 78px, 64px"
+          />
+        </Link>
 
         {/* Right — Occasions + Membership (desktop), icons (always) */}
         <div className="flex items-center gap-1">
@@ -452,61 +500,93 @@ export function Header({
                below), because `sticky` + `z-40` on <header> makes this a
                child layer that can never outrank a body-level sibling on its
                own, however large a number is written here. */
-            "fixed inset-0 z-40 flex flex-col overflow-y-auto overflow-x-hidden bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden",
+            /* Top padding clears the header's own row, which sits ABOVE this
+               overlay (the close button is the burger, at z-50). At 4.25rem
+               the brand mark started underneath the X and the two collided. */
+            "fixed inset-0 z-40 flex flex-col overflow-y-auto overflow-x-hidden bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-[calc(env(safe-area-inset-top)+6.75rem)] lg:hidden",
             menuState === "closing" ? "menu-out" : "menu-in",
           )}
         >
-          {/* Art direction, not a second logo: the house mark blown far past
-              the screen, cropped by it, blurred until it reads as depth in
-              the olive rather than as an image sitting on top of it. The
-              crisp mark below is the one the eye is meant to find. */}
+          {/*
+            THE ATELIER WATERMARK.
+
+            The previous attempt was 165% wide at 13% opacity under a 34px
+            blur, and it was invisible — 34px of blur on a fine line mark
+            dissolves every stroke into a flat wash, so the panel read as a
+            plain olive rectangle. Scale does the work instead: the mark is
+            twice the screen's width, cropped hard by two edges, with only
+            enough blur to take the edge off the linework. It is legible as
+            a monogram without ever competing with the navigation, because
+            it is enormous and dim rather than small and smudged.
+          */}
           <span
             aria-hidden
-            className="pointer-events-none absolute -end-[42%] top-[10%] -z-10 w-[165%] select-none opacity-[0.13] blur-[34px]"
+            className="pointer-events-none absolute -end-[58%] top-[6%] -z-10 w-[200%] select-none opacity-[0.09] blur-[3px]"
           >
             <Monogram className="w-full text-cream" />
           </span>
+          {/* A single soft pool of light behind the head of the menu, so the
+              olive has depth rather than being one flat fill. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10"
+            style={{
+              background:
+                "radial-gradient(90% 55% at 50% 0%, rgba(228,220,197,0.10) 0%, rgba(228,220,197,0) 70%)",
+            }}
+          />
 
-          <MonogramBloom className="mx-auto w-14 shrink-0 text-cream" />
+          {/* Branding first, and it is the lockup rather than a lone
+              monogram — the menu is a place the visitor has arrived at, so
+              it says whose house this is. */}
+          <div className="shrink-0">
+            <Monogram className="w-11 text-cream" />
+            <p className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-cream/55">
+              {t.nav.atelier}
+            </p>
+          </div>
 
-          <nav aria-label="Mobile" className="mt-8 flex-1">
+          {/*
+            SEARCH — a function, so it sits in its own zone directly under
+            the branding, ABOVE the list of destinations, where a luxury
+            retailer puts it. Previously it sat between HOME and ABOUT,
+            inside the list, which is exactly what made it read as one more
+            page. Nothing about it now resembles the links below: sentence
+            case, not Cinzel caps; a bordered field, not a row; the icon
+            trailing the way a submit affordance does.
+          */}
+          <button
+            type="button"
+            onClick={() => {
+              closeMenu();
+              setSearchOpen(true);
+            }}
+            className="mt-7 flex min-h-12 w-full shrink-0 items-center justify-between gap-3 rounded-sm border border-cream/25 bg-cream/[0.06] px-4 text-start text-base text-cream/70 transition-colors duration-200 ease-bloom active:border-cream/50 active:text-cream"
+          >
+            {t.nav.search}
+            <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/70" />
+          </button>
+
+          <nav aria-label="Mobile" className="mt-7">
             <ul className="menu-links flex flex-col">
               <li className="border-b border-cream/10">
                 <Link
                   href="/"
                   onClick={closeMenu}
-                  className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                 >
                   {t.nav.home}
                 </Link>
-              </li>
-              {/* Search is an ACTION, not a destination. Given the shape of
-                  the thing it opens — a field — it reads as a field: an
-                  outlined row with the icon leading and a prompt in sentence
-                  case, so it is never mistaken for another page in the list
-                  of uppercase links around it. */}
-              <li className="pb-5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeMenu();
-                    setSearchOpen(true);
-                  }}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-sm border border-cream/20 bg-cream/[0.04] px-4 text-start text-base text-cream/70 transition-colors duration-200 ease-bloom active:border-cream/40 active:text-cream"
-                >
-                  <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/60" />
-                  {t.nav.search}
-                </button>
               </li>
               {navTree.map((group) =>
                 group.children.length ? (
                   <li key={group.href} className="border-b border-cream/10">
                     <details className="group/acc">
-                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
+                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
                         {navLabel(t, group.href, group.label)}
                         <span
                           aria-hidden
-                          className="text-sage transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
+                          className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
                         >
                           +
                         </span>
@@ -516,7 +596,7 @@ export function Header({
                           <Link
                             href={group.href}
                             onClick={closeMenu}
-                            className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                            className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                           >
                             {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
                           </Link>
@@ -526,7 +606,7 @@ export function Header({
                             <Link
                               href={link.href}
                               onClick={closeMenu}
-                              className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                              className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                             >
                               {navLabel(t, link.href, link.label)}
                             </Link>
@@ -540,7 +620,7 @@ export function Header({
                     <Link
                       href={group.href}
                       onClick={closeMenu}
-                      className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                      className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                     >
                       {navLabel(t, group.href, group.label)}
                     </Link>
@@ -551,7 +631,7 @@ export function Header({
                 <Link
                   href="/account"
                   onClick={closeMenu}
-                  className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                 >
                   {t.nav.account}
                 </Link>
@@ -564,7 +644,13 @@ export function Header({
               globals.css `.overlay-open`), which is what used to sit on top
               of the language control here. Both controls are laid out in one
               row, so they cannot collide at any width. */}
-          <div className="menu-footnote mt-6 flex shrink-0 flex-col gap-4 border-t border-cream/10 pt-5">
+          {/* `mt-auto` rather than a flex-1 nav above it: the nav used to be
+              stretched, which pushed this row to the floor and opened ~250px
+              of empty olive in the middle of the menu. Now the list keeps its
+              natural height and only the leftover space — if any — falls
+              here, so the menu is spacious on a tall phone and simply scrolls
+              on a short one, with nothing stranded below the fold. */}
+          <div className="menu-footnote mt-auto flex shrink-0 flex-col gap-4 border-t border-cream/10 pb-1 pt-5">
             <div className="flex items-center justify-between gap-3">
               <a
                 href={CONTACT.whatsappHref}
@@ -585,9 +671,6 @@ export function Header({
               </a>
               <LanguageToggle tone="cream" size="full" />
             </div>
-            <p className="font-brand text-[0.625rem] uppercase tracking-brand text-sage">
-              {t.nav.atelier}
-            </p>
           </div>
         </div>
       )}

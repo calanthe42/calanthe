@@ -39,7 +39,7 @@ function FilterButton({
         "min-h-11 whitespace-nowrap px-1 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-colors duration-200 ease-bloom",
         active
           ? "text-olive underline decoration-burnt-orange underline-offset-8"
-          : "text-sage hover:text-olive",
+          : "text-ink-muted hover:text-olive",
       )}
     >
       {children}
@@ -128,7 +128,7 @@ export function ShopGrid({
   return (
     <div>
       {query && (
-        <p className="mb-4 text-sm text-sage">
+        <p className="mb-4 text-sm text-ink-muted">
           Results for &ldquo;{initialQuery.trim()}&rdquo;
         </p>
       )}
@@ -189,11 +189,11 @@ export function ShopGrid({
 
       {visible.length === 0 ? (
         <div className="flex flex-col items-center gap-5 py-24 text-center">
-          <Monogram className="w-14 text-sage" />
+          <Monogram className="w-14 text-ink-muted" />
           <p className="font-display text-2xl font-light italic text-olive">
             Nothing blooms here yet.
           </p>
-          <p className="max-w-xs text-sm text-sage">
+          <p className="max-w-xs text-sm text-ink-muted">
             No arrangements match those choices — try softening a filter.
           </p>
         </div>

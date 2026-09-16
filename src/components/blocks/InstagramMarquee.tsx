@@ -22,7 +22,7 @@ export async function InstagramMarquee() {
   const { t } = await getDictionary();
 
   return (
-    <section className="section-pad">
+    <section className="section-pad-sm">
       <Reveal className="mx-auto flex max-w-xl flex-col items-center gutter text-center">
         <MonogramBloom className="w-10 text-burnt-orange/70" />
 
@@ -35,7 +35,7 @@ export async function InstagramMarquee() {
           {CONTACT.instagramHandle}
         </a>
 
-        <p className="mt-3 text-base leading-relaxed text-sage">
+        <p className="mt-3 text-base leading-relaxed text-ink-muted">
           {t.sections.instagramLine}
         </p>
 

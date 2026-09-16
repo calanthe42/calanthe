@@ -72,7 +72,7 @@ export default function StyleCheckPage() {
             quiet work of body copy, interface labels, and prices.
           </p>
           <p className="font-sans text-base text-olive">
-            Bordeaux in Bloom — <span className="text-sage">AED 420</span>
+            Bordeaux in Bloom — <span className="text-ink-muted">AED 420</span>
           </p>
         </div>
       </section>
@@ -93,14 +93,14 @@ export default function StyleCheckPage() {
                 <p className="font-brand text-xs uppercase tracking-brand text-olive">
                   {swatch.name}
                 </p>
-                <p className="text-sm text-sage">
+                <p className="text-sm text-ink-muted">
                   {swatch.hex} · {swatch.role}
                 </p>
               </div>
             </li>
           ))}
         </ul>
-        <p className="text-sm text-sage">
+        <p className="text-sm text-ink-muted">
           Page background #F3EFDF · Hairlines #CBC4A9 — shown by this page itself.
         </p>
       </section>
@@ -160,7 +160,7 @@ export default function StyleCheckPage() {
           {["One", "Two", "Three"].map((label, i) => (
             <StaggerItem key={label}>
               <div className="flex aspect-[4/3] items-center justify-center rounded-sm bg-cream">
-                <span className="font-brand text-xs uppercase tracking-brand text-sage">
+                <span className="font-brand text-xs uppercase tracking-brand text-ink-muted">
                   {label} · {(i + 1) * 80}ms
                 </span>
               </div>
@@ -190,19 +190,19 @@ export default function StyleCheckPage() {
             <BotanicalPlaceholder seed="par-c" palette="burgundy" />
           </Parallax>
         </div>
-        <p className="text-sm text-sage">Speeds 0.9 · 1.0 · 1.1 — scroll slowly.</p>
+        <p className="text-sm text-ink-muted">Speeds 0.9 · 1.0 · 1.1 — scroll slowly.</p>
       </section>
 
       <section className="flex min-h-svh flex-col items-center justify-center gap-6">
         <Eyebrow>09 — Motion · MonogramBloom</Eyebrow>
         <MonogramBloom className="w-40 text-olive" title="Calanthe monogram" />
-        <p className="text-sm text-sage">The true vector mark, drawing on.</p>
+        <p className="text-sm text-ink-muted">The true vector mark, drawing on.</p>
       </section>
 
       <Hairline />
 
       <footer className="pb-8 text-center">
-        <p className="text-sm text-sage">
+        <p className="text-sm text-ink-muted">
           CALANTHE foundation · verify at 390px · grain 3.5%
         </p>
       </footer>

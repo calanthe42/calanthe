@@ -149,7 +149,7 @@ export function BuildYourOwnForm() {
         <h2 className="font-display text-3xl font-light leading-tight text-olive lg:text-4xl">
           Your request is written. Send it on WhatsApp.
         </h2>
-        <p className="max-w-md text-base leading-relaxed text-sage">
+        <p className="max-w-md text-base leading-relaxed text-ink-muted">
           We opened a WhatsApp message to the atelier with everything you chose. Once you
           send it, a florist replies to confirm the arrangement, delivery and the total of{" "}
           {formatAed(totalAed)} before composing.
@@ -173,7 +173,7 @@ export function BuildYourOwnForm() {
         </div>
         <Link
           href="/shop"
-          className="min-h-11 content-center text-sm text-sage underline decoration-hairline underline-offset-4 hover:text-olive"
+          className="min-h-11 content-center text-sm text-ink-muted underline decoration-hairline underline-offset-4 hover:text-olive"
         >
           Continue shopping
         </Link>
@@ -270,7 +270,7 @@ export function BuildYourOwnForm() {
                   transition={{ duration: 0.35, ease: EASE_BLOOM }}
                   className="mt-3"
                 >
-                  <label className="flex items-center gap-3 text-sm text-sage">
+                  <label className="flex items-center gap-3 text-sm text-ink-muted">
                     AED
                     <input
                       type="number"
@@ -286,7 +286,7 @@ export function BuildYourOwnForm() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <p className="mt-3 max-w-md text-sm italic leading-relaxed text-sage">
+            <p className="mt-3 max-w-md text-sm italic leading-relaxed text-ink-muted">
               {byoBudgetNote}
             </p>
           </Step>
@@ -335,7 +335,7 @@ export function BuildYourOwnForm() {
                 )}
               >
                 <span>Yes, in a vase</span>
-                <span className="text-xs text-sage">
+                <span className="text-xs text-ink-muted">
                   +{formatAed(BYO_VASE_PRICE_AED)}
                 </span>
               </button>
@@ -350,7 +350,7 @@ export function BuildYourOwnForm() {
                 )}
               >
                 <span>No, hand-tied</span>
-                <span className="text-xs text-sage">Wrapped in paper</span>
+                <span className="text-xs text-ink-muted">Wrapped in paper</span>
               </button>
             </div>
           </Step>
@@ -369,7 +369,7 @@ export function BuildYourOwnForm() {
               className={cn(fieldClasses, "disabled:opacity-50")}
             />
             <div className="mt-2 flex items-center justify-between gap-4">
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-sage">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={leaveBlank}
@@ -381,7 +381,7 @@ export function BuildYourOwnForm() {
                 />
                 Leave the card blank
               </label>
-              <span className="text-xs text-sage">{message.length}/220</span>
+              <span className="text-xs text-ink-muted">{message.length}/220</span>
             </div>
           </Step>
 
@@ -397,7 +397,7 @@ export function BuildYourOwnForm() {
           </Step>
         </ol>
 
-        <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-sage">
+        <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-ink-muted">
           {seasonalDisclaimer}
         </p>
 
@@ -428,7 +428,7 @@ export function BuildYourOwnForm() {
 
 function SendNote() {
   return (
-    <p className="mt-3 text-sm leading-relaxed text-sage">
+    <p className="mt-3 text-sm leading-relaxed text-ink-muted">
       Opens WhatsApp with your request written out. Nothing is ordered until a florist
       confirms it with you.
     </p>
@@ -461,14 +461,14 @@ function Step({
         <span
           className={cn(
             "font-sans text-sm transition-colors duration-300 ease-bloom",
-            active ? "text-burnt-orange" : "text-sage",
+            active ? "text-burnt-orange" : "text-ink-muted",
           )}
         >
           {index + 1}
         </span>
         {step.title}
       </h2>
-      {hint && <p className="mt-1 text-sm text-sage">{hint}</p>}
+      {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
       <div className="mt-4">{children}</div>
       {error && (
         <p role="alert" className={fieldErrorClasses}>
@@ -530,13 +530,13 @@ function Summary({
       <dl className="mt-5 flex flex-col divide-y divide-hairline/70">
         {rows.map((row) => (
           <div key={row.label} className="flex gap-4 py-3">
-            <dt className="w-20 shrink-0 font-brand text-[0.625rem] font-medium uppercase leading-6 tracking-brand text-sage">
+            <dt className="w-20 shrink-0 font-brand text-[0.625rem] font-medium uppercase leading-6 tracking-brand text-ink-muted">
               {row.label}
             </dt>
             <dd
               className={cn(
                 "min-w-0 flex-1 break-words text-base leading-6",
-                row.value ? "text-olive" : "text-sage/80",
+                row.value ? "text-olive" : "text-ink-muted/80",
               )}
             >
               {row.value ?? (row.optional ? "None" : "Not chosen yet")}
@@ -552,7 +552,7 @@ function Summary({
           {totalAed > 0 ? formatAed(totalAed) : "—"}
         </p>
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-sage lg:hidden">
+      <p className="mt-3 text-sm leading-relaxed text-ink-muted lg:hidden">
         Opens WhatsApp with your request written out. Nothing is ordered until a florist
         confirms it with you.
       </p>

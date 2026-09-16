@@ -23,13 +23,13 @@ export async function TrustBand() {
   ];
 
   return (
-    <section className="section-pad">
+    <section className="border-t border-hairline/70 bg-cream section-pad-join">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <Reveal>
           <h2 className="display-2 font-display font-light text-olive">
             {t.sections.promiseTitle}
           </h2>
-          <p className="mt-4 max-w-sm text-base leading-relaxed text-sage">
+          <p className="mt-4 max-w-sm text-base leading-relaxed text-ink-muted">
             {t.sections.promiseAsk}{" "}
             <a
               href={CONTACT.whatsappHref}
@@ -50,7 +50,7 @@ export async function TrustBand() {
               <h3 className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
                 {g.title}
               </h3>
-              <p className="mt-2 max-w-xs text-base leading-relaxed text-sage">
+              <p className="mt-2 max-w-xs text-base leading-relaxed text-ink-muted">
                 {g.copy}
               </p>
             </StaggerItem>

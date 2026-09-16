@@ -11,18 +11,25 @@ type LanguageToggleProps = {
 };
 
 /**
- * English / العربية.
+ * English · العربية
  *
- * A SEGMENTED CONTROL, NOT A PILL OF INITIALS. The old control put "EN" and a
- * lone "ع" in a rounded outline: two glyphs of different scripts, neither
- * obviously current, in a shape the rest of the site never uses. This reads
- * as one control with two halves and a filled active half, so which language
- * you are in is visible without reading — and in the menu, where there is
- * room, each language is named in its own script, which is the only spelling
- * a reader of that language can be sure of.
+ * TWO WORDS AND A RULE BETWEEN THEM — no box, no fill, no chip.
  *
- * Switching writes a cookie and refreshes, so the page comes back in the
- * chosen language rather than merely changing direction (see lib/locale.tsx).
+ * The previous control was a bordered segmented box with a filled active
+ * half. Measured against the rest of the header it was the heaviest object
+ * on the bar: every neighbour is a 22px line icon or tracked Cinzel at 12px,
+ * and a bordered container with a solid fill among them reads as a form
+ * control that wandered out of a checkout page. Luxury navigation states the
+ * current language; it does not package it.
+ *
+ * So the active language is the one at full strength, the other is dimmed,
+ * and a hairline separates them — the same hairline vocabulary the rest of
+ * the site already uses for dividers. It is now lighter than anything else
+ * in the header, which is correct: it is the least important control there.
+ *
+ * Tap targets stay at 44px through vertical padding, so losing the visual
+ * weight costs nothing in usability. Switching writes a cookie and refreshes
+ * so the page returns in the chosen language (see lib/locale.tsx).
  */
 export function LanguageToggle({
   tone = "olive",
@@ -33,36 +40,35 @@ export function LanguageToggle({
   const cream = tone === "cream";
 
   const option =
-    "relative flex h-9 items-center justify-center rounded-[3px] px-3 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-colors duration-300 ease-bloom";
-  /* On the photograph a solid cream fill reads as a sticker; a lit facet of
-     the same glass the hero buttons use keeps it part of the image. On cream
-     surfaces the olive fill is right — there is nothing behind it to respect. */
-  const active = cream
-    ? "bg-cream/15 text-cream shadow-[inset_0_0_0_1px_rgba(228,220,197,0.35)]"
-    : "bg-olive text-cream";
-  const idle = cream ? "text-cream/60 hover:text-cream" : "text-sage hover:text-olive";
+    "inline-flex min-h-11 items-center px-1.5 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-opacity duration-200 ease-bloom";
+  const activeTone = cream ? "text-cream" : "text-olive";
+  const idleTone = cream
+    ? "text-cream/50 hover:text-cream/80"
+    : "text-ink-muted hover:text-olive";
 
   return (
     <div
       role="group"
       aria-label={t.language.label}
       aria-busy={switching}
-      className={cn(
-        "inline-flex items-center gap-0.5 rounded-sm border p-0.5",
-        cream ? "border-cream/25 bg-cream/[0.06]" : "border-hairline bg-cream/40",
-        switching && "opacity-70",
-        className,
-      )}
+      className={cn("inline-flex items-center", switching && "opacity-60", className)}
     >
       <button
         type="button"
         onClick={() => setLocale("en")}
         aria-pressed={locale === "en"}
         aria-label={t.language.toEnglish}
-        className={cn(option, locale === "en" ? active : idle)}
+        className={cn(option, locale === "en" ? activeTone : idleTone)}
       >
         {size === "full" ? t.language.english : "EN"}
       </button>
+
+      {/* A divider, not a border around anything. */}
+      <span
+        aria-hidden
+        className={cn("h-3 w-px", cream ? "bg-cream/30" : "bg-hairline")}
+      />
+
       <button
         type="button"
         onClick={() => setLocale("ar")}
@@ -71,11 +77,10 @@ export function LanguageToggle({
         lang="ar"
         className={cn(
           option,
-          /* Arabic sits optically small next to tracked-out Latin caps, and
-             letterspacing breaks its joins — so it gets its own size and no
-             tracking. */
+          /* Arabic sits optically small beside tracked-out Latin caps, and
+             letterspacing breaks its joins — its own size, no tracking. */
           "font-sans text-[0.8125rem] tracking-normal",
-          locale === "ar" ? active : idle,
+          locale === "ar" ? activeTone : idleTone,
         )}
       >
         {size === "full" ? t.language.arabic : "ع"}

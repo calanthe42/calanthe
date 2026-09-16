@@ -38,7 +38,7 @@ export default async function CustomerOrderPage({
         <Reveal>
           <Eyebrow>Your order</Eyebrow>
           <h1 className="display-2 mt-3 font-display font-light text-olive">Please sign in.</h1>
-          <p className="mt-4 text-base leading-relaxed text-sage">
+          <p className="mt-4 text-base leading-relaxed text-ink-muted">
             Sign in to see this order. Orders are only ever shown to the account that placed them.
           </p>
           <Link
@@ -72,7 +72,7 @@ export default async function CustomerOrderPage({
       <Reveal className="mb-8">
         <Eyebrow>Your order</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">{order.orderNumber}</h1>
-        <p className="mt-2 text-base text-sage">
+        <p className="mt-2 text-base text-ink-muted">
           Placed{" "}
           {new Date(order.createdAt).toLocaleDateString("en-AE", {
             day: "numeric",
@@ -92,7 +92,7 @@ export default async function CustomerOrderPage({
                 {item.productName}
                 {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                 {(item.selectedOptions ?? []).length > 0 ? (
-                  <span className="block text-sm text-sage">
+                  <span className="block text-sm text-ink-muted">
                     {(item.selectedOptions ?? []).map((o) => o.value).join(" · ")}
                   </span>
                 ) : null}
@@ -106,11 +106,11 @@ export default async function CustomerOrderPage({
 
         <dl className="mt-5 space-y-1.5 border-t border-hairline pt-4 text-base">
           <div className="flex justify-between">
-            <dt className="text-sage">Subtotal</dt>
+            <dt className="text-ink-muted">Subtotal</dt>
             <dd className="tabular-nums">{formatFils(Number(order.subtotalFils))}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-sage">Delivery</dt>
+            <dt className="text-ink-muted">Delivery</dt>
             <dd className="tabular-nums">
               {Number(order.deliveryFeeFils) === 0
                 ? "Free"
@@ -123,7 +123,7 @@ export default async function CustomerOrderPage({
           </div>
         </dl>
 
-        <p className="mt-4 text-sm leading-relaxed text-sage">
+        <p className="mt-4 text-sm leading-relaxed text-ink-muted">
           {order.paymentStatus === "PENDING"
             ? "Payable in cash on delivery."
             : `Payment: ${order.paymentStatus.toLowerCase().replace(/_/g, " ")}`}
@@ -136,7 +136,7 @@ export default async function CustomerOrderPage({
           <p className="mt-3 text-base text-olive">To {order.recipientName}</p>
         ) : null}
         <p className="mt-1 whitespace-pre-line text-base text-olive">{order.deliveryAddress}</p>
-        <p className="mt-2 text-base text-sage">
+        <p className="mt-2 text-base text-ink-muted">
           {new Date(order.deliveryDate).toLocaleDateString("en-AE", {
             weekday: "long",
             day: "numeric",

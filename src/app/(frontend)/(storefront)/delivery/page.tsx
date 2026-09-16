@@ -24,7 +24,7 @@ export default function DeliveryPage() {
         <h1 className="display-2 mt-3 font-display font-light text-olive">
           Delivery, across all seven Emirates.
         </h1>
-        <p className="mt-4 max-w-lg text-base leading-relaxed text-sage">
+        <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-muted">
           Order before {SAME_DAY_CUTOFF_HOUR}:00 and your arrangement is composed and
           delivered the same day. Delivery is complimentary on orders over{" "}
           {formatAed(FREE_DELIVERY_THRESHOLD_AED)}.
@@ -52,14 +52,14 @@ export default function DeliveryPage() {
           <StaggerItem key={zone.id} className="bg-canvas">
             <div className="flex items-baseline justify-between px-5 py-4">
               <p className="text-base text-olive">{zone.name}</p>
-              <p className="text-sm text-sage">{formatAed(zone.feeAed)}</p>
+              <p className="text-sm text-ink-muted">{formatAed(zone.feeAed)}</p>
             </div>
           </StaggerItem>
         ))}
       </Stagger>
 
       <Reveal className="mt-10">
-        <p className="max-w-lg text-sm leading-relaxed text-sage">
+        <p className="max-w-lg text-sm leading-relaxed text-ink-muted">
           Before every delivery, your florist sends a photo or video of the finished
           arrangement on WhatsApp for your approval. We contact the recipient only to
           coordinate timing — never with the price.

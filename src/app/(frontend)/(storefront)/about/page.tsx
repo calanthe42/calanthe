@@ -77,11 +77,11 @@ export default function AboutPage() {
             <h2 className="display-2 mt-3 font-display font-light text-olive">
               More than a beautiful gesture.
             </h2>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-sage">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
               We believe flowers carry emotion, mark meaningful moments and express
               what words sometimes cannot.
             </p>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
+            <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
               Our arrangements combine classical elegance with a contemporary
               creative touch, bringing together carefully selected flowers, refined
               compositions and distinctive details. From intimate gestures to
@@ -120,7 +120,7 @@ export default function AboutPage() {
                   <h3 className="font-display text-2xl font-light text-olive">
                     {s.name}
                   </h3>
-                  <p className="mt-3 text-base leading-relaxed text-sage">{s.copy}</p>
+                  <p className="mt-3 text-base leading-relaxed text-ink-muted">{s.copy}</p>
                 </div>
               </StaggerItem>
             ))}

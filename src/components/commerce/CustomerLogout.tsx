@@ -19,7 +19,7 @@ export function CustomerLogout() {
           router.refresh();
         })
       }
-      className="min-h-11 text-sm text-sage underline underline-offset-4 hover:text-olive disabled:opacity-60"
+      className="min-h-11 text-sm text-ink-muted underline underline-offset-4 hover:text-olive disabled:opacity-60"
     >
       {pending ? "Signing out…" : "Sign out"}
     </button>

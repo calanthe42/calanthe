@@ -1,4 +1,3 @@
-import { AnnouncementBar } from "@/components/blocks/AnnouncementBar";
 import { Footer } from "@/components/blocks/Footer";
 import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
@@ -14,7 +13,7 @@ export default async function StorefrontLayout({
   /* Read once, on the server, and hand down as props. The cart provider and
      the search overlay both need the catalogue, and neither may query the
      database from the browser (docs/PROJECT-STRUCTURE.md §4). */
-  const [catalogue, occasions, { locale }] = await Promise.all([
+  const [catalogue, occasions, { locale, t }] = await Promise.all([
     getAvailableProducts(),
     getActiveOccasions(),
     getDictionary(),
@@ -27,11 +26,15 @@ export default async function StorefrontLayout({
           <main>, which is what this targets. */}
       <a
         href="#main"
-        className="skip-link m-3 rounded-sm bg-olive px-5 py-3 font-brand text-xs font-medium uppercase tracking-brand text-cream"
+        className="skip-link m-3 inline-flex min-h-11 items-center rounded-sm bg-olive px-5 font-brand text-xs font-medium uppercase tracking-brand text-cream"
       >
-        Skip to content
+        {t.nav.skipToContent}
       </a>
-      <AnnouncementBar />
+      {/* The strip is rendered INSIDE the header (see Header.tsx): over the
+          homepage photograph the two used to be separately coloured bands
+          stacked on one another, and the hard edge between them read as an
+          unexplained line across the top of the hero. One element now owns
+          the whole top of the page and decides how it is painted. */}
       <Header products={catalogue} occasions={occasions} />
       {/* tabIndex -1 so the skip link actually MOVES focus here. Without
           it the browser scrolls but leaves focus in the navigation, and

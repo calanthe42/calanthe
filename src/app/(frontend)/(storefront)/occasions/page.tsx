@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ClipReveal } from "@/components/motion/ClipReveal";
-import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { Eyebrow } from "@/components/ui/Eyebrow";
+import { PageHeader } from "@/components/blocks/PageHeader";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getActiveOccasions } from "@backend/data/occasions";
+import { getDictionary } from "@/lib/i18n/server";
 import { leadWithOccasion } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 
@@ -35,21 +35,24 @@ export const metadata: Metadata = {
  */
 export default async function OccasionsPage() {
   /* The same featured occasion as the homepage band — one rule, one place. */
-  const occasions = leadWithOccasion(await getActiveOccasions());
+  const [occasions, { t }] = await Promise.all([
+    getActiveOccasions().then(leadWithOccasion),
+    getDictionary(),
+  ]);
   const [lead, ...rest] = occasions;
 
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
-      <Reveal className="mb-10 max-w-2xl lg:mb-14">
-        <Eyebrow>Occasions</Eyebrow>
-        <h1 className="display-2 mt-3 font-display font-light text-olive">
-          For every unspoken thing.
-        </h1>
-        <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
-          Some things are easier handed over than said. Begin with the moment, and we will
-          compose the rest.
-        </p>
-      </Reveal>
+      <PageHeader
+        eyebrow={t.pages.occasionsEyebrow}
+        title={t.pages.occasionsTitle}
+        intro={t.pages.occasionsIntro}
+        meta={
+          occasions.length
+            ? `${occasions.length} ${occasions.length === 1 ? t.pages.occasionOne : t.pages.occasionMany}`
+            : undefined
+        }
+      />
 
       {!lead ? (
         <CatalogueEmpty />

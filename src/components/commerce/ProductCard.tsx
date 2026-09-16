@@ -89,13 +89,13 @@ export function ProductCard({
           <h3 className="font-display text-lg font-normal text-olive lg:text-xl">
             {product.name}
           </h3>
-          <p className="shrink-0 text-sm text-sage lg:text-base">
+          <p className="shrink-0 text-sm text-ink-muted lg:text-base">
             {showView && <span className="mr-1 text-xs">from</span>}
             {formatAed(product.priceAed)}
           </p>
         </div>
         {showView && (
-          <p className="mt-1.5 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage transition-colors duration-200 ease-bloom group-hover:text-burnt-orange">
+          <p className="mt-1.5 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted transition-colors duration-200 ease-bloom group-hover:text-burnt-orange">
             View arrangement
           </p>
         )}

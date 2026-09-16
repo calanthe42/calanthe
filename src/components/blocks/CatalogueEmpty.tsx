@@ -45,6 +45,10 @@ export async function CatalogueEmpty({
             placeholder: { seed: "catalogue-empty", palette: "warm" },
           }}
           sizes="(max-width: 1024px) 100vw, 50vw"
+          /* While the catalogue is empty this photograph IS the shop page's
+             largest paint — Next reported it as the LCP element and asked
+             for the hint. */
+          priority
         />
       </ClipReveal>
 
@@ -53,7 +57,7 @@ export async function CatalogueEmpty({
         <h2 className="mt-3 font-display text-3xl font-light leading-tight text-olive lg:text-[2.75rem]">
           {heading}
         </h2>
-        <p className="mt-4 text-base leading-relaxed text-sage">{body}</p>
+        <p className="mt-4 text-base leading-relaxed text-ink-muted">{body}</p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <ButtonLink href="/build-your-own" className="whitespace-nowrap">

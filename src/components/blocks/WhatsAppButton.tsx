@@ -37,6 +37,36 @@ export function WhatsAppButton() {
    */
   const heroRoute = pathname === "/";
   const [visible, setVisible] = useState(!heroRoute);
+  const [scrolling, setScrolling] = useState(false);
+
+  /**
+   * IT STEPS OUT OF THE WAY WHILE YOU SCROLL.
+   *
+   * A fixed badge in the corner covers a 48px square of whatever happens to
+   * be under it. Measured at 375, 390 and 430px, that was the corner of the
+   * "New Born" tile on /occasions at every width, and a budget option on
+   * /build-your-own at 390 — a control the visitor could see but not tap.
+   * Padding cannot fix this: on a scrolling grid, content passes under the
+   * badge continuously by definition.
+   *
+   * So it withdraws while the page is moving and returns a beat after it
+   * stops. Nothing is ever obscured at the moment someone is reading or
+   * aiming at it, and the button is still there the instant they settle.
+   * Transform and opacity only, so it costs the scroll nothing.
+   */
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      setScrolling(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setScrolling(false), 450);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!heroRoute) {
@@ -102,6 +132,8 @@ export function WhatsAppButton() {
          the server and client disagreed about during hydration. Absent
          is both the correct semantics and the stable one. */
       aria-hidden={visible ? undefined : true}
+      /* Scrolling only hides it visually — it stays in the tab order,
+         because a keyboard visitor is not the one scrolling it away. */
       tabIndex={visible ? undefined : -1}
       className={cn(
         /* `floating-whatsapp` lets globals.css stand this down while a
@@ -114,6 +146,8 @@ export function WhatsAppButton() {
         visible
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0",
+        /* Out of the way while the page moves — see the note above. */
+        visible && scrolling && "translate-y-2 opacity-0 duration-200",
       )}
     >
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6" aria-hidden>

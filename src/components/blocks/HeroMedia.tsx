@@ -135,7 +135,12 @@ export function HeroMedia() {
           height={HERO_POSTER.height}
           fetchPriority="high"
           decoding="async"
-          className="h-full w-full object-cover"
+          /* The phone crop is 9:16 against a photograph composed for a
+             wider frame, so a centred crop spends the top 40% of the
+             screen on out-of-focus background and pushes the bouquet
+             under the words. Favouring the lower part of the frame brings
+             the flowers up into the empty half. */
+          className="h-full w-full object-cover object-[50%_72%] lg:object-center"
         />
       </picture>
 

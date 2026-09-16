@@ -70,7 +70,7 @@ export default async function OccasionPage({
         </h1>
         {/* The owner's own words, when she has written them in /admin. */}
         {occasion.description ? (
-          <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
+          <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
             {occasion.description}
           </p>
         ) : null}

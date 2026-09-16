@@ -88,12 +88,12 @@ const OrderSummary = memo(function OrderSummary({
                   {formatAed(itemUnitPrice(item) * item.qty)}
                 </p>
               </div>
-              <p className="mt-1 text-sm text-sage">
+              <p className="mt-1 text-sm text-ink-muted">
                 {item.qty > 1 && <>{item.qty} × </>}
                 {describeCartItem(item)}
               </p>
               {item.giftMessage && (
-                <p className="mt-1 text-sm italic text-sage">With a handwritten card</p>
+                <p className="mt-1 text-sm italic text-ink-muted">With a handwritten card</p>
               )}
             </div>
           </li>
@@ -101,11 +101,11 @@ const OrderSummary = memo(function OrderSummary({
       </ul>
       <hr className="my-5 border-0 border-t border-hairline" />
       <dl className="flex flex-col gap-2 text-sm">
-        <div className="flex justify-between text-sage">
+        <div className="flex justify-between text-ink-muted">
           <dt>Subtotal</dt>
           <dd>{formatAed(subtotalAed)}</dd>
         </div>
-        <div className="flex justify-between text-sage">
+        <div className="flex justify-between text-ink-muted">
           <dt>Delivery{zone ? ` to ${zone.name}` : ""}</dt>
           <dd>
             {zone
@@ -122,7 +122,7 @@ const OrderSummary = memo(function OrderSummary({
           <dd className="font-display text-2xl">{formatAed(totalAed)}</dd>
         </div>
       </dl>
-      <p className="mt-4 text-sm leading-relaxed text-sage">
+      <p className="mt-4 text-sm leading-relaxed text-ink-muted">
         Paid in cash when your flowers arrive.
       </p>
     </div>
@@ -145,7 +145,7 @@ function Step({
         id={`step-${index}`}
         className="mb-6 flex items-baseline gap-4 font-display text-2xl font-light text-olive lg:text-[1.75rem]"
       >
-        <span className="font-sans text-sm text-sage">{index}</span>
+        <span className="font-sans text-sm text-ink-muted">{index}</span>
         {title}
       </h2>
       {children}
@@ -307,7 +307,7 @@ export function CheckoutForm() {
         >
           Your flowers are in our hands.
         </h1>
-        <p className="max-w-md text-base leading-relaxed text-sage">
+        <p className="max-w-md text-base leading-relaxed text-ink-muted">
           Before your arrangement leaves the atelier, your florist sends a photo or video
           on WhatsApp for your approval. Payment is taken in cash on delivery.
         </p>
@@ -329,11 +329,11 @@ export function CheckoutForm() {
   if (items.length === 0) {
     return (
       <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 text-center">
-        <Monogram className="w-14 text-sage" />
+        <Monogram className="w-14 text-ink-muted" />
         <h1 className="font-display text-3xl font-light italic text-olive lg:text-4xl">
           Your cart is waiting to bloom.
         </h1>
-        <p className="max-w-sm text-base leading-relaxed text-sage">
+        <p className="max-w-sm text-base leading-relaxed text-ink-muted">
           Choose an arrangement, or have one composed for you.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -437,7 +437,7 @@ export function CheckoutForm() {
                       />
                     </div>
                   </div>
-                  <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-3 text-base text-sage">
+                  <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-3 text-base text-ink-muted">
                     <input
                       type="checkbox"
                       checked={surprise}
@@ -474,7 +474,7 @@ export function CheckoutForm() {
               </select>
               <FieldError id="zone-error" message={fieldErrors.zoneId} />
               {zone && freeDelivery && (
-                <p className="mt-2 text-sm text-sage">
+                <p className="mt-2 text-sm text-ink-muted">
                   Delivery is complimentary on orders over{" "}
                   {formatAed(FREE_DELIVERY_THRESHOLD_AED)}.
                 </p>
@@ -516,7 +516,7 @@ export function CheckoutForm() {
                     )}
                   >
                     <span className="text-sm">{day.label}</span>
-                    <span className="text-xs text-sage">{day.sub}</span>
+                    <span className="text-xs text-ink-muted">{day.sub}</span>
                   </button>
                 ))}
               </div>
@@ -614,7 +614,7 @@ export function CheckoutForm() {
               </span>
               <div>
                 <p className="text-base text-olive">Cash on delivery</p>
-                <p className="mt-1 text-sm leading-relaxed text-sage">
+                <p className="mt-1 text-sm leading-relaxed text-ink-muted">
                   Pay the courier when your flowers arrive. Nothing is charged now.
                 </p>
               </div>
@@ -667,7 +667,7 @@ export function CheckoutForm() {
             >
               {pending ? "Placing your order…" : <>Place Order — {formatAed(totalAed)}</>}
             </Button>
-            <p className="mt-4 text-sm leading-relaxed text-sage">
+            <p className="mt-4 text-sm leading-relaxed text-ink-muted">
               Questions first?{" "}
               <a
                 href={CONTACT.whatsappHref}

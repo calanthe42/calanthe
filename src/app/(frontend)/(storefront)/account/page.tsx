@@ -34,7 +34,7 @@ export default async function AccountPage() {
           <h1 className="display-2 mt-3 font-display font-light text-olive">
             Please sign in.
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-sage">
+          <p className="mt-4 text-base leading-relaxed text-ink-muted">
             Sign in to see your orders. You do not need an account to buy — every arrangement
             can be ordered as a guest.
           </p>
@@ -68,7 +68,7 @@ export default async function AccountPage() {
         <div>
           <Eyebrow>Your account</Eyebrow>
           <h1 className="display-2 mt-3 font-display font-light text-olive">{name}</h1>
-          <p className="mt-2 text-base text-sage">{customer.email}</p>
+          <p className="mt-2 text-base text-ink-muted">{customer.email}</p>
         </div>
         <CustomerLogout />
       </Reveal>
@@ -78,7 +78,7 @@ export default async function AccountPage() {
       {orders.docs.length === 0 ? (
         <div className="rounded-media border border-hairline bg-cream/40 px-6 py-14 text-center">
           <p className="font-display text-xl font-light text-olive">No orders yet</p>
-          <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-sage">
+          <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-ink-muted">
             When you order, it will appear here with its progress.
           </p>
           <Link href="/shop" className="mt-4 inline-block text-sm text-olive underline underline-offset-4">
@@ -95,7 +95,7 @@ export default async function AccountPage() {
               >
                 <div>
                   <p className="font-medium text-olive">{order.orderNumber}</p>
-                  <p className="text-sm text-sage">
+                  <p className="text-sm text-ink-muted">
                     {new Date(order.createdAt).toLocaleDateString("en-AE", {
                       day: "numeric", month: "long", year: "numeric",
                     })}
@@ -103,7 +103,7 @@ export default async function AccountPage() {
                 </div>
                 <div className="text-right">
                   <p className="tabular-nums text-olive">{formatFils(Number(order.totalFils))}</p>
-                  <p className="text-sm text-sage">
+                  <p className="text-sm text-ink-muted">
                     {order.fulfilmentStatus.toLowerCase().replace(/_/g, " ")}
                   </p>
                 </div>

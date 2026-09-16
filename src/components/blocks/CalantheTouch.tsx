@@ -33,7 +33,7 @@ export async function CalantheTouch() {
               <h3 className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
                 {pillar.title}
               </h3>
-              <p className="mt-3 max-w-sm text-base leading-relaxed text-sage">
+              <p className="mt-3 max-w-sm text-base leading-relaxed text-ink-muted">
                 {pillar.copy}
               </p>
             </StaggerItem>

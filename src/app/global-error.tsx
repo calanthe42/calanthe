@@ -51,13 +51,13 @@ export default function GlobalError({
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
         <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-canvas px-6 text-center">
-          <p className="font-brand text-xs font-medium uppercase tracking-brand text-sage">
+          <p className="font-brand text-xs font-medium uppercase tracking-brand text-ink-muted">
             Something bloomed wrong
           </p>
           <h1 className="max-w-md font-display text-4xl font-light text-olive lg:text-5xl">
             A petal fell out of place.
           </h1>
-          <p className="max-w-sm text-base leading-relaxed text-sage">
+          <p className="max-w-sm text-base leading-relaxed text-ink-muted">
             Something interrupted the page. It has been noted — please try
             again.
           </p>

@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
       <div className="flex flex-col items-center gap-8 py-8">
-        <Monogram className="monogram-pulse w-12 text-sage" />
+        <Monogram className="monogram-pulse w-12 text-ink-muted" />
       </div>
       {/* Cream skeletons */}
       <div className="mt-4 flex flex-col gap-8">

@@ -52,7 +52,7 @@ function OrderCard({ order }: { order: Order }) {
       >
         <div>
           <p className="font-display text-lg text-olive">{order.number}</p>
-          <p className="text-sm text-sage">{order.placedOn}</p>
+          <p className="text-sm text-ink-muted">{order.placedOn}</p>
         </div>
         <div className="flex items-center gap-3">
           <span
@@ -95,7 +95,7 @@ function OrderCard({ order }: { order: Order }) {
                           )}
                         />
                       </span>
-                      <span className={cn("text-sm", done ? "text-olive" : "text-sage")}>
+                      <span className={cn("text-sm", done ? "text-olive" : "text-ink-muted")}>
                         {step.label}
                       </span>
                     </li>
@@ -112,14 +112,14 @@ function OrderCard({ order }: { order: Order }) {
                     <span className="text-olive">
                       {item.name} · {item.size} × {item.qty}
                       {item.addons.length > 0 && (
-                        <span className="text-sage"> · {item.addons.join(" · ")}</span>
+                        <span className="text-ink-muted"> · {item.addons.join(" · ")}</span>
                       )}
                     </span>
-                    <span className="shrink-0 text-sage">{formatAed(item.priceAed)}</span>
+                    <span className="shrink-0 text-ink-muted">{formatAed(item.priceAed)}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-sm text-sage">Delivered to: {order.deliverTo}</p>
+              <p className="mt-4 text-sm text-ink-muted">Delivered to: {order.deliverTo}</p>
             </div>
           </motion.div>
         )}
@@ -173,7 +173,7 @@ function Reminders() {
 
   return (
     <div>
-      <p className="max-w-md text-sm leading-relaxed text-sage">
+      <p className="max-w-md text-sm leading-relaxed text-ink-muted">
         We&apos;ll remind you a few days ahead, so the flowers always arrive on time.
         (Reminders send once the backend arrives.)
       </p>
@@ -226,7 +226,7 @@ function Reminders() {
                 <p className="text-base text-olive">
                   {r.name} — {r.occasion}
                 </p>
-                <p className="text-sm text-sage">
+                <p className="text-sm text-ink-muted">
                   {new Date(r.date).toLocaleDateString("en-GB", {
                     day: "numeric",
                     month: "long",
@@ -237,7 +237,7 @@ function Reminders() {
               <button
                 type="button"
                 onClick={() => save(reminders.filter((_, j) => j !== i))}
-                className="min-h-11 px-2 text-sm text-sage underline-offset-4 hover:text-olive hover:underline"
+                className="min-h-11 px-2 text-sm text-ink-muted underline-offset-4 hover:text-olive hover:underline"
               >
                 Remove
               </button>
@@ -263,7 +263,7 @@ export function AccountClient() {
   if (!authed) {
     return (
       <div className="flex min-h-[50svh] flex-col items-center justify-center gap-6 text-center">
-        <Monogram className="w-14 text-sage" />
+        <Monogram className="w-14 text-ink-muted" />
         <p className="font-display text-2xl font-light italic text-olive">
           Sign in to see your atelier account.
         </p>
@@ -290,7 +290,7 @@ export function AccountClient() {
               "min-h-11 whitespace-nowrap pb-3 font-brand text-[0.6875rem] font-medium uppercase tracking-brand transition-colors duration-200 ease-bloom",
               tab === t
                 ? "border-b border-burnt-orange text-olive"
-                : "text-sage hover:text-olive",
+                : "text-ink-muted hover:text-olive",
             )}
           >
             {t}
@@ -321,7 +321,7 @@ export function AccountClient() {
             <button
               type="button"
               onClick={() => toast("Address book opens with the backend phase")}
-              className="flex min-h-24 items-center justify-center rounded-sm border border-dashed border-hairline text-sm text-sage transition-colors duration-200 ease-bloom hover:border-sage hover:text-olive"
+              className="flex min-h-24 items-center justify-center rounded-sm border border-dashed border-hairline text-sm text-ink-muted transition-colors duration-200 ease-bloom hover:border-sage hover:text-olive"
             >
               + Add address
             </button>
@@ -359,7 +359,7 @@ export function AccountClient() {
                 setAuthed(false);
                 toast("Signed out");
               }}
-              className="ml-4 min-h-11 text-sm text-sage underline-offset-4 hover:text-olive hover:underline"
+              className="ml-4 min-h-11 text-sm text-ink-muted underline-offset-4 hover:text-olive hover:underline"
             >
               Sign out
             </button>

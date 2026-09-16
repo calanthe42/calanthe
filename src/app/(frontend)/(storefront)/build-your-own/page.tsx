@@ -17,7 +17,7 @@ export default function BuildYourOwnPage() {
         <h1 className="display-2 mt-3 font-display font-light text-olive">
           Made for them, by you.
         </h1>
-        <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
+        <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
           Choose your budget, colours and preferences. We&apos;ll take care of the
           flowers.
         </p>
