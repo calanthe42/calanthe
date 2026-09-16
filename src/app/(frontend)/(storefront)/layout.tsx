@@ -4,6 +4,7 @@ import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
 import { WhatsAppButton } from "@/components/blocks/WhatsAppButton";
 import { LazyCartDrawer } from "@/components/commerce/LazyCartDrawer";
+import { getDictionary } from "@/lib/i18n/server";
 import { getActiveOccasions } from "@backend/data/occasions";
 import { getAvailableProducts } from "@backend/data/products";
 
@@ -13,13 +14,14 @@ export default async function StorefrontLayout({
   /* Read once, on the server, and hand down as props. The cart provider and
      the search overlay both need the catalogue, and neither may query the
      database from the browser (docs/PROJECT-STRUCTURE.md §4). */
-  const [catalogue, occasions] = await Promise.all([
+  const [catalogue, occasions, { locale }] = await Promise.all([
     getAvailableProducts(),
     getActiveOccasions(),
+    getDictionary(),
   ]);
 
   return (
-    <Providers catalogue={catalogue}>
+    <Providers catalogue={catalogue} locale={locale}>
       {/* First thing in the tab order on every page: a way past the
           navigation. Every storefront page renders its content in a
           <main>, which is what this targets. */}

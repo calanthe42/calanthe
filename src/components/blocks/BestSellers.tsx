@@ -6,10 +6,11 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getBestSellers } from "@backend/data/products";
 import { PHOTOS } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /** Same grammar as New Arrivals; the first tile is a 2x editorial moment. */
 export async function BestSellers() {
-  const sellers = await getBestSellers(4);
+  const [sellers, { t }] = await Promise.all([getBestSellers(4), getDictionary()]);
 
   /* Nothing to rank. New Arrivals already carries the made-to-order
      invitation when the catalogue is empty; a second one here, or the
@@ -20,9 +21,9 @@ export async function BestSellers() {
     <section className="section-pad">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal>
-          <Eyebrow>Best Sellers</Eyebrow>
+          <Eyebrow>{t.sections.bestSellersEyebrow}</Eyebrow>
           <h2 className="display-2 mt-3 font-display font-light text-olive">
-            Loved, week after week.
+            {t.sections.bestSellersTitle}
           </h2>
         </Reveal>
       </div>

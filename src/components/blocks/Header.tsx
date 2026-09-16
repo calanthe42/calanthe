@@ -6,10 +6,12 @@ import { usePathname } from "next/navigation";
 import { SearchOverlay } from "@/components/blocks/SearchOverlay";
 import type { Occasion, Product } from "@/lib/data";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
+import { Monogram } from "@/components/ui/Monogram";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
+import { useT } from "@/lib/locale";
 import { CONTACT, navTree } from "@/lib/data";
 import { LanguageToggle } from "@/components/blocks/LanguageToggle";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
@@ -39,6 +41,25 @@ function IconSearch({ className }: { className?: string }) {
 
 type NavGroup = (typeof navTree)[number];
 
+/** The dictionary key behind each navigation label and child link. */
+const NAV_LABELS: Record<string, keyof ReturnType<typeof useT>["nav"]> = {
+  "/about": "about",
+  "/shop": "shop",
+  "/membership": "memberships",
+  "/events": "events",
+  "/occasions": "shopByOccasion",
+  "/shop?ready=today": "readyToday",
+  "/build-your-own": "buildYourOwn",
+  "/events#guest-favors": "guestFavors",
+  "/events#arrangements": "eventArrangements",
+};
+
+/** Falls back to the English label in data.ts for anything unmapped. */
+function navLabel(t: ReturnType<typeof useT>, href: string, fallback: string): string {
+  const key = NAV_LABELS[href];
+  return key ? t.nav[key] : fallback;
+}
+
 /**
  * A desktop heading from the client's menu tree, with what sits under it.
  *
@@ -58,6 +79,7 @@ function DesktopNavItem({
   onDark: boolean;
   occasions: readonly Occasion[];
 }) {
+  const t = useT();
   const triggerRef = useRef<HTMLAnchorElement>(null);
   /* Escape closes the panel while focus returns to the heading. Hover and
      focus-within would otherwise reopen it immediately, so it stays shut
@@ -72,7 +94,7 @@ function DesktopNavItem({
   if (group.children.length === 0) {
     return (
       <Link href={group.href} className={cn(linkClasses, "hover:opacity-60")}>
-        {group.label}
+        {navLabel(t, group.href, group.label)}
       </Link>
     );
   }
@@ -92,7 +114,7 @@ function DesktopNavItem({
       }}
     >
       <Link ref={triggerRef} href={group.href} className={linkClasses}>
-        {group.label}
+        {navLabel(t, group.href, group.label)}
         {/* A hairline under the open heading, drawing from the left. */}
         <span
           aria-hidden
@@ -116,7 +138,7 @@ function DesktopNavItem({
                   href={child.href}
                   className="block whitespace-nowrap py-1.5 font-display text-xl font-light text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
                 >
-                  {child.label}
+                  {navLabel(t, child.href, child.label)}
                 </Link>
               </li>
             ))}
@@ -125,7 +147,7 @@ function DesktopNavItem({
                 href={group.href}
                 className="block whitespace-nowrap py-1 text-sm text-sage transition-colors duration-200 ease-bloom hover:text-olive"
               >
-                {group.label} all
+                {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
               </Link>
             </li>
           </ul>
@@ -178,6 +200,7 @@ export function Header({
   const [searchOpen, setSearchOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { count, openCart } = useCart();
+  const t = useT();
 
   useEffect(() => {
     let ticking = false;
@@ -199,6 +222,24 @@ export function Header({
       if (closeTimer.current) clearTimeout(closeTimer.current);
     };
   }, []);
+
+  /**
+   * THE FROZEN PAGE.
+   *
+   * Closing is animated, so the overlay lingers for 320ms in a `closing`
+   * state before it unmounts — and that state was only ever left by a
+   * timer. A route change mid-animation, a second tap, or any unmount that
+   * cleared the timer left `menuState` stuck at `closing`: the overlay is
+   * `fixed inset-0`, so it stayed over the page, invisible, swallowing every
+   * tap and scroll until the visitor found the X. Navigating always ends the
+   * menu here, and `animationend` below retires it without depending on a
+   * timer at all.
+   */
+  useEffect(() => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setMenuState("closed");
+    setSearchOpen(false);
+  }, [pathname]);
 
   /* Both full-screen overlays (mobile menu, search) already show their
      own brand mark — hide the traveling hero mark underneath them
@@ -360,14 +401,14 @@ export function Header({
                 search lives inside the full-screen menu instead. */}
             <Link
               href="/wishlist"
-              aria-label="Wishlist"
+              aria-label={t.nav.wishlist}
               className="flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
             >
               <IconHeart className="h-[22px] w-[22px]" />
             </Link>
             <Link
               href="/account"
-              aria-label="Account"
+              aria-label={t.nav.account}
               className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
             >
               <IconUser className="h-[22px] w-[22px]" />
@@ -394,11 +435,16 @@ export function Header({
         </div>
       </div>
 
-      {/* Full-screen mobile menu — accordion groups in the olive overlay.
-          Unchanged content; only the persistent bar above changed shape. */}
+      {/* Full-screen mobile menu — accordion groups in the olive overlay. */}
       {menuState !== "closed" && (
         <div
+          /* The animation's own end retires the overlay: no timer to lose,
+             and while it plays out it stops taking taps. */
+          onAnimationEnd={() => {
+            if (menuState === "closing") setMenuState("closed");
+          }}
           className={cn(
+            menuState === "closing" && "pointer-events-none",
             /* z-40 INSIDE the header's own stacking context, deliberately
                left alone: the close button above it is z-50, and raising this
                above that locks a visitor inside the menu. What lifts this
@@ -406,10 +452,21 @@ export function Header({
                below), because `sticky` + `z-40` on <header> makes this a
                child layer that can never outrank a body-level sibling on its
                own, however large a number is written here. */
-            "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden",
+            "fixed inset-0 z-40 flex flex-col overflow-y-auto overflow-x-hidden bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-[calc(env(safe-area-inset-top)+5rem)] lg:hidden",
             menuState === "closing" ? "menu-out" : "menu-in",
           )}
         >
+          {/* Art direction, not a second logo: the house mark blown far past
+              the screen, cropped by it, blurred until it reads as depth in
+              the olive rather than as an image sitting on top of it. The
+              crisp mark below is the one the eye is meant to find. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -end-[42%] top-[10%] -z-10 w-[165%] select-none opacity-[0.13] blur-[34px]"
+          >
+            <Monogram className="w-full text-cream" />
+          </span>
+
           <MonogramBloom className="mx-auto w-14 shrink-0 text-cream" />
 
           <nav aria-label="Mobile" className="mt-8 flex-1">
@@ -420,20 +477,25 @@ export function Header({
                   onClick={closeMenu}
                   className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                 >
-                  Home
+                  {t.nav.home}
                 </Link>
               </li>
-              <li className="border-b border-cream/10">
+              {/* Search is an ACTION, not a destination. Given the shape of
+                  the thing it opens — a field — it reads as a field: an
+                  outlined row with the icon leading and a prompt in sentence
+                  case, so it is never mistaken for another page in the list
+                  of uppercase links around it. */}
+              <li className="pb-5">
                 <button
                   type="button"
                   onClick={() => {
                     closeMenu();
                     setSearchOpen(true);
                   }}
-                  className="flex w-full items-center gap-3 py-4 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-sm border border-cream/20 bg-cream/[0.04] px-4 text-start text-base text-cream/70 transition-colors duration-200 ease-bloom active:border-cream/40 active:text-cream"
                 >
-                  <IconSearch className="h-5 w-5" />
-                  Search
+                  <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/60" />
+                  {t.nav.search}
                 </button>
               </li>
               {navTree.map((group) =>
@@ -441,7 +503,7 @@ export function Header({
                   <li key={group.href} className="border-b border-cream/10">
                     <details className="group/acc">
                       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
-                        {group.label}
+                        {navLabel(t, group.href, group.label)}
                         <span
                           aria-hidden
                           className="text-sage transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
@@ -456,7 +518,7 @@ export function Header({
                             onClick={closeMenu}
                             className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                           >
-                            {group.label} all
+                            {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
                           </Link>
                         </li>
                         {group.children.map((link) => (
@@ -466,7 +528,7 @@ export function Header({
                               onClick={closeMenu}
                               className="block min-h-11 py-2 pl-4 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                             >
-                              {link.label}
+                              {navLabel(t, link.href, link.label)}
                             </Link>
                           </li>
                         ))}
@@ -480,7 +542,7 @@ export function Header({
                       onClick={closeMenu}
                       className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                     >
-                      {group.label}
+                      {navLabel(t, group.href, group.label)}
                     </Link>
                   </li>
                 ),
@@ -491,7 +553,7 @@ export function Header({
                   onClick={closeMenu}
                   className="flex min-h-14 items-center py-3 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                 >
-                  Account
+                  {t.nav.account}
                 </Link>
               </li>
             </ul>
@@ -511,15 +573,20 @@ export function Header({
                 onClick={closeMenu}
                 className="inline-flex min-h-11 items-center gap-2.5 font-brand text-xs font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-4 w-4"
+                  aria-hidden
+                >
                   <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2.05 22l5.3-1.39a9.87 9.87 0 0 0 4.69 1.19h.01c5.46 0 9.9-4.44 9.9-9.9a9.83 9.83 0 0 0-2.9-7A9.83 9.83 0 0 0 12.04 2Zm0 18.13h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.17-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.22-8.23 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.73-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.16-.48-.29Z" />
                 </svg>
                 WhatsApp
               </a>
-              <LanguageToggle tone="cream" />
+              <LanguageToggle tone="cream" size="full" />
             </div>
             <p className="font-brand text-[0.625rem] uppercase tracking-brand text-sage">
-              Flower Atelier — UAE
+              {t.nav.atelier}
             </p>
           </div>
         </div>

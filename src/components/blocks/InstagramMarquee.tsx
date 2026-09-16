@@ -1,81 +1,46 @@
-import { Monogram } from "@/components/ui/Monogram";
+import { Reveal } from "@/components/motion/Reveal";
+import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { CONTACT } from "@/lib/data";
-import { cn } from "@/lib/cn";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
- * The Instagram invitation — set in type, not in borrowed photographs.
+ * The invitation to follow the atelier — one quiet line, no movement.
  *
- * This section used to be two rows of stock CGI imagery captioned "Calanthe on
- * Instagram". None of it was Calanthe's, and a visitor who followed the link
- * expecting those pictures would find a different feed. Until the atelier's
- * own posts can be shown, the rows carry what is true — the handle and the
- * invitation — in the same CSS marquee grammar the client approved (two rows,
- * opposite directions, pause on hover). The words are decorative and hidden
- * from assistive technology; the one link below is the real content.
+ * This section has been through two wrong answers. It began as rows of stock
+ * photography captioned "Calanthe on Instagram", which were not Calanthe's
+ * pictures. It was then replaced with a scrolling wall of the handle repeated
+ * across the screen, which is the loudest thing a page can do and belongs to
+ * a different kind of brand entirely.
+ *
+ * What a flower atelier does here is simply say where it is, once, and stop:
+ * the house mark, the handle set in the display face, and a single line.
+ * When the client's own photography exists this becomes a small editorial
+ * grid of real posts; until then, silence is the honest treatment and the
+ * quieter one.
  */
-
-const PHRASES = {
-  handle: CONTACT.instagramHandle,
-  invitation: "Follow the atelier",
-} as const;
-
-function MarqueeRow({
-  phrase,
-  reverse = false,
-  className,
-}: {
-  phrase: string;
-  reverse?: boolean;
-  className?: string;
-}) {
-  /* One run repeated enough to overfill the widest screen, then doubled so
-     the track can translate -50% into a seamless loop. */
-  const run = Array.from({ length: 6 }, () => phrase);
-  const doubled = [...run, ...run];
+export async function InstagramMarquee() {
+  const { t } = await getDictionary();
 
   return (
-    <div className={cn("group overflow-hidden", className)} aria-hidden>
-      <div
-        className={cn(
-          "marquee-track flex w-max items-center",
-          reverse && "marquee-reverse",
-        )}
-      >
-        {doubled.map((text, i) => (
-          <span key={i} className="flex shrink-0 items-center">
-            <span className="whitespace-nowrap px-6 font-display text-5xl font-light leading-none text-olive lg:px-10 lg:text-7xl">
-              {text}
-            </span>
-            <Monogram className="h-6 w-6 shrink-0 text-burnt-orange/60 lg:h-8 lg:w-8" />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
+    <section className="section-pad">
+      <Reveal className="mx-auto flex max-w-xl flex-col items-center gutter text-center">
+        <MonogramBloom className="w-10 text-burnt-orange/70" />
 
-export function InstagramMarquee() {
-  return (
-    <section className="overflow-hidden section-pad">
-      <div className="flex flex-col gap-4 lg:gap-6">
-        <MarqueeRow phrase={PHRASES.handle} />
-        <MarqueeRow
-          phrase={PHRASES.invitation}
-          reverse
-          className="hidden italic text-sage sm:block [&_span]:text-sage"
-        />
-      </div>
-
-      <div className="mt-10 flex justify-center gutter lg:mt-14">
         <a
           href={CONTACT.instagramHref}
           target="_blank"
           rel="noreferrer"
-          className="group/ig inline-flex min-h-12 items-center gap-3 border-b border-hairline pb-1 font-brand text-xs font-medium uppercase tracking-brand text-olive transition-colors duration-200 ease-bloom hover:border-burnt-orange"
+          className="group mt-6 inline-flex min-h-11 items-center font-display text-3xl font-light text-olive transition-colors duration-300 ease-bloom hover:text-burnt-orange lg:text-4xl"
         >
-          Follow {CONTACT.instagramHandle} on Instagram
+          {CONTACT.instagramHandle}
         </a>
-      </div>
+
+        <p className="mt-3 text-base leading-relaxed text-sage">
+          {t.sections.instagramLine}
+        </p>
+
+        <span aria-hidden className="mt-8 block h-px w-16 bg-hairline" />
+      </Reveal>
     </section>
   );
 }

@@ -18,10 +18,12 @@ import { vercelBlobOidcAdapter } from "./vercel-blob-oidc";
  * remains the sensible migration if image traffic ever justifies it; the
  * adapter is a config swap, not a schema change, so that door stays open.
  *
- * NOTHING PRIVATE MAY BE STORED HERE. Vercel Blob supports only `public`
- * access today. That is correct for product photography and wrong for
- * anything else — receipts and documents stream through an authenticated
- * route instead (docs/DATABASE.md §3).
+ * THE STORE IS PRIVATE. `calanthe.ae.a-blob` was created with private access,
+ * which is fixed for the life of a store, so every object is written and read
+ * authenticated and reaches a visitor only through Payload's own media route.
+ * The adapter matches that exactly (backend/payload/vercel-blob-oidc.ts);
+ * writing `public` into a private store is refused, which is what left the
+ * store empty and every /cms upload failing.
  */
 
 /**

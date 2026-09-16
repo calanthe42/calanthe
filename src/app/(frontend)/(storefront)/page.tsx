@@ -1,5 +1,4 @@
 import { BestSellers } from "@/components/blocks/BestSellers";
-import { BotanicalStem } from "@/components/motion/BotanicalStem";
 import { JsonLd } from "@/components/blocks/JsonLd";
 import { CalantheTouch } from "@/components/blocks/CalantheTouch";
 import { Hero } from "@/components/blocks/Hero";
@@ -27,10 +26,6 @@ export default async function HomePage() {
           See lib/seo.ts for why those are deliberately absent. */}
       <JsonLd data={floristJsonLd()} />
       <JsonLd data={websiteJsonLd()} />
-      {/* The signature: a hairline stem drawing itself down the left
-          margin as the page is scrolled. Fixed-position marginalia — it
-          adds nothing to the layout and cannot shift it. */}
-      <BotanicalStem />
       <Hero />
       <QuickNavBand occasions={occasions} />
       <NewArrivals />

@@ -35,7 +35,9 @@ const {
  * A complete Payload product document. Typed as the real generated `Product`
  * so a schema change breaks these tests rather than letting them drift.
  */
-function doc(over: Partial<PayloadProduct> & Record<string, unknown> = {}): PayloadProduct {
+function doc(
+  over: Partial<PayloadProduct> & Record<string, unknown> = {},
+): PayloadProduct {
   return {
     id: 1,
     slug: "amber-hour",
@@ -51,8 +53,18 @@ function doc(over: Partial<PayloadProduct> & Record<string, unknown> = {}): Payl
     flowers: ["roses"] as PayloadProduct["flowers"],
     occasions: [{ slug: "birthday" }],
     legacyImages: [
-      { alt: "Amber Hour", src: "https://example.test/a.jpg", placeholderSeed: "a", placeholderPalette: "warm" },
-      { alt: "Amber Hour detail", src: null, placeholderSeed: "b", placeholderPalette: "olive" },
+      {
+        alt: "Amber Hour",
+        src: "https://example.test/a.jpg",
+        placeholderSeed: "a",
+        placeholderPalette: "warm",
+      },
+      {
+        alt: "Amber Hour detail",
+        src: null,
+        placeholderSeed: "b",
+        placeholderPalette: "olive",
+      },
     ],
     ...over,
   } as PayloadProduct;
@@ -120,12 +132,31 @@ describe("query shape", () => {
 
   it("featured query also constrains featured", async () => {
     await getFeaturedProducts();
-    expect(JSON.stringify(find.mock.calls[0][0].where)).toContain('"featured":{"equals":true}');
+    expect(JSON.stringify(find.mock.calls[0][0].where)).toContain(
+      '"featured":{"equals":true}',
+    );
   });
 
   it("new arrivals query also constrains newArrival", async () => {
     await getNewArrivals();
-    expect(JSON.stringify(find.mock.calls[0][0].where)).toContain('"newArrival":{"equals":true}');
+    expect(JSON.stringify(find.mock.calls[0][0].where)).toContain(
+      '"newArrival":{"equals":true}',
+    );
+  });
+
+  it("SHOP ALL constrains availability and nothing else", async () => {
+    /* "Shop all" must mean every available product, whatever occasions it
+       carries and whether it carries any — an occasion or category filter
+       leaking into this query silently hides half the catalogue. */
+    find.mockResolvedValue({ docs: [] });
+    await getAvailableProducts(500);
+    const { where, limit } = find.mock.calls[0][0];
+    const json = JSON.stringify(where);
+    expect(json).toContain('"available":{"equals":true}');
+    expect(json).not.toContain("occasions");
+    expect(json).not.toContain("category");
+    expect(json).not.toContain("featured");
+    expect(limit).toBe(500);
   });
 
   it("occasion query constrains the occasion slug", async () => {
@@ -151,31 +182,51 @@ describe("database failures", () => {
 describe("document mapping", () => {
   it("converts integer fils to the AED the storefront renders", () => {
     expect(__internal.toStorefrontProduct(doc({ priceFils: 48000 })).priceAed).toBe(480);
-    expect(__internal.toStorefrontProduct(doc({ priceFils: 39050 })).priceAed).toBe(390.5);
+    expect(__internal.toStorefrontProduct(doc({ priceFils: 39050 })).priceAed).toBe(
+      390.5,
+    );
   });
 
   it("exposes no admin-only fields", () => {
     const mapped = __internal.toStorefrontProduct(
-      doc({ stock: 5, trackStock: true, compareAtPriceFils: 99000, seo: { noIndex: true } }),
+      doc({
+        stock: 5,
+        trackStock: true,
+        compareAtPriceFils: 99000,
+        seo: { noIndex: true },
+      }),
     );
-    expect(Object.keys(mapped).sort()).toEqual(
-      ["featured", "flowers", "id", "images", "name", "newArrival", "occasions", "priceAed", "slug"],
-    );
+    expect(Object.keys(mapped).sort()).toEqual([
+      "featured",
+      "flowers",
+      "id",
+      "images",
+      "name",
+      "newArrival",
+      "occasions",
+      "priceAed",
+      "slug",
+    ]);
   });
 
   it("carries the owner's short description only when she has written one", () => {
     expect(
-      __internal.toStorefrontProduct(doc({ shortDescription: "  Garden roses, loosely tied.  " }))
-        .description,
+      __internal.toStorefrontProduct(
+        doc({ shortDescription: "  Garden roses, loosely tied.  " }),
+      ).description,
     ).toBe("Garden roses, loosely tied.");
-    expect(__internal.toStorefrontProduct(doc({ shortDescription: "   " }))).not.toHaveProperty(
-      "description",
-    );
+    expect(
+      __internal.toStorefrontProduct(doc({ shortDescription: "   " })),
+    ).not.toHaveProperty("description");
   });
 
   it("always yields exactly two images, even from one", () => {
     const mapped = __internal.toStorefrontProduct(
-      doc({ legacyImages: [{ alt: "only", src: null, placeholderSeed: "x", placeholderPalette: "warm" }] }),
+      doc({
+        legacyImages: [
+          { alt: "only", src: null, placeholderSeed: "x", placeholderPalette: "warm" },
+        ],
+      }),
     );
     expect(mapped.images).toHaveLength(2);
   });
@@ -211,6 +262,8 @@ describe("document mapping", () => {
   });
 
   it("survives occasions returned as bare ids", () => {
-    expect(__internal.toStorefrontProduct(doc({ occasions: [7, 9] })).occasions).toEqual([]);
+    expect(__internal.toStorefrontProduct(doc({ occasions: [7, 9] })).occasions).toEqual(
+      [],
+    );
   });
 });

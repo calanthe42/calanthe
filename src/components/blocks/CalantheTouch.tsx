@@ -2,24 +2,17 @@ import { HairlineDraw } from "@/components/motion/HairlineDraw";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-
-const pillars = [
-  {
-    title: "Hand-arranged daily",
-    copy: "Every stem is chosen and placed by hand in our atelier, morning by morning.",
-  },
-  {
-    title: "Thoughtful presentation",
-    copy: "Wrapped in embossed paper, tied and sealed with the Calanthe monogram.",
-  },
-  {
-    title: "Delivered with care",
-    copy: "Kept cool and upright to your door, across all seven emirates.",
-  },
-] as const;
+import { getDictionary } from "@/lib/i18n/server";
 
 /** Quiet cream section — quality, presentation, attention to detail. */
-export function CalantheTouch() {
+export async function CalantheTouch() {
+  const { t } = await getDictionary();
+  const pillars = [
+    { title: t.touch.handTitle, copy: t.touch.handCopy },
+    { title: t.touch.wrapTitle, copy: t.touch.wrapCopy },
+    { title: t.touch.deliverTitle, copy: t.touch.deliverCopy },
+  ];
+
   return (
     /* The hairline matters when Best Sellers has nothing to show: this
        section then follows the equally cream video-approval section, and
@@ -29,7 +22,7 @@ export function CalantheTouch() {
         <Reveal className="flex flex-col items-center text-center">
           <MonogramBloom className="w-14 text-olive" />
           <h2 className="display-2 mt-6 font-display font-light text-olive">
-            The Calanthe Touch
+            {t.sections.touchTitle}
           </h2>
         </Reveal>
 

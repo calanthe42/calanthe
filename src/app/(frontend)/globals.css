@@ -55,7 +55,7 @@ body::after {
 /* One warm color-grade over all floral imagery so mixed sources read
    as a single brand world. */
 .floral-grade {
-  filter: sepia(0.14) saturate(0.88) contrast(1.03) brightness(1.02) hue-rotate(-4deg);
+  filter: sepia(0.1) saturate(0.98) contrast(1.07) brightness(1.03) hue-rotate(-4deg);
 }
 
 /* Soft depth: large blur, low opacity, olive-tinted — tiles lift off
@@ -617,23 +617,40 @@ body.overlay-open .floating-whatsapp {
   }
 }
 
-/* Petals crossing the hero (components/motion/PetalDrift.tsx).
-   Compositor-only: `transform` and `opacity`, nothing else, so five of these
-   running for half a minute each cost a phone nothing. Each petal carries its
-   own drift, duration, delay and spin as custom properties, so one keyframe
-   set serves all five without any of them moving in step. */
-.petal {
-  top: -12%;
+/* Petals adrift in the hero (components/motion/PetalDrift.tsx).
+
+   TWO NESTED ANIMATIONS, ON PURPOSE. The outer element falls; the inner one
+   sways and turns on an unrelated duration. Composing them is what stops the
+   motion reading as a repeating loop — a single keyframe per petal always
+   traces the same straight line, and the eye catches that almost at once.
+   Both animate `transform` only, so the pair still costs one composited
+   layer each and never touches layout. */
+.petal-fall {
+  top: -18%;
   will-change: transform;
-  animation: petal-drift var(--petal-duration, 28s) linear var(--petal-delay, 0s) infinite;
+  animation: petal-fall var(--fall-duration, 45s) linear var(--fall-delay, 0s) infinite;
 }
 
-@keyframes petal-drift {
+.petal-sway {
+  will-change: transform;
+  animation: petal-sway var(--sway-duration, 13s) ease-in-out 0s infinite alternate;
+}
+
+@keyframes petal-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 132vh, 0);
+  }
+}
+
+@keyframes petal-sway {
   from {
     transform: translate3d(0, 0, 0) rotate(0deg);
   }
   to {
-    transform: translate3d(var(--petal-drift, 6vw), 128vh, 0) rotate(var(--petal-spin, 180deg));
+    transform: translate3d(var(--sway-drift, 24px), 0, 0) rotate(var(--sway-spin, 160deg));
   }
 }
 
@@ -694,163 +711,6 @@ body.overlay-open .floating-whatsapp {
   .js .io-mono:not(.io-in) path {
     stroke-dashoffset: 0;
     stroke-opacity: 0;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* THE SIGNATURE — the botanical stem.                                 */
-/*                                                                     */
-/* One hairline growing down the left margin of the homepage as the    */
-/* visitor scrolls, leaves opening along it as the line reaches them.  */
-/* JavaScript writes exactly ONE value — `--stem`, 0 to 1 — once per   */
-/* animation frame; every rule below derives from it. Nothing here     */
-/* touches layout or paint: only `transform` and `opacity`, both       */
-/* composited.                                                         */
-/*                                                                     */
-/* The whole stem lives inside a band narrower than the page gutter    */
-/* (20px on phones, 32px on desktop) and every leaf opens to the RIGHT */
-/* of the line, so it cannot collide with content at any width — the   */
-/* awkward case is the ~1280px viewport, where the max-w-7xl container */
-/* has no outer margin left to spare.                                  */
-/* ------------------------------------------------------------------ */
-
-@property --stem {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-@property --at {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
-.botanical-stem {
-  --stem: 0;
-  position: fixed;
-  left: 4px;
-  top: 16vh;
-  height: 68svh;
-  width: 20px;
-  z-index: 30;
-  pointer-events: none;
-  color: var(--color-sage);
-  /* Hidden until the effect has measured and armed it: without JS this
-     element must never appear as a stray line down the page. */
-  opacity: 0;
-
-  /* MARGINALIA NEEDS A MARGIN, AND A PHONE HAS NONE.
-     Below 1024px this page is edge-to-edge photography — the occasion
-     tiles, the product rows and the marquee all bleed to x=0 — so a
-     sage hairline pinned to the left edge stops reading as a drawn stem
-     and starts reading as a scratch on the screen. It is measured, not
-     assumed: at 390px the nearest content sits at x=0 through most of
-     the scroll. The phone already has its own scroll signature in the
-     hero mark that travels into the navbar, so this one waits for a
-     viewport with room for it. */
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .botanical-stem {
-    display: block;
-  }
-}
-
-.botanical-stem[data-ready="true"] {
-  /* Fades in over the first sixth of its travel, so it arrives with the
-     first section rather than sitting there waiting. */
-  opacity: clamp(0, calc(var(--stem) * 6), 0.85);
-}
-
-.botanical-stem__line {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1px;
-  height: 100%;
-  background: currentColor;
-  transform: scaleY(var(--stem));
-  transform-origin: top center;
-}
-
-.botanical-stem__bud {
-  position: absolute;
-  left: -2px;
-  top: -2px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-burnt-orange);
-  transform: scale(clamp(0, calc(var(--stem) * 10), 1));
-}
-
-.botanical-stem__leaf {
-  position: absolute;
-  left: 1px;
-  width: 14px;
-  /* Each leaf opens as the line passes its own position: a leaf at 46%
-     is closed until `--stem` reaches 0.46, then opens over the next 7%
-     of the scroll. `--at` is set per leaf in the markup. */
-  opacity: clamp(0, calc((var(--stem) - var(--at)) * 14), 1);
-  transform-origin: left center;
-}
-
-.botanical-stem__leaf svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.botanical-stem__leaf[data-tilt="up"] {
-  transform: translateY(-50%)
-    rotate(calc(-24deg * clamp(0, calc((var(--stem) - var(--at)) * 14), 1)))
-    scale(clamp(0.5, calc((var(--stem) - var(--at)) * 14), 1));
-}
-
-.botanical-stem__leaf[data-tilt="down"] {
-  transform: translateY(-50%)
-    rotate(calc(26deg * clamp(0, calc((var(--stem) - var(--at)) * 14), 1)))
-    scale(clamp(0.5, calc((var(--stem) - var(--at)) * 14), 1));
-}
-
-@media (min-width: 1024px) {
-  .botanical-stem__leaf {
-    width: 18px;
-  }
-}
-
-/* On very wide screens the container has real margin, so the stem can
-   step out of the gutter and sit in the white space beside the page —
-   where marginalia belongs. */
-@media (min-width: 1440px) {
-  .botanical-stem {
-    left: calc(50vw - 40rem - 2.75rem);
-  }
-}
-
-/* A line whose only subject is the act of scrolling has nothing to say
-   to a visitor who asked for stillness. It is not rendered at all. */
-@media (prefers-reduced-motion: reduce) {
-  .botanical-stem {
-    display: none;
-  }
-}
-
-/* The site supports Arabic by mirroring the whole document (see
-   lib/locale.tsx), so the marginalia mirrors with it — otherwise the
-   stem sits in the reading margin in English and across the start of
-   every line in Arabic. Flipping the container also flips which way
-   the leaves open, which is what we want. */
-[dir="rtl"] .botanical-stem {
-  left: auto;
-  right: 4px;
-  transform: scaleX(-1);
-}
-
-@media (min-width: 1440px) {
-  [dir="rtl"] .botanical-stem {
-    right: calc(50vw - 40rem - 2.75rem);
   }
 }
 

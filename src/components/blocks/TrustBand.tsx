@@ -1,7 +1,8 @@
 import { HairlineDraw } from "@/components/motion/HairlineDraw";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { CONTACT, TRUST } from "@/lib/data";
+import { CONTACT } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * The service promise, stated once and plainly.
@@ -12,16 +13,24 @@ import { CONTACT, TRUST } from "@/lib/data";
  * them, so the band reads as a statement with its evidence, and the one
  * line under it is a real way to ask a question before ordering.
  */
-export function TrustBand() {
+export async function TrustBand() {
+  const { t } = await getDictionary();
+  const guarantees = [
+    { title: t.trust.sameDayTitle, copy: t.trust.sameDayCopy },
+    { title: t.trust.videoTitle, copy: t.trust.videoCopy },
+    { title: t.trust.freshTitle, copy: t.trust.freshCopy },
+    { title: t.trust.emiratesTitle, copy: t.trust.emiratesCopy },
+  ];
+
   return (
     <section className="section-pad">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <Reveal>
           <h2 className="display-2 font-display font-light text-olive">
-            {TRUST.headline}
+            {t.sections.promiseTitle}
           </h2>
           <p className="mt-4 max-w-sm text-base leading-relaxed text-sage">
-            Questions before you order? A florist answers on{" "}
+            {t.sections.promiseAsk}{" "}
             <a
               href={CONTACT.whatsappHref}
               target="_blank"
@@ -35,7 +44,7 @@ export function TrustBand() {
         </Reveal>
 
         <Stagger className="grid grid-cols-1 gap-x-8 gap-y-9 sm:grid-cols-2">
-          {TRUST.guarantees.map((g, i) => (
+          {guarantees.map((g, i) => (
             <StaggerItem key={g.title}>
               <HairlineDraw delay={i * 0.1} className="mb-4" />
               <h3 className="font-brand text-xs font-medium uppercase tracking-brand text-olive">

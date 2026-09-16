@@ -1,79 +1,147 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Petals crossing the hero photograph, the way they cross a workbench.
+ * Four petals adrift in the hero — the only ambient motion on the page.
  *
- * WHY THIS AND NOT AN EFFECT. The hero is a still photograph of a finished
- * bouquet; the atelier it comes from is a room where petals are constantly
- * being trimmed, dropped and swept. A handful drifting slowly through the
- * frame says "these are made by hand, this morning" without a word of copy,
- * which is the one thing the homepage could not say before.
+ * WHAT WENT WRONG BEFORE, TWICE. First a hairline stem grew down the whole
+ * document, fixed to the viewport, crossing every section beneath it: a line
+ * travelling through a page of photographs reads as a stray object, not as
+ * marginalia. Then five petals fell in straight diagonals at even intervals —
+ * closer, but the eye reads regular spacing and identical paths as a
+ * screensaver within about two seconds.
  *
- * RESTRAINT IS THE DESIGN. Five petals, not a snowstorm: at 0.22 opacity over
- * a dark photograph they read as motes of light rather than confetti, and any
- * one of them takes the better part of half a minute to cross. Falling petals
- * are a cliché when they are fast, opaque and numerous; slow, few and barely
- * there is atmosphere.
+ * WHAT MAKES THIS READ AS A ROOM RATHER THAN AN EFFECT.
  *
- * COST. No JavaScript, no library, no scroll listener. Five absolutely
- * positioned SVGs animating `transform` and `opacity` only — both handled by
- * the compositor, so this never touches layout or paint and cannot jank a
- * phone. Marked `aria-hidden`, so it is silent to assistive technology, and
- * `prefers-reduced-motion` removes it outright (globals.css).
+ * - **Two axes, never one.** The outer span carries the fall, the inner span
+ *   sways side to side on a different, deliberately non-multiple duration
+ *   (37s against 11s, and so on). The paths never repeat in a way the eye can
+ *   learn, and no petal travels in a straight line.
+ * - **Depth, not a layer.** Two petals sit far back — smaller, blurred, barely
+ *   there; two sit closer and sharper. The frame gains depth instead of a
+ *   sheet of confetti over the photograph.
+ * - **Already in motion.** Negative delays mean the scene is mid-drift at
+ *   first paint. Nothing starts, so nothing announces itself.
+ * - **Few, slow, faint.** Four petals, 37–61 seconds to cross, 0.10–0.20
+ *   opacity over a dark photograph. Noticed on the second look, never the
+ *   first — which is the whole brief.
+ * - **Contained.** Absolutely positioned inside the hero's own
+ *   `overflow-hidden` box, so it cannot reach another section.
  *
- * Geometry lives in inline custom properties because each petal needs its own
- * path, and five one-off keyframe sets would be worse than five variables.
+ * COST. No JavaScript, no library, no scroll listener: eight elements
+ * animating `transform` and `opacity`, both composited, so the main thread
+ * never sees them. `aria-hidden`, and removed outright under
+ * `prefers-reduced-motion` (globals.css).
  */
 
 type Petal = {
-  /** Start, as a percentage of the hero's width. */
+  /** Where it enters, as a percentage of the hero's width. */
   x: number;
-  /** Horizontal drift over the whole fall, in viewport width units. */
+  /** Seconds for one crossing — long, and never a multiple of a neighbour. */
+  fall: number;
+  /** Seconds for one sway. Deliberately unrelated to `fall`. */
+  sway: number;
+  /** How far it wanders sideways while falling. */
   drift: number;
-  /** Seconds for one crossing. Slow — this is weather, not animation. */
-  duration: number;
+  /** Negative: the petal is already partway down at first paint. */
   delay: number;
   size: number;
   spin: number;
   opacity: number;
+  /** Distance blur — the far petals are softer. */
+  blur: number;
 };
 
 const PETALS: readonly Petal[] = [
-  { x: 12, drift: 7, duration: 26, delay: 0, size: 22, spin: 160, opacity: 0.22 },
-  { x: 33, drift: -5, duration: 32, delay: 6, size: 15, spin: -120, opacity: 0.16 },
-  { x: 58, drift: 9, duration: 29, delay: 12, size: 26, spin: 200, opacity: 0.2 },
-  { x: 74, drift: -8, duration: 35, delay: 3, size: 18, spin: -180, opacity: 0.14 },
-  { x: 89, drift: 5, duration: 24, delay: 16, size: 13, spin: 140, opacity: 0.18 },
+  {
+    x: 16,
+    fall: 44,
+    sway: 11,
+    drift: 26,
+    delay: -12,
+    size: 21,
+    spin: 150,
+    opacity: 0.18,
+    blur: 0,
+  },
+  {
+    x: 38,
+    fall: 61,
+    sway: 17,
+    drift: -34,
+    delay: -39,
+    size: 12,
+    spin: -90,
+    opacity: 0.1,
+    blur: 1.6,
+  },
+  {
+    x: 67,
+    fall: 37,
+    sway: 13,
+    drift: 30,
+    delay: -24,
+    size: 26,
+    spin: 190,
+    opacity: 0.2,
+    blur: 0,
+  },
+  {
+    x: 86,
+    fall: 53,
+    sway: 19,
+    drift: -22,
+    delay: -5,
+    size: 14,
+    spin: -130,
+    opacity: 0.12,
+    blur: 1.2,
+  },
 ];
 
 export function PetalDrift({ className }: { className?: string }) {
   return (
-    <div aria-hidden className={cn("petal-drift pointer-events-none absolute inset-0 overflow-hidden", className)}>
+    <div
+      aria-hidden
+      className={cn(
+        "petal-drift pointer-events-none absolute inset-0 overflow-hidden",
+        className,
+      )}
+    >
       {PETALS.map((petal, i) => (
         <span
           key={i}
-          className="petal absolute block"
+          className="petal-fall absolute block"
           style={
             {
               left: `${petal.x}%`,
               width: `${petal.size}px`,
-              opacity: petal.opacity,
-              "--petal-drift": `${petal.drift}vw`,
-              "--petal-duration": `${petal.duration}s`,
-              "--petal-delay": `${petal.delay}s`,
-              "--petal-spin": `${petal.spin}deg`,
+              "--fall-duration": `${petal.fall}s`,
+              "--fall-delay": `${petal.delay}s`,
             } as React.CSSProperties
           }
         >
-          {/* One soft petal, drawn once and reused. The shape is deliberately
-              imperfect — a real petal is not an ellipse. */}
-          <svg viewBox="0 0 24 32" fill="none" className="h-auto w-full">
-            <path
-              d="M12 0.5c6.2 5.4 11 12.4 11 19.1 0 7-4.9 12-11 12S1 26.6 1 19.6C1 12.9 5.8 5.9 12 0.5Z"
-              fill="currentColor"
-              className="text-cream"
-            />
-          </svg>
+          <span
+            className="petal-sway block"
+            style={
+              {
+                opacity: petal.opacity,
+                filter: petal.blur ? `blur(${petal.blur}px)` : undefined,
+                "--sway-duration": `${petal.sway}s`,
+                "--sway-drift": `${petal.drift}px`,
+                "--sway-spin": `${petal.spin}deg`,
+              } as React.CSSProperties
+            }
+          >
+            {/* A petal, not an ellipse: one edge fuller than the other, the
+                tip drawn slightly off centre, the way a real one curls. */}
+            <svg viewBox="0 0 24 34" fill="none" className="h-auto w-full">
+              <path
+                d="M12.6 0.6c7 6.2 10.9 13.2 10.6 20.2-.3 7.3-5.4 12.6-11.6 12.6S0 27.9 0.4 20.6C.8 13.3 5.2 6.4 12.6.6Z"
+                fill="currentColor"
+                className="text-cream"
+              />
+            </svg>
+          </span>
         </span>
       ))}
     </div>

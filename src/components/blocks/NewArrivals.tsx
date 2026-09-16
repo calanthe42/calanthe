@@ -4,17 +4,18 @@ import { ProductCard } from "@/components/commerce/ProductCard";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getNewArrivals } from "@backend/data/products";
+import { getDictionary } from "@/lib/i18n/server";
 
 export async function NewArrivals() {
-  const arrivals = await getNewArrivals(4);
+  const [arrivals, { t }] = await Promise.all([getNewArrivals(4), getDictionary()]);
 
   return (
     <section className="section-pad">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal>
-          <Eyebrow>New Arrivals</Eyebrow>
+          <Eyebrow>{t.sections.newArrivalsEyebrow}</Eyebrow>
           <h2 className="display-2 mt-3 font-display font-light text-olive">
-            Fresh from the atelier.
+            {t.sections.newArrivalsTitle}
           </h2>
         </Reveal>
       </div>

@@ -9,7 +9,6 @@ import {
   occasions,
   priceBuckets,
   type FlowerType,
-  type OccasionSlug,
   type PriceBucketId,
   type Product,
 } from "@/lib/data";
@@ -50,6 +49,14 @@ function FilterButton({
 
 type ShopGridProps = {
   products: readonly Product[];
+  /**
+   * The occasions to offer as filters. Passed in from the page so the chips
+   * are whatever the owner has created in /admin — the static list in
+   * lib/data.ts is only a fallback for callers that have no database read of
+   * their own, and an occasion added in the admin would never have appeared
+   * in it.
+   */
+  occasions?: readonly { slug: string; name: string }[];
   /** Hide the occasion row when the page itself is an occasion. */
   showOccasionFilter?: boolean;
   initialQuery?: string;
@@ -59,12 +66,13 @@ type ShopGridProps = {
 
 export function ShopGrid({
   products,
+  occasions: occasionOptions = occasions,
   showOccasionFilter = true,
   initialQuery = "",
   initialFlower = "",
   initialPrice = "",
 }: ShopGridProps) {
-  const [occasion, setOccasion] = useState<OccasionSlug | "all">("all");
+  const [occasion, setOccasion] = useState<string>("all");
   const [flower, setFlower] = useState<FlowerType | "all">(
     flowerTypes.some((f) => f.slug === initialFlower)
       ? (initialFlower as FlowerType)
@@ -88,7 +96,7 @@ export function ShopGrid({
       );
     }
     if (occasion !== "all") {
-      list = list.filter((p) => p.occasions.includes(occasion));
+      list = list.filter((p) => (p.occasions as readonly string[]).includes(occasion));
     }
     if (flower !== "all") {
       list = list.filter((p) => p.flowers.includes(flower));
@@ -132,7 +140,7 @@ export function ShopGrid({
             <FilterButton active={occasion === "all"} onClick={() => setOccasion("all")}>
               All
             </FilterButton>
-            {occasions.map((o) => (
+            {occasionOptions.map((o) => (
               <FilterButton
                 key={o.slug}
                 active={occasion === o.slug}

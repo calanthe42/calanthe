@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { HeroRibbon } from "@/components/blocks/HeroRibbon";
 import { HeroMedia } from "@/components/blocks/HeroMedia";
+import { getDictionary } from "@/lib/i18n/server";
 
 type HeroProps = {
   /**
@@ -24,7 +25,9 @@ type HeroProps = {
  * sit quietly on top of it. One idea at a time: mark -> ribbon ->
  * headline -> CTAs. No scroll cue.
  */
-export function Hero({ media }: HeroProps) {
+export async function Hero({ media }: HeroProps) {
+  const { t } = await getDictionary();
+
   return (
     <section
       data-hero-root
@@ -53,7 +56,7 @@ export function Hero({ media }: HeroProps) {
         className="absolute inset-0"
         style={{
           background: [
-            "radial-gradient(58% 44% at 50% 48%, rgba(28,30,18,0.5) 0%, rgba(28,30,18,0.22) 50%, rgba(28,30,18,0) 78%)",
+            "radial-gradient(52% 40% at 50% 46%, rgba(28,30,18,0.34) 0%, rgba(28,30,18,0.14) 52%, rgba(28,30,18,0) 76%)",
             /* The words' pocket. Denser than the centre scrim because on a
                wide screen the bouquet's brightest daisies sit directly
                behind "Where feelings" — the headline must read on them. */
@@ -91,14 +94,14 @@ export function Hero({ media }: HeroProps) {
           <HeroRibbon className="mb-5 h-5 w-20 lg:mb-6 lg:h-6 lg:w-24" />
 
           <p className="mb-4 font-brand text-xs font-medium uppercase tracking-brand text-cream/80 lg:mb-5">
-            Flower Atelier — UAE
+            {t.hero.eyebrow}
           </p>
 
           <SplitLines
             as="h1"
             immediate
             delay={0.4}
-            lines={["Where feelings", "take form."]}
+            lines={[t.hero.headlineOne, t.hero.headlineTwo]}
             className="mb-8 font-display text-[clamp(2.75rem,10vw,3.6rem)] font-light leading-[1.04] text-cream lg:mb-10 lg:text-[clamp(3.4rem,4.6vw,4.75rem)]"
           />
 
@@ -111,14 +114,14 @@ export function Hero({ media }: HeroProps) {
                 variant="glass-primary"
                 className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
               >
-                Shop Flowers
+                {t.hero.shopFlowers}
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
                 className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
               >
-                Build Your Own
+                {t.hero.buildYourOwn}
               </ButtonLink>
             </div>
           </div>

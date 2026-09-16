@@ -4,6 +4,7 @@ import { ShopGrid } from "@/components/commerce/ShopGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getAvailableProducts } from "@backend/data/products";
+import { getActiveOccasions } from "@backend/data/occasions";
 import { SAME_DAY_CUTOFF_HOUR } from "@/lib/data";
 
 /* The catalogue is now database-backed, so these pages must be allowed to
@@ -33,7 +34,14 @@ export default async function ShopPage({
   const readyToday = ready === "today";
   /* Availability is enforced by the query, not here: getAvailableProducts
      only ever returns products the public may buy. */
-  const available = await getAvailableProducts();
+  /* SHOP ALL MEANS ALL. Every available product, whatever occasions it is
+     assigned to and whether it is assigned to any — the only filter is the
+     one the data layer always applies, `available: true`. The limit is raised
+     well past the catalogue's size so nothing is silently cut off. */
+  const [available, occasions] = await Promise.all([
+    getAvailableProducts(500),
+    getActiveOccasions(),
+  ]);
   const list = readyToday
     ? available.filter((p) => p.featured || p.newArrival)
     : available;
@@ -59,6 +67,7 @@ export default async function ShopPage({
       ) : (
         <ShopGrid
           products={list}
+          occasions={occasions}
           initialQuery={q}
           initialFlower={flower}
           initialPrice={price}

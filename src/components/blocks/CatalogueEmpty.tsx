@@ -4,6 +4,7 @@ import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { CONTACT, PRODUCT_PHOTOS } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * Shown when the catalogue itself has nothing to show — as opposed to
@@ -19,15 +20,21 @@ import { CONTACT, PRODUCT_PHOTOS } from "@/lib/data";
  * out as an editorial moment (photograph beside the words) rather than a boxed
  * notice, because on a quiet week it may be the first thing a visitor sees.
  */
-export function CatalogueEmpty({
-  title = "Every arrangement can be made to order.",
-  message = "The next collection is being composed. Until it arrives, tell us the moment, the colours and your budget, and a florist will compose it for you.",
-  eyebrow = "Made to order",
+export async function CatalogueEmpty({
+  title,
+  message,
+  eyebrow,
 }: {
   title?: string;
   message?: string;
   eyebrow?: string;
 }) {
+  const { t } = await getDictionary();
+  /* Callers may pass their own wording (an occasion page names the occasion);
+     otherwise the dictionary speaks, in the visitor's language. */
+  const heading = title ?? t.empty.title;
+  const body = message ?? t.empty.body;
+  const label = eyebrow ?? t.empty.eyebrow;
   return (
     <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
       <ClipReveal className="relative aspect-[4/3] w-full overflow-hidden rounded-media lg:aspect-[5/6]">
@@ -42,15 +49,15 @@ export function CatalogueEmpty({
       </ClipReveal>
 
       <Reveal className="max-w-md">
-        <Eyebrow>{eyebrow}</Eyebrow>
+        <Eyebrow>{label}</Eyebrow>
         <h2 className="mt-3 font-display text-3xl font-light leading-tight text-olive lg:text-[2.75rem]">
-          {title}
+          {heading}
         </h2>
-        <p className="mt-4 text-base leading-relaxed text-sage">{message}</p>
+        <p className="mt-4 text-base leading-relaxed text-sage">{body}</p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <ButtonLink href="/build-your-own" className="whitespace-nowrap">
-            Build Your Own
+            {t.nav.buildYourOwn}
           </ButtonLink>
           <a
             href={CONTACT.whatsappHref}
@@ -58,7 +65,7 @@ export function CatalogueEmpty({
             rel="noreferrer"
             className={buttonClasses("secondary", "whitespace-nowrap")}
           >
-            Message a Florist
+            {t.empty.messageFlorist}
           </a>
         </div>
       </Reveal>

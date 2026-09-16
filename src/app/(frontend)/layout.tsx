@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
+import { getDictionary } from "@/lib/i18n/server";
 import { MotionObserver } from "@/components/motion/MotionObserver";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { OG_IMAGE } from "@/lib/seo";
@@ -70,13 +71,18 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /* Rendered from the cookie, so an Arabic visitor is served Arabic in the
+     first byte — direction included — instead of English that flips after
+     hydration (lib/i18n/server.ts). */
+  const { locale, dir } = await getDictionary();
+
   return (
-    <html lang="en">
+    <html lang={locale} dir={dir}>
       <body
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
