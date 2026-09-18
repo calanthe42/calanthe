@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Monogram } from "@/components/ui/Monogram";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { occasions } from "@/lib/data";
+import type { Occasion } from "@/lib/data";
 import { cn } from "@/lib/cn";
 
 const extra = [
@@ -22,7 +22,7 @@ const extra = [
  * sitting there. Pointer-only by design (`lg:` + hover state): on a
  * phone it stays a clean, quiet line.
  */
-export function QuickNavBand() {
+export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion[] }) {
   const [active, setActive] = useState<number | null>(null);
 
   const links = [
@@ -65,7 +65,7 @@ export function QuickNavBand() {
       <div className="mx-auto max-w-7xl gutter py-8 lg:py-11">
         <div className="flex flex-col items-center gap-1.5 lg:gap-2">
           <Monogram className="h-6 w-6 text-burnt-orange/70 lg:h-7 lg:w-7" />
-          <p className="font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-sage/80 lg:text-[0.625rem]">
+          <p className="font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-ink-muted/80 lg:text-[0.625rem]">
             Send flowers for
           </p>
         </div>

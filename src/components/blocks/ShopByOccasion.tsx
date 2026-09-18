@@ -4,7 +4,9 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { occasions } from "@/lib/data";
+import { getActiveOccasions } from "@backend/data/occasions";
+import { leadWithOccasion } from "@/lib/catalogue";
+import { getDictionary } from "@/lib/i18n/server";
 import { cn } from "@/lib/cn";
 
 /* Bento shapes per tile, in the client's exact order. */
@@ -23,14 +25,18 @@ const tileLayout = [
 
 const parallaxSpeeds = [0.9, 1, 1.1, 0.9, 1.1] as const;
 
-export function ShopByOccasion() {
+export async function ShopByOccasion() {
+  /* Just Because leads the bento; the occasion it displaces takes its small
+     tile. One rule, shared with /occasions — see lib/catalogue.ts. */
+  const [list, { t }] = await Promise.all([getActiveOccasions(), getDictionary()]);
+  const occasions = leadWithOccasion(list);
   return (
-    <section className="section-pad">
+    <section className="section-pad-xl">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal>
-          <Eyebrow>Shop by Occasion</Eyebrow>
+          <Eyebrow>{t.sections.occasionsEyebrow}</Eyebrow>
           <h2 className="display-2 mt-3 font-display font-light text-olive">
-            For every unspoken thing.
+            {t.sections.occasionsTitle}
           </h2>
         </Reveal>
 

@@ -86,6 +86,34 @@ export const OCCASION_PHOTOS = {
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
 
+/**
+ * The shape of the arrangement, as chosen in /admin.
+ *
+ * These seven ARE the schema (collections/Products.ts) — not an invented
+ * merchandising taxonomy. The shop's category navigation is built from the
+ * values the catalogue actually contains, so adding a product in /admin and
+ * choosing "Plant" makes Plants appear in the shop by itself.
+ */
+export type ProductCategory =
+  | "bouquet"
+  | "vase-arrangement"
+  | "box-arrangement"
+  | "basket"
+  | "single-stem"
+  | "plant"
+  | "event-piece";
+
+/** Display names, matching the labels the owner sees in /admin. */
+export const productCategoryNames: Record<ProductCategory, string> = {
+  bouquet: "Bouquets",
+  "vase-arrangement": "Vase Arrangements",
+  "box-arrangement": "Box Arrangements",
+  basket: "Baskets",
+  "single-stem": "Single Stems",
+  plant: "Plants",
+  "event-piece": "Event Pieces",
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -94,8 +122,12 @@ export type Product = {
   images: readonly [ProductImage, ProductImage];
   occasions: readonly OccasionSlug[];
   flowers: readonly FlowerType[];
+  /** The shape of the arrangement, straight from /admin. */
+  category: ProductCategory;
   featured: boolean;
   newArrival: boolean;
+  /** The owner's short description from /admin. Absent until she writes one. */
+  description?: string;
 };
 
 export const flowerTypes: readonly { slug: FlowerType; name: string }[] = [
@@ -123,6 +155,8 @@ export type Occasion = {
   slug: OccasionSlug;
   name: string;
   image: ProductImage;
+  /** Written by the owner in /admin. Absent until she writes one. */
+  description?: string;
 };
 
 function img(
@@ -171,6 +205,7 @@ export const products: readonly Product[] = [
   {
     id: "p1",
     slug: "amber-hour",
+    category: "bouquet",
     name: "Amber Hour",
     priceAed: 480,
     images: [
@@ -185,6 +220,7 @@ export const products: readonly Product[] = [
   {
     id: "p2",
     slug: "quiet-devotion",
+    category: "vase-arrangement",
     name: "Quiet Devotion",
     priceAed: 650,
     images: [
@@ -209,6 +245,7 @@ export const products: readonly Product[] = [
   {
     id: "p3",
     slug: "the-first-letter",
+    category: "bouquet",
     name: "The First Letter",
     priceAed: 420,
     images: [
@@ -228,6 +265,7 @@ export const products: readonly Product[] = [
   {
     id: "p4",
     slug: "bordeaux-whisper",
+    category: "box-arrangement",
     name: "Bordeaux Whisper",
     priceAed: 720,
     images: [
@@ -252,6 +290,7 @@ export const products: readonly Product[] = [
   {
     id: "p5",
     slug: "sage-and-cinder",
+    category: "vase-arrangement",
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
@@ -271,6 +310,7 @@ export const products: readonly Product[] = [
   {
     id: "p6",
     slug: "dawn-procession",
+    category: "event-piece",
     name: "Dawn Procession",
     priceAed: 850,
     images: [
@@ -290,6 +330,7 @@ export const products: readonly Product[] = [
   {
     id: "p7",
     slug: "velvet-hour",
+    category: "box-arrangement",
     name: "Velvet Hour",
     priceAed: 950,
     images: [
@@ -304,6 +345,7 @@ export const products: readonly Product[] = [
   {
     id: "p8",
     slug: "a-soft-reply",
+    category: "basket",
     name: "A Soft Reply",
     priceAed: 350,
     images: [
@@ -323,6 +365,7 @@ export const products: readonly Product[] = [
   {
     id: "p9",
     slug: "the-long-stem",
+    category: "single-stem",
     name: "The Long Stem",
     priceAed: 540,
     images: [
@@ -342,6 +385,7 @@ export const products: readonly Product[] = [
   {
     id: "p10",
     slug: "meadow-at-dusk",
+    category: "bouquet",
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [
@@ -686,25 +730,6 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
 };
 
 /* ------------------------------------------------------------------ */
-/* Instagram                                                           */
-/* ------------------------------------------------------------------ */
-
-export const instagramTiles: readonly ProductImage[] = [
-  img("ig-1", "warm", "Calanthe on Instagram", PHOTOS.terracotta),
-  img("ig-2", "olive", "Calanthe on Instagram", PHOTOS.peachRoses),
-  img("ig-3", "burgundy", "Calanthe on Instagram", PHOTOS.moodyProtea),
-  img("ig-4", "warm", "Calanthe on Instagram", PHOTOS.blushKraft),
-  img("ig-5", "olive", "Calanthe on Instagram", PHOTOS.roseMauveWall),
-  img("ig-6", "warm", "Calanthe on Instagram", PHOTOS.poppyMeadow),
-  img("ig-7", "olive", "Calanthe on Instagram", PHOTOS.dahliaDark),
-  img("ig-8", "warm", "Calanthe on Instagram", PHOTOS.whiteOrchid),
-  img("ig-9", "burgundy", "Calanthe on Instagram", PHOTOS.callaLilies),
-  img("ig-10", "olive", "Calanthe on Instagram", PHOTOS.stargazer),
-  img("ig-11", "warm", "Calanthe on Instagram", PHOTOS.whiteRoseWood),
-  img("ig-12", "olive", "Calanthe on Instagram", PHOTOS.pinkTulip),
-] as const;
-
-/* ------------------------------------------------------------------ */
 /* Navigation (single source for header + footer)                      */
 /* ------------------------------------------------------------------ */
 
@@ -747,13 +772,22 @@ export const helpNavLinks = [
 ] as const;
 
 /* ------------------------------------------------------------------ */
-/* Trust layer (ALL numbers/logos are placeholders — client to confirm) */
+/* Trust layer                                                         */
 /* ------------------------------------------------------------------ */
 
-/** FLAGGED placeholder — replace with the client's real count/rating. */
+/**
+ * Service promises only — things the atelier does on every order.
+ *
+ * There is deliberately no customer count, star rating, review quote or
+ * press strip here. The site carried "14,000+ happy customers", "Rated 5
+ * stars" and four "Press One…" wordmarks as placeholders, and they were
+ * live. Invented social proof is worse than none: it is the first thing a
+ * sceptical buyer checks, and it contradicts lib/seo.ts, which refuses to
+ * publish ratings for the same reason. Add real numbers or press here only
+ * once the client supplies them.
+ */
 export const TRUST = {
-  customersLine: "14,000+ happy customers",
-  ratingLine: "Rated 5 stars by our clients",
+  headline: "Promised on every order.",
   guarantees: [
     { title: "Same-day delivery", copy: "Ordered before 5pm, at their door today." },
     {
@@ -766,8 +800,6 @@ export const TRUST = {
     },
     { title: "All seven Emirates", copy: "One atelier, delivering across the UAE." },
   ],
-  /** FLAGGED placeholders — swap for real press logos when provided. */
-  pressPlaceholders: ["Press One", "Press Two", "Press Three", "Press Four"],
 } as const;
 
 export const VIDEO_APPROVAL = {

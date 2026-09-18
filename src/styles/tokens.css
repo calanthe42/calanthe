@@ -15,6 +15,30 @@
   --color-transparent: transparent;
   --color-current: currentColor;
 
+  /*
+   * ---- Readable secondary text ----
+   *
+   * These are not new brand colors. Each is an existing brand pigment laid
+   * down at lower density on its own surface — the same relationship ink
+   * has to paper — so the palette is unchanged and the page keeps its soft,
+   * warm cast.
+   *
+   * They exist because SAGE CANNOT CARRY BODY TEXT, measured:
+   *   sage on canvas  3.22:1   sage on cream  2.71:1   sage on olive 3.71:1
+   * against the 4.5:1 AA floor. Sage was being used for nearly every intro
+   * paragraph and caption on the site, and that — not the palette, not the
+   * photography — is what read as "washed out".
+   *
+   *   ink-muted   = olive at 78%   canvas 6.23:1   cream 5.25:1
+   *   cream-muted = cream at 72%   olive  6.01:1   burgundy 7.51:1
+   *
+   * Sage keeps every job it is actually good at: hairlines, borders, icons,
+   * and large display text where the AA floor is 3:1.
+   */
+  --color-ink: #2b2f1b; /* body text on light surfaces (= olive) */
+  --color-ink-muted: #575946; /* secondary text on canvas AND cream */
+  --color-cream-muted: #b0ac95; /* secondary text on olive AND burgundy */
+
   --tracking-brand: 0.18em;
 
   /* ---- Shape: luxury is almost square; media breathes softer ---- */

@@ -4,21 +4,25 @@ import Link from "next/link";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
-import { products } from "@/lib/data";
+import type { Product } from "@/lib/data";
 import { useWishlist } from "@/lib/wishlist";
 
-export function WishlistPageClient() {
+export function WishlistPageClient({
+  products = [],
+}: {
+  products?: readonly Product[];
+}) {
   const { ids } = useWishlist();
   const saved = products.filter((p) => ids.includes(p.id));
 
   if (saved.length === 0) {
     return (
       <div className="flex flex-col items-center gap-6 py-24 text-center">
-        <Monogram className="w-14 text-sage" />
+        <Monogram className="w-14 text-ink-muted" />
         <p className="max-w-sm font-display text-2xl font-light italic text-olive">
           Hearts you leave here never wilt.
         </p>
-        <p className="max-w-xs text-sm text-sage">
+        <p className="max-w-xs text-sm text-ink-muted">
           Tap the heart on any arrangement to keep it close.
         </p>
         <Link href="/shop" className={buttonClasses("secondary")}>

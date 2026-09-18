@@ -26,12 +26,12 @@ export default function StorefrontError({
 
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-canvas px-6 text-center">
-      <Monogram className="w-16 text-sage" />
+      <Monogram className="w-16 text-ink-muted" />
       <Eyebrow>Something bloomed wrong</Eyebrow>
       <h1 className="max-w-md font-display text-4xl font-light text-olive lg:text-5xl">
         A petal fell out of place.
       </h1>
-      <p className="max-w-sm text-base leading-relaxed text-sage">
+      <p className="max-w-sm text-base leading-relaxed text-ink-muted">
         Something interrupted this page. It has been noted — please try
         again.
       </p>

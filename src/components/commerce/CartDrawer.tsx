@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
@@ -61,16 +62,16 @@ function CartLine({ item }: { item: CartItemType }) {
             {formatAed(itemUnitPrice(item) * item.qty)}
           </p>
         </div>
-        <p className="text-sm text-sage">{describeCartItem(item)}</p>
+        <p className="text-sm text-ink-muted">{describeCartItem(item)}</p>
         {item.giftMessage && (
-          <p className="text-sm italic text-sage">Gift message included</p>
+          <p className="text-sm italic text-ink-muted">Gift message included</p>
         )}
         <div className="mt-2 flex items-center justify-between">
           <QtyStepper item={item} />
           <button
             type="button"
             onClick={() => removeItem(item.key)}
-            className="min-h-11 px-2 text-sm text-sage underline-offset-4 transition-colors duration-200 ease-bloom hover:text-olive hover:underline"
+            className="min-h-11 px-2 text-sm text-ink-muted underline-offset-4 transition-colors duration-200 ease-bloom hover:text-olive hover:underline"
           >
             Remove
           </button>
@@ -89,29 +90,27 @@ function CompleteTheGift() {
 
   return (
     <div className="border-t border-hairline px-6 py-4">
-      <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
+      <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted">
         Complete the gift
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      {/* Named, priced choices rather than image tiles: the add-ons have no
+          photographs, and generated art captioned "chocolates" showed
+          something other than what was being added. */}
+      <ul className="flex flex-col gap-2">
         {suggestions.map((addon) => (
-          <button
-            key={addon.id}
-            type="button"
-            onClick={() => addAddonToItem(last.key, addon.id)}
-            className="flex flex-col overflow-hidden rounded-media-sm border border-hairline text-left transition-colors duration-200 ease-bloom hover:border-sage"
-          >
-            <span className="block aspect-square w-full overflow-hidden">
-              <FloralImage image={addon.image} sizes="110px" />
-            </span>
-            <span className="px-2 pt-1.5 text-xs leading-tight text-olive">
-              {addon.name}
-            </span>
-            <span className="px-2 pb-2 pt-0.5 text-[0.6875rem] text-sage">
-              +{formatAed(addon.priceAed)}
-            </span>
-          </button>
+          <li key={addon.id}>
+            <button
+              type="button"
+              onClick={() => addAddonToItem(last.key, addon.id)}
+              aria-label={`Add ${addon.name} to ${last.name}, ${formatAed(addon.priceAed)}`}
+              className="flex min-h-11 w-full items-center justify-between gap-3 rounded-sm border border-hairline px-4 text-left transition-colors duration-200 ease-bloom hover:border-sage"
+            >
+              <span className="text-sm text-olive">{addon.name}</span>
+              <span className="text-sm text-ink-muted">+{formatAed(addon.priceAed)}</span>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -121,6 +120,19 @@ export function CartDrawer() {
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
   const progress = Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
   useScrollLock(isOpen);
+
+  /* Escape closes it, like every other overlay on the site. Without this the
+     drawer stayed open on Escape AND kept the scroll lock, so the page sat
+     frozen behind it until the visitor found the X — the exact "page won't
+     scroll" fault, reached through the cart rather than the menu. */
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeCart();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, closeCart]);
 
   return (
     <AnimatePresence>
@@ -168,23 +180,32 @@ export function CartDrawer() {
 
             {items.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
-                <Monogram className="w-14 text-sage" />
+                <Monogram className="w-14 text-ink-muted" />
                 <p className="font-display text-2xl font-light italic text-olive">
                   Your cart is waiting to bloom.
                 </p>
-                <Link
-                  href="/shop"
-                  onClick={closeCart}
-                  className={buttonClasses("secondary")}
-                >
-                  Shop Flowers
-                </Link>
+                <div className="flex w-full max-w-xs flex-col gap-3">
+                  <Link
+                    href="/shop"
+                    onClick={closeCart}
+                    className={buttonClasses("primary", "whitespace-nowrap")}
+                  >
+                    Shop Flowers
+                  </Link>
+                  <Link
+                    href="/build-your-own"
+                    onClick={closeCart}
+                    className={buttonClasses("secondary", "whitespace-nowrap")}
+                  >
+                    Build Your Own
+                  </Link>
+                </div>
               </div>
             ) : (
               <>
                 {/* Free delivery progress */}
                 <div className="border-b border-hairline px-6 py-4">
-                  <p className="text-sm text-sage">
+                  <p className="text-sm text-ink-muted">
                     {remaining > 0 ? (
                       <>{formatAed(remaining)} away from complimentary delivery</>
                     ) : (
@@ -212,7 +233,7 @@ export function CartDrawer() {
 
                 <footer className="border-t border-hairline px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4">
                   <div className="mb-4 flex items-baseline justify-between">
-                    <p className="font-brand text-xs font-medium uppercase tracking-brand text-sage">
+                    <p className="font-brand text-xs font-medium uppercase tracking-brand text-ink-muted">
                       Subtotal
                     </p>
                     <p className="font-display text-2xl text-olive">

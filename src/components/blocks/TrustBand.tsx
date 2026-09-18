@@ -1,55 +1,61 @@
 import { HairlineDraw } from "@/components/motion/HairlineDraw";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { TRUST } from "@/lib/data";
+import { CONTACT } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
- * Quiet editorial trust layer: guarantees, rating line and an
- * "as featured in" strip. Every count and logo is a placeholder
- * awaiting the client's real numbers/press (see PROJECT-BRAIN.md).
+ * The service promise, stated once and plainly.
+ *
+ * Only things the atelier does on every order appear here (see TRUST in
+ * lib/data.ts for why there is no rating, count or press strip). The
+ * heading sits beside the promises on desktop rather than centred above
+ * them, so the band reads as a statement with its evidence, and the one
+ * line under it is a real way to ask a question before ordering.
  */
-export function TrustBand() {
+export async function TrustBand() {
+  const { t } = await getDictionary();
+  const guarantees = [
+    { title: t.trust.sameDayTitle, copy: t.trust.sameDayCopy },
+    { title: t.trust.videoTitle, copy: t.trust.videoCopy },
+    { title: t.trust.freshTitle, copy: t.trust.freshCopy },
+    { title: t.trust.emiratesTitle, copy: t.trust.emiratesCopy },
+  ];
+
   return (
-    <section className="section-pad">
-      <div className="mx-auto max-w-7xl gutter">
-        <Reveal className="text-center">
-          <p className="font-display text-2xl font-light italic text-olive lg:text-3xl">
-            {TRUST.ratingLine}
-          </p>
-          <p className="mt-2 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
-            {TRUST.customersLine}
+    <section className="border-t border-hairline/70 bg-cream section-pad-join">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+        <Reveal>
+          <h2 className="display-2 font-display font-light text-olive">
+            {t.sections.promiseTitle}
+          </h2>
+          <p className="mt-4 max-w-sm text-base leading-relaxed text-ink-muted">
+            {t.sections.promiseAsk}{" "}
+            <a
+              href={CONTACT.whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="text-olive underline decoration-hairline underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
+            >
+              WhatsApp
+            </a>
+            .
           </p>
         </Reveal>
 
-        <Stagger className="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
-          {TRUST.guarantees.map((g, i) => (
+        <Stagger className="grid grid-cols-1 gap-x-8 gap-y-9 sm:grid-cols-2">
+          {guarantees.map((g, i) => (
             <StaggerItem key={g.title}>
               <HairlineDraw delay={i * 0.1} className="mb-4" />
               <h3 className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
                 {g.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-sage">{g.copy}</p>
+              <p className="mt-2 max-w-xs text-base leading-relaxed text-ink-muted">
+                {g.copy}
+              </p>
             </StaggerItem>
           ))}
         </Stagger>
-
-        {/* Press strip — placeholder wordmarks, flagged for the client */}
-        <Reveal className="mt-14 lg:mt-16">
-          <p className="mb-5 text-center font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage">
-            As featured in
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-50">
-            {TRUST.pressPlaceholders.map((name) => (
-              <span
-                key={name}
-                aria-label="Press logo placeholder"
-                className="font-display text-xl font-light italic text-sage"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </Reveal>
       </div>
     </section>
   );

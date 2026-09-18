@@ -42,9 +42,39 @@ body::after {
 /* Vertical rhythm — one scale for the whole site.                     */
 /* ------------------------------------------------------------------ */
 
-/* Section breathing: ~64px on phones → ~120px on desktop. */
+/* ------------------------------------------------------------------ */
+/* SECTION RHYTHM — a scale, not a single value.
+ *
+ * Every section on the site used one `.section-pad`, so every section had
+ * the same weight: measured, the homepage ran 64/64 on a phone and
+ * 97.6/97.6 on a laptop from top to bottom, and two consecutive cream
+ * sections merged into one slab with no boundary between them. Identical
+ * spacing everywhere is what makes a page read as a template — the eye
+ * gets no cue about what matters.
+ *
+ * Four steps, used deliberately:
+ *   .section-pad-xl   editorial moments that should feel like a held breath
+ *   .section-pad      the default
+ *   .section-pad-sm   utility rows: trust, quick links, service facts
+ *   .section-pad-join a section that CONTINUES the one above it — half the
+ *                     top padding, so a pair reads as one composed spread
+ *                     rather than two unrelated blocks.                   */
+/* ------------------------------------------------------------------ */
 .section-pad {
   padding-block: clamp(4rem, 4vw + 2.5rem, 7.5rem);
+}
+
+.section-pad-xl {
+  padding-block: clamp(5.5rem, 6vw + 3rem, 11rem);
+}
+
+.section-pad-sm {
+  padding-block: clamp(2.5rem, 2vw + 1.5rem, 4rem);
+}
+
+.section-pad-join {
+  padding-block-start: clamp(1rem, 1.5vw + 0.5rem, 2.5rem);
+  padding-block-end: clamp(4rem, 4vw + 2.5rem, 7.5rem);
 }
 
 /* Container side gutters: 20px on phones → 32px on desktop. */
@@ -55,7 +85,7 @@ body::after {
 /* One warm color-grade over all floral imagery so mixed sources read
    as a single brand world. */
 .floral-grade {
-  filter: sepia(0.14) saturate(0.88) contrast(1.03) brightness(1.02) hue-rotate(-4deg);
+  filter: sepia(0.1) saturate(0.98) contrast(1.07) brightness(1.03) hue-rotate(-4deg);
 }
 
 /* Soft depth: large blur, low opacity, olive-tinted — tiles lift off
@@ -182,18 +212,18 @@ body::after {
     opacity 0.85s var(--ease-bloom),
     transform 0.85s var(--ease-bloom);
 }
-.js .io-reveal:not(.io-in) {
+.js .io-reveal:not([data-io-in]) {
   opacity: 0;
   transform: translateY(24px);
 }
 
-/* Stagger: parent gets io-in; children cascade 80ms apart. */
+/* Stagger: parent gets data-io-in; children cascade 80ms apart. */
 .io-stagger > * {
   transition:
     opacity 0.85s var(--ease-bloom),
     transform 0.85s var(--ease-bloom);
 }
-.js .io-stagger:not(.io-in) > * {
+.js .io-stagger:not([data-io-in]) > * {
   opacity: 0;
   transform: translateY(24px);
 }
@@ -227,13 +257,13 @@ body::after {
   transition: clip-path 1.05s var(--ease-bloom);
   clip-path: inset(0 0 0 0);
 }
-.js .io-clip:not(.io-in) {
+.js .io-clip:not([data-io-in]) {
   clip-path: inset(100% 0 0 0);
 }
 .io-clip-inner {
   transition: transform 1.05s var(--ease-bloom);
 }
-.js .io-clip:not(.io-in) .io-clip-inner {
+.js .io-clip:not([data-io-in]) .io-clip-inner {
   transform: scale(1.1);
 }
 
@@ -241,7 +271,7 @@ body::after {
 .io-lines .io-line {
   transition: transform 0.85s var(--ease-bloom);
 }
-.js .io-lines:not(.io-in) .io-line {
+.js .io-lines:not([data-io-in]) .io-line {
   transform: translateY(110%);
 }
 .io-lines > *:nth-child(3) .io-line {
@@ -259,7 +289,7 @@ body::after {
   transform-origin: left;
   transition: transform 0.85s var(--ease-bloom);
 }
-.js .io-hairline:not(.io-in) {
+.js .io-hairline:not([data-io-in]) {
   transform: scaleX(0);
 }
 
@@ -277,7 +307,7 @@ body::after {
   fill-opacity: 1;
   stroke-opacity: 0;
 }
-.js .io-mono:not(.io-in) path {
+.js .io-mono:not([data-io-in]) path {
   stroke-dashoffset: 1;
   fill-opacity: 0;
   stroke-opacity: 1;
@@ -305,15 +335,15 @@ body::after {
 /* BYO banner: io reveals drive MOBILE only — on desktop the GSAP
    pinned timeline owns these elements (one motion per moment). */
 @media (min-width: 1024px) {
-  .js .byo-photo.io-reveal:not(.io-in),
-  .js .byo-eyebrow.io-reveal:not(.io-in),
-  .js .byo-copy.io-reveal:not(.io-in),
-  .js .byo-cta.io-reveal:not(.io-in) {
+  .js .byo-photo.io-reveal:not([data-io-in]),
+  .js .byo-eyebrow.io-reveal:not([data-io-in]),
+  .js .byo-copy.io-reveal:not([data-io-in]),
+  .js .byo-cta.io-reveal:not([data-io-in]) {
     opacity: 1;
     transform: none;
     transition: none;
   }
-  .js .io-lines:not(.io-in) .byo-line {
+  .js .io-lines:not([data-io-in]) .byo-line {
     transform: none;
     transition: none;
   }
@@ -357,6 +387,25 @@ body::after {
 .menu-in .menu-links > li:nth-child(4) {
   animation-delay: 0.39s;
 }
+/* SHORT PHONES (iPhone SE / 8 at 667px, and any phone in landscape).
+   The menu is composed for a 844px screen; at 667px the same spacing put
+   the WhatsApp + language row 27px below the fold, so the language control
+   could only be reached by scrolling a menu that gives no hint it scrolls.
+   Tightening the head and the rows recovers ~45px, which is enough to land
+   the whole menu on screen. Rows stay at 52px — still above the 44px
+   minimum tap target. */
+@media (max-height: 700px) {
+  .menu-in,
+  .menu-out {
+    padding-top: calc(env(safe-area-inset-top) + 5.25rem);
+  }
+
+  .menu-in .menu-links a,
+  .menu-in .menu-links summary {
+    min-height: 3.25rem;
+  }
+}
+
 .menu-in .menu-footnote {
   animation: menu-fade 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
 }
@@ -463,6 +512,51 @@ body::after {
 }
 
 /* ------------------------------------------------------------------ */
+/* THE TRAVELLING MARK.
+ *
+ * The lockup lives in the header's centre slot permanently. These custom
+ * properties push it down into the hero while the page is at the top and
+ * relax to identity as the visitor scrolls — see HeroMarkTravel.tsx for
+ * why the movement is expressed this way round rather than as a second,
+ * fixed copy of the mark flying upward.
+ *
+ * Defaults are the DOCKED state, so with no JavaScript, under reduced
+ * motion, or on any route that is not the homepage, the mark simply sits
+ * in the navbar. Nothing to fail open.                                   */
+/* ------------------------------------------------------------------ */
+.travel-mark {
+  --travel: 1;
+  --travel-y: 0px;
+  --travel-scale: 1;
+  /* Centring is part of the same transform so the two never compose in
+     the wrong order — the bug that once threw the mark off to the left. */
+  transform: translate(-50%, -50%) translateY(var(--travel-y))
+    scale(var(--travel-scale));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Out over the photograph it is decoration: a mark scaled past 500px must
+   not intercept taps meant for the hero beneath it. */
+.travel-mark[data-travelling="true"] {
+  pointer-events: none;
+}
+
+/* The colour crossfade, driven by the same progress value. */
+.travel-mark[data-travelling] .stacked-cream {
+  opacity: var(--travel-cream, 1);
+}
+.travel-mark[data-travelling] .stacked-olive {
+  opacity: calc(1 - var(--travel-cream, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-mark {
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Frosted-glass CTAs — hero only, over photography. The blur is cheap
    here because the hero image behind them is static once it has
    settled (parallax and ken-burns are desktop-only).                  */
@@ -513,73 +607,26 @@ body::after {
 }
 
 /* ------------------------------------------------------------------ */
-/* The hero mark's own life: a one-time settle on load, then the
-   faintest drift while the visitor hasn't scrolled yet. Both live on an
-   INNER element so they never fight GSAP, which owns the outer
-   element's transform. Transform-only — the mark is never faded from
-   zero (it may be the LCP element).                                   */
-/* ------------------------------------------------------------------ */
-.logo-breathe {
-  animation:
-    logo-settle 1.4s var(--ease-bloom) both,
-    logo-drift 7s ease-in-out 1.4s infinite;
-}
+/* EVERY PIECE OF FIXED PAGE CHROME STANDS DOWN WHILE A FULL-SCREEN OVERLAY
+   IS OPEN (the mobile menu, search).
 
-/* Once the mark starts travelling, the idle drift stops — one motion
-   at a time, and nothing competes with the scroll. */
-.hero-logo-dock.is-travelling .logo-breathe {
-  animation-play-state: paused;
-}
+   The floating WhatsApp button is `position: fixed`, so it is a sibling of
+   the overlay in the viewport rather than a child of the page it covers, and
+   it used to land on top of the language control at the foot of the menu.
+   Hiding it here is not a z-index race: the menu carries its own WhatsApp
+   link, so nothing is lost while it is open, and it returns the moment it
+   closes.
 
-@keyframes logo-settle {
-  from {
-    transform: scale(1.06) translateY(6px);
-  }
-  to {
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes logo-drift {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-6px) scale(1.012);
-  }
-}
-
-/* The hero's logo mark, at rest in the markup, is the no-JS /
-   reduced-motion version. Once JS has attached (`.js`) and the visitor
-   allows motion, `HeroLogoDock` is the one true mark instead — it
-   starts at this exact spot and travels into the navbar on scroll. */
-@media (prefers-reduced-motion: no-preference) {
-  .js .hero-mark-inline {
-    display: none;
-  }
-}
-
-/* Both full-screen overlays (mobile menu, search) show their own
-   brand mark — hide the traveling mark underneath rather than let it
-   show through at the wrong scale. Header.tsx toggles this class. */
-/* Centring uses the standalone `translate` property, NOT `transform`.
-   GSAP owns `transform` on this element; when centring lived in a
-   Tailwind -translate-x-1/2 class it was applied twice on some
-   viewports (once by CSS, once by GSAP's xPercent) and the mark shot
-   off to the left. `translate` composes with `transform` instead of
-   fighting it, so pre-JS centring and the scroll animation coexist. */
-.hero-logo-dock,
-.hero-mark-inline {
-  translate: -50% -50%;
-}
-
-.hero-logo-dock {
-  transition: opacity 0.2s var(--ease-bloom);
-}
-body.overlay-open .hero-logo-dock {
+   The hero's travelling brand mark used to be hidden here too. It no longer
+   exists — the mark lives in the header on every route now (see Header.tsx),
+   which removed the logo jump, the bleed-through over the navigation and the
+   empty centre of the homepage header in one go. */
+body.overlay-open .floating-whatsapp {
   opacity: 0;
   pointer-events: none;
+}
+.floating-whatsapp {
+  transition: opacity 0.2s var(--ease-bloom);
 }
 
 /* Original ribbon motif: settles in once, just after the monogram
@@ -599,6 +646,43 @@ body.overlay-open .hero-logo-dock {
   }
 }
 
+/* Petals adrift in the hero (components/motion/PetalDrift.tsx).
+
+   TWO NESTED ANIMATIONS, ON PURPOSE. The outer element falls; the inner one
+   sways and turns on an unrelated duration. Composing them is what stops the
+   motion reading as a repeating loop — a single keyframe per petal always
+   traces the same straight line, and the eye catches that almost at once.
+   Both animate `transform` only, so the pair still costs one composited
+   layer each and never touches layout. */
+.petal-fall {
+  top: -18%;
+  will-change: transform;
+  animation: petal-fall var(--fall-duration, 45s) linear var(--fall-delay, 0s) infinite;
+}
+
+.petal-sway {
+  will-change: transform;
+  animation: petal-sway var(--sway-duration, 13s) ease-in-out 0s infinite alternate;
+}
+
+@keyframes petal-fall {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 132vh, 0);
+  }
+}
+
+@keyframes petal-sway {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(var(--sway-drift, 24px), 0, 0) rotate(var(--sway-spin, 160deg));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -613,6 +697,11 @@ body.overlay-open .hero-logo-dock {
   .splitline-rise,
   .menu-in .menu-links > li {
     animation: none;
+  }
+  /* Drifting petals are atmosphere, not information: with reduced motion
+     asked for, they leave rather than freeze mid-fall. */
+  .petal-drift {
+    display: none;
   }
   .toast-in {
     animation-name: menu-fade;
@@ -629,27 +718,70 @@ body.overlay-open .hero-logo-dock {
     transition-duration: 0.5s;
     transition-delay: 0s;
   }
-  .js .io-reveal:not(.io-in),
-  .js .io-stagger:not(.io-in) > * {
+  .js .io-reveal:not([data-io-in]),
+  .js .io-stagger:not([data-io-in]) > * {
     transform: none;
   }
-  .js .io-clip:not(.io-in) {
+  .js .io-clip:not([data-io-in]) {
     clip-path: inset(0 0 0 0);
     opacity: 0;
   }
-  .js .io-clip:not(.io-in) .io-clip-inner {
+  .js .io-clip:not([data-io-in]) .io-clip-inner {
     transform: none;
   }
-  .js .io-lines:not(.io-in) .io-line {
-    transform: none;
-    opacity: 0;
-  }
-  .js .io-hairline:not(.io-in) {
+  .js .io-lines:not([data-io-in]) .io-line {
     transform: none;
     opacity: 0;
   }
-  .js .io-mono:not(.io-in) path {
+  .js .io-hairline:not([data-io-in]) {
+    transform: none;
+    opacity: 0;
+  }
+  .js .io-mono:not([data-io-in]) path {
     stroke-dashoffset: 0;
     stroke-opacity: 0;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Focus — visible everywhere, in the brand's own accent.              */
+/*                                                                     */
+/* Buttons and links already carried their own focus-visible rings;    */
+/* inputs, textareas, summary elements and the many plain <Link>s in   */
+/* the footer and navigation fell back to the browser default, which   */
+/* over a cream ground is a thin blue box that is easy to lose. This   */
+/* is the floor: any component with a better idea still overrides it.  */
+/* ------------------------------------------------------------------ */
+:focus-visible {
+  outline: 2px solid var(--color-burnt-orange);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Over the dark sections, the accent is still legible but the offset
+   ring needs to not sit on top of the text it belongs to. */
+.bg-olive :focus-visible,
+.bg-burgundy :focus-visible {
+  outline-offset: 4px;
+}
+
+/* Skip link: off-screen until focused, then a real, tappable control
+   in the top-left. Keyboard and screen-reader users get past the
+   navigation without tabbing the whole menu on every page. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  z-index: 100;
+  /* -120% of the element's own height is not far enough once it carries a
+     12px margin: 40px tall, 12px down, 48px up leaves FOUR PIXELS of olive
+     showing across the top of every page — visible as a stray dark bar in
+     the corner of the search overlay, which is the only place the canvas is
+     pale enough to notice it. Subtracting the margin as well as the height
+     puts it properly out of sight at any font size. */
+  transform: translateY(calc(-100% - 1.5rem));
+  transition: transform 0.2s var(--ease-bloom);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
 }

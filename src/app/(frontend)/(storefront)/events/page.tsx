@@ -83,7 +83,7 @@ export default function EventsPage() {
             <h2 className="display-2 mt-3 font-display font-light text-olive">
               Composed for the space, not the catalogue.
             </h2>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-sage">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
               We work from your venue, your palette and the feeling you want the
               room to have — then build to it.
             </p>
@@ -118,7 +118,7 @@ export default function EventsPage() {
             <h2 className="display-2 mt-3 font-display font-light text-olive">
               Something for everyone to take home.
             </h2>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-sage">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
               Thoughtfully presented floral gifts finished with Calanthe&rsquo;s
               signature packaging and personal touches — made in the quantities
               your day needs.

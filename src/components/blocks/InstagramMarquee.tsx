@@ -1,59 +1,46 @@
-import { FloralImage } from "@/components/ui/FloralImage";
-import { instagramTiles, CONTACT } from "@/lib/data";
-import { cn } from "@/lib/cn";
+import { Reveal } from "@/components/motion/Reveal";
+import { MonogramBloom } from "@/components/motion/MonogramBloom";
+import { CONTACT } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
-function MarqueeRow({
-  tiles,
-  reverse = false,
-  className,
-}: {
-  tiles: readonly (typeof instagramTiles)[number][];
-  reverse?: boolean;
-  className?: string;
-}) {
-  /* Content duplicated once; the track translates -50% for a seamless loop. */
-  const doubled = [...tiles, ...tiles];
-
-  return (
-    <div className={cn("group overflow-hidden", className)}>
-      <div
-        className={cn(
-          "marquee-track flex w-max gap-3 lg:gap-4",
-          reverse && "marquee-reverse",
-        )}
-      >
-        {doubled.map((tile, i) => (
-          <div
-            key={`${tile.placeholder.seed}-${i}`}
-            className="aspect-square w-36 shrink-0 overflow-hidden rounded-media lg:w-44"
-            aria-hidden={i >= tiles.length}
-          >
-            <FloralImage image={tile} sizes="176px" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function InstagramMarquee() {
-  const rowA = instagramTiles.slice(0, 6);
-  const rowB = instagramTiles.slice(6, 12);
+/**
+ * The invitation to follow the atelier — one quiet line, no movement.
+ *
+ * This section has been through two wrong answers. It began as rows of stock
+ * photography captioned "Calanthe on Instagram", which were not Calanthe's
+ * pictures. It was then replaced with a scrolling wall of the handle repeated
+ * across the screen, which is the loudest thing a page can do and belongs to
+ * a different kind of brand entirely.
+ *
+ * What a flower atelier does here is simply say where it is, once, and stop:
+ * the house mark, the handle set in the display face, and a single line.
+ * When the client's own photography exists this becomes a small editorial
+ * grid of real posts; until then, silence is the honest treatment and the
+ * quieter one.
+ */
+export async function InstagramMarquee() {
+  const { t } = await getDictionary();
 
   return (
-    <section className="overflow-hidden section-pad">
-      <a
-        href={CONTACT.instagramHref}
-        target="_blank"
-        rel="noreferrer"
-        className="mx-auto mb-8 flex min-h-11 w-fit items-center justify-center px-4 text-center font-brand text-xs font-medium uppercase tracking-brand text-olive transition-opacity duration-200 ease-bloom hover:opacity-60 lg:mb-10"
-      >
-        {CONTACT.instagramHandle}
-      </a>
-      <div className="flex flex-col gap-3 lg:gap-4">
-        <MarqueeRow tiles={rowA} />
-        <MarqueeRow tiles={rowB} reverse className="hidden sm:block" />
-      </div>
+    <section className="section-pad-sm">
+      <Reveal className="mx-auto flex max-w-xl flex-col items-center gutter text-center">
+        <MonogramBloom className="w-10 text-burnt-orange/70" />
+
+        <a
+          href={CONTACT.instagramHref}
+          target="_blank"
+          rel="noreferrer"
+          className="group mt-6 inline-flex min-h-11 items-center font-display text-3xl font-light text-olive transition-colors duration-300 ease-bloom hover:text-burnt-orange lg:text-4xl"
+        >
+          {CONTACT.instagramHandle}
+        </a>
+
+        <p className="mt-3 text-base leading-relaxed text-ink-muted">
+          {t.sections.instagramLine}
+        </p>
+
+        <span aria-hidden className="mt-8 block h-px w-16 bg-hairline" />
+      </Reveal>
     </section>
   );
 }

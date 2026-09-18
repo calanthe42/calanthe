@@ -44,7 +44,7 @@ export default function MembershipPage() {
             </p>
           </Reveal>
           <Reveal delay={0.15} className="mt-12 w-full max-w-md">
-            <p className="mb-4 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream/60">
+            <p className="mb-4 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream/60">
               Choose your delivery day
             </p>
             <DayPicker />
@@ -64,7 +64,7 @@ export default function MembershipPage() {
                 )}
               >
                 {tier.mostLoved && (
-                  <p className="absolute -top-3 left-7 bg-burnt-orange px-3 py-1 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream">
+                  <p className="absolute -top-3 left-7 bg-burnt-orange px-3 py-1 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream">
                     Most loved
                   </p>
                 )}
@@ -73,13 +73,13 @@ export default function MembershipPage() {
                 </h2>
                 <p className="mt-4 font-display text-3xl font-light text-olive">
                   from {formatAed(tier.fromAedPerDelivery)}
-                  <span className="ml-1 text-base text-sage">/ delivery</span>
+                  <span className="ml-1 text-base text-ink-muted">/ delivery</span>
                 </p>
-                <p className="mt-1 text-sm text-sage">4 deliveries a month</p>
+                <p className="mt-1 text-sm text-ink-muted">4 deliveries a month</p>
                 <p className="mt-4 text-base leading-relaxed text-olive">{tier.blurb}</p>
                 <ul className="mt-5 flex flex-1 flex-col gap-2">
                   {tier.includes.map((line) => (
-                    <li key={line} className="flex gap-2 text-sm text-sage">
+                    <li key={line} className="flex gap-2 text-sm text-ink-muted">
                       <span aria-hidden className="text-burnt-orange">
                         ·
                       </span>
@@ -104,7 +104,7 @@ export default function MembershipPage() {
             </StaggerItem>
           ))}
         </Stagger>
-        <p className="mt-6 text-center text-xs text-sage">
+        <p className="mt-6 text-center text-xs text-ink-muted">
           Online membership checkout arrives with the backend phase — for now,
           &ldquo;Begin&rdquo; opens WhatsApp so our florists can set it up with you directly.
         </p>
@@ -119,11 +119,11 @@ export default function MembershipPage() {
           <Stagger className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
             {steps.map((step, i) => (
               <StaggerItem key={step.title}>
-                <p className="font-display text-4xl font-light text-sage">0{i + 1}</p>
+                <p className="font-display text-4xl font-light text-ink-muted">0{i + 1}</p>
                 <h3 className="mt-3 font-brand text-xs font-medium uppercase tracking-brand text-olive">
                   {step.title}
                 </h3>
-                <p className="mt-2 max-w-sm text-base leading-relaxed text-sage">
+                <p className="mt-2 max-w-sm text-base leading-relaxed text-ink-muted">
                   {step.copy}
                 </p>
               </StaggerItem>

@@ -1,134 +1,146 @@
-import Link from "next/link";
-import { HeroLogoDock } from "@/components/motion/HeroLogoDock";
 import { Parallax } from "@/components/motion/Parallax";
+import { PetalDrift } from "@/components/motion/PetalDrift";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
-import { StackedLogo } from "@/components/ui/StackedLogo";
-import { HeroRibbon } from "@/components/blocks/HeroRibbon";
+import { HeroMedia } from "@/components/blocks/HeroMedia";
+import { getDictionary } from "@/lib/i18n/server";
 
 type HeroProps = {
   /**
-   * SWAP POINT for the client's real photography: pass any node that
-   * fills its parent (an <Image fill className="object-cover" /> once
-   * real imagery arrives, or a video element — the section itself
-   * doesn't care what fills it).
+   * SWAP POINT: pass any node that fills its parent. Left unset, the
+   * hero renders <HeroMedia />, which is the poster photograph plus the
+   * optional hero film (see lib/hero-media.ts) — the section itself
+   * doesn't care what fills it.
    */
   media?: React.ReactNode;
 };
 
 /**
- * Hero — full-viewport, photography-led. The flower is the whole
- * background; the brand mark, the locked words and the two actions
- * sit quietly on top of it. One idea at a time: mark -> ribbon ->
- * headline -> CTAs. No scroll cue.
+ * Hero — full-viewport, photography-led, and composed on ONE axis.
+ *
+ * TWO CENTRES, RESOLVED IN TIME RATHER THAN SPACE. The frame used to carry a
+ * 560px wordmark dead-centre AND an eyebrow/headline/CTA stack ranged left
+ * beneath it, with nothing to say which to read first. It still opens on the
+ * centred mark, because that is the brand moment — but the mark is no longer
+ * a second object competing with the words. It is the HEADER's own mark,
+ * transformed down into this frame (see HeroMarkTravel.tsx), and it withdraws
+ * into the bar the moment the visitor scrolls. The mark is read first, then
+ * the words, because the mark leaves.
+ *
+ * Everything written hangs off a single left margin, bottom-start, where a
+ * magazine would set a caption to a full-bleed photograph.
  */
-export function Hero({ media }: HeroProps) {
+export async function Hero({ media }: HeroProps) {
+  const { t } = await getDictionary();
+
   return (
     <section
       data-hero-root
-      className="relative -mt-16 flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive lg:-mt-20"
+      className="relative -mt-[6.25rem] flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive lg:-mt-[7.5rem]"
     >
       {/* Full-bleed photography — the visual centerpiece. Parallax is
           desktop-only: on a phone the travelling logo is the one
           scroll-linked animation on this screen, and it keeps every
           frame it can get. */}
       <Parallax speed={0.93} desktopOnly className="absolute inset-0">
-        <div className="hero-kenburns h-full w-full">
-          {media ?? (
-            /* Art-directed, not just resized: landscape screens get the
-               wide crop, portrait screens get the tall one. The browser
-               downloads only the one it needs. */
-            <picture className="block h-full w-full">
-              <source
-                media="(min-aspect-ratio: 1/1)"
-                srcSet="/brand/hero-desktop.jpg"
-              />
-              <img
-                src="/brand/hero-mobile.jpg"
-                alt="A Calanthe arrangement of garden roses, daisies and coral blossom in a white vase"
-                width={1600}
-                height={2000}
-                fetchPriority="high"
-                decoding="async"
-                className="h-full w-full object-cover"
-              />
-            </picture>
-          )}
-        </div>
+        <div className="hero-kenburns h-full w-full">{media ?? <HeroMedia />}</div>
       </Parallax>
+
+      {/* Petals crossing the frame — the one piece of ambient motion on the
+          page. Above the photograph so they catch its light, below the
+          scrims and the words so nothing they pass behind becomes harder to
+          read. CSS only; removed entirely under reduced motion. */}
+      <PetalDrift />
 
       {/* Two soft scrims, both fading to nothing so the photograph keeps
           its own colour: one behind the centred mark (the bouquet's
           daisies are bright, and the mark is cream), one where the words
           sit at the bottom-left. */}
+      {/*
+        ONE scrim, anchored where the words are, plus a light touch across
+        the very top so the header's type has something to sit on. The old
+        centre scrim existed only to rescue the centred wordmark from the
+        daisies behind it; with the wordmark gone, so is the reason to grey
+        out the middle of the photograph — which is most of what made the
+        image look flat and washed.
+      */}
       <div
         aria-hidden
         className="absolute inset-0"
         style={{
           background: [
-            "radial-gradient(58% 44% at 50% 48%, rgba(28,30,18,0.5) 0%, rgba(28,30,18,0.22) 50%, rgba(28,30,18,0) 78%)",
-            "radial-gradient(130% 100% at 12% 100%, rgba(43,47,27,0.64) 0%, rgba(43,47,27,0.32) 32%, rgba(43,47,27,0.08) 58%, rgba(43,47,27,0) 78%)",
+            "linear-gradient(to bottom, rgba(43,47,27,0.46) 0%, rgba(43,47,27,0.12) 18%, rgba(43,47,27,0) 32%)",
+            /* A breath of shade behind the travelling mark while it is
+               out over the bouquet — enough for cream letterforms to
+               hold on the daisies, far short of grey-ing the middle of
+               the photograph the way the old full-frame scrim did. */
+            "radial-gradient(44% 32% at 50% 46%, rgba(28,30,18,0.46) 0%, rgba(28,30,18,0.20) 52%, rgba(28,30,18,0) 78%)",
+            "radial-gradient(115% 95% at 4% 100%, rgba(43,47,27,0.86) 0%, rgba(43,47,27,0.52) 32%, rgba(43,47,27,0.14) 58%, rgba(43,47,27,0) 78%)",
           ].join(", "),
         }}
       />
       {/* Phones only: the tall crop puts the brightest part of the
           bouquet directly behind the words, so they need a firmer
           floor than the desktop crop does. */}
+      {/* The phone crop puts the bouquet's brightest daisies directly behind
+          the eyebrow and the first headline line, so the floor has to reach
+          further up and hold longer than the desktop one — measured against
+          the actual crop, not guessed. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-olive/90 via-olive/45 to-transparent lg:hidden"
+        className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-olive/95 via-olive/62 to-transparent lg:hidden"
       />
 
-      {/* The mark, at rest: large and dead-centre in the VIEWPORT on
-          load (fixed, not relative to the hero's own box — the two
-          coincide almost exactly, but "almost" was visibly off).
-          `HeroLogoDock` (mounted below) takes over as this same mark
-          once JS confirms motion is allowed, traveling into the navbar
-          as the page scrolls. This inline mark is the no-JS /
-          reduced-motion version — same size, same spot, never moves. */}
-      <Link
-        href="/"
-        aria-label="Calanthe — home"
-        className="hero-mark-inline fixed left-1/2 top-[var(--logo-hero-top)] z-[45] block w-[var(--logo-hero-w)]"
-      >
-        <StackedLogo tone="cream" priority sizes="(min-width: 1024px) 560px, 330px" />
-      </Link>
-      <HeroLogoDock />
-
-      {/* Content — bottom third (thumb zone on mobile), left on desktop */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl gutter pb-[calc(env(safe-area-inset-bottom)+4.5rem)] lg:pb-28">
-        <div className="max-w-2xl">
-          <HeroRibbon className="mb-5 h-5 w-20 lg:mb-6 lg:h-6 lg:w-24" />
-
-          <p className="mb-4 font-brand text-xs font-medium uppercase tracking-brand text-cream/80 lg:mb-5">
-            Flower Atelier — UAE
+      {/* Content — bottom-start: thumb zone on a phone, the classic
+          editorial caption position on a laptop.
+          The bottom padding on a phone clears the floating WhatsApp button
+          (48px inset 20px from the corner): the actions are full-width, so
+          anything parked in that corner sits on top of the second one. */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl gutter pb-[calc(env(safe-area-inset-bottom)+5.75rem)] lg:pb-24">
+        <div className="max-w-xl">
+          {/* No mark here: the brand lockup is the large one at the centre
+              of the frame, which is the header's own mark transformed down
+              into the hero (HeroMarkTravel.tsx). A second monogram beside
+              the eyebrow would be the same mark twice in one screen. */}
+          <p className="mb-4 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream lg:mb-5 lg:text-xs">
+            {t.hero.eyebrow}
           </p>
 
           <SplitLines
             as="h1"
             immediate
-            delay={0.4}
-            lines={["Where feelings", "take form."]}
-            className="mb-8 font-display text-[clamp(2.75rem,10vw,3.6rem)] font-light leading-[1.04] text-cream lg:mb-10 lg:text-[clamp(3.4rem,4.6vw,4.75rem)]"
+            delay={0.25}
+            lines={[t.hero.headlineOne, t.hero.headlineTwo]}
+            className="mb-9 font-display text-[clamp(2.9rem,11vw,3.9rem)] font-light leading-[1.02] text-cream lg:mb-11 lg:text-[clamp(3.6rem,5vw,5.25rem)]"
           />
 
           <div className="hero-cta-in">
-            {/* Phone: two compact pills side by side in the thumb zone.
-                Desktop: full-size, generous. */}
-            <div className="flex flex-row gap-2.5 sm:max-w-md sm:gap-4">
+            {/*
+              STACKED ON A PHONE, SIDE BY SIDE FROM 400px.
+
+              Two `flex-1` buttons with `whitespace-nowrap` could not fit
+              "BUILD YOUR OWN" in 170px at 390px wide, so it rendered as
+              "BUILD YOUR O" — text clipped by a container that had been
+              told never to wrap it. Full-width rows cannot clip, give a
+              48px target instead of 43px, and put both actions squarely in
+              the thumb zone. The near-square corner is the brand's
+              (radius-sm, 2px); the fully-rounded pill was neither in the
+              system nor in character.
+            */}
+            <div className="flex flex-col gap-3 min-[400px]:flex-row min-[400px]:gap-3.5 sm:max-w-lg">
               <ButtonLink
                 href="/shop"
                 variant="glass-primary"
-                className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
+                className="w-full min-[400px]:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
-                Shop Flowers
+                {t.hero.shopFlowers}
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
-                className="min-h-10 flex-1 whitespace-nowrap rounded-full px-4 text-[0.6875rem] sm:min-h-12 sm:px-8 sm:text-[0.8125rem] lg:w-auto lg:flex-none lg:px-12"
+                className="w-full min-[400px]:flex-1 lg:w-auto lg:flex-none lg:px-12"
               >
-                Build Your Own
+                {t.hero.buildYourOwn}
               </ButtonLink>
             </div>
           </div>

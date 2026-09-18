@@ -17,7 +17,7 @@ export function VideoApprovalSection() {
           <h2 className="display-2 mt-3 font-display font-light text-olive">
             {VIDEO_APPROVAL.title}
           </h2>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
+          <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
             {VIDEO_APPROVAL.copy}
           </p>
         </Reveal>

@@ -25,8 +25,12 @@
 
 - Vercel project `calanthe` (account nateliya420-6290).
 - Set env vars in Vercel (Production). Required — the server will not
-  boot without them: DATABASE_URL (Neon prod branch), PAYLOAD_SECRET.
-  Also set NEXT_PUBLIC_SERVER_URL=https://calanthe.vercel.app
+  boot without them: DATABASE_URL (Neon prod branch), PAYLOAD_SECRET, and
+  media storage: connect a Vercel Blob store to the project, which sets
+  BLOB_STORE_ID and authenticates by OIDC — no long-lived token to create
+  or paste. BLOB_READ_WRITE_TOKEN is the legacy fallback, needed only when
+  the app runs outside Vercel; it is not required here.
+  Also set NEXT_PUBLIC_SERVER_URL=https://www.calanthe.ae
 - Optional — a warning is logged when missing, never fatal: SENTRY_DSN
   (error tracking), UPSTASH_REDIS_REST_URL/TOKEN (rate limiting; the
   feature that first uses Redis must require them).

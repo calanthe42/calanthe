@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/locale";
 
 /** Same-day orders close at 14:00 Gulf Standard Time (UTC+4). */
 const CUTOFF_HOUR_GST = 14;
@@ -43,31 +44,34 @@ function remaining(): { open: boolean; h: number; m: number } {
 }
 
 /**
- * The announcement strip, made live: how long is left to order for
- * delivery today. Renders the static line on the server and only
- * swaps in the countdown once mounted, so there is no hydration
- * mismatch and no layout shift — the strip is a fixed height either way.
+ * The service strip, made live: how long is left to order for delivery
+ * today. Renders the static line on the server and only swaps in the
+ * countdown once mounted, so there is no hydration mismatch and no layout
+ * shift — the strip is a fixed height either way.
+ *
+ * The sentence is assembled from two dictionary fragments around the figure
+ * rather than interpolated into an English template, so Arabic can place the
+ * duration where Arabic places it.
  */
 export function CutoffCountdown() {
-  const [label, setLabel] = useState<string | null>(null);
+  const t = useT();
+  const [left, setLeft] = useState<{ open: boolean; h: number; m: number } | null>(
+    null,
+  );
 
   useEffect(() => {
-    const tick = () => {
-      const { open, h, m } = remaining();
-      setLabel(
-        open
-          ? `Order within ${h > 0 ? `${h}h ` : ""}${m}m for delivery today`
-          : "Ordering now for tomorrow's deliveries",
-      );
-    };
+    const tick = () => setLeft(remaining());
     tick();
     const id = setInterval(tick, 30_000);
     return () => clearInterval(id);
   }, []);
 
-  return (
-    <span suppressHydrationWarning>
-      {label ?? "Same-day delivery across the UAE"}
-    </span>
-  );
+  let text = t.strip.sameDay;
+  if (left) {
+    text = left.open
+      ? `${t.strip.orderWithinBefore} ${left.h > 0 ? `${left.h}h ` : ""}${left.m}m ${t.strip.orderWithinAfter}`
+      : t.strip.tomorrow;
+  }
+
+  return <span suppressHydrationWarning>{text}</span>;
 }

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { products } from "@/lib/data";
+import { getAvailableProductSlugs } from "@backend/data/products";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  const slugs = await getAvailableProductSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 /** Canonical product URLs live at /product/[slug]. */
