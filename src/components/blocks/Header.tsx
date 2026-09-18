@@ -24,6 +24,11 @@ const OVERLAY_ROUTES = new Set(["/"]);
 const NAV_LEFT = navTree.slice(0, 2);
 const NAV_RIGHT = navTree.slice(2);
 
+/* The phone menu splits the same tree either side of OCCASIONS, which it
+   promotes to a destination of its own — see the note at the insertion. */
+const NAV_BEFORE_OCCASIONS = navTree.slice(0, 2);
+const NAV_AFTER_OCCASIONS = navTree.slice(2);
+
 function IconSearch({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
@@ -212,14 +217,26 @@ export function Header({
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 40);
+        /* ON THE HERO ROUTE THE BAR RESOLVES WITH THE MARK, NOT BEFORE IT.
+           At a flat 40px the bar turned solid cream while the travelling
+           lockup was still out over the photograph, so for most of the
+           journey the navigation was a finished-looking bar with an empty
+           middle and a logo floating below it. Matching the threshold to
+           the travel distance (HeroMarkTravel's 42% of the hero) makes the
+           two land as one movement. */
+        const threshold = overlay ? window.innerHeight * 0.34 : 40;
+        setScrolled(window.scrollY > threshold);
         ticking = false;
       });
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [overlay]);
 
   useEffect(() => {
     return () => {
@@ -399,19 +416,31 @@ export function Header({
         <Link
           href="/"
           aria-label="Calanthe — home"
+          data-travel-mark
           /* Centred on the ROW, and the row is centred on the viewport, so
-             the mark is centred on the viewport at every width. */
+             the mark is centred on the viewport at every width — which is
+             also why the travelling animation never needs a horizontal
+             calculation (see HeroMarkTravel.tsx). */
           /* `block`, NOT flex: StackedLogo stacks two absolutely-positioned
              images inside this box, so a flex container collapses both to
              0x0 and the wordmark disappears entirely. The 44px tap target
              comes from an invisible overlay instead, which expands the hit
              area without touching the logo's own geometry. */
-          className="absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] -translate-x-1/2 -translate-y-1/2 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
+          className="travel-mark absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
         >
+          {/* Both colourways render; the travel animation crossfades them
+              so the mark turns olive exactly as it lands on the bar. On
+              every other route the tone prop decides outright. */}
+          {/* `sizes` must describe the LARGEST size this mark is ever
+              painted at, not its resting one. At the navbar's 78px the
+              browser fetched a 78px-wide asset and the travelling animation
+              then scaled it past 540px — a 7x upscale, which rendered as a
+              blurred, ghosted smear over the hero. Requesting the hero size
+              makes it sharp out there, and downscaling to the bar is free. */}
           <StackedLogo
             tone={onDark ? "cream" : "olive"}
             priority
-            sizes="(min-width: 1024px) 78px, 64px"
+            sizes="(min-width: 1024px) 560px, 330px"
           />
         </Link>
 
@@ -521,7 +550,17 @@ export function Header({
           */}
           <span
             aria-hidden
-            className="pointer-events-none absolute -end-[58%] top-[6%] -z-10 w-[200%] select-none opacity-[0.09] blur-[3px]"
+            className="pointer-events-none absolute -end-[72%] top-[2%] -z-10 w-[260%] select-none opacity-[0.12] blur-[2px]"
+          >
+            <Monogram className="w-full text-cream" />
+          </span>
+          {/* A second, much softer pass at a different scale and offset.
+              One flat silhouette reads as a sticker; two at different blurs
+              read as depth — the mark seen through the olive rather than
+              printed on it. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -start-[45%] bottom-[-18%] -z-10 w-[150%] select-none opacity-[0.06] blur-[10px]"
           >
             <Monogram className="w-full text-cream" />
           </span>
@@ -578,7 +617,73 @@ export function Header({
                   {t.nav.home}
                 </Link>
               </li>
-              {navTree.map((group) =>
+              {NAV_BEFORE_OCCASIONS.map((group) =>
+                group.children.length ? (
+                  <li key={group.href} className="border-b border-cream/10">
+                    <details className="group/acc">
+                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
+                        {navLabel(t, group.href, group.label)}
+                        <span
+                          aria-hidden
+                          className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
+                        >
+                          +
+                        </span>
+                      </summary>
+                      <ul className="flex flex-col pb-4">
+                        <li>
+                          <Link
+                            href={group.href}
+                            onClick={closeMenu}
+                            className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                          >
+                            {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
+                          </Link>
+                        </li>
+                        {group.children.map((link) => (
+                          <li key={link.href}>
+                            <Link
+                              href={link.href}
+                              onClick={closeMenu}
+                              className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                            >
+                              {navLabel(t, link.href, link.label)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ) : (
+                  <li key={group.href} className="border-b border-cream/10">
+                    <Link
+                      href={group.href}
+                      onClick={closeMenu}
+                      className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                    >
+                      {navLabel(t, group.href, group.label)}
+                    </Link>
+                  </li>
+                ),
+              )}
+
+              {/* OCCASIONS, directly after SHOP where it belongs in the
+                  reading order. In the client's nav tree it is a child of
+                  SHOP, which is right for the desktop hover panel — but on a
+                  phone that buries one of the two ways people actually shop
+                  behind an extra tap. It stays inside the SHOP accordion as
+                  well; one destination can have two routes to it. */}
+              <li className="border-b border-cream/10">
+                <Link
+                  href="/occasions"
+                  onClick={closeMenu}
+                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                >
+                  {t.nav.shopByOccasion}
+                </Link>
+              </li>
+
+              {NAV_AFTER_OCCASIONS.map((group) =>
                 group.children.length ? (
                   <li key={group.href} className="border-b border-cream/10">
                     <details className="group/acc">

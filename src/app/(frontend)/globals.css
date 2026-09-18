@@ -512,6 +512,51 @@ body::after {
 }
 
 /* ------------------------------------------------------------------ */
+/* THE TRAVELLING MARK.
+ *
+ * The lockup lives in the header's centre slot permanently. These custom
+ * properties push it down into the hero while the page is at the top and
+ * relax to identity as the visitor scrolls — see HeroMarkTravel.tsx for
+ * why the movement is expressed this way round rather than as a second,
+ * fixed copy of the mark flying upward.
+ *
+ * Defaults are the DOCKED state, so with no JavaScript, under reduced
+ * motion, or on any route that is not the homepage, the mark simply sits
+ * in the navbar. Nothing to fail open.                                   */
+/* ------------------------------------------------------------------ */
+.travel-mark {
+  --travel: 1;
+  --travel-y: 0px;
+  --travel-scale: 1;
+  /* Centring is part of the same transform so the two never compose in
+     the wrong order — the bug that once threw the mark off to the left. */
+  transform: translate(-50%, -50%) translateY(var(--travel-y))
+    scale(var(--travel-scale));
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Out over the photograph it is decoration: a mark scaled past 500px must
+   not intercept taps meant for the hero beneath it. */
+.travel-mark[data-travelling="true"] {
+  pointer-events: none;
+}
+
+/* The colour crossfade, driven by the same progress value. */
+.travel-mark[data-travelling] .stacked-cream {
+  opacity: var(--travel-cream, 1);
+}
+.travel-mark[data-travelling] .stacked-olive {
+  opacity: calc(1 - var(--travel-cream, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-mark {
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Frosted-glass CTAs — hero only, over photography. The blur is cheap
    here because the hero image behind them is static once it has
    settled (parallax and ken-burns are desktop-only).                  */

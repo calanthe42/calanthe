@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cinzel, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
 import { getDictionary } from "@/lib/i18n/server";
 import { MotionObserver } from "@/components/motion/MotionObserver";
+import { HeroMarkTravel } from "@/components/motion/HeroMarkTravel";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { OG_IMAGE } from "@/lib/seo";
 import { SITE_ORIGIN } from "@/lib/site";
@@ -87,6 +88,7 @@ export default async function RootLayout({
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
         <MotionObserver />
+        <HeroMarkTravel />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

@@ -86,6 +86,34 @@ export const OCCASION_PHOTOS = {
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
 
+/**
+ * The shape of the arrangement, as chosen in /admin.
+ *
+ * These seven ARE the schema (collections/Products.ts) — not an invented
+ * merchandising taxonomy. The shop's category navigation is built from the
+ * values the catalogue actually contains, so adding a product in /admin and
+ * choosing "Plant" makes Plants appear in the shop by itself.
+ */
+export type ProductCategory =
+  | "bouquet"
+  | "vase-arrangement"
+  | "box-arrangement"
+  | "basket"
+  | "single-stem"
+  | "plant"
+  | "event-piece";
+
+/** Display names, matching the labels the owner sees in /admin. */
+export const productCategoryNames: Record<ProductCategory, string> = {
+  bouquet: "Bouquets",
+  "vase-arrangement": "Vase Arrangements",
+  "box-arrangement": "Box Arrangements",
+  basket: "Baskets",
+  "single-stem": "Single Stems",
+  plant: "Plants",
+  "event-piece": "Event Pieces",
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -94,6 +122,8 @@ export type Product = {
   images: readonly [ProductImage, ProductImage];
   occasions: readonly OccasionSlug[];
   flowers: readonly FlowerType[];
+  /** The shape of the arrangement, straight from /admin. */
+  category: ProductCategory;
   featured: boolean;
   newArrival: boolean;
   /** The owner's short description from /admin. Absent until she writes one. */
@@ -175,6 +205,7 @@ export const products: readonly Product[] = [
   {
     id: "p1",
     slug: "amber-hour",
+    category: "bouquet",
     name: "Amber Hour",
     priceAed: 480,
     images: [
@@ -189,6 +220,7 @@ export const products: readonly Product[] = [
   {
     id: "p2",
     slug: "quiet-devotion",
+    category: "vase-arrangement",
     name: "Quiet Devotion",
     priceAed: 650,
     images: [
@@ -213,6 +245,7 @@ export const products: readonly Product[] = [
   {
     id: "p3",
     slug: "the-first-letter",
+    category: "bouquet",
     name: "The First Letter",
     priceAed: 420,
     images: [
@@ -232,6 +265,7 @@ export const products: readonly Product[] = [
   {
     id: "p4",
     slug: "bordeaux-whisper",
+    category: "box-arrangement",
     name: "Bordeaux Whisper",
     priceAed: 720,
     images: [
@@ -256,6 +290,7 @@ export const products: readonly Product[] = [
   {
     id: "p5",
     slug: "sage-and-cinder",
+    category: "vase-arrangement",
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
@@ -275,6 +310,7 @@ export const products: readonly Product[] = [
   {
     id: "p6",
     slug: "dawn-procession",
+    category: "event-piece",
     name: "Dawn Procession",
     priceAed: 850,
     images: [
@@ -294,6 +330,7 @@ export const products: readonly Product[] = [
   {
     id: "p7",
     slug: "velvet-hour",
+    category: "box-arrangement",
     name: "Velvet Hour",
     priceAed: 950,
     images: [
@@ -308,6 +345,7 @@ export const products: readonly Product[] = [
   {
     id: "p8",
     slug: "a-soft-reply",
+    category: "basket",
     name: "A Soft Reply",
     priceAed: 350,
     images: [
@@ -327,6 +365,7 @@ export const products: readonly Product[] = [
   {
     id: "p9",
     slug: "the-long-stem",
+    category: "single-stem",
     name: "The Long Stem",
     priceAed: 540,
     images: [
@@ -346,6 +385,7 @@ export const products: readonly Product[] = [
   {
     id: "p10",
     slug: "meadow-at-dusk",
+    category: "bouquet",
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [

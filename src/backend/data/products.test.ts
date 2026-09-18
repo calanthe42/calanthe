@@ -196,7 +196,12 @@ describe("document mapping", () => {
         seo: { noIndex: true },
       }),
     );
+    /* `category` belongs on this list: it is what the arrangement IS, the
+       owner picks it in /admin, and the shop groups by it. `stock`,
+       `trackStock`, `compareAtPriceFils` and `seo` are the admin-only
+       fields this test exists to keep out. */
     expect(Object.keys(mapped).sort()).toEqual([
+      "category",
       "featured",
       "flowers",
       "id",
@@ -259,6 +264,17 @@ describe("document mapping", () => {
 
   it("maps occasion relationships to slugs", () => {
     expect(__internal.toStorefrontProduct(doc()).occasions).toEqual(["birthday"]);
+  });
+
+  it("carries the admin's category through to the storefront", () => {
+    /* The shop builds its category navigation from this value, so a product
+       saved in /admin as a plant has to reach the storefront as a plant —
+       it used to be dropped in the mapper, which left the field in the
+       database serving nobody. */
+    expect(__internal.toStorefrontProduct(doc({ category: "plant" })).category).toBe(
+      "plant",
+    );
+    expect(__internal.toStorefrontProduct(doc()).category).toBe("bouquet");
   });
 
   it("survives occasions returned as bare ids", () => {

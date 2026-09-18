@@ -2,7 +2,6 @@ import { Parallax } from "@/components/motion/Parallax";
 import { PetalDrift } from "@/components/motion/PetalDrift";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
-import { Monogram } from "@/components/ui/Monogram";
 import { HeroMedia } from "@/components/blocks/HeroMedia";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -19,21 +18,17 @@ type HeroProps = {
 /**
  * Hero — full-viewport, photography-led, and composed on ONE axis.
  *
- * WHAT WAS WRONG. The frame carried two centres: a 560px cream wordmark
- * dead-centre, and the eyebrow/headline/CTA stack ranged left underneath it.
- * Nothing told the eye which to read first, and the wordmark landed on the
- * brightest, busiest part of the bouquet, where half its letters were eaten
- * by daisies. Two focal points is not art direction; it is an unresolved
- * layout.
+ * TWO CENTRES, RESOLVED IN TIME RATHER THAN SPACE. The frame used to carry a
+ * 560px wordmark dead-centre AND an eyebrow/headline/CTA stack ranged left
+ * beneath it, with nothing to say which to read first. It still opens on the
+ * centred mark, because that is the brand moment — but the mark is no longer
+ * a second object competing with the words. It is the HEADER's own mark,
+ * transformed down into this frame (see HeroMarkTravel.tsx), and it withdraws
+ * into the bar the moment the visitor scrolls. The mark is read first, then
+ * the words, because the mark leaves.
  *
- * WHAT IT IS NOW. Identity lives in the header, permanently and centred
- * (see Header.tsx). The hero therefore has one job — say the thing — and
- * everything in it hangs off a single left margin: a small monogram, then
- * the eyebrow, then the headline, then the two actions. The photograph is
- * the hero; the words are a caption to it, bottom-start, where a magazine
- * would set them.
- *
- * ONE ORDER, TOP TO BOTTOM: mark → eyebrow → headline → actions.
+ * Everything written hangs off a single left margin, bottom-start, where a
+ * magazine would set a caption to a full-bleed photograph.
  */
 export async function Hero({ media }: HeroProps) {
   const { t } = await getDictionary();
@@ -75,6 +70,11 @@ export async function Hero({ media }: HeroProps) {
         style={{
           background: [
             "linear-gradient(to bottom, rgba(43,47,27,0.46) 0%, rgba(43,47,27,0.12) 18%, rgba(43,47,27,0) 32%)",
+            /* A breath of shade behind the travelling mark while it is
+               out over the bouquet — enough for cream letterforms to
+               hold on the daisies, far short of grey-ing the middle of
+               the photograph the way the old full-frame scrim did. */
+            "radial-gradient(44% 32% at 50% 46%, rgba(28,30,18,0.46) 0%, rgba(28,30,18,0.20) 52%, rgba(28,30,18,0) 78%)",
             "radial-gradient(115% 95% at 4% 100%, rgba(43,47,27,0.86) 0%, rgba(43,47,27,0.52) 32%, rgba(43,47,27,0.14) 58%, rgba(43,47,27,0) 78%)",
           ].join(", "),
         }}
@@ -98,13 +98,11 @@ export async function Hero({ media }: HeroProps) {
           anything parked in that corner sits on top of the second one. */}
       <div className="relative z-10 mx-auto w-full max-w-7xl gutter pb-[calc(env(safe-area-inset-bottom)+5.75rem)] lg:pb-24">
         <div className="max-w-xl">
-          {/* The mark sits ON the eyebrow's line rather than floating above
-              it: alone it landed on a white daisy and read as a smudge, and
-              a lone symbol with nothing beside it is not a lockup. Together
-              they are one object, and they share the same band of the
-              photograph — so if one is legible, both are. */}
-          <p className="mb-4 flex items-center gap-2.5 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream lg:mb-5 lg:text-xs">
-            <Monogram className="w-5 shrink-0 text-cream/90 lg:w-[1.375rem]" />
+          {/* No mark here: the brand lockup is the large one at the centre
+              of the frame, which is the header's own mark transformed down
+              into the hero (HeroMarkTravel.tsx). A second monogram beside
+              the eyebrow would be the same mark twice in one screen. */}
+          <p className="mb-4 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream lg:mb-5 lg:text-xs">
             {t.hero.eyebrow}
           </p>
 

@@ -119,6 +119,12 @@ function toStorefrontProduct(doc: PayloadProduct): Product {
     images: toImages(doc),
     occasions: toOccasionSlugs(doc),
     flowers: (doc.flowers ?? []) as Product["flowers"],
+    /* The owner picks this in /admin and it was being dropped here, so the
+       shop had no way to group by it and the category field existed in the
+       database for nobody's benefit. It is not an admin-only field — it is
+       what the arrangement IS, and the customer should be able to browse by
+       it. */
+    category: doc.category as Product["category"],
     featured: Boolean(doc.featured),
     newArrival: Boolean(doc.newArrival),
     /* The short description only — the rich-text body is not rendered on the
