@@ -211,6 +211,42 @@ export function Header({
   const { count, openCart } = useCart();
   const t = useT();
 
+  /**
+   * THE HEADER PUBLISHES ITS OWN HEIGHT.
+   *
+   * The hero slides up underneath this bar with a negative top margin, and
+   * that margin used to be a hardcoded 6.25rem — a guess that has to equal
+   * the real header height exactly. It does not, on a real iPhone: the
+   * safe-area inset adds to it on a notched device, and the service strip
+   * above the nav row wraps to two lines at narrow widths. When the guess is
+   * short, the top of the hero — its headline included — is left exposed
+   * above the bar, which is precisely the Safari fault reported.
+   *
+   * Measured and written to `--header-h`, the hero's offset is always the
+   * real height, whatever the chrome, the inset or the wrapping do. The
+   * ResizeObserver keeps it true through rotation, toolbar collapse and a
+   * language switch that changes the strip's line count.
+   */
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${Math.round(el.getBoundingClientRect().height)}px`,
+      );
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    window.addEventListener("orientationchange", publish);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", publish);
+    };
+  }, []);
+
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -301,6 +337,7 @@ export function Header({
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         /* THE STACKING CONTEXT IS THE BUG, NOT THE NUMBER.
            `sticky` + a z-index makes this element a stacking context, so the
@@ -417,6 +454,15 @@ export function Header({
           href="/"
           aria-label="Calanthe — home"
           data-travel-mark
+          /* SET ON THE SERVER, not waited for.
+             The travelling CSS keys off `data-travelling`, and until this
+             turn only the scroll handler set it — so between first paint and
+             hydration the mark fell to the navbar rule and then popped up to
+             hero size once JS ran. The header already knows whether this
+             route has a full-bleed hero, so it can say so in the markup and
+             the first frame is already correct. The handler keeps updating
+             it from scroll position exactly as before. */
+          data-travelling={overlay ? "true" : undefined}
           /* Centred on the ROW, and the row is centred on the viewport, so
              the mark is centred on the viewport at every width — which is
              also why the travelling animation never needs a horizontal
@@ -431,17 +477,11 @@ export function Header({
           {/* Both colourways render; the travel animation crossfades them
               so the mark turns olive exactly as it lands on the bar. On
               every other route the tone prop decides outright. */}
-          {/* `sizes` must describe the LARGEST size this mark is ever
-              painted at, not its resting one. At the navbar's 78px the
-              browser fetched a 78px-wide asset and the travelling animation
-              then scaled it past 540px — a 7x upscale, which rendered as a
-              blurred, ghosted smear over the hero. Requesting the hero size
-              makes it sharp out there, and downscaling to the bar is free. */}
-          <StackedLogo
-            tone={onDark ? "cream" : "olive"}
-            priority
-            sizes="(min-width: 1024px) 560px, 330px"
-          />
+          {/* No `sizes` or `priority` any more: the lockup is vector, so
+              there is no resolution to pick and nothing to preload — it
+              arrives with the markup and is crisp at every size it is
+              scaled to between the bar and the hero. */}
+          <StackedLogo tone={onDark ? "cream" : "olive"} />
         </Link>
 
         {/* Right — Occasions + Membership (desktop), icons (always) */}

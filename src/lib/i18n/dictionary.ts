@@ -78,7 +78,6 @@ export const en = {
   },
   band: {
     sendFlowersFor: "Send flowers for",
-    sameDay: "Same-Day",
     luxury: "Luxury",
   },
   sections: {
@@ -305,7 +304,6 @@ export const ar: typeof en = {
   },
   band: {
     sendFlowersFor: "أرسلي الزهور لـ",
-    sameDay: "توصيل اليوم",
     luxury: "الفاخرة",
   },
   sections: {

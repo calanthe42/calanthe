@@ -36,7 +36,33 @@ export async function Hero({ media }: HeroProps) {
   return (
     <section
       data-hero-root
-      className="relative -mt-[6.25rem] flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive lg:-mt-[7.5rem]"
+      /*
+       * THE OFFSET IS MEASURED, NOT GUESSED.
+       *
+       * This used to be `-mt-[6.25rem]` / `lg:-mt-[7.5rem]` — a hardcoded
+       * 100px and 120px standing in for the header's real height so the
+       * photograph runs full-bleed behind it. On a real iPhone the header is
+       * taller than the guess: the safe-area inset adds to it on a notched
+       * device, and the service strip wraps to two lines at narrow widths.
+       * The hero was then pulled up too little and its top — headline
+       * included — sat exposed above the bar. That is the reported Safari
+       * fault, and no negative constant can be right for every device.
+       *
+       * Header.tsx measures itself into `--header-h` (ResizeObserver, so it
+       * survives rotation and toolbar collapse). The fallbacks keep the old
+       * values for the first paint before hydration, so nothing shifts.
+       *
+       * HEIGHT STAYS `100svh`. Adding the header height to it was wrong and
+       * measurably so: the hero is `justify-end`, so a box taller than the
+       * viewport pushes its own content — eyebrow, headline, both CTAs —
+       * below the fold by exactly the offset. The hero begins at the top of
+       * the viewport and ends at the bottom of it; the header simply sits
+       * over its first 102px. `svh` is the small viewport (toolbar
+       * expanded), so the composition is correct at its tightest and only
+       * gains room as the chrome retracts, never loses it.
+       */
+      style={{ marginTop: "calc(-1 * var(--header-h, 6.25rem))" }}
+      className="relative flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive"
     >
       {/* Full-bleed photography — the visual centerpiece. Parallax is
           desktop-only: on a phone the travelling logo is the one
@@ -116,29 +142,48 @@ export async function Hero({ media }: HeroProps) {
 
           <div className="hero-cta-in">
             {/*
-              STACKED ON A PHONE, SIDE BY SIDE FROM 400px.
+              EDITORIAL CTAs, NOT APP BUTTONS.
 
-              Two `flex-1` buttons with `whitespace-nowrap` could not fit
-              "BUILD YOUR OWN" in 170px at 390px wide, so it rendered as
-              "BUILD YOUR O" — text clipped by a container that had been
-              told never to wrap it. Full-width rows cannot clip, give a
-              48px target instead of 43px, and put both actions squarely in
-              the thumb zone. The near-square corner is the brand's
-              (radius-sm, 2px); the fully-rounded pill was neither in the
-              system nor in character.
+              These were full-bleed slabs on a phone: `w-full` below 400px
+              and `flex-1` above it, so both stretched the whole measure and
+              read as a mobile app's action bar rather than as the two quiet
+              invitations under a magazine cover line.
+
+              They now size to their own text at every width, sitting side
+              by side and wrapping only if the language needs the room. The
+              48px minimum height and the 2px corner are untouched — this is
+              a change of WIDTH and weight, not of tap target or shape.
+
+              `text-[0.75rem]` and tighter tracking on a phone: at 13px with
+              0.18em the words alone were 200px wide, which is what forced
+              the full-bleed layout in the first place.
+
+              EQUAL WIDTH WHEN THEY STACK. Left to size themselves the two
+              came out 168px and 191px, and whether they sat on one row or
+              two changed with both width and language — 430px English put
+              them side by side while 390px did not, and Arabic flipped at a
+              different width again. Two stacked buttons of different widths
+              on a left margin is the "awkward different-width alignment"
+              this was reported as. A shared `min-w` makes the pair one
+              consistent block at every phone width and in both languages;
+              from `sm:` there is room for them to sit side by side.
+
+              The floor steps up with the padding at 400px: `px-7` pushed
+              "Build Your Own" to 199px, back past a 192px floor, and the
+              pair went uneven again at 414 and 430.
             */}
-            <div className="flex flex-col gap-3 min-[400px]:flex-row min-[400px]:gap-3.5 sm:max-w-lg">
+            <div className="flex flex-wrap items-center gap-3 min-[400px]:gap-3.5">
               <ButtonLink
                 href="/shop"
                 variant="glass-primary"
-                className="w-full min-[400px]:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="min-w-[12rem] px-6 text-[0.75rem] tracking-[0.14em] sm:min-w-0 min-[400px]:min-w-[12.5rem] min-[400px]:px-7 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
               >
                 {t.hero.shopFlowers}
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
-                className="w-full min-[400px]:flex-1 lg:w-auto lg:flex-none lg:px-12"
+                className="min-w-[12rem] px-6 text-[0.75rem] tracking-[0.14em] sm:min-w-0 min-[400px]:min-w-[12.5rem] min-[400px]:px-7 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
               >
                 {t.hero.buildYourOwn}
               </ButtonLink>

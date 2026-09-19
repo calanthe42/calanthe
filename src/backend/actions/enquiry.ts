@@ -91,6 +91,18 @@ async function create(
 /* ------------------------------------------------------------------ */
 
 export type BespokeEnquiryRequest = Contact & {
+  /**
+   * Who the flowers are for.
+   *
+   * "gift" means a third party receives them, so the atelier needs a second
+   * name and number to deliver to and the sender's details to confirm with.
+   * "myself" means one person, one address — asking for a recipient would be
+   * asking someone to fill in their own name twice.
+   */
+  isGift: boolean;
+  recipientName?: string;
+  recipientPhone?: string;
+  deliveryLocation?: string;
   occasion: string;
   budgetAed: number;
   colours: readonly string[];
@@ -117,12 +129,29 @@ export async function submitBespokeEnquiry(
     ? "Florist's choice"
     : request.colours.join(", ");
 
+  /* Recipient details have no columns of their own on the buildYourOwn
+     group — the schema models the ARRANGEMENT, and who receives it belongs
+     to the order that follows. Until an enquiry can become an order they go
+     into the message the florist reads, clearly labelled. */
+  const forWhom = request.isGift
+    ? [
+        "For: a gift",
+        clean(request.recipientName, 140)
+          ? `Recipient: ${clean(request.recipientName, 140)}`
+          : "",
+        clean(request.recipientPhone, 40)
+          ? `Recipient phone: ${clean(request.recipientPhone, 40)}`
+          : "",
+      ]
+    : ["For: themselves"];
+
   /* The schema's buildYourOwn group has no column for the vase, the card or
      the running total, so they are written into the message the florist
      actually reads. Losing them would defeat the point of recording this. */
   const message = [
     `Occasion: ${request.occasion}`,
     `Budget: AED ${request.budgetAed}`,
+    ...forWhom,
     colours ? `Colours: ${colours}` : "",
     request.vase === null ? "" : `Vase: ${request.vase ? "yes" : "no"}`,
     request.leaveCardBlank
@@ -149,6 +178,9 @@ export async function submitBespokeEnquiry(
     message,
     buildYourOwn: {
       budgetFils: Math.round(request.budgetAed * 100),
+      ...(clean(request.deliveryLocation, 240)
+        ? { deliveryLocation: clean(request.deliveryLocation, 240) }
+        : {}),
       ...(request.cardMessage && !request.leaveCardBlank
         ? { cardMessage: clean(request.cardMessage, 300) }
         : {}),

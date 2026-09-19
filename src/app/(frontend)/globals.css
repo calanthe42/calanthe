@@ -527,22 +527,56 @@ body::after {
 .travel-mark {
   --travel: 1;
   --travel-y: 0px;
-  --travel-scale: 1;
-  /* THE LOCKUP IS A BITMAP BEING SCALED CONTINUOUSLY. Without its own
-     compositor layer the browser re-rasterises the PNG at every fractional
-     scale step, which on a phone reads as the mark shimmering the whole way
-     down. Promoting it means one rasterisation, scaled by the GPU.
-     `backface-visibility` is the old but still necessary half of this on
-     iOS Safari, which otherwise keeps the layer on the main thread. */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
-  /* Centring is part of the same transform so the two never compose in
-     the wrong order — the bug that once threw the mark off to the left. */
-  transform: translate(-50%, -50%) translateY(var(--travel-y))
-    scale(var(--travel-scale));
+  /* 1 while the mark fills the hero, 1/scaleUp once it is docked. */
+  --travel-shrink: 1;
+  /* Only translation lives on the link. The link keeps the NAV footprint so
+     the header's layout never moves; the artwork inside is what changes
+     size. */
+  transform: translate(-50%, -50%) translateY(var(--travel-y));
   transform-origin: center center;
   will-change: transform;
+}
+
+/*
+ * RASTERISE BIG, SCALE DOWN — NEVER THE REVERSE.
+ *
+ * The lockup is a bitmap. Previously the link was 64px wide on a phone and
+ * the whole thing was scaled UP ~4.75x to fill the hero, with its own
+ * compositor layer. A compositor layer is rasterised ONCE at its layout
+ * size, so the GPU was enlarging a 64px-wide bitmap to 304px — which is
+ * exactly the soft, low-quality mark seen on a real device.
+ *
+ * The artwork is now laid out at the HERO width and scaled DOWN to the bar.
+ * Rasterisation therefore always happens at the largest size it is ever
+ * shown, and the GPU only ever downsamples, which is sharp at any DPR.
+ *
+ * `position: absolute` matters as much as the size: at hero width this box
+ * is far wider than its 64px parent, and in flow it would push the page
+ * sideways. Out of flow it contributes nothing to layout width.
+ */
+.travel-mark .stacked-logo {
+  position: absolute;
+  /* PHYSICAL `left`, deliberately, NOT `inset-inline-start`.
+     Centring is symmetric, so there is no reading direction to respect — and
+     the logical property actively breaks it: under RTL it resolves to
+     `right: 50%`, while the `translate(-50%)` beside it stays physical. The
+     two then compose to put the mark one full width to the left of centre
+     instead of on it, which measured as dx=-304 at 390px in Arabic. */
+  left: 50%;
+  top: 50%;
+  width: var(--logo-hero-w);
+  transform: translate(-50%, -50%) scale(var(--travel-shrink));
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Routes with no travelling hero: the mark is simply the navbar's, at the
+   navbar's size, with no transform in play. */
+.travel-mark:not([data-travelling]) .stacked-logo {
+  width: var(--logo-nav-w);
+  transform: translate(-50%, -50%);
 }
 
 /* Out over the photograph it is decoration: a mark scaled past 500px must

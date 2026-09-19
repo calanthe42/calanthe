@@ -79,7 +79,7 @@ export function HeroMarkTravel() {
      * transform genuinely cleared.
      *
      * THE VARIABLES THAT MUST BE CLEARED ARE `--travel-y` AND
-     * `--travel-scale`, because those are the two the transform actually
+     * `--travel-shrink`, because those are the two the transform actually
      * reads. Clearing `--travel` alone looks right but changes nothing, so
      * the element is still expanded out in the hero when it is measured —
      * and the "docked centre" comes back as the hero centre. The difference
@@ -92,7 +92,7 @@ export function HeroMarkTravel() {
      */
     const measure = () => {
       mark.style.setProperty("--travel-y", "0px");
-      mark.style.setProperty("--travel-scale", "1");
+      mark.style.setProperty("--travel-shrink", "1");
       const rect = mark.getBoundingClientRect();
       navCentre = rect.top + rect.height / 2;
 
@@ -139,7 +139,12 @@ export function HeroMarkTravel() {
         "--travel-y",
         `${Math.round((1 - eased) * (heroCentre - navCentre))}px`,
       );
-      mark.style.setProperty("--travel-scale", String(1 + (1 - eased) * (scaleUp - 1)));
+      /* SHRINK, never grow: the artwork is laid out at the hero width (see
+         `.travel-mark .stacked-logo` in globals.css) so the bitmap is
+         rasterised at its largest and the GPU only downsamples. 1 in the
+         hero, 1/scaleUp once docked. */
+      const docked = scaleUp > 0 ? 1 / scaleUp : 0.25;
+      mark.style.setProperty("--travel-shrink", String(1 - eased * (1 - docked)));
       /* Cream nearly the whole way, olive only as it lands. Turning at 62%
          left the mark mid-dissolve while it was still out over the
          photograph — and olive on a dark bouquet is invisible, so it read
@@ -234,7 +239,7 @@ export function HeroMarkTravel() {
       window.removeEventListener("orientationchange", remeasure);
       mark.style.removeProperty("--travel");
       mark.style.removeProperty("--travel-y");
-      mark.style.removeProperty("--travel-scale");
+      mark.style.removeProperty("--travel-shrink");
       mark.style.removeProperty("--travel-cream");
       delete mark.dataset.travelling;
     };
