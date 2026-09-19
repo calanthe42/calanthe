@@ -6,7 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { Button, buttonClasses } from "@/components/ui/Button";
+import { Button, ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import {
   chipClasses,
@@ -17,6 +17,7 @@ import {
   labelClasses,
 } from "@/components/ui/form-classes";
 import { Monogram } from "@/components/ui/Monogram";
+import { useT } from "@/lib/locale";
 import { cn } from "@/lib/cn";
 import { describeCartItem, itemUnitPrice, useCart, type CartItem } from "@/lib/cart";
 import {
@@ -165,6 +166,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 export function CheckoutForm() {
   const { items, subtotalAed, clear } = useCart();
+  const t = useT();
 
   /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
@@ -331,21 +333,22 @@ export function CheckoutForm() {
       <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 text-center">
         <Monogram className="w-14 text-ink-muted" />
         <h1 className="font-display text-3xl font-light italic text-olive lg:text-4xl">
-          Your cart is waiting to bloom.
+          {t.cart.empty}
         </h1>
         <p className="max-w-sm text-base leading-relaxed text-ink-muted">
-          Choose an arrangement, or have one composed for you.
+          {t.cart.emptyBody}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link href="/shop" className={buttonClasses("primary", "whitespace-nowrap")}>
-            Shop Flowers
-          </Link>
-          <Link
+          <ButtonLink href="/shop" className="whitespace-nowrap">
+            {t.cart.shopFlowers}
+          </ButtonLink>
+          <ButtonLink
             href="/build-your-own"
-            className={buttonClasses("secondary", "whitespace-nowrap")}
+            variant="secondary"
+            className="whitespace-nowrap"
           >
-            Build Your Own
-          </Link>
+            {t.cart.buildYourOwn}
+          </ButtonLink>
         </div>
       </div>
     );

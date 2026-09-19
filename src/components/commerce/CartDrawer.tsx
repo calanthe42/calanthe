@@ -14,11 +14,12 @@ import {
   type CartItem as CartItemType,
 } from "@/lib/cart";
 import { addons, formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
-import { useLocale } from "@/lib/locale";
+import { useLocale, useT } from "@/lib/locale";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 function QtyStepper({ item }: { item: CartItemType }) {
   const { setQty } = useCart();
+  const t = useT();
   /* One is the floor. Below it the reducer removes the line, which is a
      different and destructive act — it should be reached through "Remove",
      deliberately, not by pressing minus one more time than intended. */
@@ -28,7 +29,7 @@ function QtyStepper({ item }: { item: CartItemType }) {
     <div className="flex items-center rounded-sm border border-hairline">
       <button
         type="button"
-        aria-label={`Decrease quantity of ${item.name}`}
+        aria-label={t.cart.decrease.replace("{name}", item.name)}
         disabled={atFloor}
         onClick={() => setQty(item.key, item.qty - 1)}
         className="flex h-11 w-11 items-center justify-center text-olive transition-opacity duration-200 ease-bloom hover:opacity-60 disabled:pointer-events-none disabled:opacity-30"
@@ -37,14 +38,14 @@ function QtyStepper({ item }: { item: CartItemType }) {
       </button>
       <span
         aria-live="polite"
-        aria-label={`Quantity ${item.qty}`}
+        aria-label={t.cart.quantity.replace("{n}", String(item.qty))}
         className="min-w-6 text-center text-sm tabular-nums text-olive"
       >
         {item.qty}
       </span>
       <button
         type="button"
-        aria-label={`Increase quantity of ${item.name}`}
+        aria-label={t.cart.increase.replace("{name}", item.name)}
         onClick={() => setQty(item.key, item.qty + 1)}
         className="flex h-11 w-11 items-center justify-center text-olive transition-opacity duration-200 ease-bloom hover:opacity-60"
       >
@@ -56,6 +57,7 @@ function QtyStepper({ item }: { item: CartItemType }) {
 
 function CartLine({ item }: { item: CartItemType }) {
   const { removeItem } = useCart();
+  const t = useT();
 
   return (
     <li className="flex gap-4 py-5">
@@ -76,17 +78,17 @@ function CartLine({ item }: { item: CartItemType }) {
         </div>
         <p className="text-sm text-ink-muted">{describeCartItem(item)}</p>
         {item.giftMessage && (
-          <p className="text-sm italic text-ink-muted">Gift message included</p>
+          <p className="text-sm italic text-ink-muted">{t.cart.giftMessageIncluded}</p>
         )}
         <div className="mt-2 flex items-center justify-between">
           <QtyStepper item={item} />
           <Button
             variant="text"
             onClick={() => removeItem(item.key)}
-            aria-label={`Remove ${item.name} from cart`}
+            aria-label={t.cart.removeItem.replace("{name}", item.name)}
             className="px-2"
           >
-            Remove
+            {t.cart.remove}
           </Button>
         </div>
       </div>
@@ -96,6 +98,7 @@ function CartLine({ item }: { item: CartItemType }) {
 
 function CompleteTheGift() {
   const { items, addAddonToItem } = useCart();
+  const t = useT();
   const last = items[items.length - 1];
   if (!last) return null;
   const suggestions = addons.filter((a) => !last.addonIds.includes(a.id)).slice(0, 3);
@@ -104,7 +107,7 @@ function CompleteTheGift() {
   return (
     <div className="border-t border-hairline px-6 py-4">
       <p className="mb-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted">
-        Complete the gift
+        {t.cart.completeTheGift}
       </p>
       {/* Named, priced choices rather than image tiles: the add-ons have no
           photographs, and generated art captioned "chocolates" showed
@@ -135,6 +138,7 @@ export function CartDrawer() {
      the cart button sits top-start in RTL, so the panel was flying out from
      under the opposite corner. */
   const { dir } = useLocale();
+  const t = useT();
   const fromEnd = dir === "rtl" ? "-100%" : "100%";
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
   const progress = Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
@@ -178,12 +182,12 @@ export function CartDrawer() {
           >
             <header className="flex items-center justify-between border-b border-hairline px-6 py-4">
               <h2 className="font-brand text-sm font-medium uppercase tracking-brand text-olive">
-                Your Cart
+                {t.cart.title}
               </h2>
               <Button
                 variant="quiet"
                 size="icon"
-                aria-label="Close cart"
+                aria-label={t.cart.close}
                 onClick={closeCart}
                 className="-me-2"
               >
@@ -220,7 +224,7 @@ export function CartDrawer() {
               <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
                 <Monogram className="w-14 text-ink-muted" />
                 <p className="font-display text-2xl font-light italic text-olive">
-                  Your cart is waiting to bloom.
+                  {t.cart.empty}
                 </p>
                 <div className="flex w-full max-w-xs flex-col gap-3">
                   <ButtonLink
@@ -228,7 +232,7 @@ export function CartDrawer() {
                     onClick={closeCart}
                     className="whitespace-nowrap"
                   >
-                    Shop Flowers
+                    {t.cart.shopFlowers}
                   </ButtonLink>
                   <ButtonLink
                     href="/build-your-own"
@@ -236,7 +240,7 @@ export function CartDrawer() {
                     onClick={closeCart}
                     className="whitespace-nowrap"
                   >
-                    Build Your Own
+                    {t.cart.buildYourOwn}
                   </ButtonLink>
                 </div>
               </div>
@@ -251,19 +255,17 @@ export function CartDrawer() {
                     className="border-b border-hairline bg-cream/60 px-6 py-3 text-sm leading-relaxed text-ink-muted"
                   >
                     {droppedCount === 1
-                      ? "One arrangement is no longer available and has been removed."
-                      : `${droppedCount} arrangements are no longer available and have been removed.`}
+                      ? t.cart.droppedOne
+                      : t.cart.droppedMany.replace("{n}", String(droppedCount))}
                   </p>
                 )}
 
                 {/* Free delivery progress */}
                 <div className="border-b border-hairline px-6 py-4">
                   <p className="text-sm text-ink-muted">
-                    {remaining > 0 ? (
-                      <>{formatAed(remaining)} away from complimentary delivery</>
-                    ) : (
-                      <>Your delivery is complimentary</>
-                    )}
+                    {remaining > 0
+                      ? t.cart.freeDeliveryAway.replace("{amount}", formatAed(remaining))
+                      : t.cart.freeDeliveryReached}
                   </p>
                   <div className="mt-2 h-px w-full bg-hairline">
                     <div
@@ -299,19 +301,19 @@ export function CartDrawer() {
                 <footer className="border-t border-hairline px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-4">
                   <div className="flex items-baseline justify-between">
                     <p className="font-brand text-xs font-medium uppercase tracking-brand text-ink-muted">
-                      Subtotal
+                      {t.cart.subtotal}
                     </p>
                     <p className="font-display text-2xl text-olive">
                       {formatAed(subtotalAed)}
                     </p>
                   </div>
                   <div className="mt-1.5 flex items-baseline justify-between gap-3 border-t border-hairline/60 pt-2.5">
-                    <p className="text-sm text-ink-muted">Delivery</p>
+                    <p className="text-sm text-ink-muted">{t.cart.delivery}</p>
                     <p className="text-sm text-ink-muted">
                       {remaining > 0 ? (
-                        "Calculated at checkout"
+                        t.cart.deliveryAtCheckout
                       ) : (
-                        <span className="text-olive">Complimentary</span>
+                        <span className="text-olive">{t.cart.deliveryFree}</span>
                       )}
                     </p>
                   </div>
@@ -321,14 +323,14 @@ export function CartDrawer() {
                     onClick={closeCart}
                     className="mt-4 w-full"
                   >
-                    Checkout
+                    {t.cart.checkout}
                   </ButtonLink>
                   <Button
                     variant="text"
                     onClick={closeCart}
                     className="mt-1 w-full"
                   >
-                    Continue shopping
+                    {t.cart.continueShopping}
                   </Button>
                 </footer>
               </>

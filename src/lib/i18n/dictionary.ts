@@ -118,6 +118,40 @@ export const en = {
     body: "The next collection is being composed. Until it arrives, tell us the moment, the colours and your budget, and a florist will compose it for you.",
     messageFlorist: "Message a Florist",
   },
+  /**
+   * The basket and the checkout.
+   *
+   * Short, functional strings — labels, buttons, states. Kept in one place
+   * because they appear on the two screens where an untranslated word is
+   * most expensive: the ones where money is involved.
+   */
+  cart: {
+    title: "Your Cart",
+    close: "Close cart",
+    empty: "Your cart is waiting to bloom.",
+    emptyBody: "Choose an arrangement, or have one composed for you.",
+    shopFlowers: "Shop Flowers",
+    buildYourOwn: "Build Your Own",
+    loading: "Loading your cart",
+    subtotal: "Subtotal",
+    delivery: "Delivery",
+    deliveryAtCheckout: "Calculated at checkout",
+    deliveryFree: "Complimentary",
+    checkout: "Checkout",
+    continueShopping: "Continue shopping",
+    remove: "Remove",
+    removeItem: "Remove {name} from cart",
+    increase: "Increase quantity of {name}",
+    decrease: "Decrease quantity of {name}",
+    quantity: "Quantity {n}",
+    completeTheGift: "Complete the gift",
+    freeDeliveryAway: "{amount} away from complimentary delivery",
+    freeDeliveryReached: "Your delivery is complimentary",
+    giftMessageIncluded: "Gift message included",
+    droppedOne: "One arrangement is no longer available and has been removed.",
+    droppedMany:
+      "{n} arrangements are no longer available and have been removed.",
+  },
   pages: {
     shopEyebrow: "The Collection",
     shopTitle: "Composed this morning, at your door today.",
@@ -255,6 +289,32 @@ export const ar: typeof en = {
     title: "كل باقة يمكن أن تُصنع خصيصًا لك.",
     body: "المجموعة القادمة قيد التنسيق. وحتى تصل، أخبرينا بالمناسبة والألوان والميزانية، وتنسّقها لك إحدى منسّقات الزهور.",
     messageFlorist: "تواصلي مع منسّقة الزهور",
+  },
+  cart: {
+    title: "سلّتك",
+    close: "إغلاق السلة",
+    empty: "سلّتك تنتظر أن تُزهر.",
+    emptyBody: "اختاري باقة جاهزة، أو دعينا نُنسّق واحدة خصيصًا لك.",
+    shopFlowers: "تسوّقي الزهور",
+    buildYourOwn: "صمّمي باقتك",
+    loading: "جارٍ تحميل سلّتك",
+    subtotal: "المجموع الفرعي",
+    delivery: "التوصيل",
+    deliveryAtCheckout: "يُحتسب عند إتمام الطلب",
+    deliveryFree: "مجاني",
+    checkout: "إتمام الطلب",
+    continueShopping: "متابعة التسوّق",
+    remove: "إزالة",
+    removeItem: "إزالة {name} من السلة",
+    increase: "زيادة كمية {name}",
+    decrease: "إنقاص كمية {name}",
+    quantity: "الكمية {n}",
+    completeTheGift: "أتمّي الهدية",
+    freeDeliveryAway: "يفصلك {amount} عن التوصيل المجاني",
+    freeDeliveryReached: "توصيلك مجاني",
+    giftMessageIncluded: "تتضمّن بطاقة إهداء",
+    droppedOne: "باقة واحدة لم تعد متوفرة وقد أُزيلت.",
+    droppedMany: "{n} باقات لم تعد متوفرة وقد أُزيلت.",
   },
   pages: {
     shopEyebrow: "المجموعة",

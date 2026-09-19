@@ -553,8 +553,8 @@ export function BuildYourOwnForm() {
 function SendNote() {
   return (
     <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-      Opens WhatsApp with your request written out. Nothing is ordered until a florist
-      confirms it with you.
+      Sends your request to the atelier. Nothing is ordered and nothing is
+      charged until a florist confirms it with you.
     </p>
   );
 }
@@ -677,8 +677,8 @@ function Summary({
         </p>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted lg:hidden">
-        Opens WhatsApp with your request written out. Nothing is ordered until a florist
-        confirms it with you.
+        Sends your request to the atelier. Nothing is ordered and nothing is
+        charged until a florist confirms it with you.
       </p>
     </section>
   );
