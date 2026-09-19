@@ -352,7 +352,26 @@ export function CheckoutForm() {
   }
 
   return (
-    <>
+    /*
+     * A REAL <form>, not a div with a click handler.
+     *
+     * Everything here was inputs inside divs, so pressing Enter in the last
+     * field did nothing — on a checkout, where that is exactly what people
+     * do — and browsers and password managers had no form to attach address
+     * autofill to. `placeOrder` is unchanged and still the only thing that
+     * creates an order; it is now reached through submit as well as click.
+     *
+     * `noValidate` because the field-level messages below are written for a
+     * customer; the browser's own bubbles would say something else, in a
+     * different voice, in the wrong language.
+     */
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        placeOrder();
+      }}
+    >
       <div className="mb-10 lg:mb-14">
         <Eyebrow>Checkout</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">
@@ -659,13 +678,13 @@ export function CheckoutForm() {
               </p>
             )}
             <Button
+              type="submit"
               variant="primary"
               className="w-full"
-              onClick={placeOrder}
-              disabled={pending}
-              aria-busy={pending}
+              loading={pending}
+              loadingText="Placing your order…"
             >
-              {pending ? "Placing your order…" : <>Place Order — {formatAed(totalAed)}</>}
+              Place Order — {formatAed(totalAed)}
             </Button>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">
               Questions first?{" "}
@@ -682,6 +701,6 @@ export function CheckoutForm() {
           </div>
         </aside>
       </div>
-    </>
+    </form>
   );
 }

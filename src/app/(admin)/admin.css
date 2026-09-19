@@ -222,8 +222,21 @@ html[data-theme="dark"] {
   font-weight: 500;
   letter-spacing: 0;
 }
-:lang(en) .font-brand {
+/* `.font-brand:lang(en)`, NOT `:lang(en) .font-brand`. The descendant form
+   asks for a .font-brand INSIDE an English element — but the wordmark IS the
+   element carrying both lang="en" and .font-brand, so it never matched and
+   the rule did nothing at all. */
+.font-brand:lang(en) {
   font-family: var(--font-cinzel), serif;
+  /* The two lines below this rule's `font-family` matter as much as it does.
+     `:lang(ar) .font-brand` also zeroes letter-spacing and clears
+     text-transform, and because both rules have equal specificity this one
+     only overrode what it actually re-declared — so the Latin wordmark came
+     back in Cinzel but lower-case and untracked ("Calanthe", not the brand's
+     "CALANTHE") on every Arabic admin screen. Restated here as the brand
+     defines them. */
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 /* Wide content scrolls inside its own container; the page body never does. */

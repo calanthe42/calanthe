@@ -70,10 +70,25 @@ export function HeroMarkTravel() {
     let distance = 1;
     let scaleUp = 1;
 
-    /* Measured, never assumed: the docked centre is read with the travel
-       transform cleared, so it is the element's true resting position. */
+    /**
+     * Measured, never assumed: the docked centre is read with the travel
+     * transform genuinely cleared.
+     *
+     * THE VARIABLES THAT MUST BE CLEARED ARE `--travel-y` AND
+     * `--travel-scale`, because those are the two the transform actually
+     * reads. Clearing `--travel` alone looks right but changes nothing, so
+     * the element is still expanded out in the hero when it is measured —
+     * and the "docked centre" comes back as the hero centre. The difference
+     * between them is then zero and the mark never moves at all.
+     *
+     * That was harmless while measure() only ever ran once, before the first
+     * transform was applied. The moment anything re-measures — a rotate, a
+     * width change, a second pass after load — it silently kills the
+     * animation.
+     */
     const measure = () => {
-      mark.style.setProperty("--travel", "1");
+      mark.style.setProperty("--travel-y", "0px");
+      mark.style.setProperty("--travel-scale", "1");
       const rect = mark.getBoundingClientRect();
       navCentre = rect.top + rect.height / 2;
 
@@ -125,20 +140,54 @@ export function HeroMarkTravel() {
       frame = requestAnimationFrame(apply);
     };
 
+    /**
+     * ONLY A WIDTH CHANGE IS A REAL LAYOUT CHANGE — ON A PHONE.
+     *
+     * A desktop browser fires `resize` when you drag the window. A phone
+     * fires it CONSTANTLY WHILE YOU SCROLL, because the address bar
+     * collapses and expands and the viewport height changes with it. The
+     * hero is `h-svh`, so re-measuring on every one of those events moved
+     * the target mid-journey and the mark visibly jumped — on a real
+     * handset only, which is why no desktop test could ever see it.
+     *
+     * Width (and orientation) genuinely change the layout. Height alone,
+     * during a scroll, is browser chrome and must be ignored.
+     */
+    let lastWidth = window.innerWidth;
     const onResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
       measure();
       apply();
     };
 
     measure();
     apply();
+
+    /* The first measure runs before the brand image has necessarily laid
+       out, which on a phone can leave the docked centre a few pixels off
+       for the whole journey. Measuring again once everything has loaded
+       costs nothing and makes the landing exact. */
+    const remeasure = () => {
+      measure();
+      apply();
+    };
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", remeasure, { once: true });
+    }
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
+    /* Rotating a handset changes the layout for real, and on iOS it does
+       not always arrive as a width change in time. */
+    window.addEventListener("orientationchange", remeasure);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("load", remeasure);
+      window.removeEventListener("orientationchange", remeasure);
       mark.style.removeProperty("--travel");
       mark.style.removeProperty("--travel-y");
       mark.style.removeProperty("--travel-scale");
