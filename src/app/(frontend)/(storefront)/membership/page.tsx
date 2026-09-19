@@ -41,14 +41,23 @@ export default function MembershipPage() {
               Fresh flowers, thoughtfully arranged and delivered to your door every week.
             </p>
           </Reveal>
-          <Reveal delay={0.15} className="mt-12 w-full max-w-md">
-            <p className="mb-4 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream/60">
-              Choose your delivery day
-            </p>
-            <DayPicker />
-          </Reveal>
         </div>
       </section>
+
+      {/*
+        THE DAY COMES AFTER THE PLAN, NOT BEFORE IT.
+
+        "Choose your delivery day" used to be the first thing on this page,
+        sitting in the hero above the tiers — asking someone to pick a
+        Tuesday before they had read what a membership is, what it costs or
+        how often it arrives. The answer is meaningless until the plan is
+        understood, and putting it first made the page read as a booking
+        form rather than an invitation.
+
+        It now sits between the tiers and "How it works": you read what you
+        are joining, you choose a tier, and then you say which day suits.
+        The picker itself is unchanged — only its place in the argument.
+      */}
 
       {/* Tiers — the cards and the enquiry that begins one now live in a
           client component, because "Begin" opens a form rather than leaving
@@ -59,6 +68,24 @@ export default function MembershipPage() {
           Nothing is charged here. A florist confirms the details with you
           before any membership begins.
         </p>
+      </section>
+
+      <section className="border-t border-hairline bg-cream">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gutter section-pad text-center">
+          <Reveal className="w-full max-w-md">
+            <Eyebrow>And then</Eyebrow>
+            <h2 className="mt-3 font-display text-[2rem] font-light leading-tight text-olive lg:text-[2.5rem]">
+              Which day suits you?
+            </h2>
+            <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-ink-muted">
+              One day a week is yours. We reserve your route and your stems, and
+              a florist confirms it with you before anything begins.
+            </p>
+            <div className="mt-9">
+              <DayPicker />
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* How it works */}

@@ -5,9 +5,11 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { CustomerLogout } from "@/components/commerce/CustomerLogout";
 import { Reveal } from "@/components/motion/Reveal";
+import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { formatFils } from "@/lib/money";
 import { getCustomerSession } from "@backend/actions/account";
+import { getDictionary } from "@/lib/i18n/server";
 
 export const metadata: Metadata = { title: "Your account", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -21,6 +23,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function AccountPage() {
   const customer = await getCustomerSession();
+  const { t } = await getDictionary();
 
 /* A signed-out visitor gets an invitation to sign in rather than a redirect.
    The storefront runs with `experimental.globalNotFound`, under which a
@@ -30,20 +33,26 @@ export default async function AccountPage() {
     return (
       <main className="mx-auto max-w-6xl gutter section-pad">
         <Reveal className="max-w-md">
-          <Eyebrow>Your account</Eyebrow>
+          <Eyebrow>{t.account.eyebrow}</Eyebrow>
           <h1 className="display-2 mt-3 font-display font-light text-olive">
-            Please sign in.
+            {t.account.signInTitle}
           </h1>
           <p className="mt-4 text-base leading-relaxed text-ink-muted">
             Sign in to see your orders. You do not need an account to buy — every arrangement
             can be ordered as a guest.
           </p>
-          <Link
-            href="/login"
-            className="mt-6 inline-block text-base text-olive underline underline-offset-4"
-          >
-            Sign in
-          </Link>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <ButtonLink href="/account/login" className="whitespace-nowrap">
+              {t.account.signIn}
+            </ButtonLink>
+            <ButtonLink
+              href="/account/register"
+              variant="secondary"
+              className="whitespace-nowrap"
+            >
+              {t.account.createAccount}
+            </ButtonLink>
+          </div>
         </Reveal>
       </main>
     );
@@ -66,7 +75,7 @@ export default async function AccountPage() {
     <main className="mx-auto max-w-6xl gutter section-pad">
       <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Eyebrow>Your account</Eyebrow>
+          <Eyebrow>{t.account.eyebrow}</Eyebrow>
           <h1 className="display-2 mt-3 font-display font-light text-olive">{name}</h1>
           <p className="mt-2 text-base text-ink-muted">{customer.email}</p>
         </div>
