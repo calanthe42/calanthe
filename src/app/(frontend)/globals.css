@@ -528,6 +528,15 @@ body::after {
   --travel: 1;
   --travel-y: 0px;
   --travel-scale: 1;
+  /* THE LOCKUP IS A BITMAP BEING SCALED CONTINUOUSLY. Without its own
+     compositor layer the browser re-rasterises the PNG at every fractional
+     scale step, which on a phone reads as the mark shimmering the whole way
+     down. Promoting it means one rasterisation, scaled by the GPU.
+     `backface-visibility` is the old but still necessary half of this on
+     iOS Safari, which otherwise keeps the layer on the main thread. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
   /* Centring is part of the same transform so the two never compose in
      the wrong order — the bug that once threw the mark off to the left. */
   transform: translate(-50%, -50%) translateY(var(--travel-y))

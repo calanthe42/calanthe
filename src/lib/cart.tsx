@@ -167,6 +167,20 @@ function reducer(state: CartState, action: CartAction): CartState {
 
 type CartContextValue = {
   items: readonly CartItem[];
+  /**
+   * False until the stored cart has been read back.
+   *
+   * The first render always has zero items, so without this the drawer shows
+   * "your cart is empty" to a returning customer for a frame before their
+   * basket appears. Empty and not-yet-known are different states and must
+   * look different.
+   */
+  hydrated: boolean;
+  /**
+   * Lines dropped on hydration because the product is no longer in the
+   * catalogue. Silently shrinking someone's basket is worse than saying so.
+   */
+  droppedCount: number;
   subtotalAed: number;
   count: number;
   isOpen: boolean;
@@ -196,8 +210,11 @@ export function CartProvider({
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
   /* Never persist until the stored cart has been read, or the initial
-     empty state would clobber it. */
+     empty state would clobber it. The ref guards the effect; the state is
+     what the UI can actually see. */
   const hydrated = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [droppedCount, setDroppedCount] = useState(0);
 
   useEffect(() => {
     /* Once only. The catalogue is a dependency because sanitising needs it,
@@ -206,15 +223,18 @@ export function CartProvider({
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        dispatch({
-          type: "hydrate",
-          items: sanitizeStoredItems(JSON.parse(raw), catalogue),
-        });
+        const stored = JSON.parse(raw);
+        const items = sanitizeStoredItems(stored, catalogue);
+        if (Array.isArray(stored) && stored.length > items.length) {
+          setDroppedCount(stored.length - items.length);
+        }
+        dispatch({ type: "hydrate", items });
       }
     } catch {
       /* corrupt storage — start empty */
     }
     hydrated.current = true;
+    setIsHydrated(true);
   }, [catalogue]);
 
   useEffect(() => {
@@ -255,6 +275,8 @@ export function CartProvider({
   const value = useMemo<CartContextValue>(
     () => ({
       items: state.items,
+      hydrated: isHydrated,
+      droppedCount,
       subtotalAed,
       count,
       isOpen,
@@ -268,6 +290,8 @@ export function CartProvider({
     }),
     [
       state.items,
+      isHydrated,
+      droppedCount,
       subtotalAed,
       count,
       isOpen,

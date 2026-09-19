@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useLenisInstance } from "@/lib/lenis-context";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
 /**
@@ -54,6 +55,7 @@ const TRAVEL = 0.42;
 export function HeroMarkTravel() {
   const pathname = usePathname();
   const reduced = useReducedMotionPref();
+  const lenis = useLenisInstance();
 
   useEffect(() => {
     /* Only the homepage has a full-bleed hero for the mark to sit in.
@@ -65,15 +67,32 @@ export function HeroMarkTravel() {
     if (!mark || !hero) return;
 
     let frame = 0;
+    /* Null until Lenis reports a position; `apply` then prefers it. */
+    const scrollRef: { current: number | null } = { current: null };
     let navCentre = 0;
     let heroCentre = 0;
     let distance = 1;
     let scaleUp = 1;
 
-    /* Measured, never assumed: the docked centre is read with the travel
-       transform cleared, so it is the element's true resting position. */
+    /**
+     * Measured, never assumed: the docked centre is read with the travel
+     * transform genuinely cleared.
+     *
+     * THE VARIABLES THAT MUST BE CLEARED ARE `--travel-y` AND
+     * `--travel-scale`, because those are the two the transform actually
+     * reads. Clearing `--travel` alone looks right but changes nothing, so
+     * the element is still expanded out in the hero when it is measured —
+     * and the "docked centre" comes back as the hero centre. The difference
+     * between them is then zero and the mark never moves at all.
+     *
+     * That was harmless while measure() only ever ran once, before the first
+     * transform was applied. The moment anything re-measures — a rotate, a
+     * width change, a second pass after load — it silently kills the
+     * animation.
+     */
     const measure = () => {
-      mark.style.setProperty("--travel", "1");
+      mark.style.setProperty("--travel-y", "0px");
+      mark.style.setProperty("--travel-scale", "1");
       const rect = mark.getBoundingClientRect();
       navCentre = rect.top + rect.height / 2;
 
@@ -99,12 +118,27 @@ export function HeroMarkTravel() {
 
     const apply = () => {
       frame = 0;
-      /* 0 = fully in the hero, 1 = fully docked in the navbar. */
-      const progress = Math.min(1, Math.max(0, window.scrollY / distance));
+      /* 0 = fully in the hero, 1 = fully docked in the navbar.
+
+         `scrollRef.current` rather than `window.scrollY`: while Lenis is
+         driving, the authoritative position is the one Lenis just wrote in
+         the GSAP ticker. Reading the window instead meant this ran off a
+         second, unsynchronised clock — see the listener block below. */
+      const y = scrollRef.current ?? window.scrollY;
+      const progress = Math.min(1, Math.max(0, y / distance));
       const eased = progress * progress * (3 - 2 * progress); // smoothstep
 
       mark.style.setProperty("--travel", String(eased));
-      mark.style.setProperty("--travel-y", `${(1 - eased) * (heroCentre - navCentre)}px`);
+      /* ROUNDED TO WHOLE PIXELS. The lockup is a bitmap; a translate of
+         190.83px leaves it straddling a pixel boundary, and the browser
+         re-samples it every frame. Over a scroll that is a continuous
+         shimmer — the "shaky logo" on a phone, where the device pixel
+         ratio makes the resampling coarser and the momentum scroll makes
+         it constant. Whole pixels cost nothing visually at this size. */
+      mark.style.setProperty(
+        "--travel-y",
+        `${Math.round((1 - eased) * (heroCentre - navCentre))}px`,
+      );
       mark.style.setProperty("--travel-scale", String(1 + (1 - eased) * (scaleUp - 1)));
       /* Cream nearly the whole way, olive only as it lands. Turning at 62%
          left the mark mid-dissolve while it was still out over the
@@ -125,27 +159,86 @@ export function HeroMarkTravel() {
       frame = requestAnimationFrame(apply);
     };
 
+    /**
+     * ONLY A WIDTH CHANGE IS A REAL LAYOUT CHANGE — ON A PHONE.
+     *
+     * A desktop browser fires `resize` when you drag the window. A phone
+     * fires it CONSTANTLY WHILE YOU SCROLL, because the address bar
+     * collapses and expands and the viewport height changes with it. The
+     * hero is `h-svh`, so re-measuring on every one of those events moved
+     * the target mid-journey and the mark visibly jumped — on a real
+     * handset only, which is why no desktop test could ever see it.
+     *
+     * Width (and orientation) genuinely change the layout. Height alone,
+     * during a scroll, is browser chrome and must be ignored.
+     */
+    let lastWidth = window.innerWidth;
     const onResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
       measure();
       apply();
     };
 
     measure();
     apply();
+
+    /* The first measure runs before the brand image has necessarily laid
+       out, which on a phone can leave the docked centre a few pixels off
+       for the whole journey. Measuring again once everything has loaded
+       costs nothing and makes the landing exact. */
+    const remeasure = () => {
+      measure();
+      apply();
+    };
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", remeasure, { once: true });
+    }
+
+    /**
+     * ONE CLOCK, NOT TWO.
+     *
+     * Lenis owns the scroll position and writes it inside the GSAP ticker
+     * (see SmoothScroll.tsx). This component used to run its OWN rAF and
+     * read `window.scrollY`, so the two loops were never guaranteed to be
+     * in the same frame: the mark was positioned from a scroll value that
+     * could be one update stale. On a laptop the frames happen to line up
+     * and it looks fine. On a phone — irregular momentum-scroll timing, a
+     * toolbar resizing the viewport mid-gesture — the read lands mid-update
+     * and the mark lags a frame, catches up, lags again. That is the shake.
+     *
+     * Subscribing to Lenis puts the mark on the same clock as the scroll it
+     * is following. The window listener stays as the fallback for the
+     * moments Lenis is not driving: before it finishes booting (it is
+     * created on idle), and under prefers-reduced-motion, where it never
+     * starts at all.
+     */
+    const onLenisScroll = ({ scroll }: { scroll: number }) => {
+      scrollRef.current = scroll;
+      apply();
+    };
+    if (lenis) lenis.on("scroll", onLenisScroll);
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
+    /* Rotating a handset changes the layout for real, and on iOS it does
+       not always arrive as a width change in time. */
+    window.addEventListener("orientationchange", remeasure);
 
     return () => {
       if (frame) cancelAnimationFrame(frame);
+      if (lenis) lenis.off("scroll", onLenisScroll);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("load", remeasure);
+      window.removeEventListener("orientationchange", remeasure);
       mark.style.removeProperty("--travel");
       mark.style.removeProperty("--travel-y");
       mark.style.removeProperty("--travel-scale");
       mark.style.removeProperty("--travel-cream");
       delete mark.dataset.travelling;
     };
-  }, [pathname, reduced]);
+  }, [pathname, reduced, lenis]);
 
   return null;
 }

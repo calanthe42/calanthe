@@ -81,3 +81,173 @@ export async function getCustomerSession() {
   if (!user || (user as { role?: string }).role !== "customer") return null;
   return user;
 }
+
+/* ------------------------------------------------------------------ */
+/* Registration, verification and password reset                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * NO SECOND AUTH SYSTEM. Everything below drives Payload's own operations
+ * on the same `users` collection: `create` (which sends the verification
+ * email because Users sets `auth.verify: true`), `verifyEmail`,
+ * `forgotPassword` and `resetPassword`. There are no home-made tokens, no
+ * separate customer table and no parallel session.
+ *
+ * WHY overrideAccess IS USED. `users.create` is admin-only by design — an
+ * openly writable users table is an open door. A visitor registering has no
+ * permissions, so the write cannot run as them. It is safe here for the same
+ * reason guest checkout is: `role` is pinned to "customer" by this function
+ * and never read from the form, so nothing a stranger posts can escalate.
+ */
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const MIN_PASSWORD = 10;
+
+export type RegisterResult =
+  | { ok: true; email: string }
+  | { ok: false; field?: string; message: string };
+
+export async function customerRegister(form: FormData): Promise<RegisterResult> {
+  const name = String(form.get("name") ?? "").replace(/\s+/g, " ").trim().slice(0, 140);
+  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 200);
+  const phone = String(form.get("phone") ?? "").trim().slice(0, 40);
+  const password = String(form.get("password") ?? "");
+  const confirm = String(form.get("confirmPassword") ?? "");
+
+  if (name.length < 2) return { ok: false, field: "name", message: "Please tell us your name." };
+  if (!EMAIL_RE.test(email))
+    return { ok: false, field: "email", message: "Please check your email address." };
+  if (password.length < MIN_PASSWORD)
+    return {
+      ok: false,
+      field: "password",
+      message: `Please use at least ${MIN_PASSWORD} characters.`,
+    };
+  if (password !== confirm)
+    return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
+
+  const payload = await getPayload({ config });
+
+  try {
+    await payload.create({
+      collection: "users",
+      overrideAccess: true,
+      /* Pinned here, never taken from the form. */
+      data: {
+        name,
+        email,
+        password,
+        role: "customer",
+        accountStatus: "active",
+        ...(phone ? { phone } : {}),
+      },
+    });
+    return { ok: true, email };
+  } catch (error) {
+    /* A duplicate address must not be distinguishable from a fresh one, or
+       this endpoint becomes a way to test which emails have accounts here.
+       The caller shows the same "check your inbox" screen either way; the
+       person who already has an account receives nothing new, which is the
+       correct outcome and reveals nothing. */
+    const message = error instanceof Error ? error.message : "";
+    if (/duplicate|unique|already/i.test(message)) return { ok: true, email };
+
+    console.error("customer registration failed", error);
+    return {
+      ok: false,
+      message: "We could not create that account just now. Please try again.",
+    };
+  }
+}
+
+export async function resendCustomerVerification(email: string): Promise<AuthResult> {
+  const address = email.trim().toLowerCase();
+  if (!EMAIL_RE.test(address)) return { ok: false, message: "Please check your email address." };
+
+  const payload = await getPayload({ config });
+  try {
+    const { docs } = await payload.find({
+      collection: "users",
+      where: { email: { equals: address } },
+      limit: 1,
+      overrideAccess: true,
+    });
+    const user = docs[0] as { id: number | string; _verified?: boolean } | undefined;
+    /* Already verified, or no such account: say the same thing either way. */
+    if (user && !user._verified) {
+      /* Re-saving with a fresh token makes Payload send the email again. */
+      await payload.update({
+        collection: "users",
+        id: user.id,
+        overrideAccess: true,
+        data: { _verified: false } as never,
+      });
+    }
+  } catch (error) {
+    console.error("resend verification failed", error);
+  }
+  return { ok: true };
+}
+
+export async function verifyCustomerEmail(token: string): Promise<AuthResult> {
+  if (!token) return { ok: false, message: "That verification link is not valid." };
+  const payload = await getPayload({ config });
+  try {
+    await payload.verifyEmail({ collection: "users", token });
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      message: "That link has expired or has already been used.",
+    };
+  }
+}
+
+export async function requestCustomerPasswordReset(form: FormData): Promise<AuthResult> {
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) return { ok: false, message: "Please check your email address." };
+
+  const payload = await getPayload({ config });
+  try {
+    await payload.forgotPassword({
+      collection: "users",
+      data: { email },
+      disableEmail: false,
+    });
+  } catch {
+    /* Swallowed on purpose. An unknown address must produce exactly the
+       same response as a known one, or this becomes an account-enumeration
+       oracle. The caller always shows "if that address has an account…". */
+  }
+  return { ok: true };
+}
+
+export type ResetResult = { ok: true } | { ok: false; field?: string; message: string };
+
+export async function resetCustomerPassword(form: FormData): Promise<ResetResult> {
+  const token = String(form.get("token") ?? "");
+  const password = String(form.get("password") ?? "");
+  const confirm = String(form.get("confirmPassword") ?? "");
+
+  if (!token) return { ok: false, message: "That reset link is not valid." };
+  if (password.length < MIN_PASSWORD)
+    return {
+      ok: false,
+      field: "password",
+      message: `Please use at least ${MIN_PASSWORD} characters.`,
+    };
+  if (password !== confirm)
+    return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
+
+  const payload = await getPayload({ config });
+  try {
+    await payload.resetPassword({
+      collection: "users",
+      data: { token, password },
+      overrideAccess: true,
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "That link has expired or has already been used." };
+  }
+}

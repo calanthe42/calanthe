@@ -1,6 +1,9 @@
+import { ClipReveal } from "@/components/motion/ClipReveal";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { FloralImage } from "@/components/ui/FloralImage";
+import { PRODUCT_PHOTOS } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 
 /**
@@ -32,19 +35,31 @@ export async function CalantheTouch() {
   ];
 
   return (
-    /* The hairline matters when Best Sellers has nothing to show: this
-       section then follows the equally cream video-approval section, and
-       without it the two read as one long block. */
-    <section className="border-t border-hairline/70 bg-cream section-pad">
+    /* CANVAS, NOT CREAM. Video approval, this section and the promise band
+       were all cream in a row — 1,400px of one unbroken field, which is how
+       three distinct ideas read as a single slab. Alternating the ground is
+       cheaper and stronger than any divider. */
+    <section className="section-pad">
       <div className="mx-auto grid max-w-7xl gutter lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
-        {/* The rail. `self-start` + sticky keeps the title beside whichever
-            step the reader is on, so the spread holds together over its
-            full height instead of the heading scrolling away first. */}
-        <Reveal className="lg:sticky lg:top-32 lg:self-start">
+        {/* The title held the rail alone and left roughly 450px of empty
+            cream beneath it — a void, not whitespace. A photograph of the
+            work itself belongs here: this section is about craft, so the
+            craft should be visible rather than only described. */}
+        <Reveal className="lg:self-start">
           <MonogramBloom className="w-12 text-olive" />
           <h2 className="display-2 mt-6 font-display font-light text-olive">
             {t.sections.touchTitle}
           </h2>
+          <ClipReveal className="mt-9 hidden aspect-[4/5] w-full overflow-hidden rounded-media lg:block">
+            <FloralImage
+              image={{
+                alt: "A Calanthe arrangement being finished by hand",
+                src: PRODUCT_PHOTOS.softWhiteRose,
+                placeholder: { seed: "calanthe-touch", palette: "warm" },
+              }}
+              sizes="(max-width: 1024px) 0px, 33vw"
+            />
+          </ClipReveal>
         </Reveal>
 
         <Stagger className="mt-12 flex flex-col lg:mt-0">

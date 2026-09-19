@@ -12,8 +12,10 @@ import {
   chipOnClasses as chipOn,
   fieldClasses,
   fieldErrorClasses,
+  labelClasses,
 } from "@/components/ui/form-classes";
 import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
+import { submitBespokeEnquiry } from "@backend/actions/enquiry";
 import { cn } from "@/lib/cn";
 import { useLenisInstance } from "@/lib/lenis-context";
 import {
@@ -34,7 +36,13 @@ import {
  * and everything after it (budget, colours, vase, card) is shaped by it. Each
  * choice lands in "Your arrangement" as it is made — beside the steps on
  * desktop, as a review step on a phone — so the request she sends is one she
- * has already read. Sending opens WhatsApp with it written out (lib/bespoke.ts).
+ * has already read.
+
+ * SENDING RECORDS IT. This used to serialise the brief into a WhatsApp URL
+ * and open a tab — if the visitor never pressed send, the atelier never knew
+ * the enquiry existed. It now writes a real Enquiry (type BUILD_YOUR_OWN)
+ * that appears in /admin, and offers WhatsApp alongside for anyone who would
+ * rather talk it through.
  */
 
 const STEPS = [
@@ -44,6 +52,10 @@ const STEPS = [
   { id: "vase", title: "A vase?" },
   { id: "card", title: "The card" },
   { id: "notes", title: "For the florist" },
+  /* A brief without a name is a brief the atelier cannot answer. This step
+     is what turns Build Your Own from a WhatsApp draft into a real enquiry
+     the florist can call back on. */
+  { id: "contact", title: "Where to reach you" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -60,8 +72,14 @@ export function BuildYourOwnForm() {
   const [message, setMessage] = useState("");
   const [leaveBlank, setLeaveBlank] = useState(false);
   const [notes, setNotes] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [reference, setReference] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const stepRefs = useRef<Partial<Record<StepId, HTMLLIElement | null>>>({});
 
   const budgetValue = useMemo(() => {
@@ -95,8 +113,11 @@ export function BuildYourOwnForm() {
     if (colours.length === 0 && !colourOther) return 2;
     if (vase === null) return 3;
     if (!message.trim() && !leaveBlank) return 4;
-    return 5;
-  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank]);
+    /* The rail's marker rests on "For the florist" until there is something
+       to reach the customer by — contact is the last thing still waiting. */
+    if (!notes.trim()) return 5;
+    return 6;
+  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank, notes]);
 
   const errors: Partial<Record<StepId, string>> = attempted
     ? {
@@ -114,22 +135,47 @@ export function BuildYourOwnForm() {
       }
     : {};
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setAttempted(true);
     const missing: StepId | null = !occasion
       ? "occasion"
       : budgetValue === 0
         ? "budget"
-        : null;
+        : !name.trim() || !phone.trim() || !email.trim()
+          ? "contact"
+          : null;
     if (missing) {
       const step = stepRefs.current[missing];
       step?.scrollIntoView({ block: "center" });
       step?.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
       return;
     }
-    /* Opened from the click itself so no popup blocker intervenes. The
-       confirmation below keeps a link in case the new tab was closed. */
-    window.open(whatsappHref, "_blank", "noopener,noreferrer");
+
+    setSending(true);
+    setError(null);
+    const result = await submitBespokeEnquiry({
+      name,
+      email,
+      phone,
+      occasion: occasion ?? "",
+      budgetAed: budgetValue,
+      colours,
+      floristChoosesColours: colourOther,
+      vase,
+      cardMessage: message,
+      leaveCardBlank: leaveBlank,
+      notes,
+      totalAed,
+    });
+    setSending(false);
+
+    if (!result.ok) {
+      setError({ code: result.code, message: result.message });
+      const step = stepRefs.current[result.code === "budget" ? "budget" : "contact"];
+      step?.scrollIntoView({ block: "center" });
+      return;
+    }
+    setReference(result.reference);
     setSubmitted(true);
   }
 
@@ -143,25 +189,32 @@ export function BuildYourOwnForm() {
   }, [submitted, lenis]);
 
   if (submitted) {
+    /* pb clears the floating WhatsApp button, which is fixed bottom-end and
+       was landing on top of this screen's own WhatsApp link. */
     return (
-      <div className="mx-auto flex min-h-[60svh] max-w-xl flex-col items-center justify-center gap-6 text-center">
+      <div className="mx-auto flex min-h-[60svh] max-w-xl flex-col items-center justify-center gap-6 pb-24 text-center lg:pb-12">
         <Monogram className="w-16 text-burnt-orange" />
         <h2 className="font-display text-3xl font-light leading-tight text-olive lg:text-4xl">
-          Your request is written. Send it on WhatsApp.
+          Your request is with the atelier.
         </h2>
         <p className="max-w-md text-base leading-relaxed text-ink-muted">
-          We opened a WhatsApp message to the atelier with everything you chose. Once you
-          send it, a florist replies to confirm the arrangement, delivery and the total of{" "}
-          {formatAed(totalAed)} before composing.
+          A florist will be in touch to confirm the arrangement, the delivery and
+          the total of {formatAed(totalAed)} before composing. Nothing has been
+          charged.
         </p>
+        {reference && (
+          <p className="font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
+            Reference {reference}
+          </p>
+        )}
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <a
             href={whatsappHref}
             target="_blank"
             rel="noreferrer"
-            className={buttonClasses("primary", "whitespace-nowrap")}
+            className={buttonClasses("secondary", "whitespace-nowrap")}
           >
-            Open WhatsApp Again
+            Also message on WhatsApp
           </a>
           <button
             type="button"
@@ -395,6 +448,61 @@ export function BuildYourOwnForm() {
               className={fieldClasses}
             />
           </Step>
+
+          <Step index={6} active={activeIndex === 6}>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="byo-name" className={labelClasses}>
+                  Your name
+                </label>
+                <input
+                  id="byo-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value.slice(0, 140))}
+                  autoComplete="name"
+                  className={fieldClasses}
+                  aria-invalid={error?.code === "name" || (attempted && !name.trim())}
+                />
+              </div>
+              <div>
+                <label htmlFor="byo-phone" className={labelClasses}>
+                  Phone
+                </label>
+                <input
+                  id="byo-phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.slice(0, 40))}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+9715…"
+                  className={fieldClasses}
+                  aria-invalid={error?.code === "phone" || (attempted && !phone.trim())}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="byo-email" className={labelClasses}>
+                  Email
+                </label>
+                <input
+                  id="byo-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value.slice(0, 200))}
+                  autoComplete="email"
+                  className={fieldClasses}
+                  aria-invalid={error?.code === "email" || (attempted && !email.trim())}
+                />
+              </div>
+            </div>
+            {error && (
+              <p role="alert" className={fieldErrorClasses}>
+                <span aria-hidden className="text-burnt-orange">
+                  ·
+                </span>
+                {error.message}
+              </p>
+            )}
+          </Step>
         </ol>
 
         <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-ink-muted">
@@ -409,16 +517,32 @@ export function BuildYourOwnForm() {
           button where she reads the total. */}
       <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
         {summary}
-        <Button variant="primary" className="mt-5 w-full" onClick={handleSubmit}>
-          Send to a Florist
+        <Button
+          variant="primary"
+          className="mt-5 w-full"
+          onClick={handleSubmit}
+          disabled={sending}
+        >
+          {sending ? "Sending…" : "Send to a Florist"}
         </Button>
         <SendNote />
       </aside>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
         <div className="mx-auto max-w-xl">
-          <Button variant="primary" className="w-full" onClick={handleSubmit}>
-            Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={sending}
+          >
+            {sending ? (
+              "Sending…"
+            ) : (
+              <>
+                Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -429,8 +553,8 @@ export function BuildYourOwnForm() {
 function SendNote() {
   return (
     <p className="mt-3 text-sm leading-relaxed text-ink-muted">
-      Opens WhatsApp with your request written out. Nothing is ordered until a florist
-      confirms it with you.
+      Sends your request to the atelier. Nothing is ordered and nothing is
+      charged until a florist confirms it with you.
     </p>
   );
 }
@@ -553,8 +677,8 @@ function Summary({
         </p>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted lg:hidden">
-        Opens WhatsApp with your request written out. Nothing is ordered until a florist
-        confirms it with you.
+        Sends your request to the atelier. Nothing is ordered and nothing is
+        charged until a florist confirms it with you.
       </p>
     </section>
   );

@@ -19,7 +19,6 @@ import {
 import { uniqueProductViews } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 import { itemUnitPrice, useCart } from "@/lib/cart";
-import { useToast } from "@/lib/toast";
 import {
   addons,
   formatAed,
@@ -60,7 +59,6 @@ function occasionName(slug: string): string {
 
 export function ProductDetail({ product }: ProductDetailProps) {
   const { addItem } = useCart();
-  const { toast } = useToast();
   const reduced = useReducedMotion();
 
   /**
@@ -153,7 +151,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
       recipientName: recipientName.trim() || undefined,
       recipientPhone: recipientPhone.trim() || undefined,
     });
-    toast(`${product.name} added to your cart`);
+    /* No toast here. `addItem` opens the cart drawer, so the confirmation is
+       the basket itself — with the line, the price and the next step in it.
+       A toast on top said the same thing twice and, being fixed to the foot
+       of the screen, covered the drawer's own "Continue shopping". */
   }
 
   const cardDetailsCount = [giftMessage, recipientName, recipientPhone].filter((v) =>

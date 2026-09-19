@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { DayPicker, FaqAccordion } from "@/components/commerce/MembershipInteractive";
+import { MembershipTiers } from "@/components/commerce/MembershipTiers";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { cn } from "@/lib/cn";
-import { CONTACT, formatAed, membershipTiers } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Membership",
@@ -43,71 +41,51 @@ export default function MembershipPage() {
               Fresh flowers, thoughtfully arranged and delivered to your door every week.
             </p>
           </Reveal>
-          <Reveal delay={0.15} className="mt-12 w-full max-w-md">
-            <p className="mb-4 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream/60">
-              Choose your delivery day
-            </p>
-            <DayPicker />
-          </Reveal>
         </div>
       </section>
 
-      {/* Tiers */}
+      {/*
+        THE DAY COMES AFTER THE PLAN, NOT BEFORE IT.
+
+        "Choose your delivery day" used to be the first thing on this page,
+        sitting in the hero above the tiers — asking someone to pick a
+        Tuesday before they had read what a membership is, what it costs or
+        how often it arrives. The answer is meaningless until the plan is
+        understood, and putting it first made the page read as a booking
+        form rather than an invitation.
+
+        It now sits between the tiers and "How it works": you read what you
+        are joining, you choose a tier, and then you say which day suits.
+        The picker itself is unchanged — only its place in the argument.
+      */}
+
+      {/* Tiers — the cards and the enquiry that begins one now live in a
+          client component, because "Begin" opens a form rather than leaving
+          the site for WhatsApp (see MembershipTiers.tsx). */}
       <section className="mx-auto max-w-7xl gutter section-pad">
-        <Stagger className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
-          {membershipTiers.map((tier) => (
-            <StaggerItem key={tier.id} className="h-full">
-              <article
-                className={cn(
-                  "relative flex h-full flex-col rounded-media-sm border p-7 lg:p-8",
-                  tier.mostLoved ? "border-olive bg-cream" : "border-hairline bg-canvas",
-                )}
-              >
-                {tier.mostLoved && (
-                  <p className="absolute -top-3 left-7 bg-burnt-orange px-3 py-1 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream">
-                    Most loved
-                  </p>
-                )}
-                <h2 className="font-brand text-sm font-medium uppercase tracking-brand text-olive">
-                  {tier.name}
-                </h2>
-                <p className="mt-4 font-display text-3xl font-light text-olive">
-                  from {formatAed(tier.fromAedPerDelivery)}
-                  <span className="ml-1 text-base text-ink-muted">/ delivery</span>
-                </p>
-                <p className="mt-1 text-sm text-ink-muted">4 deliveries a month</p>
-                <p className="mt-4 text-base leading-relaxed text-olive">{tier.blurb}</p>
-                <ul className="mt-5 flex flex-1 flex-col gap-2">
-                  {tier.includes.map((line) => (
-                    <li key={line} className="flex gap-2 text-sm text-ink-muted">
-                      <span aria-hidden className="text-burnt-orange">
-                        ·
-                      </span>
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={`${CONTACT.whatsappHref}?text=${encodeURIComponent(
-                    `Hello Calanthe, I'd like to begin the ${tier.name} membership.`,
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(
-                    buttonClasses(tier.mostLoved ? "primary" : "secondary"),
-                    "mt-7 w-full",
-                  )}
-                >
-                  Begin {tier.name}
-                </a>
-              </article>
-            </StaggerItem>
-          ))}
-        </Stagger>
-        <p className="mt-6 text-center text-xs text-ink-muted">
-          Online membership checkout arrives with the backend phase — for now,
-          &ldquo;Begin&rdquo; opens WhatsApp so our florists can set it up with you directly.
+        <MembershipTiers />
+        <p className="mt-6 text-center text-sm text-ink-muted">
+          Nothing is charged here. A florist confirms the details with you
+          before any membership begins.
         </p>
+      </section>
+
+      <section className="border-t border-hairline bg-cream">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gutter section-pad text-center">
+          <Reveal className="w-full max-w-md">
+            <Eyebrow>And then</Eyebrow>
+            <h2 className="mt-3 font-display text-[2rem] font-light leading-tight text-olive lg:text-[2.5rem]">
+              Which day suits you?
+            </h2>
+            <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-ink-muted">
+              One day a week is yours. We reserve your route and your stems, and
+              a florist confirms it with you before anything begins.
+            </p>
+            <div className="mt-9">
+              <DayPicker />
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* How it works */}

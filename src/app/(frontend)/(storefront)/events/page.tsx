@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -153,15 +154,24 @@ export default function EventsPage() {
                 back with a proposal and a quote.
               </p>
             </StaggerItem>
+            {/* A real form, not two links off-site. Events are the atelier's
+                largest and most date-sensitive orders, and until now an
+                enquiry left no trace anywhere — see EventEnquiryForm. */}
             <StaggerItem>
-              <div className="mt-9 flex flex-wrap justify-center gap-4">
-                <ButtonLink href={CONTACT.whatsappHref} variant="primary">
-                  WhatsApp {CONTACT.whatsapp}
-                </ButtonLink>
-                <ButtonLink href={`mailto:${CONTACT.email}`} variant="secondary-cream">
-                  Email the atelier
-                </ButtonLink>
+              <div className="mt-10 text-start">
+                <EventEnquiryForm />
               </div>
+            </StaggerItem>
+            <StaggerItem>
+              <p className="mt-8 text-sm text-cream/60">
+                Or email{" "}
+                <a
+                  href={`mailto:${CONTACT.email}`}
+                  className="underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-burnt-orange"
+                >
+                  {CONTACT.email}
+                </a>
+              </p>
             </StaggerItem>
           </Stagger>
 

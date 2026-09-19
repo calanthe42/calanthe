@@ -23,7 +23,7 @@ export async function TrustBand() {
   ];
 
   return (
-    <section className="border-t border-hairline/70 bg-cream section-pad-join">
+    <section className="bg-cream section-pad">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <Reveal>
           <h2 className="display-2 font-display font-light text-olive">
