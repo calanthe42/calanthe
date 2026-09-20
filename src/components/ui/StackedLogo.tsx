@@ -15,6 +15,12 @@ type StackedLogoProps = {
    */
   tone?: "cream" | "olive";
   className?: string;
+  /**
+   * Whether this instance carries the `<symbol>` definition. The header's
+   * mark does; the hero's placeholder copy (Hero.tsx) reuses it by id, so
+   * the geometry is in the document once, not twice.
+   */
+  defineSymbol?: boolean;
 };
 
 /**
@@ -40,13 +46,14 @@ type StackedLogoProps = {
  * `<use>` inherits colour from its own context, which is what lets the two
  * layers cross-dissolve exactly as the two images did before.
  */
-export function StackedLogo({ tone = "cream", className }: StackedLogoProps) {
+export function StackedLogo({ tone = "cream", className, defineSymbol = true }: StackedLogoProps) {
   return (
     <span
       data-tone={tone}
       className={cn("stacked-logo relative block aspect-[1081/719]", className)}
     >
       {/* Defined once, never painted. */}
+      {defineSymbol ? (
       <svg width="0" height="0" aria-hidden className="absolute">
         <symbol id="calanthe-stacked" viewBox={VIEW_BOX}>
       <path fill="currentColor" d="M 208.33 570.99 C 205.61 576.35 202.25 580.65 198.25 583.9 C 194.25 587.14 189.71 589.49 184.66 590.94 C 179.6 592.38 174.3 593.1 168.74 593.1 C 162.19 592.79 156.18 591.43 150.74 589 C 145.29 586.58 140.6 583.23 136.66 578.95 C 132.71 574.68 129.62 569.55 127.41 563.57 C 125.18 557.59 124.07 550.95 124.07 543.62 C 124.07 536.31 125.12 529.63 127.24 523.61 C 129.35 517.57 132.38 512.42 136.32 508.14 C 140.27 503.87 145.04 500.57 150.66 498.25 C 156.27 495.93 162.57 494.77 169.57 494.77 C 179.13 494.77 187.46 497.04 194.58 501.57 C 201.69 506.11 206.47 512.86 208.91 521.82 L 212.91 521.82 L 209.41 498.48 C 204.3 495.39 198.41 492.81 191.75 490.75 C 185.08 488.69 177.63 487.66 169.41 487.66 C 160.18 487.66 151.85 489 144.41 491.68 C 136.96 494.36 130.62 498.17 125.41 503.12 C 120.18 508.07 116.12 514 113.24 520.9 C 110.35 527.8 108.9 535.43 108.9 543.78 C 108.9 552.34 110.38 560.07 113.32 566.97 C 116.26 573.88 120.38 579.8 125.66 584.75 C 130.93 589.7 137.24 593.51 144.57 596.19 C 151.91 598.87 159.91 600.21 168.58 600.21 C 174.36 600.21 179.63 599.62 184.41 598.43 C 189.19 597.25 193.52 595.62 197.41 593.56 C 201.3 591.5 204.75 589.05 207.75 586.22 C 210.75 583.39 213.36 580.27 215.58 576.87 L 217.75 551.36 L 213.91 551.36 C 212.91 559.09 211.05 565.63 208.33 570.99 " />
@@ -66,6 +73,7 @@ export function StackedLogo({ tone = "cream", className }: StackedLogoProps) {
       <path fill="currentColor" d="M 680.38 259.34 C 677.05 259.34 674.36 262.04 674.36 265.36 C 674.36 268.7 677.05 271.39 680.38 271.39 C 683.71 271.39 686.41 268.7 686.41 265.36 C 686.41 262.04 683.71 259.34 680.38 259.34 " />
         </symbol>
       </svg>
+      ) : null}
 
       <svg
         viewBox={VIEW_BOX}

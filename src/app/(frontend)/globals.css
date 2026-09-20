@@ -512,71 +512,117 @@ body::after {
 }
 
 /* ------------------------------------------------------------------ */
+/* THE MARK'S PLACE IN THE HERO.
+ *
+ * A flex child of the hero that fills the space between the header and
+ * the copy (Hero.tsx). The lockup inside is centred in it and sized to
+ * fit — as tall as the artwork's natural height at `--logo-hero-w`, or as
+ * tall as the slot allows, whichever is less. The browser does all of it,
+ * so a font swap, an Arabic rewrap or a rotation re-lays it out with the
+ * rest of the page and no script has to notice.
+ *
+ * A slot too short to hold a lockup worth showing hides it (the container
+ * query), and the driver then leaves the header's mark docked: a 40px
+ * lockup floating over the photograph says less than the crisp one in the
+ * bar.                                                                  */
+/* ------------------------------------------------------------------ */
+.hero-mark-slot {
+  padding-block: 2rem;
+  /* Size containment, so the slot's height is definite and the artwork's
+     percentage height below resolves against it. The slot has no content
+     of its own to size, so nothing is lost. */
+  container-type: size;
+}
+.hero-mark-art {
+  /* Height first, width from the ratio: this is what lets `max-height`
+     genuinely shrink the mark on a short screen without breaking its
+     shape. `width` from `--logo-hero-w` with a max-height would clamp the
+     box and leave the artwork letterboxed inside it — which the driver
+     would then measure as the wrong size. */
+  height: min(100%, calc(var(--logo-hero-w) * 717.91 / 1080));
+  aspect-ratio: 1080 / 717.91;
+  width: auto;
+}
+/* Below 72px of artwork (plus the padding) there is no composition to
+   make — see MIN_MARK in HeroMarkTravel.tsx. */
+@container (max-height: 136px) {
+  .hero-mark-art {
+    display: none;
+  }
+}
+/* Once the driver has taken over, the header's mark stands exactly here;
+   this copy is kept in layout (so it can still be measured) and made
+   invisible. */
+[data-hero-root][data-mark-live] .hero-mark-art {
+  visibility: hidden;
+}
+
+/* ------------------------------------------------------------------ */
 /* THE TRAVELLING MARK.
  *
- * The lockup lives in the header's centre slot permanently. These custom
- * properties push it down into the hero while the page is at the top and
- * relax to identity as the visitor scrolls — see HeroMarkTravel.tsx for
- * why the movement is expressed this way round rather than as a second,
- * fixed copy of the mark flying upward.
+ * The lockup lives in the header's centre slot permanently. On the
+ * homepage the driver (HeroMarkTravel.tsx) transforms it down onto the
+ * hero's slot while the page is at the top and relaxes it to identity as
+ * the visitor scrolls.
  *
- * Defaults are the DOCKED state, so with no JavaScript, under reduced
- * motion, or on any route that is not the homepage, the mark simply sits
- * in the navbar. Nothing to fail open.                                   */
+ * THE DEFAULT IS DOCKED, AND IT IS THE ONLY STATE CSS KNOWS. With no
+ * JavaScript, under reduced motion, on any other route, and — this is the
+ * one that matters — before hydration on a slow phone, the mark is simply
+ * the navbar's, at the navbar's size. The driver opts IN by setting
+ * `data-travelling`; nothing is ever server-rendered into a half state.
+ * On the homepage the server marks it `data-pending` so it stays hidden
+ * until the driver is ready, because the hero's own copy of the mark is
+ * already standing in the right place (see `.hero-mark-slot`).           */
 /* ------------------------------------------------------------------ */
 .travel-mark {
-  --travel: 1;
+  --travel-x: 0px;
   --travel-y: 0px;
-  /* 1 while the mark fills the hero, 1/scaleUp once it is docked. */
   --travel-shrink: 1;
-  /* Only translation lives on the link. The link keeps the NAV footprint so
-     the header's layout never moves; the artwork inside is what changes
-     size. */
-  transform: translate(-50%, -50%) translateY(var(--travel-y));
+  --travel-cream: 1;
+  /* Only translation lives on the link. The link keeps the NAV footprint
+     so the header's layout never moves; the artwork inside is what
+     changes size. */
+  transform: translate(-50%, -50%) translate(var(--travel-x), var(--travel-y));
   transform-origin: center center;
+}
+.travel-mark[data-pending] {
+  visibility: hidden;
+}
+.travel-mark[data-travelling] {
   will-change: transform;
+}
+
+/* Docked: the artwork at the navbar's width, no transform in play. */
+.travel-mark .stacked-logo {
+  position: absolute;
+  /* PHYSICAL `left`, deliberately, NOT `inset-inline-start`. Centring is
+     symmetric, so there is no reading direction to respect — and the
+     logical property actively breaks it: under RTL it resolves to
+     `right: 50%`, while the `translate(-50%)` beside it stays physical.
+     Measured as dx=-304 at 390px in Arabic. */
+  left: 50%;
+  top: 50%;
+  width: var(--logo-nav-w);
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
 }
 
 /*
- * RASTERISE BIG, SCALE DOWN — NEVER THE REVERSE.
+ * Driven: RASTERISE BIG, SCALE DOWN — NEVER THE REVERSE.
  *
- * The lockup is a bitmap. Previously the link was 64px wide on a phone and
- * the whole thing was scaled UP ~4.75x to fill the hero, with its own
- * compositor layer. A compositor layer is rasterised ONCE at its layout
- * size, so the GPU was enlarging a 64px-wide bitmap to 304px — which is
- * exactly the soft, low-quality mark seen on a real device.
- *
- * The artwork is now laid out at the HERO width and scaled DOWN to the bar.
- * Rasterisation therefore always happens at the largest size it is ever
- * shown, and the GPU only ever downsamples, which is sharp at any DPR.
- *
- * `position: absolute` matters as much as the size: at hero width this box
- * is far wider than its 64px parent, and in flow it would push the page
- * sideways. Out of flow it contributes nothing to layout width.
+ * A compositor layer is rasterised once at its layout size. Laid out at
+ * 64px and enlarged 4.75x to the hero, the mark went soft on a real
+ * device. So while the driver is in charge the artwork is laid out at the
+ * HERO width and only ever scaled down, which is sharp at any DPR.
+ * `position: absolute` is what stops a hero-sized box pushing the page
+ * sideways: out of flow it contributes nothing to layout width.
  */
-.travel-mark .stacked-logo {
-  position: absolute;
-  /* PHYSICAL `left`, deliberately, NOT `inset-inline-start`.
-     Centring is symmetric, so there is no reading direction to respect — and
-     the logical property actively breaks it: under RTL it resolves to
-     `right: 50%`, while the `translate(-50%)` beside it stays physical. The
-     two then compose to put the mark one full width to the left of centre
-     instead of on it, which measured as dx=-304 at 390px in Arabic. */
-  left: 50%;
-  top: 50%;
+.travel-mark[data-travelling] .stacked-logo {
   width: var(--logo-hero-w);
   transform: translate(-50%, -50%) scale(var(--travel-shrink));
-  transform-origin: center center;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-/* Routes with no travelling hero: the mark is simply the navbar's, at the
-   navbar's size, with no transform in play. */
-.travel-mark:not([data-travelling]) .stacked-logo {
-  width: var(--logo-nav-w);
-  transform: translate(-50%, -50%);
 }
 
 /* Out over the photograph it is decoration: a mark scaled past 500px must
@@ -587,10 +633,10 @@ body::after {
 
 /* The colour crossfade, driven by the same progress value. */
 .travel-mark[data-travelling] .stacked-cream {
-  opacity: var(--travel-cream, 1);
+  opacity: var(--travel-cream);
 }
 .travel-mark[data-travelling] .stacked-olive {
-  opacity: calc(1 - var(--travel-cream, 1));
+  opacity: calc(1 - var(--travel-cream));
 }
 
 @media (prefers-reduced-motion: reduce) {

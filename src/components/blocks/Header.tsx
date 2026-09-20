@@ -454,15 +454,18 @@ export function Header({
           href="/"
           aria-label="Calanthe — home"
           data-travel-mark
-          /* SET ON THE SERVER, not waited for.
-             The travelling CSS keys off `data-travelling`, and until this
-             turn only the scroll handler set it — so between first paint and
-             hydration the mark fell to the navbar rule and then popped up to
-             hero size once JS ran. The header already knows whether this
-             route has a full-bleed hero, so it can say so in the markup and
-             the first frame is already correct. The handler keeps updating
-             it from scroll position exactly as before. */
-          data-travelling={overlay ? "true" : undefined}
+          /* PENDING, NOT TRAVELLING.
+             This used to be `data-travelling="true"` from the server, meant
+             to stop the mark popping from navbar size to hero size once JS
+             ran. It did that — and replaced it with something worse: until
+             hydration the CSS had the travelling attribute but none of the
+             driver's numbers, which is the artwork at hero size centred on
+             the navbar, cropped behind the header. On Safari hydration can
+             take several seconds, so that was the first thing an iPhone
+             showed. Now the hero carries its own copy of the mark, laid out
+             by CSS (Hero.tsx), and this one is hidden until the driver is
+             ready to put it exactly there. Nothing is ever half-set. */
+          data-pending={overlay ? "" : undefined}
           /* Centred on the ROW, and the row is centred on the viewport, so
              the mark is centred on the viewport at every width — which is
              also why the travelling animation never needs a horizontal

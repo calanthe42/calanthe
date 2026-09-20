@@ -2,6 +2,7 @@ import { Parallax } from "@/components/motion/Parallax";
 import { PetalDrift } from "@/components/motion/PetalDrift";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
+import { StackedLogo } from "@/components/ui/StackedLogo";
 import { HeroMedia } from "@/components/blocks/HeroMedia";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -116,6 +117,40 @@ export async function Hero({ media }: HeroProps) {
         aria-hidden
         className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-olive/95 via-olive/62 to-transparent lg:hidden"
       />
+
+      {/*
+        THE MARK'S PLACE IN THE HERO IS LAID OUT BY CSS, NOT COMPUTED BY JS.
+
+        This slot is a flex child that fills whatever is left between the
+        header (the margin-top) and the copy block below. The lockup inside
+        is centred in it and sized to fit it, all in CSS — see
+        `.hero-mark-slot` in globals.css. Nothing here is measured, summed or
+        clamped in a script, so nothing can be stale: when a webfont swaps,
+        Arabic rewraps, or the phone rotates, the browser re-lays this out
+        along with everything else.
+
+        WHY A REAL COPY OF THE MARK AND NOT AN EMPTY BOX. On Safari the page
+        can sit un-hydrated for several seconds, and in that time the only
+        thing on screen is what the server sent. The previous version sent
+        the header's mark with the travelling attribute already set and let
+        CSS default it to hero size at the navbar's position — which is a
+        330px lockup cropped behind the header, the fault reported from a
+        real iPhone. Now the first paint IS the finished composition: this
+        copy stands in the hero and the header's mark is hidden. When the
+        driver takes over (HeroMarkTravel.tsx) it reads this box, places the
+        header's mark exactly on it, and hides this one, in the same frame.
+        Under reduced motion this copy simply stays.
+      */}
+      <div
+        data-hero-mark-slot
+        aria-hidden
+        className="hero-mark-slot relative z-10 flex min-h-0 flex-1 items-center justify-center"
+        style={{ marginTop: "var(--header-h, 6.25rem)" }}
+      >
+        <div data-hero-mark-art className="hero-mark-art">
+          <StackedLogo tone="cream" defineSymbol={false} className="h-full w-full" />
+        </div>
+      </div>
 
       {/* Content — bottom-start: thumb zone on a phone, the classic
           editorial caption position on a laptop.
