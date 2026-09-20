@@ -203,31 +203,54 @@ export function HeroMarkTravel() {
       const progress = Math.min(1, Math.max(0, y / distance));
       const eased = progress * progress * (3 - 2 * progress); // smoothstep
 
-      let dx = 0;
-      let dy = 0;
-      if (eased < 1) {
+      if (eased >= 1) {
         /*
-         * WHERE "DOCKED" IS RIGHT NOW, not where it was at rest.
+         * LANDED: HAND THE MARK BACK TO CSS.
          *
-         * The header is sticky, and the service strip above the navbar row
-         * scrolls away during the first few dozen pixels — so the row, and
-         * the docked mark with it, moves while the journey is under way. A
-         * docked centre measured once at the top is wrong by the strip's
-         * height for the rest of the journey; the earlier version measured
-         * it once and hoped. Reading the row each frame costs one layout
-         * read while the mark is travelling and nothing once it has landed.
-         *
-         * `offsetLeft`/`offsetTop` are the link's UNTRANSFORMED position —
-         * `left: 50%; top: 50%` — which is its centre once the base
-         * `translate(-50%, -50%)` is applied. Reading the link's own rect
-         * would include the travel transform we are about to set.
+         * Docked is the one state the stylesheet knows on its own — the
+         * artwork at the navbar's width, no transform — and it is the
+         * sharpest one there is, because the browser rasterises it at the
+         * size it is shown. The driven rules keep the artwork laid out at
+         * HERO width and scaled down five times on a compositor layer, which
+         * the GPU samples without mipmaps: on a real iPhone the serifs of
+         * the wordmark went soft, and stayed soft for the whole visit,
+         * because "false" is still an attribute as far as `[data-travelling]`
+         * is concerned. The two sizes are the same 64px (`dockShrink` is
+         * defined from the link's own width), so nothing moves at the swap;
+         * only the rasterisation changes. Scrolling back up puts the
+         * attribute straight back, below.
          */
-        const r = parts.row.getBoundingClientRect();
-        const navCX = r.left + mark.offsetLeft;
-        const navCY = r.top + mark.offsetTop;
-        dx = (1 - eased) * (heroCX - navCX);
-        dy = (1 - eased) * (heroCY - y - navCY);
+        if (mark.dataset.travelling !== undefined) {
+          delete mark.dataset.travelling;
+          mark.style.removeProperty("--travel-x");
+          mark.style.removeProperty("--travel-y");
+          mark.style.removeProperty("--travel-shrink");
+          mark.style.removeProperty("--travel-cream");
+        }
+        return;
       }
+
+      /*
+       * WHERE "DOCKED" IS RIGHT NOW, not where it was at rest.
+       *
+       * The header is sticky, and the service strip above the navbar row
+       * scrolls away during the first few dozen pixels — so the row, and
+       * the docked mark with it, moves while the journey is under way. A
+       * docked centre measured once at the top is wrong by the strip's
+       * height for the rest of the journey; the earlier version measured
+       * it once and hoped. Reading the row each frame costs one layout
+       * read while the mark is travelling and nothing once it has landed.
+       *
+       * `offsetLeft`/`offsetTop` are the link's UNTRANSFORMED position —
+       * `left: 50%; top: 50%` — which is its centre once the base
+       * `translate(-50%, -50%)` is applied. Reading the link's own rect
+       * would include the travel transform we are about to set.
+       */
+      const r = parts.row.getBoundingClientRect();
+      const navCX = r.left + mark.offsetLeft;
+      const navCY = r.top + mark.offsetTop;
+      const dx = (1 - eased) * (heroCX - navCX);
+      const dy = (1 - eased) * (heroCY - y - navCY);
 
       /* Whole pixels: the transform is on a compositor layer and a
          fractional translate leaves the artwork straddling a pixel

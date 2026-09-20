@@ -348,7 +348,7 @@ export function Header({
            exactly the bleed-through: page chrome painted over a full-screen
            overlay. While an overlay is open the whole header is promoted above
            them; the layers inside it keep working unchanged. */
-        "sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        "site-header sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
         menuOpen || searchOpen ? "z-[70]" : "z-40",
         /* Blur is desktop-only: on a phone, backdrop-blur re-renders
            every frame as content moves under it, which is one of the

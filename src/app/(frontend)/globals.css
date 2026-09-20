@@ -646,6 +646,30 @@ body::after {
 }
 
 /* ------------------------------------------------------------------ */
+/* THE STATUS BAR IS NOT A WINDOW.
+ *
+ * On an iPhone, with `viewport-fit=cover`, Safari does two things at once
+ * while the page is scrolled: it keeps painting the page underneath the
+ * status bar, and it anchors a sticky element's `top: 0` BELOW it. So the
+ * bar sat 47px down with the scrolled hero — headline and all — showing
+ * through the strip above it. The cap extends the header's own background
+ * upward by exactly the inset, so what shows behind the clock is the bar,
+ * not whatever happened to scroll past. `background: inherit` follows the
+ * header through its transparent-to-solid transition, so over the hero at
+ * the top of the page the cap is as clear as the bar is. Zero-height
+ * everywhere the inset is zero.                                          */
+/* ------------------------------------------------------------------ */
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: env(safe-area-inset-top, 0px);
+  background: inherit;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
 /* Frosted-glass CTAs — hero only, over photography. The blur is cheap
    here because the hero image behind them is static once it has
    settled (parallax and ken-burns are desktop-only).                  */
