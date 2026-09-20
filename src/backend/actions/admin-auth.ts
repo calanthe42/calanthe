@@ -4,6 +4,7 @@ import { cookies as nextCookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
 
 /**
  * Signing in to, and out of, the Calanthe admin.
@@ -57,6 +58,31 @@ export async function adminLogin(form: FormData): Promise<AdminAuthResult> {
 
   if (!email || !password) {
     return { ok: false, message: "Enter your email and password.", code: "auth.missing" };
+  }
+
+  /*
+   * Two counts, because they stop different attacks.
+   *
+   * Per network: one machine working through a list of addresses, where no
+   * single account ever reaches Payload's five-strike lock.
+   * Per address: the same address hammered from a botnet, where the network
+   * count never builds up on any one node.
+   *
+   * Checked BEFORE payload.login so a refused attempt costs no password
+   * hash — bcrypt is deliberately slow, which makes an unthrottled login
+   * endpoint a way to exhaust the server's CPU as well as guess passwords.
+   */
+  const [byNetwork, byIdentity] = await Promise.all([
+    throttle(LIMITS.adminLogin, await clientAddress()),
+    throttle(LIMITS.loginIdentity, `admin:${email}`),
+  ]);
+  const blocked = !byNetwork.allowed ? byNetwork : !byIdentity.allowed ? byIdentity : null;
+  if (blocked) {
+    return {
+      ok: false,
+      message: `Too many sign-in attempts. ${waitMessage(blocked.retryAfterSeconds)}`,
+      code: "auth.throttled",
+    };
   }
 
   const payload = await getPayload({ config });

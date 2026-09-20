@@ -190,6 +190,7 @@ const ROUTES = [
   ["enquiry-detail", enquiryDetail],
   ["events", "/admin/events"],
   ["event-detail", eventDetail],
+  ["team", "/admin/team"],
   ["discounts", "/admin/discounts"],
   ["settings", "/admin/settings"],
   ["not-found", "/admin/products/99999991/edit"],
@@ -197,7 +198,7 @@ const ROUTES = [
 
 notes.push(`screens audited: ${ROUTES.map(([name]) => name).join(", ")}`);
 
-const SHOT = new Set(["dashboard", "products", "product-edit", "orders", "order-detail", "media", "enquiry-detail", "customer-detail"]);
+const SHOT = new Set(["dashboard", "products", "product-edit", "orders", "order-detail", "media", "enquiry-detail", "customer-detail", "team"]);
 
 for (const [name, route] of ROUTES) {
   await open(ownerPage, route);
@@ -454,6 +455,20 @@ if (STAFF.email) {
     const saveButtons = await staffPage.locator('button[type="submit"]').count();
     check(disabled > 0 && saveButtons === 0, "staff sees a product read-only", `fieldsets=${disabled} saves=${saveButtons}`);
   }
+
+  /* Staff reach the Staff screen from the navigation on purpose — "how do I
+     get back in" is their question — and are given the answer, not a list. */
+  await open(staffPage, "/admin/team");
+  const teamText = await staffPage.locator("main").innerText();
+  check(
+    /owner/i.test(teamText),
+    "staff is refused the staff list",
+    teamText.slice(0, 80).split(/\s+/).join(" "),
+  );
+  check(
+    (await staffPage.getByRole("button", { name: /add someone/i }).count()) === 0,
+    "staff is not offered the invite button",
+  );
 
   const devCms = await staffPage.locator('a[href="/cms"]').count();
   check(devCms === 0, "staff is not shown the developer CMS link");

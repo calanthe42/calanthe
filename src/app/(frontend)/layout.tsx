@@ -29,7 +29,7 @@ const instrument = Instrument_Sans({
 });
 
 const DESCRIPTION =
-  "Luxury flower atelier in the UAE. Hand-composed arrangements, same-day delivery. Where feelings take form.";
+  "Luxury flower atelier in the UAE. Hand-composed arrangements, delivered across all seven Emirates. Where feelings take form.";
 
 export const metadata: Metadata = {
   /* Without metadataBase, every relative Open Graph URL Next generates
@@ -88,8 +88,14 @@ export default async function RootLayout({
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
         <MotionObserver />
-        <HeroMarkTravel />
-        <SmoothScroll>{children}</SmoothScroll>
+        {/* INSIDE SmoothScroll, not beside it. The driver reads the Lenis
+            instance from context so the mark moves on the same clock as the
+            page; mounted as a sibling it sat outside the provider, always
+            read null, and the "one clock" fix never actually connected. */}
+        <SmoothScroll>
+          <HeroMarkTravel />
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );

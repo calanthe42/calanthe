@@ -3,6 +3,7 @@
 import { cookies as nextCookies, headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
 
 /**
  * The customer's own account.
@@ -23,6 +24,21 @@ export async function customerLogin(form: FormData): Promise<AuthResult> {
 
   if (!email || !password) {
     return { ok: false, message: "Enter your email and password." };
+  }
+
+  /* Per network AND per address — see backend/security/throttle.ts for why
+     one without the other stops only half of what it looks like it stops.
+     Checked before payload.login so a refused attempt costs no bcrypt. */
+  const [byNetwork, byIdentity] = await Promise.all([
+    throttle(LIMITS.customerLogin, await clientAddress()),
+    throttle(LIMITS.loginIdentity, `customer:${email}`),
+  ]);
+  const blocked = !byNetwork.allowed ? byNetwork : !byIdentity.allowed ? byIdentity : null;
+  if (blocked) {
+    return {
+      ok: false,
+      message: `Too many sign-in attempts. ${waitMessage(blocked.retryAfterSeconds)}`,
+    };
   }
 
   const payload = await getPayload({ config });
@@ -126,6 +142,17 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
   if (password !== confirm)
     return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
 
+  /* Account creation is the one public write to the users table. Without a
+     limit it is a script that fills the customer list — the business's most
+     valuable asset — with thousands of rows the owner then has to sift. */
+  const registrations = await throttle(LIMITS.register, await clientAddress());
+  if (!registrations.allowed) {
+    return {
+      ok: false,
+      message: `Too many accounts created from here. ${waitMessage(registrations.retryAfterSeconds)}`,
+    };
+  }
+
   const payload = await getPayload({ config });
 
   try {
@@ -163,6 +190,14 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
 export async function resendCustomerVerification(email: string): Promise<AuthResult> {
   const address = email.trim().toLowerCase();
   if (!EMAIL_RE.test(address)) return { ok: false, message: "Please check your email address." };
+
+  /* Per address, not per network: this endpoint sends mail to whoever is
+     named, so an unlimited one is a way to use Calanthe to bombard somebody
+     else's inbox. Three is more than anyone needs and far short of abuse. */
+  const resends = await throttle(LIMITS.verifyResend, address);
+  if (!resends.allowed) {
+    return { ok: false, message: waitMessage(resends.retryAfterSeconds) };
+  }
 
   const payload = await getPayload({ config });
   try {
@@ -207,6 +242,25 @@ export async function requestCustomerPasswordReset(form: FormData): Promise<Auth
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { ok: false, message: "Please check your email address." };
 
+  /*
+   * Both counts happen BEFORE the lookup, so neither reveals anything: a
+   * known and an unknown address are throttled identically, and the only
+   * thing the response can tell a stranger is how often they themselves
+   * have asked.
+   *
+   * Per address stops Calanthe being used to bombard one person's inbox.
+   * Per network stops a script walking a list of addresses to find which
+   * ones the shop knows.
+   */
+  const [byEmail, byNetwork] = await Promise.all([
+    throttle(LIMITS.passwordResetEmail, email),
+    throttle(LIMITS.passwordResetIp, await clientAddress()),
+  ]);
+  const blocked = !byEmail.allowed ? byEmail : !byNetwork.allowed ? byNetwork : null;
+  if (blocked) {
+    return { ok: false, message: waitMessage(blocked.retryAfterSeconds) };
+  }
+
   const payload = await getPayload({ config });
   try {
     await payload.forgotPassword({
@@ -238,6 +292,14 @@ export async function resetCustomerPassword(form: FormData): Promise<ResetResult
     };
   if (password !== confirm)
     return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
+
+  /* The token is long and random, so guessing it is not a realistic attack —
+     but an endpoint that will check an unlimited number of guesses is one
+     tired algorithm away from becoming one, and the limit costs nothing. */
+  const attempts = await throttle(LIMITS.passwordResetIp, await clientAddress());
+  if (!attempts.allowed) {
+    return { ok: false, message: waitMessage(attempts.retryAfterSeconds) };
+  }
 
   const payload = await getPayload({ config });
   try {

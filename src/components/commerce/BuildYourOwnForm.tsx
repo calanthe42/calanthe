@@ -7,12 +7,15 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import {
-  chipClasses as chip,
-  chipOffClasses as chipOff,
-  chipOnClasses as chipOn,
   fieldClasses,
   fieldErrorClasses,
   labelClasses,
+  optionClasses,
+  optionLabelOff,
+  optionLabelOn,
+  optionRule,
+  optionRuleFill,
+  optionTick,
 } from "@/components/ui/form-classes";
 import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
 import { submitBespokeEnquiry } from "@backend/actions/enquiry";
@@ -24,6 +27,7 @@ import {
   byoBudgetsAed,
   BYO_MIN_BUDGET_AED,
   byoColours,
+  byoColourSwatches,
   byoOccasionOptions,
   formatAed,
   seasonalDisclaimer,
@@ -52,6 +56,11 @@ const STEPS = [
   { id: "vase", title: "A vase?" },
   { id: "card", title: "The card" },
   { id: "notes", title: "For the florist" },
+  /* WHO RECEIVES THEM decides which details the atelier needs next, so it
+     is asked before the details rather than after. A gift needs a second
+     name and number to deliver to; an arrangement for yourself needs one
+     address and no recipient at all. */
+  { id: "gift", title: "Who is it for?" },
   /* A brief without a name is a brief the atelier cannot answer. This step
      is what turns Build Your Own from a WhatsApp draft into a real enquiry
      the florist can call back on. */
@@ -72,6 +81,10 @@ export function BuildYourOwnForm() {
   const [message, setMessage] = useState("");
   const [leaveBlank, setLeaveBlank] = useState(false);
   const [notes, setNotes] = useState("");
+  const [isGift, setIsGift] = useState<boolean | null>(null);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -116,8 +129,9 @@ export function BuildYourOwnForm() {
     /* The rail's marker rests on "For the florist" until there is something
        to reach the customer by — contact is the last thing still waiting. */
     if (!notes.trim()) return 5;
-    return 6;
-  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank, notes]);
+    if (isGift === null) return 6;
+    return 7;
+  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank, notes, isGift]);
 
   const errors: Partial<Record<StepId, string>> = attempted
     ? {
@@ -141,6 +155,8 @@ export function BuildYourOwnForm() {
       ? "occasion"
       : budgetValue === 0
         ? "budget"
+        : isGift === null
+        ? "gift"
         : !name.trim() || !phone.trim() || !email.trim()
           ? "contact"
           : null;
@@ -157,6 +173,10 @@ export function BuildYourOwnForm() {
       name,
       email,
       phone,
+      isGift: isGift === true,
+      recipientName: isGift ? recipientName : undefined,
+      recipientPhone: isGift ? recipientPhone : undefined,
+      deliveryLocation: deliveryLocation || undefined,
       occasion: occasion ?? "",
       budgetAed: budgetValue,
       colours,
@@ -265,22 +285,20 @@ export function BuildYourOwnForm() {
           <Step
             index={0}
             active={activeIndex === 0}
+            done={activeIndex > 0}
             error={errors.occasion}
             stepRef={(el) => {
               stepRefs.current.occasion = el;
             }}
           >
-            <div className="flex flex-wrap gap-2.5">
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoOccasionOptions.map((o) => (
-                <button
+                <Option
                   key={o}
-                  type="button"
-                  aria-pressed={occasion === o}
-                  onClick={() => setOccasion(o)}
-                  className={cn(chip, occasion === o ? chipOn : chipOff)}
-                >
-                  {o}
-                </button>
+                  label={o}
+                  selected={occasion === o}
+                  onSelect={() => setOccasion(o)}
+                />
               ))}
             </div>
           </Step>
@@ -288,31 +306,28 @@ export function BuildYourOwnForm() {
           <Step
             index={1}
             active={activeIndex === 1}
+            done={activeIndex > 1}
             error={errors.budget}
             stepRef={(el) => {
               stepRefs.current.budget = el;
             }}
           >
-            <div className="flex flex-wrap gap-2.5">
+            {/* Figures read down a column, not across a row of boxes — the
+                eye compares amounts far more easily in a list. */}
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoBudgetsAed.map((b) => (
-                <button
+                <Option
                   key={b}
-                  type="button"
-                  aria-pressed={budget === b}
-                  onClick={() => setBudget(b)}
-                  className={cn(chip, budget === b ? chipOn : chipOff)}
-                >
-                  {formatAed(b)}
-                </button>
+                  label={formatAed(b)}
+                  selected={budget === b}
+                  onSelect={() => setBudget(b)}
+                />
               ))}
-              <button
-                type="button"
-                aria-pressed={budget === "other"}
-                onClick={() => setBudget("other")}
-                className={cn(chip, budget === "other" ? chipOn : chipOff)}
-              >
-                Another amount
-              </button>
+              <Option
+                label="Another amount"
+                selected={budget === "other"}
+                onSelect={() => setBudget("other")}
+              />
             </div>
             <AnimatePresence>
               {budget === "other" && (
@@ -344,71 +359,55 @@ export function BuildYourOwnForm() {
             </p>
           </Step>
 
-          <Step index={2} active={activeIndex === 2} hint="Choose as many as you like.">
-            <div className="flex flex-wrap gap-2.5">
+          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} hint="Choose as many as you like.">
+            {/* THE PALETTE LEADS, THE WORDS FOLLOW. "Peach & Apricot" in a
+                grey box asks someone to read a name and imagine the stems.
+                The three stops beside each name are what a florist would
+                actually put on the table. */}
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoColours.map((c) => {
                 const on = colours.includes(c);
                 return (
-                  <button
+                  <Option
                     key={c}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() =>
+                    label={c}
+                    swatch={byoColourSwatches[c]}
+                    selected={on}
+                    onSelect={() =>
                       setColours((prev) =>
                         on ? prev.filter((x) => x !== c) : [...prev, c],
                       )
                     }
-                    className={cn(chip, on ? chipOn : chipOff)}
-                  >
-                    {c}
-                  </button>
+                  />
                 );
               })}
-              <button
-                type="button"
-                aria-pressed={colourOther}
-                onClick={() => setColourOther((v) => !v)}
-                className={cn(chip, colourOther ? chipOn : chipOff)}
-              >
-                Let the florist choose
-              </button>
+              <Option
+                label="Let the florist choose"
+                note="A palette picked on the morning"
+                selected={colourOther}
+                onSelect={() => setColourOther((v) => !v)}
+              />
             </div>
           </Step>
 
-          <Step index={3} active={activeIndex === 3}>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <button
-                type="button"
-                aria-pressed={vase === true}
-                onClick={() => setVase(true)}
-                className={cn(
-                  chip,
-                  "flex-col gap-0.5 py-3",
-                  vase === true ? chipOn : chipOff,
-                )}
-              >
-                <span>Yes, in a vase</span>
-                <span className="text-xs text-ink-muted">
-                  +{formatAed(BYO_VASE_PRICE_AED)}
-                </span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={vase === false}
-                onClick={() => setVase(false)}
-                className={cn(
-                  chip,
-                  "flex-col gap-0.5 py-3",
-                  vase === false ? chipOn : chipOff,
-                )}
-              >
-                <span>No, hand-tied</span>
-                <span className="text-xs text-ink-muted">Wrapped in paper</span>
-              </button>
+          <Step index={3} active={activeIndex === 3} done={activeIndex > 3}>
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+              <Option
+                label="Yes, in a vase"
+                note={`+${formatAed(BYO_VASE_PRICE_AED)}`}
+                selected={vase === true}
+                onSelect={() => setVase(true)}
+              />
+              <Option
+                label="No, hand-tied"
+                note="Wrapped in paper"
+                selected={vase === false}
+                onSelect={() => setVase(false)}
+              />
             </div>
           </Step>
 
-          <Step index={4} active={activeIndex === 4}>
+          <Step index={4} active={activeIndex === 4} done={activeIndex > 4}>
             <textarea
               value={message}
               onChange={(e) => {
@@ -438,7 +437,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={5} active={activeIndex === 5} hint="Optional.">
+          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} hint="Optional.">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
@@ -449,7 +448,88 @@ export function BuildYourOwnForm() {
             />
           </Step>
 
-          <Step index={6} active={activeIndex === 6}>
+          <Step index={6} active={activeIndex === 6} done={activeIndex > 6}>
+            <div
+              className="grid grid-cols-2 gap-3"
+              role="group"
+              aria-label="Who is it for?"
+            >
+              {[
+                { value: true, label: "It's a gift", note: "Sent to someone else" },
+                { value: false, label: "For myself", note: "Delivered to me" },
+              ].map((choice) => (
+                <button
+                  key={String(choice.value)}
+                  type="button"
+                  aria-pressed={isGift === choice.value}
+                  onClick={() => setIsGift(choice.value)}
+                  className={cn(
+                    "flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-sm border px-3 text-center transition-colors duration-200 ease-bloom",
+                    isGift === choice.value
+                      ? "border-olive bg-cream text-olive"
+                      : "border-hairline text-olive hover:border-sage",
+                  )}
+                >
+                  <span className="text-sm">{choice.label}</span>
+                  <span className="text-xs text-ink-muted">{choice.note}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Only a gift needs a second person's details. Asking for them
+                when the flowers are for the buyer is asking someone to write
+                their own name twice. */}
+            {isGift === true && (
+              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="byo-rec-name" className={labelClasses}>
+                    Recipient name
+                  </label>
+                  <input
+                    id="byo-rec-name"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value.slice(0, 140))}
+                    className={fieldClasses}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="byo-rec-phone" className={labelClasses}>
+                    Recipient phone
+                  </label>
+                  <input
+                    id="byo-rec-phone"
+                    dir="ltr"
+                    inputMode="tel"
+                    value={recipientPhone}
+                    onChange={(e) => setRecipientPhone(e.target.value.slice(0, 40))}
+                    placeholder="+9715…"
+                    className={cn(fieldClasses, "text-start")}
+                  />
+                </div>
+              </div>
+            )}
+
+            {isGift !== null && (
+              <div className="mt-5">
+                <label htmlFor="byo-location" className={labelClasses}>
+                  {isGift ? "Where should it go?" : "Your delivery address"}
+                </label>
+                <input
+                  id="byo-location"
+                  value={deliveryLocation}
+                  onChange={(e) => setDeliveryLocation(e.target.value.slice(0, 240))}
+                  placeholder="Jumeirah, Dubai"
+                  className={fieldClasses}
+                />
+                <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+                  An area is enough for now — a florist confirms the exact
+                  address with you.
+                </p>
+              </div>
+            )}
+          </Step>
+
+          <Step index={7} active={activeIndex === 7} done={activeIndex > 7}>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="byo-name" className={labelClasses}>
@@ -517,32 +597,51 @@ export function BuildYourOwnForm() {
           button where she reads the total. */}
       <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
         {summary}
+        {/* Sized to its words, not to the column — the summary above is the
+            subject here, and the action belongs to it rather than over it. */}
         <Button
           variant="primary"
-          className="mt-5 w-full"
+          size="compact"
+          className="mt-6"
           onClick={handleSubmit}
-          disabled={sending}
+          loading={sending}
+          loadingText="Sending…"
         >
-          {sending ? "Sending…" : "Send to a Florist"}
+          Send to a Florist
         </Button>
         <SendNote />
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
-        <div className="mx-auto max-w-xl">
+      {/*
+        THE BAR REPORTS, THE BUTTON ACTS.
+
+        This was a full-bleed burnt-orange slab pinned across the bottom of
+        the screen — the loudest object on a page whose subject is a bouquet,
+        and the first thing the eye landed on instead of the choices being
+        made. It is now a quiet cream bar carrying the RUNNING TOTAL on the
+        reading edge, with the action sized to its own words beside it. The
+        total is the useful thing to keep on screen while choosing; the
+        button only needs to be findable, not dominant.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="font-brand text-[0.5625rem] uppercase tracking-brand text-ink-muted">
+              Estimated total
+            </p>
+            <p className="font-display text-xl font-light leading-none text-olive">
+              {totalAed > 0 ? formatAed(totalAed) : "—"}
+            </p>
+          </div>
           <Button
             variant="primary"
-            className="w-full"
+            size="compact"
+            className="shrink-0"
             onClick={handleSubmit}
-            disabled={sending}
+            loading={sending}
+            loadingText="Sending…"
           >
-            {sending ? (
-              "Sending…"
-            ) : (
-              <>
-                Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
-              </>
-            )}
+            Send to a Florist
           </Button>
         </div>
       </div>
@@ -559,9 +658,83 @@ function SendNote() {
   );
 }
 
+
+/**
+ * One way of choosing, used by every step.
+ *
+ * Every option on this page used to be the same bordered rectangle — eight
+ * ways of describing an arrangement arriving as identical grey buttons. This
+ * is the storefront's own grammar instead: a label on a hairline, and
+ * choosing draws that hairline in burnt orange from the reading edge. The
+ * same movement the shop's category row and the occasion band already use.
+ *
+ * `swatch` is optional and only the colour step passes it — there the
+ * palette itself is the point, so it leads and the words follow.
+ */
+function Option({
+  label,
+  note,
+  selected,
+  onSelect,
+  swatch,
+}: {
+  label: string;
+  note?: string;
+  selected: boolean;
+  onSelect: () => void;
+  swatch?: readonly [string, string, string];
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={optionClasses}
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        {swatch && (
+          <span aria-hidden className="flex shrink-0 overflow-hidden rounded-[2px]">
+            {swatch.map((c) => (
+              <span key={c} style={{ background: c }} className="h-6 w-2.5" />
+            ))}
+          </span>
+        )}
+        <span className="min-w-0">
+          <span className={cn("block truncate", selected ? optionLabelOn : optionLabelOff)}>
+            {label}
+          </span>
+          {note && <span className="mt-0.5 block text-xs text-ink-muted">{note}</span>}
+        </span>
+      </span>
+
+      <span
+        aria-hidden
+        className={cn(
+          optionTick,
+          selected ? "text-burnt-orange opacity-100" : "opacity-0",
+        )}
+      >
+        Chosen
+      </span>
+
+      <span aria-hidden className={optionRule}>
+        <span
+          className={cn(
+            optionRuleFill,
+            selected
+              ? "scale-x-100"
+              : "scale-x-0 group-hover/opt:scale-x-100 group-focus-visible/opt:scale-x-100",
+          )}
+        />
+      </span>
+    </button>
+  );
+}
+
 function Step({
   index,
   active,
+  done = false,
   hint,
   error,
   stepRef,
@@ -569,6 +742,8 @@ function Step({
 }: {
   index: number;
   active: boolean;
+  /** Answered: the segment above fills and the number becomes the mark. */
+  done?: boolean;
   hint?: string;
   error?: string;
   stepRef?: (el: HTMLLIElement | null) => void;
@@ -576,20 +751,72 @@ function Step({
 }) {
   const step = STEPS[index];
   const headingId = `byo-${step.id}`;
+  const last = index === STEPS.length - 1;
   return (
-    <li ref={stepRef} aria-labelledby={headingId} className="scroll-mt-32">
+    /*
+     * THE EDITORIAL RAIL.
+     *
+     * A single hairline runs down the consultation, and each step is a
+     * marker on it. The line is drawn with `scaleY` from the top, so a
+     * completed step's segment is filled and a future one's is pale — the
+     * rail reads as progress made rather than as a decoration.
+     *
+     * The rail lives in PADDING, not in a floating column: `ps-10` on the
+     * item and the marker positioned at `start-0` inside it. That is why it
+     * cannot push anything sideways — there is no second track to overflow,
+     * and the whole thing mirrors for Arabic because every inset is logical.
+     *
+     * COMPLETED shows the flower mark instead of the number. It is the one
+     * moment the brand's own glyph does the talking, and it earns its place:
+     * "this one is answered" is exactly what a mark means here.
+     */
+    <li
+      ref={stepRef}
+      aria-labelledby={headingId}
+      data-state={done ? "done" : active ? "active" : "future"}
+      className="group/step relative scroll-mt-32 ps-10 pb-2 lg:ps-14"
+    >
+      {/* The line. Sits under the marker and stops at the last step. */}
+      {!last && (
+        <span
+          aria-hidden
+          className="absolute bottom-0 start-[0.6875rem] top-8 w-px bg-hairline lg:start-[0.9375rem]"
+        >
+          <span
+            className={cn(
+              "block h-full w-px origin-top bg-burnt-orange/45 transition-transform duration-700 ease-bloom motion-reduce:transition-none",
+              done ? "scale-y-100" : "scale-y-0",
+            )}
+          />
+        </span>
+      )}
+
+      {/* The marker: number while pending, the mark once answered. */}
+      <span
+        aria-hidden
+        className={cn(
+          "absolute start-0 top-[0.1875rem] grid h-6 w-6 place-items-center rounded-full border bg-canvas transition-colors duration-500 ease-bloom lg:h-8 lg:w-8",
+          done
+            ? "border-burnt-orange/40 text-burnt-orange"
+            : active
+              ? "border-olive text-olive"
+              : "border-hairline text-ink-muted",
+        )}
+      >
+        {done ? (
+          <Monogram className="w-3 lg:w-3.5" />
+        ) : (
+          <span className="font-sans text-[0.6875rem] lg:text-xs">{index + 1}</span>
+        )}
+      </span>
+
       <h2
         id={headingId}
-        className="flex items-baseline gap-3 font-display text-2xl font-light text-olive lg:text-[1.75rem]"
+        className={cn(
+          "font-display text-2xl font-light transition-colors duration-300 ease-bloom lg:text-[1.75rem]",
+          active || done ? "text-olive" : "text-olive/55",
+        )}
       >
-        <span
-          className={cn(
-            "font-sans text-sm transition-colors duration-300 ease-bloom",
-            active ? "text-burnt-orange" : "text-ink-muted",
-          )}
-        >
-          {index + 1}
-        </span>
         {step.title}
       </h2>
       {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}

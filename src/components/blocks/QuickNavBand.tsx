@@ -6,11 +6,18 @@ import { Monogram } from "@/components/ui/Monogram";
 import { FloralImage } from "@/components/ui/FloralImage";
 import type { Occasion } from "@/lib/data";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/locale";
 
-const extra = [
-  { label: "Same-Day", href: "/shop" },
-  { label: "Luxury", href: "/shop?price=over-600" },
-] as const;
+/**
+ * Appended after the occasions from the database.
+ *
+ * "Same-Day" was removed at the client's request: it is a delivery promise,
+ * not an occasion, and sitting in a row of occasions it read as a category
+ * the shop does not have. The same-day DELIVERY logic is untouched — the
+ * cutoff countdown in the service strip and the trust band both still
+ * announce it, which is where a promise belongs.
+ */
+const EXTRA_HREF = "/shop?price=over-600";
 
 /**
  * The line directly beneath the hero — a chapter opening, not filter
@@ -24,6 +31,10 @@ const extra = [
  */
 export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion[] }) {
   const [active, setActive] = useState<number | null>(null);
+  const t = useT();
+  /* Was a hardcoded English literal, so it stayed "Luxury" on the Arabic
+     homepage. */
+  const extra = [{ label: t.band.luxury, href: EXTRA_HREF }];
 
   const links = [
     ...occasions.map((o) => ({

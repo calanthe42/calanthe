@@ -211,6 +211,42 @@ export function Header({
   const { count, openCart } = useCart();
   const t = useT();
 
+  /**
+   * THE HEADER PUBLISHES ITS OWN HEIGHT.
+   *
+   * The hero slides up underneath this bar with a negative top margin, and
+   * that margin used to be a hardcoded 6.25rem — a guess that has to equal
+   * the real header height exactly. It does not, on a real iPhone: the
+   * safe-area inset adds to it on a notched device, and the service strip
+   * above the nav row wraps to two lines at narrow widths. When the guess is
+   * short, the top of the hero — its headline included — is left exposed
+   * above the bar, which is precisely the Safari fault reported.
+   *
+   * Measured and written to `--header-h`, the hero's offset is always the
+   * real height, whatever the chrome, the inset or the wrapping do. The
+   * ResizeObserver keeps it true through rotation, toolbar collapse and a
+   * language switch that changes the strip's line count.
+   */
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${Math.round(el.getBoundingClientRect().height)}px`,
+      );
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    window.addEventListener("orientationchange", publish);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", publish);
+    };
+  }, []);
+
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -301,6 +337,7 @@ export function Header({
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         /* THE STACKING CONTEXT IS THE BUG, NOT THE NUMBER.
            `sticky` + a z-index makes this element a stacking context, so the
@@ -311,7 +348,7 @@ export function Header({
            exactly the bleed-through: page chrome painted over a full-screen
            overlay. While an overlay is open the whole header is promoted above
            them; the layers inside it keep working unchanged. */
-        "sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        "site-header sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
         menuOpen || searchOpen ? "z-[70]" : "z-40",
         /* Blur is desktop-only: on a phone, backdrop-blur re-renders
            every frame as content moves under it, which is one of the
@@ -417,6 +454,18 @@ export function Header({
           href="/"
           aria-label="Calanthe — home"
           data-travel-mark
+          /* PENDING, NOT TRAVELLING.
+             This used to be `data-travelling="true"` from the server, meant
+             to stop the mark popping from navbar size to hero size once JS
+             ran. It did that — and replaced it with something worse: until
+             hydration the CSS had the travelling attribute but none of the
+             driver's numbers, which is the artwork at hero size centred on
+             the navbar, cropped behind the header. On Safari hydration can
+             take several seconds, so that was the first thing an iPhone
+             showed. Now the hero carries its own copy of the mark, laid out
+             by CSS (Hero.tsx), and this one is hidden until the driver is
+             ready to put it exactly there. Nothing is ever half-set. */
+          data-pending={overlay ? "" : undefined}
           /* Centred on the ROW, and the row is centred on the viewport, so
              the mark is centred on the viewport at every width — which is
              also why the travelling animation never needs a horizontal
@@ -426,22 +475,25 @@ export function Header({
              0x0 and the wordmark disappears entirely. The 44px tap target
              comes from an invisible overlay instead, which expands the hit
              area without touching the logo's own geometry. */
-          className="travel-mark absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
+          /* `aspect-[1081/719]` IS LOAD-BEARING, not decoration.
+             The artwork inside is `position: absolute` (so a hero-sized box
+             cannot push the page sideways), which leaves this link with no
+             in-flow child — and it collapsed to ZERO HEIGHT. Everything
+             vertical is measured from this box: with height 0 the docked
+             centre resolved to the link's top edge, `--travel-y` computed to
+             0, and the lockup centred on that point — putting its top 32px
+             above the viewport, behind the header. That is the crop.
+             The ratio restores the real navbar footprint. */
+          className="travel-mark absolute left-1/2 top-1/2 block aspect-[1081/719] w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
         >
           {/* Both colourways render; the travel animation crossfades them
               so the mark turns olive exactly as it lands on the bar. On
               every other route the tone prop decides outright. */}
-          {/* `sizes` must describe the LARGEST size this mark is ever
-              painted at, not its resting one. At the navbar's 78px the
-              browser fetched a 78px-wide asset and the travelling animation
-              then scaled it past 540px — a 7x upscale, which rendered as a
-              blurred, ghosted smear over the hero. Requesting the hero size
-              makes it sharp out there, and downscaling to the bar is free. */}
-          <StackedLogo
-            tone={onDark ? "cream" : "olive"}
-            priority
-            sizes="(min-width: 1024px) 560px, 330px"
-          />
+          {/* No `sizes` or `priority` any more: the lockup is vector, so
+              there is no resolution to pick and nothing to preload — it
+              arrives with the markup and is crisp at every size it is
+              scaled to between the bar and the hero. */}
+          <StackedLogo tone={onDark ? "cream" : "olive"} />
         </Link>
 
         {/* Right — Occasions + Membership (desktop), icons (always) */}

@@ -2,6 +2,7 @@
 
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { LIMITS, guardByAddress } from "@backend/security/throttle";
 
 /**
  * Membership interest, recorded in the system rather than thrown at WhatsApp.
@@ -66,6 +67,12 @@ function clean(value: string | undefined, max: number): string {
 export async function submitMembershipEnquiry(
   request: MembershipEnquiryRequest,
 ): Promise<MembershipEnquiryResult> {
+  /* One bucket for every lead form. These write to the enquiry list the
+     owner works through by hand, so spam here does not degrade a service —
+     it wastes a florist's morning. */
+  const wait = await guardByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+
   const contactName = clean(request.contactName, 140);
   const contactEmail = clean(request.contactEmail, 200).toLowerCase();
   const contactPhone = clean(request.contactPhone, 40);

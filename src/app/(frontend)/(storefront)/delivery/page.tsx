@@ -6,14 +6,13 @@ import {
   deliveryZones,
   formatAed,
   FREE_DELIVERY_THRESHOLD_AED,
-  SAME_DAY_CUTOFF_HOUR,
   timeSlots,
 } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Delivery Information",
   description:
-    "Same-day flower delivery across all seven Emirates — cutoffs, fees and time windows for Calanthe deliveries.",
+    "Flower delivery across all seven Emirates — days, fees and time windows for Calanthe deliveries.",
 };
 
 export default function DeliveryPage() {
@@ -25,8 +24,11 @@ export default function DeliveryPage() {
           Delivery, across all seven Emirates.
         </h1>
         <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-muted">
-          Order before {SAME_DAY_CUTOFF_HOUR}:00 and your arrangement is composed and
-          delivered the same day. Delivery is complimentary on orders over{" "}
+          {/* No same-day promise: the atelier does not offer it. The cutoff
+              still governs which days the picker can offer, which is a
+              scheduling rule rather than a claim. */}
+          Choose the day and the window that suit them, across all seven
+          Emirates. Delivery is complimentary on orders over{" "}
           {formatAed(FREE_DELIVERY_THRESHOLD_AED)}.
         </p>
       </Reveal>

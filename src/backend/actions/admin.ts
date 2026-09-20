@@ -420,6 +420,18 @@ export async function updateOrderFulfilment(
       data: { fulfilmentStatus } as never,
     });
     revalidatePath("/admin/orders");
+    /* AND THE PAGE THE USER IS ACTUALLY LOOKING AT.
+       Every other entity here revalidates its own detail route — products,
+       occasions, enquiries, events all do. The two order actions did not, so
+       advancing an order updated the list and the dashboard while the open
+       order page kept showing the previous action. A florist pressed "Mark
+       ready", saw nothing change, and pressed it again. The work had
+       succeeded both times; only the screen was stale.
+
+       The segment is revalidated by its pattern because orders are routed by
+       `orderNumber` while these actions receive `id`. Invalidating the other
+       order pages costs nothing in a tool used by a handful of people. */
+    revalidatePath("/admin/orders/[orderNumber]", "page");
     revalidatePath("/admin");
     const known = fulfilmentStatus in FULFILMENT_DONE;
     return {
@@ -447,6 +459,8 @@ export async function updateOrderOperations(id: number, form: FormData): Promise
       } as never,
     });
     revalidatePath("/admin/orders");
+    /* Same reason as above. */
+    revalidatePath("/admin/orders/[orderNumber]", "page");
     return { ok: true, message: "Order notes saved.", code: "actions.order.notesSaved" };
   } catch (error) {
     return failure(error, "The order could not be updated.", "actions.order.updateFailed");

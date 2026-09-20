@@ -370,6 +370,16 @@ export function CheckoutForm() {
      */
     <form
       noValidate
+      /*
+       * A form with an onSubmit handler and no method is still a GET form
+       * until React hydrates. Pressing Enter in the last field before that
+       * moment would navigate to /checkout?customerName=…&customerPhone=…
+       * &deliveryAddress=… — the customer's name, phone and home address in
+       * the address bar, in history, and in every log along the way. The
+       * same fault was found on the admin sign-in form, where it was a
+       * password. POST keeps it in a body Next simply discards.
+       */
+      method="post"
       onSubmit={(e) => {
         e.preventDefault();
         placeOrder();
