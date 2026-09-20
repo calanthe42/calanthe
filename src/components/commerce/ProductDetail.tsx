@@ -23,7 +23,6 @@ import {
   addons,
   formatAed,
   occasions as occasionNames,
-  SAME_DAY_CUTOFF_HOUR,
   sizes,
   timeSlots,
   type AddonId,
@@ -84,7 +83,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [giftMessage, setGiftMessage] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
-  const { now, days, selectedDay, setDay, slot, setSlot, countdown } =
+  const { days, selectedDay, setDay, slot, setSlot } =
     useDeliverySchedule();
 
   /* Same pricing rule the cart charges — never a second copy of it. */
@@ -291,15 +290,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <ul className="mt-5 flex flex-col gap-2.5 text-base text-olive">
               <li className="flex gap-3">
                 <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-burnt-orange" />
-                {countdown ? (
-                  <span>Order within {countdown} for delivery today.</span>
-                ) : now ? (
-                  <span>Order now for delivery tomorrow.</span>
-                ) : (
-                  <span>
-                    Same-day delivery on orders placed before {SAME_DAY_CUTOFF_HOUR}:00.
-                  </span>
-                )}
+                {/* NO SAME-DAY CLAIM. This branched between "order within
+                    3h 12m for delivery today" and "same-day delivery on
+                    orders placed before 17:00" — both promising a service
+                    the atelier does not offer. The delivery day is chosen
+                    from the real schedule in the picker below; this line
+                    now says what is actually true of every arrangement. */}
+                <span>Composed to order, and delivered on the day you choose.</span>
               </li>
               <li className="flex gap-3">
                 <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-burnt-orange" />

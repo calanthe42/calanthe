@@ -103,6 +103,14 @@ export const Users: CollectionConfig = {
     update: isAdminOrSelf,
     delete: isAdmin,
     admin: canAccessAdminPanel,
+    /* NOT A DEFAULT WORTH INHERITING. Payload leaves `unlock` undefined
+       unless declared, and an undefined access rule resolves to "any
+       authenticated user" (auth/executeAccess.js) — so without this line a
+       staff account, or any signed-in customer, could clear the five-strike
+       lock on anybody's account, including the owner's. That turns the
+       lockout from a brute-force defence into a speed bump. Clearing a lock
+       is an owner's decision about a person she employs. */
+    unlock: isAdmin,
   },
   hooks: {
     beforeChange: [

@@ -7,12 +7,15 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import {
-  chipClasses as chip,
-  chipOffClasses as chipOff,
-  chipOnClasses as chipOn,
   fieldClasses,
   fieldErrorClasses,
   labelClasses,
+  optionClasses,
+  optionLabelOff,
+  optionLabelOn,
+  optionRule,
+  optionRuleFill,
+  optionTick,
 } from "@/components/ui/form-classes";
 import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
 import { submitBespokeEnquiry } from "@backend/actions/enquiry";
@@ -24,6 +27,7 @@ import {
   byoBudgetsAed,
   BYO_MIN_BUDGET_AED,
   byoColours,
+  byoColourSwatches,
   byoOccasionOptions,
   formatAed,
   seasonalDisclaimer,
@@ -287,17 +291,14 @@ export function BuildYourOwnForm() {
               stepRefs.current.occasion = el;
             }}
           >
-            <div className="flex flex-wrap gap-2.5">
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoOccasionOptions.map((o) => (
-                <button
+                <Option
                   key={o}
-                  type="button"
-                  aria-pressed={occasion === o}
-                  onClick={() => setOccasion(o)}
-                  className={cn(chip, occasion === o ? chipOn : chipOff)}
-                >
-                  {o}
-                </button>
+                  label={o}
+                  selected={occasion === o}
+                  onSelect={() => setOccasion(o)}
+                />
               ))}
             </div>
           </Step>
@@ -311,26 +312,22 @@ export function BuildYourOwnForm() {
               stepRefs.current.budget = el;
             }}
           >
-            <div className="flex flex-wrap gap-2.5">
+            {/* Figures read down a column, not across a row of boxes — the
+                eye compares amounts far more easily in a list. */}
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoBudgetsAed.map((b) => (
-                <button
+                <Option
                   key={b}
-                  type="button"
-                  aria-pressed={budget === b}
-                  onClick={() => setBudget(b)}
-                  className={cn(chip, budget === b ? chipOn : chipOff)}
-                >
-                  {formatAed(b)}
-                </button>
+                  label={formatAed(b)}
+                  selected={budget === b}
+                  onSelect={() => setBudget(b)}
+                />
               ))}
-              <button
-                type="button"
-                aria-pressed={budget === "other"}
-                onClick={() => setBudget("other")}
-                className={cn(chip, budget === "other" ? chipOn : chipOff)}
-              >
-                Another amount
-              </button>
+              <Option
+                label="Another amount"
+                selected={budget === "other"}
+                onSelect={() => setBudget("other")}
+              />
             </div>
             <AnimatePresence>
               {budget === "other" && (
@@ -363,66 +360,50 @@ export function BuildYourOwnForm() {
           </Step>
 
           <Step index={2} active={activeIndex === 2} done={activeIndex > 2} hint="Choose as many as you like.">
-            <div className="flex flex-wrap gap-2.5">
+            {/* THE PALETTE LEADS, THE WORDS FOLLOW. "Peach & Apricot" in a
+                grey box asks someone to read a name and imagine the stems.
+                The three stops beside each name are what a florist would
+                actually put on the table. */}
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               {byoColours.map((c) => {
                 const on = colours.includes(c);
                 return (
-                  <button
+                  <Option
                     key={c}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() =>
+                    label={c}
+                    swatch={byoColourSwatches[c]}
+                    selected={on}
+                    onSelect={() =>
                       setColours((prev) =>
                         on ? prev.filter((x) => x !== c) : [...prev, c],
                       )
                     }
-                    className={cn(chip, on ? chipOn : chipOff)}
-                  >
-                    {c}
-                  </button>
+                  />
                 );
               })}
-              <button
-                type="button"
-                aria-pressed={colourOther}
-                onClick={() => setColourOther((v) => !v)}
-                className={cn(chip, colourOther ? chipOn : chipOff)}
-              >
-                Let the florist choose
-              </button>
+              <Option
+                label="Let the florist choose"
+                note="A palette picked on the morning"
+                selected={colourOther}
+                onSelect={() => setColourOther((v) => !v)}
+              />
             </div>
           </Step>
 
           <Step index={3} active={activeIndex === 3} done={activeIndex > 3}>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              <button
-                type="button"
-                aria-pressed={vase === true}
-                onClick={() => setVase(true)}
-                className={cn(
-                  chip,
-                  "flex-col gap-0.5 py-3",
-                  vase === true ? chipOn : chipOff,
-                )}
-              >
-                <span>Yes, in a vase</span>
-                <span className="text-xs text-ink-muted">
-                  +{formatAed(BYO_VASE_PRICE_AED)}
-                </span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={vase === false}
-                onClick={() => setVase(false)}
-                className={cn(
-                  chip,
-                  "flex-col gap-0.5 py-3",
-                  vase === false ? chipOn : chipOff,
-                )}
-              >
-                <span>No, hand-tied</span>
-                <span className="text-xs text-ink-muted">Wrapped in paper</span>
-              </button>
+            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+              <Option
+                label="Yes, in a vase"
+                note={`+${formatAed(BYO_VASE_PRICE_AED)}`}
+                selected={vase === true}
+                onSelect={() => setVase(true)}
+              />
+              <Option
+                label="No, hand-tied"
+                note="Wrapped in paper"
+                selected={vase === false}
+                onSelect={() => setVase(false)}
+              />
             </div>
           </Step>
 
@@ -616,32 +597,51 @@ export function BuildYourOwnForm() {
           button where she reads the total. */}
       <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
         {summary}
+        {/* Sized to its words, not to the column — the summary above is the
+            subject here, and the action belongs to it rather than over it. */}
         <Button
           variant="primary"
-          className="mt-5 w-full"
+          size="compact"
+          className="mt-6"
           onClick={handleSubmit}
-          disabled={sending}
+          loading={sending}
+          loadingText="Sending…"
         >
-          {sending ? "Sending…" : "Send to a Florist"}
+          Send to a Florist
         </Button>
         <SendNote />
       </aside>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
-        <div className="mx-auto max-w-xl">
+      {/*
+        THE BAR REPORTS, THE BUTTON ACTS.
+
+        This was a full-bleed burnt-orange slab pinned across the bottom of
+        the screen — the loudest object on a page whose subject is a bouquet,
+        and the first thing the eye landed on instead of the choices being
+        made. It is now a quiet cream bar carrying the RUNNING TOTAL on the
+        reading edge, with the action sized to its own words beside it. The
+        total is the useful thing to keep on screen while choosing; the
+        button only needs to be findable, not dominant.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="font-brand text-[0.5625rem] uppercase tracking-brand text-ink-muted">
+              Estimated total
+            </p>
+            <p className="font-display text-xl font-light leading-none text-olive">
+              {totalAed > 0 ? formatAed(totalAed) : "—"}
+            </p>
+          </div>
           <Button
             variant="primary"
-            className="w-full"
+            size="compact"
+            className="shrink-0"
             onClick={handleSubmit}
-            disabled={sending}
+            loading={sending}
+            loadingText="Sending…"
           >
-            {sending ? (
-              "Sending…"
-            ) : (
-              <>
-                Send to a Florist{totalAed > 0 && <> — {formatAed(totalAed)}</>}
-              </>
-            )}
+            Send to a Florist
           </Button>
         </div>
       </div>
@@ -655,6 +655,79 @@ function SendNote() {
       Sends your request to the atelier. Nothing is ordered and nothing is
       charged until a florist confirms it with you.
     </p>
+  );
+}
+
+
+/**
+ * One way of choosing, used by every step.
+ *
+ * Every option on this page used to be the same bordered rectangle — eight
+ * ways of describing an arrangement arriving as identical grey buttons. This
+ * is the storefront's own grammar instead: a label on a hairline, and
+ * choosing draws that hairline in burnt orange from the reading edge. The
+ * same movement the shop's category row and the occasion band already use.
+ *
+ * `swatch` is optional and only the colour step passes it — there the
+ * palette itself is the point, so it leads and the words follow.
+ */
+function Option({
+  label,
+  note,
+  selected,
+  onSelect,
+  swatch,
+}: {
+  label: string;
+  note?: string;
+  selected: boolean;
+  onSelect: () => void;
+  swatch?: readonly [string, string, string];
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={optionClasses}
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        {swatch && (
+          <span aria-hidden className="flex shrink-0 overflow-hidden rounded-[2px]">
+            {swatch.map((c) => (
+              <span key={c} style={{ background: c }} className="h-6 w-2.5" />
+            ))}
+          </span>
+        )}
+        <span className="min-w-0">
+          <span className={cn("block truncate", selected ? optionLabelOn : optionLabelOff)}>
+            {label}
+          </span>
+          {note && <span className="mt-0.5 block text-xs text-ink-muted">{note}</span>}
+        </span>
+      </span>
+
+      <span
+        aria-hidden
+        className={cn(
+          optionTick,
+          selected ? "text-burnt-orange opacity-100" : "opacity-0",
+        )}
+      >
+        Chosen
+      </span>
+
+      <span aria-hidden className={optionRule}>
+        <span
+          className={cn(
+            optionRuleFill,
+            selected
+              ? "scale-x-100"
+              : "scale-x-0 group-hover/opt:scale-x-100 group-focus-visible/opt:scale-x-100",
+          )}
+        />
+      </span>
+    </button>
   );
 }
 

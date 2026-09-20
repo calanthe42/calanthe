@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Shop",
   description:
-    "Hand-composed arrangements from the Calanthe atelier — same-day delivery across the UAE.",
+    "Hand-composed arrangements from the Calanthe atelier, delivered across the UAE.",
 };
 
 export default async function ShopPage({
@@ -29,7 +29,7 @@ export default async function ShopPage({
   const { q = "", flower = "", price = "", ready = "" } = await searchParams;
 
   /* "Ready Made for Today" is the same catalogue, filtered to what the
-     atelier can compose and deliver the same day — not a separate page
+     atelier can compose and deliver soonest — not a separate page
      to keep in sync. */
   const readyToday = ready === "today";
   /* Availability is enforced by the query, not here: getAvailableProducts

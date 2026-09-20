@@ -533,6 +533,26 @@ export const byoColours = [
   "Greens & Foliage",
 ] as const;
 
+/**
+ * What each palette actually looks like.
+ *
+ * The options themselves are unchanged — this only gives the existing names
+ * something to show. Asking someone to choose "Peach & Apricot" from a row of
+ * identical bordered buttons is asking them to read a word and imagine the
+ * flowers; a florist would put the stems on the table. Three stops each,
+ * because a real palette is a range rather than a colour.
+ */
+export const byoColourSwatches: Record<(typeof byoColours)[number], readonly [string, string, string]> = {
+  "Whites & Creams": ["#FBF8F0", "#F0E9D8", "#DFD3B8"],
+  "Blush & Rose": ["#F6DCDA", "#E8AFAE", "#CE7F84"],
+  "Peach & Apricot": ["#FBE0CB", "#F2BC91", "#DE9364"],
+  "Sunlit Yellows": ["#FAECC2", "#F0D284", "#DDB14A"],
+  "Burnt Orange & Rust": ["#E2A277", "#C9743D", "#9F4F23"],
+  "Reds & Burgundies": ["#C8556A", "#94263C", "#2E131B"],
+  "Lilac & Purples": ["#E3DAEC", "#B9A4CE", "#8A6FA6"],
+  "Greens & Foliage": ["#D8DCC2", "#A3AD84", "#5E6B45"],
+};
+
 /** FLAGGED: placeholder set — replace with the client's exact 8 occasions. */
 export const byoOccasionOptions = [
   "Birthday",

@@ -2,6 +2,7 @@
 
 import { getPayload, type RequiredDataFromCollectionSlug } from "payload";
 import config from "@payload-config";
+import { LIMITS, guardByAddress } from "@backend/security/throttle";
 
 /**
  * The atelier's two remaining lead flows, recorded instead of discarded.
@@ -117,6 +118,12 @@ export type BespokeEnquiryRequest = Contact & {
 export async function submitBespokeEnquiry(
   request: BespokeEnquiryRequest,
 ): Promise<EnquiryResult> {
+  /* One bucket for every lead form. These write to the enquiry list the
+     owner works through by hand, so spam here does not degrade a service —
+     it wastes a florist's morning. */
+  const wait = await guardByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+
   const invalid = checkContact(request);
   if (invalid) return invalid;
 
@@ -207,6 +214,12 @@ export type EventEnquiryRequest = Contact & {
 export async function submitEventEnquiry(
   request: EventEnquiryRequest,
 ): Promise<EnquiryResult> {
+  /* One bucket for every lead form. These write to the enquiry list the
+     owner works through by hand, so spam here does not degrade a service —
+     it wastes a florist's morning. */
+  const wait = await guardByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+
   const invalid = checkContact(request);
   if (invalid) return invalid;
 

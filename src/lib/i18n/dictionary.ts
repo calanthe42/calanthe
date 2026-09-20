@@ -47,13 +47,9 @@ export const en = {
   strip: {
     emirates: "Delivering across all seven Emirates",
     video: "Video approval on every order",
-    sameDay: "Same-day delivery across the UAE",
-    tomorrow: "Ordering now for tomorrow's deliveries",
-    /* Assembled around the live figure: "Order within · 3h 12m · for
-       delivery today". Split so Arabic can put the number where Arabic
-       puts it, rather than forcing English word order. */
-    orderWithinBefore: "Order within",
-    orderWithinAfter: "for delivery today",
+    /* No same-day claim and no countdown: the atelier does not offer
+       same-day delivery, so a ticker promising it was simply untrue. */
+    composed: "Every arrangement composed by hand",
   },
   search: {
     label: "Search the atelier",
@@ -102,8 +98,8 @@ export const en = {
     deliverCopy: "Kept cool and upright to your door, across all seven emirates.",
   },
   trust: {
-    sameDayTitle: "Same-day delivery",
-    sameDayCopy: "Ordered before 5pm, at their door today.",
+    sameDayTitle: "Delivered on your day",
+    sameDayCopy: "Choose the day and the window that suit them.",
     videoTitle: "Video approval",
     videoCopy: "See your arrangement on WhatsApp before it leaves.",
     freshTitle: "Freshness guarantee",
@@ -276,10 +272,7 @@ export const ar: typeof en = {
   strip: {
     emirates: "نوصّل إلى الإمارات السبع",
     video: "موافقتك بالفيديو على كل طلب",
-    sameDay: "توصيل في اليوم نفسه داخل الإمارات",
-    tomorrow: "الطلبات الآن لتوصيل الغد",
-    orderWithinBefore: "اطلبي خلال",
-    orderWithinAfter: "ليصلك اليوم",
+    composed: "كل باقة تُنسَّق يدويًا",
   },
   search: {
     label: "ابحثي في الأتيليه",
@@ -327,8 +320,8 @@ export const ar: typeof en = {
     deliverCopy: "تبقى منتعشة وقائمة حتى بابك، في الإمارات السبع.",
   },
   trust: {
-    sameDayTitle: "توصيل في اليوم نفسه",
-    sameDayCopy: "اطلبي قبل الخامسة مساءً، وتصل اليوم.",
+    sameDayTitle: "توصيل في يومك المختار",
+    sameDayCopy: "اختاري اليوم والوقت المناسبين لهم.",
     videoTitle: "موافقتك بالفيديو",
     videoCopy: "شاهدي باقتك عبر واتساب قبل أن تغادر.",
     freshTitle: "ضمان النضارة",

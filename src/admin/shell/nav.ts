@@ -7,10 +7,15 @@ import type { IconName } from "@admin/ui/icons";
  *
  * EVERY ITEM HERE IS A WORKING SCREEN. Sections that exist in the business's
  * vocabulary but have no screen yet (discounts, delivery settings,
- * memberships, campaigns, staff administration, settings) are deliberately
- * absent rather than listed behind a "Soon" badge: a navigation item that
- * leads to an apology is worse than one the owner never sees. They return
- * here, each in one line, when the screen behind them is real.
+ * memberships, campaigns, settings) are deliberately absent rather than
+ * listed behind a "Soon" badge: a navigation item that leads to an apology is
+ * worse than one the owner never sees. They return here, each in one line,
+ * when the screen behind them is real.
+ *
+ * Staff is shown to everyone, not only to the owner. A staff member opening
+ * it sees a short panel telling her the owner manages accounts and can get
+ * her back in — which is the answer to the question she came with. Hiding the
+ * item would leave her with nowhere to look.
  */
 
 export type NavItem = { href: string; label: MessageKey; icon: IconName };
@@ -40,6 +45,10 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     heading: "nav.sections.operations",
     items: [{ href: "/admin/events", label: "nav.events", icon: "sparkles" }],
+  },
+  {
+    heading: "nav.sections.system",
+    items: [{ href: "/admin/team", label: "nav.staff", icon: "staff" }],
   },
 ];
 

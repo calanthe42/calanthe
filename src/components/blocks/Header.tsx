@@ -472,7 +472,16 @@ export function Header({
              0x0 and the wordmark disappears entirely. The 44px tap target
              comes from an invisible overlay instead, which expands the hit
              area without touching the logo's own geometry. */
-          className="travel-mark absolute left-1/2 top-1/2 block w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
+          /* `aspect-[1081/719]` IS LOAD-BEARING, not decoration.
+             The artwork inside is `position: absolute` (so a hero-sized box
+             cannot push the page sideways), which leaves this link with no
+             in-flow child — and it collapsed to ZERO HEIGHT. Everything
+             vertical is measured from this box: with height 0 the docked
+             centre resolved to the link's top edge, `--travel-y` computed to
+             0, and the lockup centred on that point — putting its top 32px
+             above the viewport, behind the header. That is the crop.
+             The ratio restores the real navbar footprint. */
+          className="travel-mark absolute left-1/2 top-1/2 block aspect-[1081/719] w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
         >
           {/* Both colourways render; the travel animation crossfades them
               so the mark turns olive exactly as it lands on the bar. On

@@ -29,7 +29,7 @@ const instrument = Instrument_Sans({
 });
 
 const DESCRIPTION =
-  "Luxury flower atelier in the UAE. Hand-composed arrangements, same-day delivery. Where feelings take form.";
+  "Luxury flower atelier in the UAE. Hand-composed arrangements, delivered across all seven Emirates. Where feelings take form.";
 
 export const metadata: Metadata = {
   /* Without metadataBase, every relative Open Graph URL Next generates

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { adminLogin } from "@backend/actions/admin-auth";
 import { useI18n } from "@admin/i18n/client";
 import { Button } from "@admin/ui/Button";
@@ -12,18 +12,39 @@ import { Icon } from "@admin/ui/icons";
  * The sign-in form. The password goes to a server action and nowhere else;
  * the session cookie is set on the server as httpOnly, so no script on the
  * page can read it.
+ *
+ * THE PASSWORD MUST NEVER LEAVE THE BROWSER EXCEPT TO THE ACTION.
+ *
+ * This form previously used `onSubmit` with no `action` and no `method`,
+ * which means that until React hydrates it is an ordinary HTML form — and an
+ * ordinary form with no method submits as GET. Someone who typed their
+ * password and pressed Enter a moment too early was navigated to
+ *
+ *     /admin/login?email=…&password=…
+ *
+ * putting the admin password in the address bar, in browser history, in the
+ * server's access log and in any proxy in between. That was observed in a
+ * browser, not theorised.
+ *
+ * Passing a FUNCTION to `action` is what the storefront's auth forms already
+ * do, and React renders it as `action="javascript:throw …"` — so a submit
+ * before hydration does nothing at all and the credentials never leave the
+ * page. The button is disabled until hydration so that "nothing at all" is
+ * visible as "not ready yet" rather than as a dead button.
  */
 export function AdminLoginForm({ next }: { next: string }) {
   const { t, resolve } = useI18n();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  /* False during server render and the first client render, true immediately
+     after — which is exactly "has this form been wired up yet". */
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
 
   return (
     <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        const data = new FormData(event.currentTarget);
+      action={(data: FormData) => {
         setError(null);
         startTransition(async () => {
           const result = await adminLogin(data);
@@ -58,7 +79,14 @@ export function AdminLoginForm({ next }: { next: string }) {
         </div>
       ) : null}
 
-      <Button type="submit" variant="primary" block loading={pending} loadingText={t("auth.pending")}>
+      <Button
+        type="submit"
+        variant="primary"
+        block
+        disabled={!ready}
+        loading={pending}
+        loadingText={t("auth.pending")}
+      >
         {t("auth.submit")}
       </Button>
     </form>

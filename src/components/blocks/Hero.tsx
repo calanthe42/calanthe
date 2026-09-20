@@ -122,7 +122,14 @@ export async function Hero({ media }: HeroProps) {
           The bottom padding on a phone clears the floating WhatsApp button
           (48px inset 20px from the corner): the actions are full-width, so
           anything parked in that corner sits on top of the second one. */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl gutter pb-[calc(env(safe-area-inset-bottom)+5.75rem)] lg:pb-24">
+      {/* `data-hero-copy` is what the travelling mark measures against: it
+          centres itself in the clear band ABOVE this block rather than at a
+          fixed fraction of the hero, so the two can never converge on a
+          short screen. See HeroMarkTravel.tsx. */}
+      <div
+        data-hero-copy
+        className="relative z-10 mx-auto w-full max-w-7xl gutter pb-[calc(env(safe-area-inset-bottom)+5.75rem)] lg:pb-24"
+      >
         <div className="max-w-xl">
           {/* No mark here: the brand lockup is the large one at the centre
               of the frame, which is the header's own mark transformed down

@@ -5,6 +5,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Product } from "@/payload-types";
 import { priceOrder, type CheckoutLineRequest } from "@backend/domain/pricing";
+import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
 
 /**
  * Cash on delivery checkout.
@@ -57,6 +58,21 @@ function fail(code: string, message: string): CheckoutResult {
 }
 
 export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutResult> {
+  /*
+   * Cash on delivery takes no card, so there is no payment step to reject a
+   * fake order. An unlimited create is therefore a script that fills the
+   * florist's morning with bouquets nobody ordered, each of which she has to
+   * ring a stranger about before she can cancel it.
+   *
+   * Eight an hour from one network is far above any real household and far
+   * below what abuse needs to be worth doing. It is checked first, before
+   * any product is loaded or priced.
+   */
+  const orders = await throttle(LIMITS.checkout, await clientAddress());
+  if (!orders.allowed) {
+    return fail("RATE_LIMITED", `Too many orders from this device. ${waitMessage(orders.retryAfterSeconds)}`);
+  }
+
   const payload = await getPayload({ config });
 
   /* ---------- shape and identity validation ---------- */

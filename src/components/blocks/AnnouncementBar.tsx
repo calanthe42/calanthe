@@ -1,6 +1,5 @@
 "use client";
 
-import { CutoffCountdown } from "@/components/blocks/CutoffCountdown";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/locale";
 
@@ -29,7 +28,14 @@ export function AnnouncementBar({ onDark }: { onDark: boolean }) {
     <div className="flex h-9 items-center">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-center px-4 lg:justify-between lg:px-8">
         <p className={side}>{t.strip.emirates}</p>
-        {/* 11px on a phone, 12px from lg. The old 10px at 60% opacity was
+        {/* A STANDING PROMISE, NOT A COUNTDOWN.
+            This read "Order within 10h 50m for delivery today" — a live
+            urgency ticker for a service the atelier does not offer. It is
+            replaced by what is actually true of every order. The delivery
+            scheduling itself (cutoff hour, available days, time slots) is
+            untouched; only this claim is gone.
+
+            11px on a phone, 12px from lg. The old 10px at 60% opacity was
             unreadable; full-strength 12px caps across the whole width made
             a service note the loudest line on the screen. This is legible
             without outranking the hero. */}
@@ -39,7 +45,7 @@ export function AnnouncementBar({ onDark }: { onDark: boolean }) {
             onDark ? "text-cream/90" : "text-olive",
           )}
         >
-          <CutoffCountdown />
+          {t.strip.composed}
         </p>
         <p className={side}>{t.strip.video}</p>
       </div>

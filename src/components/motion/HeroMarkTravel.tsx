@@ -46,8 +46,21 @@ import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
  * rAF-throttled scroll listener, so the compositor does the work.
  */
 
-/** Where the big mark sits in the hero, as a fraction of viewport height. */
-const HERO_CENTRE = 0.46;
+/** The artwork's own ratio, from the Illustrator master. */
+const STACKED_RATIO = 1080 / 717.91;
+
+/** Breathing room kept between the mark and both the header and the copy. */
+const BAND_PADDING = 32;
+
+/**
+ * Under this height the mark does not travel at all.
+ *
+ * A 553px screen with a 102px header and a full copy block leaves under 90px
+ * of clear space. A lockup that small over the photograph is not a brand
+ * moment — the crisp one already in the navbar says more. So the hero simply
+ * opens without it, which is a decision rather than a failed fit.
+ */
+const MIN_MARK = 72;
 
 /** How much scrolling completes the journey, as a fraction of the hero. */
 const TRAVEL = 0.42;
@@ -72,7 +85,12 @@ export function HeroMarkTravel() {
     let navCentre = 0;
     let heroCentre = 0;
     let distance = 1;
-    let scaleUp = 1;
+    let heroShrink = 1;
+    let tooShort = false;
+    let naturalH = 0;
+    let headerH = 0;
+    let bandBottom = 0;
+    let dockShrink = 0.25;
 
     /**
      * Measured, never assumed: the docked centre is read with the travel
@@ -90,16 +108,37 @@ export function HeroMarkTravel() {
      * width change, a second pass after load — it silently kills the
      * animation.
      */
+    const headerEl = document.querySelector<HTMLElement>("header");
+    const copyEl = document.querySelector<HTMLElement>("[data-hero-copy]");
+
+    const dockShrinkOf = (navW: number, heroW: number) =>
+      heroW && navW ? navW / heroW : 0.25;
+
     const measure = () => {
       mark.style.setProperty("--travel-y", "0px");
       mark.style.setProperty("--travel-shrink", "1");
       const rect = mark.getBoundingClientRect();
       navCentre = rect.top + rect.height / 2;
 
-      const heroHeight = hero.getBoundingClientRect().height || window.innerHeight;
-      heroCentre = heroHeight * HERO_CENTRE;
+      const heroBox = hero.getBoundingClientRect();
+      const heroHeight = heroBox.height || window.innerHeight;
       distance = Math.max(1, heroHeight * TRAVEL);
 
+      /**
+       * THE MARK IS CENTRED IN THE CLEAR BAND, NOT AT A FIXED FRACTION.
+       *
+       * It used to sit at 46% of the hero's height while the words were
+       * anchored to the hero's bottom. Two unrelated anchoring systems: as
+       * the viewport shortens they converge, and nothing in the layout
+       * prevents it. Measured on real phone viewports with Safari's toolbars
+       * showing, the lockup overlapped the eyebrow on 16 of 18 cases — by
+       * 136px on an iPhone SE. The only case that passed was 390x844 with no
+       * browser chrome, which is exactly the viewport a desktop test uses.
+       *
+       * The band is the space between the header and the top of the copy.
+       * Centring the mark inside it means the relationship is defined by the
+       * layout rather than by a constant that happens to work at one height.
+       */
       /* `--logo-hero-w` is `min(78vw, 330px)` — a calc expression, not a
          number, so parseFloat returns NaN and the whole animation silently
          fell back to a hardcoded 4x. Measuring a throwaway element that
@@ -112,8 +151,66 @@ export function HeroMarkTravel() {
       const heroWidth = probe.getBoundingClientRect().width;
       probe.remove();
 
+      /**
+       * A CONSTRAINT, NOT A FORMULA.
+       *
+       * Three attempts at this failed the same way: each computed where the
+       * mark should go, and each could be wrong if the copy's height changed
+       * after the sum was done. The mark then either sat on the headline or
+       * was cropped behind the header, and which one depended on the
+       * language and on timing.
+       *
+       * So the band is now solved rather than estimated. Both edges come
+       * from ONE number — the space left over once the header and the copy
+       * have taken theirs — and the mark is sized to fit inside it:
+       *
+       *     top    = headerHeight + padding + (band - markHeight) / 2
+       *     bottom = top + markHeight
+       *
+       * Because `markHeight <= band` by construction, the top can never rise
+       * above the header and the bottom can never reach the copy. A stale
+       * measurement changes how BIG the mark is, never whether it collides —
+       * and the observers below correct the size on the next frame.
+       */
+      const headerHeight = headerEl
+        ? headerEl.getBoundingClientRect().height
+        : rect.height * 2;
+
+      const copyHeight = copyEl
+        ? copyEl.getBoundingClientRect().height
+        : heroHeight * 0.5;
+
+      /* COMPOSE AGAINST WHAT IS VISIBLE, not against the hero's box.
+         The hero carries `min-h-[600px]`, so on a 553px iPhone SE with
+         Safari's chrome showing it is TALLER than the screen — and sizing
+         the mark to space below the fold is what put it back on the
+         headline at exactly those two viewports. */
+      const visible = Math.min(heroHeight, window.innerHeight);
+      const band = visible - copyHeight - headerHeight - BAND_PADDING * 2;
+
+      /* The artwork is laid out at `--logo-hero-w`; this is the height that
+         width implies, and the height it may actually occupy. */
+      const naturalHeight = heroWidth / STACKED_RATIO;
+      naturalH = naturalHeight;
+      headerH = headerHeight;
+      bandBottom = headerHeight + BAND_PADDING + band;
+      const markHeight = Math.max(0, Math.min(naturalHeight, band));
+
+      /* Below this there is genuinely no room to compose: a 40px lockup
+         floating over the photograph says less than the one already sitting
+         in the bar. It stays docked, which is a deliberate state rather than
+         a shrunken one — and it is still fully visible, just in the header. */
+      tooShort = markHeight < MIN_MARK;
+
+      /* When there is no room to compose, the hero end of the journey IS
+         the docked position: same centre, same size, nothing to travel. */
+      heroCentre = tooShort
+        ? navCentre
+        : headerHeight + BAND_PADDING + band / 2;
+
       const navWidth = rect.width;
-      scaleUp = heroWidth && navWidth ? heroWidth / navWidth : 4;
+      heroShrink = naturalHeight && !tooShort ? markHeight / naturalHeight : dockShrinkOf(rect.width, heroWidth);
+      dockShrink = dockShrinkOf(navWidth, heroWidth);
     };
 
     const apply = () => {
@@ -135,16 +232,49 @@ export function HeroMarkTravel() {
          shimmer — the "shaky logo" on a phone, where the device pixel
          ratio makes the resampling coarser and the momentum scroll makes
          it constant. Whole pixels cost nothing visually at this size. */
-      mark.style.setProperty(
-        "--travel-y",
-        `${Math.round((1 - eased) * (heroCentre - navCentre))}px`,
-      );
+      /**
+       * THE TOP EDGE IS ENFORCED HERE, EVERY FRAME.
+       *
+       * measure() computes a band that cannot collide — but only while its
+       * inputs are current, and the copy's height changes when a webfont
+       * swaps or Arabic rewraps. Three rounds of observers narrowed that
+       * window without closing it, and the mark still cropped behind the
+       * header on a handful of Arabic viewports.
+       *
+       * So the constraint is applied where it can never be stale: whatever
+       * measure() decided, the mark is pushed back down if its top would
+       * rise above the header. A stale band now costs a few pixels of
+       * position, never a clipped logo.
+       */
+      let travelY = (1 - eased) * (heroCentre - navCentre);
+      const currentH = naturalH * (heroShrink + eased * (dockShrink - heroShrink));
+      const top = navCentre + travelY - currentH / 2;
+      const minTop = headerH + BAND_PADDING;
+      if (!tooShort && top < minTop) travelY += minTop - top;
+
+      /* And the same bound on the other side. Clamping only the top fixed
+         the crop and left the opposite failure: a band measured too tall put
+         the mark 180px BELOW where it belonged, straight through the
+         headline. Both edges are bounded, and because the mark is never
+         taller than the band the two can always be satisfied at once. */
+      /* Bounded against the band measured at rest, NOT against a live
+         `getBoundingClientRect()` of the copy: that value is
+         viewport-relative, so reading it inside a scroll handler made the
+         bound shrink as the page scrolled and dragged the mark 250px up the
+         screen. The cached band is occasionally stale; a scroll-dependent
+         one is wrong on every frame. */
+      const bottom = navCentre + travelY + currentH / 2;
+      if (!tooShort && bottom > bandBottom) travelY -= bottom - bandBottom;
+
+      mark.style.setProperty("--travel-y", `${Math.round(travelY)}px`);
       /* SHRINK, never grow: the artwork is laid out at the hero width (see
-         `.travel-mark .stacked-logo` in globals.css) so the bitmap is
-         rasterised at its largest and the GPU only downsamples. 1 in the
-         hero, 1/scaleUp once docked. */
-      const docked = scaleUp > 0 ? 1 / scaleUp : 0.25;
-      mark.style.setProperty("--travel-shrink", String(1 - eased * (1 - docked)));
+         `.travel-mark .stacked-logo` in globals.css) so it is rasterised at
+         its largest and only ever scaled down. `heroShrink` is whatever fits
+         the clear band above the copy; `dockShrink` is the navbar. */
+      mark.style.setProperty(
+        "--travel-shrink",
+        String(heroShrink + eased * (dockShrink - heroShrink)),
+      );
       /* Cream nearly the whole way, olive only as it lands. Turning at 62%
          left the mark mid-dissolve while it was still out over the
          photograph — and olive on a dark bouquet is invisible, so it read
@@ -201,6 +331,31 @@ export function HeroMarkTravel() {
     }
 
     /**
+     * THE COPY DECIDES THE BAND, SO THE COPY MUST BE WATCHED.
+     *
+     * The band is measured against `[data-hero-copy]`, and that block
+     * changes height after the first measure: a webfont swaps, or the
+     * headline rewraps. In Arabic it rewraps to a different number of lines
+     * entirely, which measured as the mark sitting 149px lower than its
+     * English counterpart and overlapping the eyebrow on a tall phone —
+     * a stale band from before the text settled.
+     *
+     * Observing the block re-derives the band whenever it actually changes,
+     * which covers font loading, a language switch and any reflow, without
+     * polling for any of them.
+     */
+    /* THE LAST RACE IS FONT LOADING. The copy's height is what sets the
+       band, and it changes the moment Cormorant and the Arabic face swap in
+       — after first paint, and after `load` on a cold cache. This is the
+       precise event for "the text has settled"; without it the band is
+       derived from fallback-font metrics and the mark lands a little wrong,
+       differently in each language. */
+    if (document.fonts?.ready) void document.fonts.ready.then(remeasure);
+
+    const copyObserver = copyEl ? new ResizeObserver(remeasure) : null;
+    copyObserver?.observe(copyEl!);
+
+    /**
      * ONE CLOCK, NOT TWO.
      *
      * Lenis owns the scroll position and writes it inside the GSAP ticker
@@ -235,6 +390,7 @@ export function HeroMarkTravel() {
       if (lenis) lenis.off("scroll", onLenisScroll);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      copyObserver?.disconnect();
       window.removeEventListener("load", remeasure);
       window.removeEventListener("orientationchange", remeasure);
       mark.style.removeProperty("--travel");
