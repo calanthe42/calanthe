@@ -953,6 +953,20 @@ export const en = {
     notFoundBody: "It may have been deleted, or the link may be out of date.",
   },
 
+  pulse: {
+    alerts: "Alerts",
+    unseen: { one: "{count} new", other: "{count} new" },
+    newOrder: "New order {number} · {amount}",
+    newEnquiry: "New enquiry from {name}",
+    arrived: { one: "{first}", other: "{count} arrived — {first}, and more" },
+    notificationBody: "Open the admin to see it.",
+    order: "Order {number}",
+    nothingNew: "Nothing new. New orders and enquiries appear here the moment they arrive.",
+    markSeen: "Mark all as seen",
+    turnOn: "Turn on alerts on this device",
+    turnedOn: "Alerts are on. You will be told even when this tab is in the background.",
+  },
+
   actions: {
     permission: "You do not have permission to do that.",
     slugTaken: "That web address is already in use. Choose a different one.",

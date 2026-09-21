@@ -9,6 +9,7 @@ import { useI18n } from "@admin/i18n/client";
 import type { AdminLocale, AdminTheme } from "@admin/preferences";
 import { Dialog } from "@admin/ui/Dialog";
 import { IconButton, IconLink } from "@admin/ui/IconButton";
+import { PulseBell } from "@admin/shell/AdminPulse";
 import { Icon } from "@admin/ui/icons";
 import { NAV_GROUPS, isActive } from "./nav";
 import { LanguageSwitcher, ThemeSwitcher } from "./Preferences";
@@ -173,6 +174,7 @@ export function AdminMobileBar(props: ShellProps) {
           </span>
         </Link>
         <div className="ms-auto flex items-center">
+          <PulseBell compact />
           <IconLink icon="search" label={t("nav.searchLabel")} href="/admin/products" />
           <IconLink icon="store" label={t("nav.viewStore")} href="/" external />
         </div>

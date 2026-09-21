@@ -1077,6 +1077,20 @@ export const ar: Messages = {
     notFoundBody: "ربما حُذفت، أو ربما أصبح الرابط قديمًا.",
   },
 
+  pulse: {
+    alerts: "التنبيهات",
+    unseen: { zero: "لا جديد", one: "جديد واحد", two: "جديدان", few: "{count} جديدة", many: "{count} جديدًا", other: "{count} جديد" },
+    newOrder: "طلب جديد {number} · {amount}",
+    newEnquiry: "استفسار جديد من {name}",
+    arrived: { zero: "{first}", one: "{first}", two: "وصل اثنان — {first}، والمزيد", few: "وصل {count} — {first}، والمزيد", many: "وصل {count} — {first}، والمزيد", other: "وصل {count} — {first}، والمزيد" },
+    notificationBody: "افتح لوحة الإدارة لرؤيته.",
+    order: "الطلب {number}",
+    nothingNew: "لا جديد. تظهر الطلبات والاستفسارات الجديدة هنا لحظة وصولها.",
+    markSeen: "تعليم الكل كمقروء",
+    turnOn: "تفعيل التنبيهات على هذا الجهاز",
+    turnedOn: "التنبيهات مفعّلة. ستصلك حتى عندما تكون هذه النافذة في الخلفية.",
+  },
+
   actions: {
     permission: "ليست لديك صلاحية للقيام بذلك.",
     slugTaken: "عنوان الصفحة هذا مستخدم بالفعل. اختر عنوانًا مختلفًا.",
