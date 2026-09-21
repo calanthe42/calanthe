@@ -17,6 +17,24 @@ import { env } from "@/lib/env";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/*
+ * EVERY ORIGIN THIS DEPLOYMENT ANSWERS ON.
+ *
+ * Payload refuses a cookie whose request carries an Origin outside this
+ * list, and a browser sends Origin on every server action. On Vercel a
+ * PREVIEW deployment answers on its own generated hostnames while
+ * NEXT_PUBLIC_SERVER_URL is only set for production — so on a preview every
+ * write in the admin came back "Only the owner can manage staff accounts" /
+ * "You do not have permission", which reads as a permissions bug and is a
+ * CSRF refusal. The deployment's own hostnames are trusted alongside.
+ */
+const trustedOrigins = [
+  env.NEXT_PUBLIC_SERVER_URL,
+  ...[process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]
+    .filter((host): host is string => Boolean(host))
+    .map((host) => `https://${host}`),
+];
+
 export default buildConfig({
   secret: env.PAYLOAD_SECRET,
   serverURL: env.NEXT_PUBLIC_SERVER_URL,
@@ -52,8 +70,8 @@ export default buildConfig({
      development interface. A cross-origin admin needs both of these lists,
      and an empty allow-list is the safe default until that origin exists.
      Add the admin app's origin here (and nowhere else) when it is built. */
-  cors: [env.NEXT_PUBLIC_SERVER_URL],
-  csrf: [env.NEXT_PUBLIC_SERVER_URL],
+  cors: trustedOrigins,
+  csrf: trustedOrigins,
   db: postgresAdapter({
     pool: {
       connectionString: env.DATABASE_URL,

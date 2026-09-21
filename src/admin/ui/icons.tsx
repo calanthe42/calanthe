@@ -53,6 +53,7 @@ const PATHS = {
   arrowLeft: "M19 12H5M11 6l-6 6 6 6",
   check: "M5 12.5l4.5 4.5L19 7",
   alert: "M12 4l9 16H3ZM12 10v4M12 17h.01",
+  bell: "M6 9a6 6 0 0 1 12 0c0 6 2 8 2 8H4s2-2 2-8ZM10 20a2 2 0 0 0 4 0",
   info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v5M12 8h.01",
   checkCircle: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM8 12.5l2.7 2.7L16 9.8",
   edit: "M4 20h4L19 9l-4-4L4 16ZM13.5 6.5l4 4",
