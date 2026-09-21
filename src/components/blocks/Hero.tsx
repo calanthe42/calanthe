@@ -186,46 +186,35 @@ export async function Hero({ media }: HeroProps) {
             {/*
               EDITORIAL CTAs, NOT APP BUTTONS.
 
-              These were full-bleed slabs on a phone: `w-full` below 400px
-              and `flex-1` above it, so both stretched the whole measure and
-              read as a mobile app's action bar rather than as the two quiet
-              invitations under a magazine cover line.
+              These were full-bleed slabs on a phone, then a pair of equal
+              192px blocks — which at 390px could not share a row, so they
+              stacked: two 48px bars, one under the other, filling the
+              bottom of the cover. The owner's word for it was "so big".
 
-              They now size to their own text at every width, sitting side
-              by side and wrapping only if the language needs the room. The
-              48px minimum height and the 2px corner are untouched — this is
-              a change of WIDTH and weight, not of tap target or shape.
+              ON A PHONE THEY SHARE ONE ROW, ALWAYS. Each takes half the
+              measure (`flex-1 basis-0`), so they are the same width in
+              both languages at every phone width without a `min-w` to
+              trip over, and the row never wraps. A step down in size —
+              44px tall, not 48; 11–12px type, not 13; tighter tracking —
+              is what makes two labels fit side by side down to 360px.
+              44px is the tap-target floor and stays.
 
-              `text-[0.75rem]` and tighter tracking on a phone: at 13px with
-              0.18em the words alone were 200px wide, which is what forced
-              the full-bleed layout in the first place.
-
-              EQUAL WIDTH WHEN THEY STACK. Left to size themselves the two
-              came out 168px and 191px, and whether they sat on one row or
-              two changed with both width and language — 430px English put
-              them side by side while 390px did not, and Arabic flipped at a
-              different width again. Two stacked buttons of different widths
-              on a left margin is the "awkward different-width alignment"
-              this was reported as. A shared `min-w` makes the pair one
-              consistent block at every phone width and in both languages;
-              from `sm:` there is room for them to sit side by side.
-
-              The floor steps up with the padding at 400px: `px-7` pushed
-              "Build Your Own" to 199px, back past a 192px floor, and the
-              pair went uneven again at 414 and 430.
+              From `sm:` there is room for them to size to their own text
+              again, as the two quiet invitations under a magazine cover
+              line that they are on a wide screen.
             */}
-            <div className="flex flex-wrap items-center gap-3 min-[400px]:gap-3.5">
+            <div className="flex items-center gap-3 min-[400px]:gap-3.5">
               <ButtonLink
                 href="/shop"
                 variant="glass-primary"
-                className="min-w-[12rem] px-6 text-[0.75rem] tracking-[0.14em] sm:min-w-0 min-[400px]:min-w-[12.5rem] min-[400px]:px-7 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
+                className="min-h-11 flex-1 basis-0 whitespace-nowrap px-3 py-2 text-[0.7rem] tracking-[0.12em] min-[400px]:text-[0.75rem] min-[400px]:tracking-[0.14em] sm:min-h-12 sm:flex-none sm:basis-auto sm:px-7 sm:py-3 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
               >
                 {t.hero.shopFlowers}
               </ButtonLink>
               <ButtonLink
                 href="/build-your-own"
                 variant="glass"
-                className="min-w-[12rem] px-6 text-[0.75rem] tracking-[0.14em] sm:min-w-0 min-[400px]:min-w-[12.5rem] min-[400px]:px-7 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
+                className="min-h-11 flex-1 basis-0 whitespace-nowrap px-3 py-2 text-[0.7rem] tracking-[0.12em] min-[400px]:text-[0.75rem] min-[400px]:tracking-[0.14em] sm:min-h-12 sm:flex-none sm:basis-auto sm:px-7 sm:py-3 lg:px-12 lg:text-[0.8125rem] lg:tracking-brand"
               >
                 {t.hero.buildYourOwn}
               </ButtonLink>

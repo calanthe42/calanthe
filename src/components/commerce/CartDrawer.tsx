@@ -280,7 +280,8 @@ export function CartDrawer() {
                   </div>
                 </div>
 
-                <ul className="flex-1 divide-y divide-hairline overflow-y-auto px-6">
+                {/* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */}
+                <ul data-lenis-prevent className="flex-1 divide-y divide-hairline overflow-y-auto px-6">
                   {items.map((item) => (
                     <CartLine key={item.key} item={item} />
                   ))}

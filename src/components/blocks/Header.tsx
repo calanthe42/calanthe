@@ -572,6 +572,16 @@ export function Header({
           onAnimationEnd={() => {
             if (menuState === "closing") setMenuState("closed");
           }}
+          /* THE MENU MUST SCROLL WHILE THE PAGE MAY NOT.
+             `useScrollLock` stops Lenis so the page holds still behind
+             this panel — and a stopped Lenis cancels EVERY touch and wheel
+             gesture on the document (lenis.mjs, `isStopped` →
+             `preventDefault`). Open the SHOP accordion and the list grows
+             past the screen; without this, the finger that tries to reach
+             the rest is swallowed, and the visitor concludes the menu is
+             stuck until the X. This attribute is Lenis's own opt-out: a
+             gesture whose path crosses it is left to the browser. */
+          data-lenis-prevent
           className={cn(
             menuState === "closing" && "pointer-events-none",
             /* z-40 INSIDE the header's own stacking context, deliberately

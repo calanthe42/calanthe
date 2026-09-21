@@ -125,6 +125,8 @@ export function SearchOverlay({
       role="dialog"
       aria-modal="true"
       aria-label={t.search.label}
+      /* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */
+      data-lenis-prevent
       className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-canvas pb-16 pt-[calc(env(safe-area-inset-top)+1rem)]"
     >
       <div className="mx-auto w-full max-w-2xl gutter">
