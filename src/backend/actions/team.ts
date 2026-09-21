@@ -80,9 +80,14 @@ const NOT_SELF = {
  */
 function failure(error: unknown, fallback: string, fallbackCode: string): Extract<ActionResult, { ok: false }> {
   const raw = error instanceof Error ? error.message : "";
+  const details = (error as { data?: { errors?: { message?: unknown }[] } } | null)?.data?.errors;
+  const detail = typeof details?.[0]?.message === "string" ? details[0].message : "";
 
   if (/last admin account/i.test(raw)) return { ok: false, message: raw };
-  if (/duplicate|unique|already exists/i.test(raw)) {
+  /* Payload reports a taken email as "The following field is invalid: email"
+     on the top line and "Value must be unique" in the detail. Reading only
+     the top line missed it, and the owner saw the database's sentence. */
+  if (/duplicate|unique|already exists|already registered/i.test(`${raw} ${detail}`)) {
     return {
       ok: false,
       message: "An account with that email address already exists.",
@@ -93,8 +98,6 @@ function failure(error: unknown, fallback: string, fallbackCode: string): Extrac
     return { ok: false, message: "You do not have permission to do that.", code: "actions.permission" };
   }
 
-  const details = (error as { data?: { errors?: { message?: unknown }[] } } | null)?.data?.errors;
-  const detail = typeof details?.[0]?.message === "string" ? details[0].message : "";
   if (detail && detail.length < 200) return { ok: false, message: detail };
 
   console.error(fallbackCode, error);

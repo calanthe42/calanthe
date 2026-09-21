@@ -956,6 +956,8 @@ export const en = {
   actions: {
     permission: "You do not have permission to do that.",
     slugTaken: "That web address is already in use. Choose a different one.",
+    fileNameTaken: "A photo with that file name is already in the library. Rename the file and upload it again.",
+    valueTaken: "That value is already in use. Choose a different one.",
     product: {
       created: "“{name}” created.",
       saved: "Changes saved.",

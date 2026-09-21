@@ -519,7 +519,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     />
                   </div>
                 </div>
-                <p className="-mt-1 text-sm text-ink-muted">
+                <p className="-mt-1 text-base text-ink-muted lg:text-sm">
                   Used only to coordinate delivery. The price is never shown to them.
                 </p>
               </div>

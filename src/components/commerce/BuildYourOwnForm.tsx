@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
@@ -270,22 +270,27 @@ export function BuildYourOwnForm() {
   return (
     <div className="grid grid-cols-1 gap-12 pb-28 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16 lg:pb-0">
       <div className="relative">
-        {/* The rail and the monogram travelling down it. */}
-        <div aria-hidden className="absolute bottom-6 left-[7px] top-3 w-px bg-hairline">
-          <motion.div
-            className="absolute -left-[7px] flex h-[15px] w-[15px] items-center justify-center"
-            animate={{ top: `${(activeIndex / (STEPS.length - 1)) * 96}%` }}
-            transition={{ duration: 0.6, ease: EASE_BLOOM }}
-          >
-            <Monogram className="w-full text-burnt-orange" />
-          </motion.div>
-        </div>
+        {/*
+          THE MARK IS THE FLORIST'S ATTENTION.
 
-        <ol className="flex flex-col gap-14 pl-10 lg:gap-16">
+          There used to be two rails: the steps' own, and a second track
+          beside it with a 15px monogram sliding down by percentage. Two
+          parallel lines and a glyph too small to read as the brand: the
+          client's words were "not understandable". Now there is one rail,
+          and the monogram lives INSIDE the marker of the question being
+          answered, large enough to be the mark. Answer it, and it travels
+          down the rail to the next question (a shared-layout move, so the
+          same element genuinely leaves one marker and arrives in the next),
+          leaving a small seal behind and filling the segment it crossed.
+          Under each answered heading the answer is written in one line, so
+          scrolling back up reads as a receipt.
+        */}
+        <ol className="flex flex-col gap-14 lg:gap-16">
           <Step
             index={0}
             active={activeIndex === 0}
             done={activeIndex > 0}
+            answer={occasion ?? undefined}
             error={errors.occasion}
             stepRef={(el) => {
               stepRefs.current.occasion = el;
@@ -307,6 +312,7 @@ export function BuildYourOwnForm() {
             index={1}
             active={activeIndex === 1}
             done={activeIndex > 1}
+            answer={budgetValue > 0 ? formatAed(budgetValue) : undefined}
             error={errors.budget}
             stepRef={(el) => {
               stepRefs.current.budget = el;
@@ -354,12 +360,18 @@ export function BuildYourOwnForm() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <p className="mt-3 max-w-md text-sm italic leading-relaxed text-ink-muted">
+            <p className="mt-3 max-w-md text-base italic leading-relaxed text-ink-muted lg:text-sm">
               {byoBudgetNote}
             </p>
           </Step>
 
-          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} hint="Choose as many as you like.">
+          <Step
+            index={2}
+            active={activeIndex === 2}
+            done={activeIndex > 2}
+            answer={[...colours, ...(colourOther ? ["Something else"] : [])].join(", ") || undefined}
+            hint="Choose as many as you like."
+          >
             {/* THE PALETTE LEADS, THE WORDS FOLLOW. "Peach & Apricot" in a
                 grey box asks someone to read a name and imagine the stems.
                 The three stops beside each name are what a florist would
@@ -390,7 +402,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={3} active={activeIndex === 3} done={activeIndex > 3}>
+          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={vase === null ? undefined : vase ? "With a vase" : "Hand-tied, no vase"}>
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               <Option
                 label="Yes, in a vase"
@@ -407,7 +419,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={4} active={activeIndex === 4} done={activeIndex > 4}>
+          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={leaveBlank ? "Left blank" : message.trim() ? "Written" : undefined}>
             <textarea
               value={message}
               onChange={(e) => {
@@ -437,7 +449,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} hint="Optional.">
+          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={notes.trim() ? "Noted" : undefined} hint="Optional.">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
@@ -448,7 +460,7 @@ export function BuildYourOwnForm() {
             />
           </Step>
 
-          <Step index={6} active={activeIndex === 6} done={activeIndex > 6}>
+          <Step index={6} active={activeIndex === 6} done={activeIndex > 6} answer={isGift === null ? undefined : isGift ? "A gift" : "For yourself"}>
             <div
               className="grid grid-cols-2 gap-3"
               role="group"
@@ -585,7 +597,7 @@ export function BuildYourOwnForm() {
           </Step>
         </ol>
 
-        <p className="mt-10 max-w-md pl-10 text-xs leading-relaxed text-ink-muted">
+        <p className="mt-10 max-w-md ps-14 text-base leading-relaxed text-ink-muted lg:ps-[4.25rem] lg:text-sm">
           {seasonalDisclaimer}
         </p>
 
@@ -624,6 +636,14 @@ export function BuildYourOwnForm() {
         button only needs to be findable, not dominant.
       */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm lg:hidden">
+        {/* Progress, as the rail's own line laid along the bar's top edge:
+            it fills as questions are answered, so the thumb zone always
+            says how far along this is without a word. */}
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-[-1px] h-px origin-left bg-burnt-orange transition-transform duration-700 ease-bloom rtl:origin-right motion-reduce:transition-none"
+          style={{ transform: `scaleX(${activeIndex / STEPS.length})` }}
+        />
         <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="font-brand text-[0.5625rem] uppercase tracking-brand text-ink-muted">
@@ -631,6 +651,9 @@ export function BuildYourOwnForm() {
             </p>
             <p className="font-display text-xl font-light leading-none text-olive">
               {totalAed > 0 ? formatAed(totalAed) : "—"}
+            </p>
+            <p className="sr-only" aria-live="polite">
+              {activeIndex} of {STEPS.length} questions answered
             </p>
           </div>
           <Button
@@ -651,7 +674,7 @@ export function BuildYourOwnForm() {
 
 function SendNote() {
   return (
-    <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+    <p className="mt-3 text-base leading-relaxed text-ink-muted lg:text-sm">
       Sends your request to the atelier. Nothing is ordered and nothing is
       charged until a florist confirms it with you.
     </p>
@@ -735,6 +758,7 @@ function Step({
   index,
   active,
   done = false,
+  answer,
   hint,
   error,
   stepRef,
@@ -744,6 +768,8 @@ function Step({
   active: boolean;
   /** Answered: the segment above fills and the number becomes the mark. */
   done?: boolean;
+  /** The answer, in a few words, written under the heading once given. */
+  answer?: string;
   hint?: string;
   error?: string;
   stepRef?: (el: HTMLLIElement | null) => void;
@@ -752,6 +778,7 @@ function Step({
   const step = STEPS[index];
   const headingId = `byo-${step.id}`;
   const last = index === STEPS.length - 1;
+  const reduced = useReducedMotion();
   return (
     /*
      * THE EDITORIAL RAIL.
@@ -774,13 +801,13 @@ function Step({
       ref={stepRef}
       aria-labelledby={headingId}
       data-state={done ? "done" : active ? "active" : "future"}
-      className="group/step relative scroll-mt-32 ps-10 pb-2 lg:ps-14"
+      className="group/step relative scroll-mt-32 ps-14 pb-2 lg:ps-[4.25rem]"
     >
       {/* The line. Sits under the marker and stops at the last step. */}
       {!last && (
         <span
           aria-hidden
-          className="absolute bottom-0 start-[0.6875rem] top-8 w-px bg-hairline lg:start-[0.9375rem]"
+          className="absolute bottom-0 start-[1.25rem] top-12 w-px bg-hairline lg:start-[1.5rem] lg:top-14"
         >
           <span
             className={cn(
@@ -791,22 +818,48 @@ function Step({
         </span>
       )}
 
-      {/* The marker: number while pending, the mark once answered. */}
+      {/* The marker: the mark while this is the question, a seal once
+          answered, a number while it waits its turn. */}
       <span
         aria-hidden
         className={cn(
-          "absolute start-0 top-[0.1875rem] grid h-6 w-6 place-items-center rounded-full border bg-canvas transition-colors duration-500 ease-bloom lg:h-8 lg:w-8",
+          "absolute start-0 top-0 grid h-10 w-10 place-items-center rounded-full border bg-canvas transition-colors duration-500 ease-bloom lg:h-12 lg:w-12",
           done
-            ? "border-burnt-orange/40 text-burnt-orange"
+            ? "border-burnt-orange/50 text-burnt-orange"
             : active
               ? "border-olive text-olive"
               : "border-hairline text-ink-muted",
         )}
       >
-        {done ? (
-          <Monogram className="w-3 lg:w-3.5" />
+        {active ? (
+          /* One element, moving: `layoutId` carries this mark from the
+             marker it leaves to the one it arrives in. */
+          <motion.span
+            /* Keys keep these three as three ELEMENTS. Without them React
+               reuses the one <span> across states, and the shared-layout
+               engine then mistakes the seal for the departing mark and
+               projects it away, invisible. */
+            key="mark"
+            layoutId="byo-mark"
+            transition={reduced ? { duration: 0 } : { layout: { duration: 0.7, ease: EASE_BLOOM } }}
+            className="grid h-full w-full place-items-center"
+          >
+            <Monogram className="w-7 lg:w-8" />
+          </motion.span>
+        ) : done ? (
+          <motion.span
+            key="seal"
+            initial={reduced ? false : { scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: EASE_BLOOM, delay: reduced ? 0 : 0.25 }}
+            className="grid place-items-center"
+          >
+            <Monogram className="w-4 lg:w-[1.125rem]" />
+          </motion.span>
         ) : (
-          <span className="font-sans text-[0.6875rem] lg:text-xs">{index + 1}</span>
+          <span key="number" className="font-sans text-sm lg:text-base">
+            {index + 1}
+          </span>
         )}
       </span>
 
@@ -819,7 +872,11 @@ function Step({
       >
         {step.title}
       </h2>
-      {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
+      {done && answer ? (
+        <p className="mt-1 text-sm text-burnt-orange">{answer}</p>
+      ) : (
+        hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>
+      )}
       <div className="mt-4">{children}</div>
       {error && (
         <p role="alert" className={fieldErrorClasses}>
@@ -903,7 +960,7 @@ function Summary({
           {totalAed > 0 ? formatAed(totalAed) : "—"}
         </p>
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-ink-muted lg:hidden">
+      <p className="mt-3 text-base leading-relaxed text-ink-muted lg:hidden">
         Sends your request to the atelier. Nothing is ordered and nothing is
         charged until a florist confirms it with you.
       </p>

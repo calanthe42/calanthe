@@ -174,7 +174,7 @@ export function CartDrawer() {
           <motion.aside
             role="dialog"
             aria-label="Cart"
-            className="fixed inset-y-0 end-0 z-[60] flex w-full max-w-md flex-col bg-canvas pt-[env(safe-area-inset-top)]"
+            className="fixed inset-y-0 end-0 z-[60] flex w-full max-w-md flex-col bg-canvas pt-[env(safe-area-inset-top)] shadow-[0_-100vh_0_0_var(--color-canvas),0_100vh_0_0_var(--color-canvas)]"
             initial={{ x: fromEnd }}
             animate={{ x: 0 }}
             exit={{ x: fromEnd }}
