@@ -165,7 +165,7 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
               return (
                 <Tr key={enquiry.id}>
                   <Td primary>
-                    <Link href={detailHref} className="font-medium text-ink hover:underline">
+                    <Link href={detailHref} className="-my-3 py-3 font-medium text-ink hover:underline">
                       {enquiry.subject}
                     </Link>
                     <span className="block truncate text-xs text-ink-3">

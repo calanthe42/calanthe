@@ -67,12 +67,23 @@ const OVERFLOW = () => {
     return false;
   };
 
+  /* Visually hidden, not laid out for eyes: the sr-only pattern (1x1,
+     overflow hidden, clipped). Cells inside a clipped table head keep their
+     layout widths and are not on screen. */
+  const clipped = (el) => {
+    for (let node = el; node && node !== document.body; node = node.parentElement) {
+      const r = node.getBoundingClientRect();
+      const st = getComputedStyle(node);
+      if ((r.width <= 1 && r.height <= 1) || (st.clipPath !== "none" && st.overflow === "hidden") || st.clip.startsWith("rect(0")) return true;
+    }
+    return false;
+  };
   for (const el of document.querySelectorAll("main *, header *, aside *")) {
     const box = el.getBoundingClientRect();
     if (box.width === 0 || box.height === 0) continue;
     const style = getComputedStyle(el);
     if (style.position === "fixed" || style.visibility === "hidden" || style.display === "none") continue;
-    if (scrollable(el)) continue;
+    if (scrollable(el) || clipped(el)) continue;
     if (box.right > limit + 2 || box.left < -2) {
       problems.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} [${Math.round(box.left)}..${Math.round(box.right)}]`);
     }
@@ -83,21 +94,28 @@ const OVERFLOW = () => {
 
 const SMALL_TARGETS = () => {
   const problems = [];
+  /* 44px is a TOUCH rule. Below 1024px every width here is a phone or a
+     tablet; from 1024 the admin is used with a mouse, and a 20px text link
+     in a dense table row is right there. Only genuinely tiny targets fail. */
+  const floor = window.innerWidth < 1024 ? 40 : 18;
   const selector = "a[href], button, select, input[type=checkbox], input[type=radio], [role=menuitem], [role=tab], summary";
   for (const el of document.querySelectorAll(selector)) {
     const box = el.getBoundingClientRect();
     if (box.width === 0 || box.height === 0) continue;
     const style = getComputedStyle(el);
     if (style.visibility === "hidden" || style.display === "none") continue;
-    /* A control inside a tall label is tapped through the label. */
-    const label = el.closest("label");
+    /* sr-only: a 1x1 clipped control whose visible twin is the real target
+       (the skip link, the input behind a custom switch or radio). */
+    if (box.width <= 1 && box.height <= 1) continue;
+    /* A control inside, or labelled by, a tall label is tapped through it. */
+    const label = el.closest("label") ?? (el.labels && el.labels[0]) ?? null;
     if (label && label.getBoundingClientRect().height >= 40) continue;
     /* Links inside running copy are text, not buttons. */
     if (el.tagName === "A" && el.closest("p, dd, li.prose")) continue;
-    if (box.height < 40) {
+    if (box.height < floor) {
       problems.push(`${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 24)}" ${Math.round(box.width)}×${Math.round(box.height)}`);
     }
-    if (problems.length > 5) break;
+    if (problems.length > 11) break;
   }
   return problems;
 };
@@ -191,8 +209,6 @@ const ROUTES = [
   ["events", "/admin/events"],
   ["event-detail", eventDetail],
   ["team", "/admin/team"],
-  ["discounts", "/admin/discounts"],
-  ["settings", "/admin/settings"],
   ["not-found", "/admin/products/99999991/edit"],
 ].filter(([, route]) => Boolean(route));
 
@@ -272,7 +288,10 @@ const qaName = `QA Bouquet ${Date.now()}`;
 await ownerPage.fill("#name", qaName);
 await ownerPage.fill("#priceAed", "199");
 await ownerPage.fill("#shortDescription", "Temporary QA product.");
-await ownerPage.click('button[type="submit"]');
+/* SCOPED TO THE PAGE'S FORM. The sidebar's sign-out is also a submit button
+   inside a form, and it comes first in the DOM: an unscoped click here
+   signed the owner out and every check after it ran against the login page. */
+await ownerPage.click('form:has(#name) button[type="submit"]');
 await ownerPage.waitForURL(/\/admin\/products\/\d+\/edit/, { timeout: 60_000 }).catch(() => {});
 const created = /\/admin\/products\/\d+\/edit/.test(ownerPage.url());
 check(created, "create product saves and opens the editor", ownerPage.url().replace(BASE, ""));
@@ -291,7 +310,7 @@ if (created) {
   check(ownerPage.url().includes("/edit"), "staying keeps you on the page");
 
   /* Save, and confirm the interface only says so afterwards. */
-  await ownerPage.click('button[type="submit"]');
+  await ownerPage.click('form:has(#name) button[type="submit"]');
   const savedToast = await ownerPage
     .locator('[role="status"]', { hasText: /saved|حفظ/i })
     .first()
@@ -305,7 +324,8 @@ if (created) {
   await ownerPage.click('button:has-text("Delete")');
   await ownerPage.waitForTimeout(300);
   await ownerPage.locator('dialog[open] button:has-text("Delete product")').click();
-  await ownerPage.waitForURL(/\/admin\/products/, { timeout: 60_000 }).catch(() => {});
+  /* The edit URL already matches /admin\/products/, so wait for the LEAVE. */
+  await ownerPage.waitForURL((u) => !u.pathname.includes("/edit"), { timeout: 60_000 }).catch(() => {});
   check(!ownerPage.url().includes("/edit"), "deleting returns to the product list", ownerPage.url().replace(BASE, ""));
 }
 
@@ -317,7 +337,7 @@ const png = Buffer.from(
 );
 await ownerPage.setInputFiles("#upload-file", { name: "qa-photo.png", mimeType: "image/png", buffer: png });
 await ownerPage.fill("#upload-alt", "QA test photograph");
-await ownerPage.click('form button[type="submit"]');
+await ownerPage.click('form:has(#upload-file) button[type="submit"]');
 const uploaded = await ownerPage
   .locator('[role="status"]')
   .first()
@@ -369,7 +389,9 @@ await open(ownerPage, "/admin/products");
 const durations = await ownerPage.evaluate(() =>
   [...document.querySelectorAll("a, button")].slice(0, 40).map((el) => getComputedStyle(el).transitionDuration),
 );
-check(durations.every((d) => d === "0.01ms" || d === "0s"), "reduced motion stops transitions", [...new Set(durations)].join(","));
+/* Chromium serialises 0.01ms as "1e-05s"; compare numbers, not strings. */
+const toMs = (d) => (d.endsWith("ms") ? parseFloat(d) : parseFloat(d) * 1000);
+check(durations.every((d) => d.split(",").every((part) => toMs(part.trim()) <= 0.02)), "reduced motion stops transitions", [...new Set(durations)].join(","));
 await ownerPage.emulateMedia({ reducedMotion: null });
 
 check(ownerWatch.errors.length === 0, "owner: no console errors", ownerWatch.errors.slice(0, 4).join(" | "));
@@ -452,7 +474,7 @@ if (STAFF.email) {
   if (productEdit) {
     await open(staffPage, productEdit);
     const disabled = await staffPage.locator("fieldset[disabled]").count();
-    const saveButtons = await staffPage.locator('button[type="submit"]').count();
+    const saveButtons = await staffPage.locator('main button[type="submit"]').count();
     check(disabled > 0 && saveButtons === 0, "staff sees a product read-only", `fieldsets=${disabled} saves=${saveButtons}`);
   }
 

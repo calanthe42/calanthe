@@ -127,7 +127,7 @@ export default async function AdminEventsPage({
               return (
                 <Tr key={event.id}>
                   <Td primary>
-                    <Link href={detailHref} className="font-medium text-ink hover:underline">
+                    <Link href={detailHref} className="-my-3 py-3 font-medium text-ink hover:underline">
                       {event.name}
                     </Link>
                     <span className="block truncate text-xs text-ink-3">

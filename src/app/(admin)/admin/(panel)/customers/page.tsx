@@ -104,7 +104,7 @@ export default async function AdminCustomersPage({
                   return (
                     <Tr key={customer.id}>
                       <Td primary>
-                        <Link href={href} className="font-medium text-ink hover:underline">
+                        <Link href={href} className="-my-3 py-3 font-medium text-ink hover:underline">
                           {name}
                         </Link>
                         <span className="block truncate text-xs text-ink-3" dir="ltr">

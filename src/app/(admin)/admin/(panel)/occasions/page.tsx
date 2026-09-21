@@ -136,7 +136,7 @@ export default async function AdminOccasionsPage({
                       <div className="flex min-w-0 items-center gap-3">
                         <Thumb shape="square" src={image?.sizes?.thumbnail?.url ?? image?.url} alt={image?.alt} />
                         <div className="min-w-0">
-                          <Link href={editHref} className="block truncate font-medium text-ink hover:underline">
+                          <Link href={editHref} className="-my-3 block truncate py-3 font-medium text-ink hover:underline">
                             {name}
                           </Link>
                           <span className="block max-w-md truncate text-xs text-ink-3">

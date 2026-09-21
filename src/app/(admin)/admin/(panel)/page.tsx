@@ -338,7 +338,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               {data.recentOrders.map((order) => (
                 <Tr key={order.id}>
                   <Td primary>
-                    <Link href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`} className="font-medium text-ink hover:underline">
+                    <Link href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`} className="-my-3 py-3 font-medium text-ink hover:underline">
                       {order.orderNumber}
                     </Link>
                     <span className="block text-xs text-ink-3">

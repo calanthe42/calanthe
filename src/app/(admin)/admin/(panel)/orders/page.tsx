@@ -159,7 +159,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
               return (
                 <Tr key={order.id}>
                   <Td primary>
-                    <Link href={orderHref} className="font-medium text-ink hover:underline">
+                    <Link href={orderHref} className="-my-3 py-3 font-medium text-ink hover:underline">
                       {number || t("orders.columns.order")}
                     </Link>
                     <span className="block text-xs text-ink-3">
