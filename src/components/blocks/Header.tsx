@@ -584,6 +584,14 @@ export function Header({
           data-lenis-prevent
           className={cn(
             menuState === "closing" && "pointer-events-none",
+            /* SAFARI PAINTS THE PAGE THROUGH ITS OWN CHROME. On an iPhone the
+               status bar and the toolbar are translucent bands OUTSIDE the
+               layout viewport this `inset-0` covers, and what shows through
+               them is whatever the page has underneath — product photographs
+               above the open menu, a headline below it. A spread shadow in
+               the panel's own colour paints out past every edge, so the bands
+               show olive. Unblurred, so it costs nothing to composite. */
+            "shadow-[0_0_0_100vmax_var(--color-olive)]",
             /* z-40 INSIDE the header's own stacking context, deliberately
                left alone: the close button above it is z-50, and raising this
                above that locks a visitor inside the menu. What lifts this

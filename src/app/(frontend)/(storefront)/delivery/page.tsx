@@ -61,7 +61,7 @@ export default function DeliveryPage() {
       </Stagger>
 
       <Reveal className="mt-10">
-        <p className="max-w-lg text-sm leading-relaxed text-ink-muted">
+        <p className="max-w-lg text-base leading-relaxed text-ink-muted lg:text-sm">
           Before every delivery, your florist sends a photo or video of the finished
           arrangement on WhatsApp for your approval. We contact the recipient only to
           coordinate timing — never with the price.

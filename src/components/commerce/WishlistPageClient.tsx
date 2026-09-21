@@ -22,7 +22,7 @@ export function WishlistPageClient({
         <p className="max-w-sm font-display text-2xl font-light italic text-olive">
           Hearts you leave here never wilt.
         </p>
-        <p className="max-w-xs text-sm text-ink-muted">
+        <p className="max-w-xs text-base text-ink-muted lg:text-sm">
           Tap the heart on any arrangement to keep it close.
         </p>
         <Link href="/shop" className={buttonClasses("secondary")}>

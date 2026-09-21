@@ -66,7 +66,7 @@ async function authed() {
 type ValidationDetail = { message?: unknown; path?: unknown };
 
 /** Turns anything thrown into a sentence a florist can act on. */
-function failure(error: unknown, fallback: string, fallbackCode: string): Failure {
+function failure(error: unknown, fallback: string, fallbackCode: string, uniqueField?: "slug"): Failure {
   if (error instanceof FormInputError) {
     return {
       ok: false,
@@ -86,12 +86,28 @@ function failure(error: unknown, fallback: string, fallbackCode: string): Failur
   const detail = typeof first?.message === "string" ? first.message : "";
   const combined = `${raw} ${detail} ${typeof first?.path === "string" ? first.path : ""}`;
 
-  if ((/slug/i.test(combined) && /unique|duplicate|already/i.test(combined)) || /duplicate key/i.test(raw)) {
-    return {
-      ok: false,
-      message: "That web address is already in use. Choose a different one.",
-      code: "actions.slugTaken",
-    };
+  if (/unique|duplicate|already/i.test(combined)) {
+    /* When the driver does not name the column, the caller says which
+       field is the only unique one it could have tripped. */
+    const field = (typeof first?.path === "string" && first.path) || uniqueField || "";
+    if (/slug/i.test(field) || /slug/i.test(combined) || /duplicate key/i.test(raw)) {
+      return {
+        ok: false,
+        message: "That web address is already in use. Choose a different one.",
+        code: "actions.slugTaken",
+      };
+    }
+    /* A photo whose file name is already in the library. Payload does not
+       rename on collision with remote storage; the owner has to. */
+    if (/filename/i.test(field)) {
+      return {
+        ok: false,
+        message: "A photo with that file name is already in the library. Rename the file and upload it again.",
+        code: "actions.fileNameTaken",
+      };
+    }
+    /* Any other unique field: still a sentence, never "Value must be unique". */
+    return { ok: false, message: "That value is already in use. Choose a different one.", code: "actions.valueTaken" };
   }
   /* Validation errors thrown by the collections' hooks are already written
      for people, in English. Anything long or multi-line is a stack, never
@@ -169,7 +185,7 @@ export async function createProduct(form: FormData): Promise<ActionResult> {
       id: doc.id,
     };
   } catch (error) {
-    return failure(error, "The product could not be created.", "actions.product.createFailed");
+    return failure(error, "The product could not be created.", "actions.product.createFailed", "slug");
   }
 }
 
@@ -220,7 +236,7 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
     revalidateStorefront();
     return { ok: true, message: "Changes saved.", code: "actions.product.saved" };
   } catch (error) {
-    return failure(error, "Your changes could not be saved.", "actions.product.saveFailed");
+    return failure(error, "Your changes could not be saved.", "actions.product.saveFailed", "slug");
   }
 }
 
@@ -509,7 +525,7 @@ export async function createOccasion(form: FormData): Promise<ActionResult> {
       id: doc.id,
     };
   } catch (error) {
-    return failure(error, "The occasion could not be created.", "actions.occasion.createFailed");
+    return failure(error, "The occasion could not be created.", "actions.occasion.createFailed", "slug");
   }
 }
 
@@ -528,7 +544,7 @@ export async function updateOccasion(id: number, form: FormData): Promise<Action
     revalidateStorefront();
     return { ok: true, message: "Changes saved.", code: "actions.occasion.saved" };
   } catch (error) {
-    return failure(error, "Your changes could not be saved.", "actions.occasion.saveFailed");
+    return failure(error, "Your changes could not be saved.", "actions.occasion.saveFailed", "slug");
   }
 }
 

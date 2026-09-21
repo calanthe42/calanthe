@@ -64,7 +64,7 @@ export default function MembershipPage() {
           the site for WhatsApp (see MembershipTiers.tsx). */}
       <section className="mx-auto max-w-7xl gutter section-pad">
         <MembershipTiers />
-        <p className="mt-6 text-center text-sm text-ink-muted">
+        <p className="mt-6 text-center text-base text-ink-muted lg:text-sm">
           Nothing is charged here. A florist confirms the details with you
           before any membership begins.
         </p>
