@@ -77,6 +77,8 @@ export function MembershipTiers() {
           role="dialog"
           aria-modal="true"
           aria-label={`Begin the ${openTier} membership`}
+          /* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */
+          data-lenis-prevent
           className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-olive/45 p-4 pt-[max(env(safe-area-inset-top),2rem)] pb-16 backdrop-blur-sm"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpenTier(null);

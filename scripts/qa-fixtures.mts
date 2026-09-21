@@ -24,7 +24,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { getPayload } from "payload";
-import config from "../src/payload.config";
+import config from "../src/payload.config.ts";
 
 type State = {
   ownerEmail: string;

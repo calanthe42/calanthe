@@ -231,7 +231,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                         <div className="flex min-w-0 items-center gap-3">
                           <Thumb src={photo?.sizes?.thumbnail?.url ?? photo?.url} alt={photo?.alt} />
                           <div className="min-w-0">
-                            <Link href={editHref} className="block truncate font-medium text-ink hover:underline">
+                            <Link href={editHref} className="-my-3 block truncate py-3 font-medium text-ink hover:underline">
                               {name}
                             </Link>
                             <span className="block max-w-xs truncate text-xs text-ink-3">

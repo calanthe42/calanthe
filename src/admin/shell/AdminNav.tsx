@@ -126,7 +126,7 @@ function NavFooter({ user, theme, locale }: ShellProps) {
           href="/cms"
           target="_blank"
           rel="noreferrer"
-          className="flex min-h-9 items-center gap-1.5 px-3 text-xs text-nav-ink-2 hover:text-nav-ink"
+          className="flex min-h-11 items-center gap-1.5 px-3 text-xs text-nav-ink-2 hover:text-nav-ink lg:min-h-9"
         >
           {t("nav.developerCms")}
           <Icon name="external" className="h-3 w-3" />

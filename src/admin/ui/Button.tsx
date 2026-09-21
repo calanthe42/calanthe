@@ -22,7 +22,9 @@ const BASE =
 
 const SIZE: Record<ButtonSize, string> = {
   md: "min-h-11 px-4",
-  sm: "min-h-11 px-3 sm:min-h-9",
+  /* `lg:`, not `sm:`: a 768px iPad is a touch screen, and 36px controls
+     there were the QA sweep's largest finding. Laptops tighten. */
+  sm: "min-h-11 px-3 lg:min-h-9",
 };
 
 const VARIANT: Record<ButtonVariant, string> = {

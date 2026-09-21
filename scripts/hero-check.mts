@@ -148,10 +148,15 @@ for (const [engineName, engine] of engines) {
       /* `p` marks a run that was read before hydration: the hero's own art,
          not the header's mark. A spread between a `p` run and a plain run is
          a REAL handoff jump — the two are supposed to occupy the same box. */
-      const tops = readings.map((x) => `${Math.round(x.markTop)}${x.preHydration ? "p" : ""}`);
-      const nums = readings.map((x) => Math.round(x.markTop));
-      const spread = Math.max(...nums) - Math.min(...nums);
-      check(spread <= 2, `${label}: stable across ${RUNS} runs`, `tops ${tops.join("/")}`);
+      /* A docked run has no meaningful top — pre-hydration the hero's own
+         art is hidden on a short screen and reports 0 — so docked compares
+         as a STATE. Mixing docked and travelled across runs is the failure;
+         so is a travelled top that wanders. */
+      const tops = readings.map((x) => `${x.docked ? "docked" : Math.round(x.markTop)}${x.preHydration ? "p" : ""}`);
+      const dockedCount = readings.filter((x) => x.docked).length;
+      const nums = readings.filter((x) => !x.docked).map((x) => Math.round(x.markTop));
+      const spread = nums.length ? Math.max(...nums) - Math.min(...nums) : 0;
+      check((dockedCount === 0 || dockedCount === RUNS) && spread <= 2, `${label}: stable across ${RUNS} runs`, `tops ${tops.join("/")}`);
     }
   }
   await browser.close();

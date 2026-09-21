@@ -41,7 +41,7 @@ export type DropdownItem = {
 };
 
 const ITEM =
-  "flex min-h-11 w-full items-center gap-2.5 rounded-sm px-3 text-start text-sm outline-none transition-colors duration-150 hover:bg-hover focus-visible:bg-hover focus-visible:shadow-[inset_0_0_0_2px_var(--a-focus)] sm:min-h-9";
+  "flex min-h-11 w-full items-center gap-2.5 rounded-sm px-3 text-start text-sm outline-none transition-colors duration-150 hover:bg-hover focus-visible:bg-hover focus-visible:shadow-[inset_0_0_0_2px_var(--a-focus)] lg:min-h-9";
 
 export function Dropdown({
   label,
@@ -226,7 +226,7 @@ export function Dropdown({
         className={
           text
             ? buttonClasses({ size: "sm" })
-            : "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-line-strong bg-surface text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink sm:h-9 sm:w-9"
+            : "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-line-strong bg-surface text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink lg:h-9 lg:w-9"
         }
       >
         {text ? (

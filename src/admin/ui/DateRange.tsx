@@ -23,7 +23,7 @@ export function DateRangePresets({ label, presets }: { label: string; presets: r
               aria-current={preset.active ? "true" : undefined}
               title={preset.description}
               className={cn(
-                "inline-flex min-h-10 min-w-14 items-center justify-center whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-colors duration-150 sm:min-h-8",
+                "inline-flex min-h-11 min-w-14 items-center justify-center whitespace-nowrap rounded-sm px-3 text-sm font-medium transition-colors duration-150 lg:min-h-8",
                 preset.active ? "bg-ink text-page" : "text-ink-2 hover:bg-hover hover:text-ink",
               )}
             >
