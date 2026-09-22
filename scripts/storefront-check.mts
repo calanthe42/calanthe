@@ -124,7 +124,8 @@ console.log("\nflows (phone)");
   const placeOrder = await page.getByRole("button", { name: /place order/i }).count();
   check(placeOrder > 0, "checkout has a place-order button");
   await page.goto(`${BASE}/build-your-own`, { waitUntil: "load" }); await page.waitForTimeout(1500);
-  await page.getByRole("button", { name: "Birthday", exact: true }).first().click().catch(() => {});
+  /* The first question is the budget — the occasion is no longer asked. */
+  await page.getByRole("button", { name: /AED 350/ }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   const seal = await page.evaluate(() => (document.querySelector('ol > li[data-state="done"] > span:nth-of-type(2) svg') as SVGElement | null)?.getBoundingClientRect().width ?? 0);
   check(seal >= 14, "build your own: answering a question seals it with the mark", `${Math.round(seal)}px`);

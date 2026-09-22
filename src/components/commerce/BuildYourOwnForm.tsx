@@ -13,9 +13,8 @@ import {
   optionClasses,
   optionLabelOff,
   optionLabelOn,
-  optionRule,
-  optionRuleFill,
-  optionTick,
+  optionOff,
+  optionOn,
 } from "@/components/ui/form-classes";
 import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib/bespoke";
 import { submitBespokeEnquiry } from "@backend/actions/enquiry";
@@ -28,7 +27,6 @@ import {
   BYO_MIN_BUDGET_AED,
   byoColours,
   byoColourSwatches,
-  byoOccasionOptions,
   formatAed,
   seasonalDisclaimer,
 } from "@/lib/data";
@@ -36,11 +34,17 @@ import {
 /**
  * Build Your Own, as a consultation rather than a form.
  *
- * The occasion comes first because it is how a person thinks about the gift,
- * and everything after it (budget, colours, vase, card) is shaped by it. Each
- * choice lands in "Your arrangement" as it is made — beside the steps on
+ * The budget comes first because it is the answer that shapes every other —
+ * the size of the arrangement, how many stems, which flowers are possible.
+ * Each choice lands in "Your arrangement" as it is made — beside the steps on
  * desktop, as a review step on a phone — so the request she sends is one she
  * has already read.
+ *
+ * THE OCCASION IS NOT ASKED. It was the first question and it was the wrong
+ * one: a bouquet for a birthday and a bouquet for an apology are composed
+ * from the same brief — a budget, a palette, a few words. The card message
+ * and the notes tell the florist what the flowers are for. One question
+ * fewer is one more request finished.
 
  * SENDING RECORDS IT. This used to serialise the brief into a WhatsApp URL
  * and open a tab — if the visitor never pressed send, the atelier never knew
@@ -50,7 +54,6 @@ import {
  */
 
 const STEPS = [
-  { id: "occasion", title: "What is the occasion?" },
   { id: "budget", title: "Your budget" },
   { id: "colours", title: "Colours" },
   { id: "vase", title: "A vase?" },
@@ -72,10 +75,11 @@ type StepId = (typeof STEPS)[number]["id"];
 export function BuildYourOwnForm() {
   const lenis = useLenisInstance();
 
-  const [occasion, setOccasion] = useState<string | null>(null);
   const [budget, setBudget] = useState<number | "other" | null>(null);
   const [customBudget, setCustomBudget] = useState("");
   const [colours, setColours] = useState<readonly string[]>([]);
+  /* Her own words about colour — the florist reads these before the swatches. */
+  const [colourNote, setColourNote] = useState("");
   const [colourOther, setColourOther] = useState(false);
   const [vase, setVase] = useState<boolean | null>(null);
   const [message, setMessage] = useState("");
@@ -111,7 +115,7 @@ export function BuildYourOwnForm() {
     floristChoosesColours: colourOther,
     vase,
     vasePriceAed: BYO_VASE_PRICE_AED,
-    occasion: occasion ?? "",
+    colourNote,
     cardMessage: message,
     leaveCardBlank: leaveBlank,
     notes,
@@ -121,23 +125,19 @@ export function BuildYourOwnForm() {
 
   /* The monogram on the rail sits at the first step still waiting on you. */
   const activeIndex = useMemo(() => {
-    if (!occasion) return 0;
-    if (budgetValue === 0) return 1;
-    if (colours.length === 0 && !colourOther) return 2;
-    if (vase === null) return 3;
-    if (!message.trim() && !leaveBlank) return 4;
+    if (budgetValue === 0) return 0;
+    if (colours.length === 0 && !colourOther && !colourNote.trim()) return 1;
+    if (vase === null) return 2;
+    if (!message.trim() && !leaveBlank) return 3;
     /* The rail's marker rests on "For the florist" until there is something
        to reach the customer by — contact is the last thing still waiting. */
-    if (!notes.trim()) return 5;
-    if (isGift === null) return 6;
-    return 7;
-  }, [occasion, budgetValue, colours, colourOther, vase, message, leaveBlank, notes, isGift]);
+    if (!notes.trim()) return 4;
+    if (isGift === null) return 5;
+    return 6;
+  }, [budgetValue, colours, colourOther, colourNote, vase, message, leaveBlank, notes, isGift]);
 
   const errors: Partial<Record<StepId, string>> = attempted
     ? {
-        ...(!occasion
-          ? { occasion: "Choose the occasion. It shapes the arrangement." }
-          : {}),
         ...(budgetValue === 0
           ? {
               budget:
@@ -151,9 +151,7 @@ export function BuildYourOwnForm() {
 
   async function handleSubmit() {
     setAttempted(true);
-    const missing: StepId | null = !occasion
-      ? "occasion"
-      : budgetValue === 0
+    const missing: StepId | null = budgetValue === 0
         ? "budget"
         : isGift === null
         ? "gift"
@@ -177,7 +175,7 @@ export function BuildYourOwnForm() {
       recipientName: isGift ? recipientName : undefined,
       recipientPhone: isGift ? recipientPhone : undefined,
       deliveryLocation: deliveryLocation || undefined,
-      occasion: occasion ?? "",
+      colourNote,
       budgetAed: budgetValue,
       colours,
       floristChoosesColours: colourOther,
@@ -256,7 +254,7 @@ export function BuildYourOwnForm() {
 
   const summary = (
     <Summary
-      occasion={occasion}
+      colourNote={colourNote}
       budgetAed={budgetValue}
       colours={colourOther ? [...colours, "Florist's choice"] : colours}
       vase={vase}
@@ -290,28 +288,6 @@ export function BuildYourOwnForm() {
             index={0}
             active={activeIndex === 0}
             done={activeIndex > 0}
-            answer={occasion ?? undefined}
-            error={errors.occasion}
-            stepRef={(el) => {
-              stepRefs.current.occasion = el;
-            }}
-          >
-            <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
-              {byoOccasionOptions.map((o) => (
-                <Option
-                  key={o}
-                  label={o}
-                  selected={occasion === o}
-                  onSelect={() => setOccasion(o)}
-                />
-              ))}
-            </div>
-          </Step>
-
-          <Step
-            index={1}
-            active={activeIndex === 1}
-            done={activeIndex > 1}
             answer={budgetValue > 0 ? formatAed(budgetValue) : undefined}
             error={errors.budget}
             stepRef={(el) => {
@@ -366,10 +342,16 @@ export function BuildYourOwnForm() {
           </Step>
 
           <Step
-            index={2}
-            active={activeIndex === 2}
-            done={activeIndex > 2}
-            answer={[...colours, ...(colourOther ? ["Something else"] : [])].join(", ") || undefined}
+            index={1}
+            active={activeIndex === 1}
+            done={activeIndex > 1}
+            answer={
+              [
+                ...colours,
+                ...(colourOther ? ["Florist's choice"] : []),
+                ...(colourNote.trim() ? [colourNote.trim()] : []),
+              ].join(", ") || undefined
+            }
             hint="Choose as many as you like."
           >
             {/* THE PALETTE LEADS, THE WORDS FOLLOW. "Peach & Apricot" in a
@@ -400,9 +382,41 @@ export function BuildYourOwnForm() {
                 onSelect={() => setColourOther((v) => !v)}
               />
             </div>
+
+            {/*
+              THE LAST WORD ON COLOUR IS HERS.
+
+              Six swatches cannot hold "the dusty blue from my wedding" or
+              "nothing yellow, please". This is where that goes, and it is
+              last on purpose: the swatches are the quick answer, this is the
+              one the florist reads twice. The line underneath is a promise,
+              not a disclaimer — flowers are grown, not stocked, and the
+              honest thing is to say who calls whom when a colour cannot be
+              had that morning.
+            */}
+            <div className="mt-6">
+              <label htmlFor="byo-colour-note" className={labelClasses}>
+                Anything else about the colours?
+              </label>
+              <textarea
+                id="byo-colour-note"
+                value={colourNote}
+                onChange={(e) => setColourNote(e.target.value.slice(0, 240))}
+                rows={2}
+                placeholder="A shade you love, a colour to avoid, something to match…"
+                className={cn(fieldClasses, "mt-2")}
+              />
+              <p className="mt-2 flex items-start gap-2 text-base leading-relaxed text-ink-muted lg:text-sm">
+                <span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-burnt-orange" />
+                <span>
+                  If a colour is not in season on the day, we will contact you
+                  before composing and agree the closest thing to it.
+                </span>
+              </p>
+            </div>
           </Step>
 
-          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={vase === null ? undefined : vase ? "With a vase" : "Hand-tied, no vase"}>
+          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} answer={vase === null ? undefined : vase ? "With a vase" : "Hand-tied, no vase"}>
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               <Option
                 label="Yes, in a vase"
@@ -419,7 +433,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={leaveBlank ? "Left blank" : message.trim() ? "Written" : undefined}>
+          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={leaveBlank ? "Left blank" : message.trim() ? "Written" : undefined}>
             <textarea
               value={message}
               onChange={(e) => {
@@ -449,7 +463,7 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={notes.trim() ? "Noted" : undefined} hint="Optional.">
+          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={notes.trim() ? "Noted" : undefined} hint="Optional.">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
@@ -460,7 +474,7 @@ export function BuildYourOwnForm() {
             />
           </Step>
 
-          <Step index={6} active={activeIndex === 6} done={activeIndex > 6} answer={isGift === null ? undefined : isGift ? "A gift" : "For yourself"}>
+          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={isGift === null ? undefined : isGift ? "A gift" : "For yourself"}>
             <div
               className="grid grid-cols-2 gap-3"
               role="group"
@@ -530,18 +544,18 @@ export function BuildYourOwnForm() {
                   id="byo-location"
                   value={deliveryLocation}
                   onChange={(e) => setDeliveryLocation(e.target.value.slice(0, 240))}
-                  placeholder="Jumeirah, Dubai"
+                  placeholder="Al Reem Island, Abu Dhabi"
                   className={fieldClasses}
                 />
-                <p className="mt-2 text-xs leading-relaxed text-ink-muted">
-                  An area is enough for now — a florist confirms the exact
+                <p className="mt-2 text-base leading-relaxed text-ink-muted lg:text-sm">
+                  An area is enough for now — Delivery confirms the exact
                   address with you.
                 </p>
               </div>
             )}
           </Step>
 
-          <Step index={7} active={activeIndex === 7} done={activeIndex > 7}>
+          <Step index={6} active={activeIndex === 6} done={activeIndex > 6}>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="byo-name" className={labelClasses}>
@@ -707,18 +721,25 @@ function Option({
   onSelect: () => void;
   swatch?: readonly [string, string, string];
 }) {
+  const reduced = useReducedMotion();
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      className={optionClasses}
+      className={cn(optionClasses, selected ? optionOn : optionOff)}
     >
       <span className="flex min-w-0 items-center gap-3">
         {swatch && (
-          <span aria-hidden className="flex shrink-0 overflow-hidden rounded-[2px]">
+          <span
+            aria-hidden
+            className={cn(
+              "flex shrink-0 overflow-hidden rounded-[2px] ring-1 transition-colors duration-200",
+              selected ? "ring-cream/40" : "ring-hairline",
+            )}
+          >
             {swatch.map((c) => (
-              <span key={c} style={{ background: c }} className="h-6 w-2.5" />
+              <span key={c} style={{ background: c }} className="h-7 w-3" />
             ))}
           </span>
         )}
@@ -726,30 +747,42 @@ function Option({
           <span className={cn("block truncate", selected ? optionLabelOn : optionLabelOff)}>
             {label}
           </span>
-          {note && <span className="mt-0.5 block text-xs text-ink-muted">{note}</span>}
+          {note && (
+            <span
+              className={cn(
+                "mt-0.5 block text-sm transition-colors duration-200",
+                selected ? "text-cream/70" : "text-ink-muted",
+              )}
+            >
+              {note}
+            </span>
+          )}
         </span>
       </span>
 
-      <span
-        aria-hidden
-        className={cn(
-          optionTick,
-          selected ? "text-burnt-orange opacity-100" : "opacity-0",
-        )}
-      >
-        Chosen
-      </span>
+      {/*
+        THE SEAL, NOT A TICK.
 
-      <span aria-hidden className={optionRule}>
-        <span
-          className={cn(
-            optionRuleFill,
-            selected
-              ? "scale-x-100"
-              : "scale-x-0 group-hover/opt:scale-x-100 group-focus-visible/opt:scale-x-100",
-          )}
-        />
-      </span>
+        Chosen used to be the word "Chosen" in small caps. The brand already
+        owns a gesture for "this is settled" — its monogram, pressed into
+        paper — so that is what confirms a choice here: the mark blooms open
+        on the end of the chip. It is never colour alone; the fill, the
+        label's colour and this mark all change together.
+      */}
+      <AnimatePresence initial={false}>
+        {selected && (
+          <motion.span
+            aria-hidden
+            initial={reduced ? false : { scale: 0.4, opacity: 0, rotate: -25 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={reduced ? { opacity: 0 } : { scale: 0.4, opacity: 0 }}
+            transition={{ duration: 0.45, ease: EASE_BLOOM }}
+            className="shrink-0 text-cream"
+          >
+            <Monogram className="w-5" />
+          </motion.span>
+        )}
+      </AnimatePresence>
     </button>
   );
 }
@@ -889,7 +922,7 @@ function Step({
 }
 
 function Summary({
-  occasion,
+  colourNote,
   budgetAed,
   colours,
   vase,
@@ -898,7 +931,7 @@ function Summary({
   notes,
   totalAed,
 }: {
-  occasion: string | null;
+  colourNote: string;
   budgetAed: number;
   colours: readonly string[];
   vase: boolean | null;
@@ -908,9 +941,10 @@ function Summary({
   totalAed: number;
 }) {
   const rows: { label: string; value: string | null; optional?: boolean }[] = [
-    { label: "Occasion", value: occasion },
     { label: "Budget", value: budgetAed > 0 ? formatAed(budgetAed) : null },
     { label: "Colours", value: colours.length > 0 ? colours.join(", ") : null },
+    /* Straight after the swatches, because it qualifies them. */
+    { label: "Colour note", value: colourNote.trim() || null, optional: true },
     {
       label: "Vase",
       value:

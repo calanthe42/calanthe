@@ -104,7 +104,7 @@ export type BespokeEnquiryRequest = Contact & {
   recipientName?: string;
   recipientPhone?: string;
   deliveryLocation?: string;
-  occasion: string;
+  colourNote: string;
   budgetAed: number;
   colours: readonly string[];
   floristChoosesColours: boolean;
@@ -127,7 +127,6 @@ export async function submitBespokeEnquiry(
   const invalid = checkContact(request);
   if (invalid) return invalid;
 
-  if (!request.occasion) return fail("occasion", "Please choose the occasion.");
   if (!Number.isFinite(request.budgetAed) || request.budgetAed <= 0) {
     return fail("budget", "Please choose a budget.");
   }
@@ -156,10 +155,10 @@ export async function submitBespokeEnquiry(
      the running total, so they are written into the message the florist
      actually reads. Losing them would defeat the point of recording this. */
   const message = [
-    `Occasion: ${request.occasion}`,
     `Budget: AED ${request.budgetAed}`,
     ...forWhom,
     colours ? `Colours: ${colours}` : "",
+    clean(request.colourNote, 240) ? `Colour note: ${clean(request.colourNote, 240)}` : "",
     request.vase === null ? "" : `Vase: ${request.vase ? "yes" : "no"}`,
     request.leaveCardBlank
       ? "Card: leave blank"
@@ -181,7 +180,7 @@ export async function submitBespokeEnquiry(
     contactName: clean(request.name, 140),
     contactEmail: clean(request.email, 200).toLowerCase(),
     contactPhone: clean(request.phone, 40),
-    subject: `Build your own — ${request.occasion}`,
+    subject: `Build your own — AED ${request.budgetAed}`,
     message,
     buildYourOwn: {
       budgetFils: Math.round(request.budgetAed * 100),

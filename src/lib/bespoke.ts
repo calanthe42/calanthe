@@ -17,7 +17,8 @@ export type BespokeRequest = {
   floristChoosesColours: boolean;
   vase: boolean | null;
   vasePriceAed: number;
-  occasion: string;
+  /** Anything the customer typed about colour, in her own words. */
+  colourNote: string;
   cardMessage: string;
   leaveCardBlank: boolean;
   notes: string;
@@ -37,9 +38,9 @@ export function bespokeMessage(request: BespokeRequest): string {
   const lines = [
     "Hello Calanthe, I would like a bespoke arrangement.",
     "",
-    `Occasion: ${request.occasion}`,
     `Budget: ${formatAed(request.budgetAed)}`,
     `Colours: ${colours.length > 0 ? colours.join(", ") : "florist's choice"}`,
+    ...(request.colourNote.trim() ? [`Colour note: ${request.colourNote.trim()}`] : []),
     `Vase: ${
       request.vase === true
         ? `yes (+${formatAed(request.vasePriceAed)})`
