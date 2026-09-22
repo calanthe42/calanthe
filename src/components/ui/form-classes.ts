@@ -41,20 +41,30 @@ export const chipOnClasses = "border-olive bg-cream text-olive";
  * `group/opt` is on the button so the rule can respond to hover and focus
  * without JavaScript.
  */
+/*
+ * AN OPTION HAS TO LOOK LIKE SOMETHING YOU PRESS.
+ *
+ * These were a bare text row with a hairline under it: no edge, no fill,
+ * nothing to say "press me" until after you already had. On a phone that
+ * reads as a list of words, and the client's report was exactly that — she
+ * could not tell the choices were buttons. Each one is now a card with its
+ * own edge: a hairline rule on cream, olive-filled once chosen, pressing
+ * inwards under the thumb. The 2px corner is the brand's (luxury is almost
+ * square), and the pairing is cream+olive either way round.
+ */
 export const optionClasses =
-  "group/opt relative flex min-h-12 w-full items-baseline justify-between gap-3 " +
-  "px-1 pb-2.5 pt-3 text-start transition-colors duration-200 ease-bloom " +
+  "group/opt relative flex min-h-[3.25rem] w-full items-center justify-between gap-3 " +
+  "rounded-sm border px-4 py-3 text-start " +
+  "transition-[background-color,border-color,color,transform] duration-200 ease-bloom " +
+  "active:scale-[0.98] motion-reduce:active:scale-100 " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive";
 
-export const optionLabelOff = "font-display text-lg font-light text-olive/70 lg:text-xl";
-export const optionLabelOn = "font-display text-lg font-light text-olive lg:text-xl";
+/** Waiting to be chosen: cream card, hairline edge. */
+export const optionOff =
+  "border-hairline bg-cream/45 hover:border-sage hover:bg-cream";
+/** Chosen: the olive fills it, and the mark on the end seals it. */
+export const optionOn = "border-olive bg-olive";
 
-/** The rule under an option. Grows from the reading edge when chosen. */
-export const optionRule =
-  "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-hairline";
-export const optionRuleFill =
-  "block h-px origin-[left_center] bg-burnt-orange transition-transform duration-300 ease-bloom rtl:origin-[right_center]";
+export const optionLabelOff = "font-display text-lg font-light text-olive lg:text-xl";
+export const optionLabelOn = "font-display text-lg font-light text-cream lg:text-xl";
 
-/** The small mark that confirms a choice, so it is never colour alone. */
-export const optionTick =
-  "shrink-0 font-brand text-[0.5625rem] uppercase tracking-brand transition-opacity duration-200";

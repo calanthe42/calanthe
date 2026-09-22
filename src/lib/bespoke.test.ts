@@ -12,7 +12,7 @@ const base: BespokeRequest = {
   floristChoosesColours: false,
   vase: true,
   vasePriceAed: 60,
-  occasion: "Birthday",
+  colourNote: "",
   cardMessage: "  Happy birthday, Mama  ",
   leaveCardBlank: false,
   notes: "",
@@ -27,7 +27,13 @@ describe("bespoke request", () => {
 
   it("writes every choice the florist needs, one per line", () => {
     const text = bespokeMessage(base);
-    expect(text).toContain("Occasion: Birthday");
+    /* The occasion is no longer asked — the card and the notes carry what
+       the flowers are for. A colour note is written only when she wrote one. */
+    expect(text).not.toContain("Occasion");
+    expect(bespokeMessage({ ...base, colourNote: "  nothing yellow  " })).toContain(
+      "Colour note: nothing yellow",
+    );
+    expect(text).not.toContain("Colour note");
     expect(text).toContain("Colours: Blush & Rose, Whites & Creams");
     expect(text).toContain('Card: "Happy birthday, Mama"');
     expect(text).toContain("Vase: yes");
