@@ -5,7 +5,6 @@ import { ProductCard } from "@/components/commerce/ProductCard";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getBestSellers } from "@backend/data/products";
-import { PHOTOS } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 
 /** Same grammar as New Arrivals; the first tile is a 2x editorial moment. */
@@ -35,8 +34,8 @@ export async function BestSellers() {
             <Parallax speed={0.92} className="absolute inset-[-8%]">
               <FloralImage
                 image={{
-                  alt: "A single rose against a warm plaster wall",
-                  src: PHOTOS.roseMauveWall,
+                  alt: "White lilies with a Calanthe lily hang tag tied among them",
+                  src: "/brand/lilies-tag.webp",
                   placeholder: { seed: "bestseller-editorial", palette: "olive" },
                 }}
                 sizes="(max-width: 1024px) 92vw, 50vw"

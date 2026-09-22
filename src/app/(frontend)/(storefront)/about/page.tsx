@@ -8,7 +8,8 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { PHOTOS, PRODUCT_PHOTOS } from "@/lib/data";
+import Image from "next/image";
+import { LilyField } from "@/components/ui/LilyField";
 
 export const metadata: Metadata = {
   title: "About",
@@ -93,9 +94,9 @@ export default function AboutPage() {
           <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">
             <FloralImage
               image={{
-                alt: "A Calanthe arrangement, composed by hand",
-                src: PRODUCT_PHOTOS.amberVase,
-                placeholder: { seed: "about-atelier", palette: "warm" },
+                alt: "A Calanthe arrangement in its burgundy bag, against deep green velvet",
+                src: "/brand/packaging-curtain.webp",
+                placeholder: { seed: "about-atelier", palette: "burgundy" },
               }}
               sizes="(max-width: 1024px) 92vw, 46vw"
             />
@@ -128,14 +129,130 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/*
+        THE NAME — the one thing about this brand nobody can look up.
+
+        It is in the identity book and it was nowhere on the website:
+        Calanthe is an orchid, and the word is Greek — kalos, beautiful, and
+        anthos, flower. That is the whole brand in two words, and it is the
+        rare piece of copy a reader actually wants to finish. It earns an
+        asymmetric spread of its own: the etymology set large as editorial
+        type, the orchid the name belongs to beside it, and the monogram
+        explained underneath, because the mark IS those petals arranged
+        until they make a "C".
+      */}
+      <section className="relative isolate overflow-hidden section-pad">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <LilyField
+            opacity={0.05}
+            className="absolute -top-[30%] start-[-40%] w-[130%] text-olive rtl:-scale-x-100 lg:w-[70%]"
+          />
+        </div>
+
+        <div className="mx-auto grid max-w-7xl gutter gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-20">
+          <ClipReveal className="relative aspect-[3/4] w-full overflow-hidden rounded-media shadow-soft lg:order-2">
+            <FloralImage
+              image={{
+                alt: "Calanthe orchid buds, the flower the brand is named after",
+                src: "/brand/orchid-buds.webp",
+                placeholder: { seed: "about-name", palette: "olive" },
+              }}
+              sizes="(max-width: 1024px) 92vw, 46vw"
+            />
+          </ClipReveal>
+
+          <div className="lg:order-1">
+            <Reveal>
+              <Eyebrow>The name</Eyebrow>
+            </Reveal>
+            <SplitLines
+              as="h2"
+              lines={["kalos — beautiful.", "anthos — flower."]}
+              className="display-2 mt-4 font-display font-light italic text-olive"
+            />
+            <Reveal delay={0.15}>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
+                Calanthe is an orchid, and its name is Greek. More than a
+                flower, it reflects a philosophy of beauty that is quiet,
+                timeless and deeply meaningful — which is the standard every
+                arrangement that leaves this atelier is held to.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.25}>
+              <div className="mt-10 flex items-start gap-5 border-t border-hairline pt-8">
+                <Monogram className="mt-1 w-12 shrink-0 text-burnt-orange" />
+                <p className="max-w-sm text-base leading-relaxed text-ink-muted">
+                  The mark is built from the same flower: petals and leaves
+                  simplified, arranged symmetrically, and resolved until the
+                  outline reads as a{" "}
+                  {/* One glyph: tracking would only add a gap before the full stop. */}
+                  <span lang="en" className="font-brand text-olive">C</span>.
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/*
+        THE DETAILS — "every touchpoint, down to the smallest."
+
+        The brand's own words, and the proof of them is physical: printed
+        ribbon, a lily hang tag, tissue that repeats the monogram, an
+        embossed card. Four objects, no frames, no captions competing with
+        them — the pieces a customer actually holds, laid out the way the
+        identity book lays them out.
+      */}
+      <section className="bg-cream section-pad">
+        <div className="mx-auto max-w-7xl gutter">
+          <Reveal className="max-w-xl">
+            <Eyebrow>The details</Eyebrow>
+            <h2 className="display-2 mt-3 font-display font-light text-olive">
+              Down to the ribbon.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink-muted">
+              Everything that reaches you is part of the gift — the tag, the
+              tissue, the card, the ribbon that ties it.
+            </p>
+          </Reveal>
+
+          <Stagger className="mt-12 grid grid-cols-2 gap-4 lg:mt-16 lg:grid-cols-4 lg:gap-6">
+            {[
+              { src: "/brand/ribbon.webp", alt: "Terracotta ribbon printed with the Calanthe wordmark and monogram", label: "Printed ribbon" },
+              { src: "/brand/lilies-tag.webp", alt: "A die-cut lily hang tag resting among white lilies", label: "Lily hang tag" },
+              { src: "/brand/wrap-sticker.webp", alt: "Monogrammed tissue paper closed with a Calanthe sticker", label: "Tissue and seal" },
+              { src: "/brand/cards-debossed.webp", alt: "A burgundy Calanthe greeting card, debossed with lilies, its gold tab pressed with the monogram", label: "Debossed card" },
+            ].map((item) => (
+              <StaggerItem key={item.src}>
+                <figure>
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-media">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      fill
+                      sizes="(max-width: 1024px) 46vw, 23vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <figcaption className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
+                    {item.label}
+                  </figcaption>
+                </figure>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
       {/* Close — the line the whole brand rests on. */}
       <section className="relative overflow-hidden bg-olive section-pad">
         <div className="relative mx-auto max-w-7xl gutter text-center">
           <ClipReveal className="mx-auto mb-12 aspect-[16/7] w-full max-w-3xl overflow-hidden rounded-media">
             <FloralImage
               image={{
-                alt: "Calanthe flowers, close",
-                src: PHOTOS.redRoses,
+                alt: "A bloom opening, lit from within — Calanthe's key visual",
+                src: "/brand/keyvisual-bloom.webp",
                 placeholder: { seed: "about-close", palette: "burgundy" },
               }}
               sizes="(max-width: 1024px) 92vw, 60vw"
