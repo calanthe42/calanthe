@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ButtonLink } from "@/components/ui/Button";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { PHOTOS } from "@/lib/data";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -105,8 +104,8 @@ export function BuildYourOwnBanner() {
         <div className="byo-photo-inner h-full w-full">
           <FloralImage
             image={{
-              alt: "A moody editorial arrangement in deep reds",
-              src: PHOTOS.moodyProtea,
+              alt: "A lily petal lit from behind, blush against warm light",
+              src: "/brand/petal-blush.webp",
               placeholder: { seed: "byo-editorial", palette: "burgundy" },
             }}
             sizes="(max-width: 1024px) 100vw, 50vw"

@@ -1,9 +1,7 @@
-import { ClipReveal } from "@/components/motion/ClipReveal";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { FloralImage } from "@/components/ui/FloralImage";
-import { PRODUCT_PHOTOS } from "@/lib/data";
+import { PackagingTrio } from "@/components/blocks/PackagingTrio";
 import { getDictionary } from "@/lib/i18n/server";
 
 /**
@@ -50,16 +48,13 @@ export async function CalantheTouch() {
           <h2 className="display-2 mt-6 font-display font-light text-olive">
             {t.sections.touchTitle}
           </h2>
-          <ClipReveal className="mt-9 hidden aspect-[4/5] w-full overflow-hidden rounded-media lg:block">
-            <FloralImage
-              image={{
-                alt: "A Calanthe arrangement being finished by hand",
-                src: PRODUCT_PHOTOS.softWhiteRose,
-                placeholder: { seed: "calanthe-touch", palette: "warm" },
-              }}
-              sizes="(max-width: 1024px) 0px, 33vw"
-            />
-          </ClipReveal>
+          {/* THE WORK ITSELF, NOT A PICTURE OF FLOWERS. This was a framed
+              stock photograph, and it was hidden below 1024px — so on a
+              phone the section about craft showed no craft at all. The
+              brand's own packaging, cut out and standing on the page's
+              cream, says "wrapped by us" in a way a borrowed rose cannot,
+              and it now shows at every width. */}
+          <PackagingTrio className="mt-10 lg:mt-12" />
         </Reveal>
 
         <Stagger className="mt-12 flex flex-col lg:mt-0">

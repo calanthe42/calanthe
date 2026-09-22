@@ -4,6 +4,20 @@ import type { NextConfig } from "next";
 import { withPayload } from "@payloadcms/next/withPayload";
 
 const nextConfig: NextConfig = {
+  /*
+   * /cart IS AN HTTP REDIRECT, NOT A PAGE.
+   *
+   * The cart lives in the slide-in drawer, so a direct visit goes to
+   * checkout. That used to be `redirect()` inside the page — but the
+   * storefront layout streams, so by the time the page ran the headers were
+   * already sent and Next fell back to <meta http-equiv="refresh"
+   * content="1">: a blank page for a second, then a second full load. Here
+   * it is answered before anything renders. 307, not 308: it is a routing
+   * choice, and a permanent redirect would be cached by browsers forever.
+   */
+  async redirects() {
+    return [{ source: "/cart", destination: "/checkout", permanent: false }];
+  },
   // Stray lockfiles exist higher up the tree; pin the workspace root here.
   turbopack: {
     root: path.dirname(fileURLToPath(import.meta.url)),

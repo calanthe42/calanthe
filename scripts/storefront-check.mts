@@ -83,6 +83,11 @@ for (const locale of ["en", "ar"] as const) {
       const errors: string[] = [];
       page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 140)); });
       page.on("pageerror", (e) => errors.push(`pageerror ${String(e).slice(0, 140)}`));
+      /* Count REAL document loads (not Next's in-place history update). A
+         page that reloads itself after it has loaded is a defect a visitor
+         sees as a flash, and it is reported as one — never retried away. */
+      let documentLoads = 0;
+      page.on("load", () => { documentLoads += 1; });
       const res = await page.goto(`${BASE}${path}`, { waitUntil: "load", timeout: 120_000 }).catch(() => null);
       await page.evaluate(() => document.fonts.ready).catch(() => {});
       await page.waitForTimeout(1200);
@@ -90,8 +95,15 @@ for (const locale of ["en", "ar"] as const) {
       check(!!res && res.status() < 400, `${label}: loads`, res ? String(res.status()) : "no response");
       if (!res || res.status() >= 400) { await page.close(); continue; }
       /* Scroll through so lazy images and reveals happen, then audit. */
-      await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } window.scrollTo(0, 0); });
+      let scrollCrash = "";
+      try {
+        await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } window.scrollTo(0, 0); });
+      } catch (e) {
+        scrollCrash = String(e).split(String.fromCharCode(10))[0].slice(0, 90);
+      }
+      await page.waitForLoadState("load").catch(() => {});
       await page.waitForTimeout(600);
+      check(documentLoads === 1 && !scrollCrash, `${label}: loads once and stays loaded`, `document loads=${documentLoads}${scrollCrash ? `, while scrolling: ${scrollCrash}` : ""}`);
       const a = await page.evaluate(AUDIT, phone);
       check(a.overflow.length === 0, `${label}: nothing wider than the screen`, a.overflow.join(" | "));
       check(a.brokenImages.length === 0, `${label}: every photograph loads`, a.brokenImages.join(" | "));

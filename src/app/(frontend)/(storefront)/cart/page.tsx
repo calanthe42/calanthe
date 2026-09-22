@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 
-/** The cart lives in the slide-in drawer; direct visits go to checkout. */
+/**
+ * Never reached in practice: next.config.ts redirects /cart before any page
+ * renders (see the note there). Kept so the route cannot 404 if that
+ * redirect is ever removed.
+ */
 export default function CartPage() {
   redirect("/checkout");
 }

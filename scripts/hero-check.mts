@@ -76,6 +76,15 @@ async function measure(browser: Browser, vp: (typeof VIEWPORTS)[number], locale:
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(600);
 
+  /* If the homepage is not what loaded, say what did — a crash on a null
+     tells nobody anything. */
+  const missing = await page.evaluate(() =>
+    document.querySelector("[data-hero-copy]") && document.querySelector("[data-travel-mark]")
+      ? null
+      : `url=${location.pathname} title="${document.title}" h1="${document.querySelector("h1")?.textContent?.trim().slice(0, 60) ?? ""}" body="${document.body.innerText.replace(/\s+/g, " ").slice(0, 160)}"`,
+  );
+  if (missing) throw new Error(`the homepage hero is not on the page: ${missing}`);
+
   const reading = await page.evaluate(() => {
     const mark = document.querySelector<HTMLElement>("[data-travel-mark]")!;
     const header = document.querySelector<HTMLElement>("header")!;
