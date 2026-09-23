@@ -2,6 +2,7 @@ import { BestSellers } from "@/components/blocks/BestSellers";
 import { JsonLd } from "@/components/blocks/JsonLd";
 import { CalantheTouch } from "@/components/blocks/CalantheTouch";
 import { Hero } from "@/components/blocks/Hero";
+import { SealMoment } from "@/components/blocks/SealMoment";
 import { InstagramMarquee } from "@/components/blocks/InstagramMarquee";
 import {
   LazyBuildYourOwnBanner,
@@ -27,6 +28,8 @@ export default async function HomePage() {
       <JsonLd data={floristJsonLd()} />
       <JsonLd data={websiteJsonLd()} />
       <Hero />
+      {/* Added at the client's instruction, directly after the hero. */}
+      <SealMoment />
       <QuickNavBand occasions={occasions} />
       <NewArrivals />
       <ShopByOccasion />

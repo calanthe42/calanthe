@@ -1,6 +1,7 @@
 import { HairlineDraw } from "@/components/motion/HairlineDraw";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { LilyField } from "@/components/ui/LilyField";
 import { CONTACT } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -23,7 +24,17 @@ export async function TrustBand() {
   ];
 
   return (
-    <section className="bg-cream section-pad">
+    <section className="relative isolate overflow-hidden bg-cream section-pad">
+      {/* The same pressed lily that runs through the top of the page, turned
+          the other way and cropped by the opposite edge — the promise band
+          is printed on the brand's paper too, not on a plain field. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <LilyField
+          opacity={0.055}
+          className="absolute -bottom-[45%] end-[-35%] w-[135%] text-olive rtl:-scale-x-100 lg:-bottom-[60%] lg:end-[-10%] lg:w-[55%]"
+        />
+      </div>
+
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <Reveal>
           <h2 className="display-2 font-display font-light text-olive">
