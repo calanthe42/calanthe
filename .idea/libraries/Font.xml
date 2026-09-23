@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Font">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Calanthe_Final Files/Font/Quattrocento.zip!/" />
+      <root url="jar://$PROJECT_DIR$/Calanthe_Final Files/Font/Cinzel.zip!/" />
+      <root url="jar://$PROJECT_DIR$/Calanthe_Final Files/Font/Quattrocento_Sans.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
