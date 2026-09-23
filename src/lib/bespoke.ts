@@ -45,7 +45,7 @@ export function bespokeMessage(request: BespokeRequest): string {
       request.vase === true
         ? `yes (+${formatAed(request.vasePriceAed)})`
         : request.vase === false
-          ? "no, hand-tied"
+          ? "no, flower bag"
           : "not decided"
     }`,
     `Card: ${

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getDictionary } from "@/lib/i18n/server";
 import { Reveal } from "@/components/motion/Reveal";
 import { BuildYourOwnForm } from "@/components/commerce/BuildYourOwnForm";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
     "Choose your budget, colours and preferences — Calanthe's florists take care of the flowers.",
 };
 
-export default function BuildYourOwnPage() {
+export default async function BuildYourOwnPage() {
+  const { t } = await getDictionary();
   return (
     /*
      * THE CONSULTATION HAPPENS ON THE SHOP'S OWN PAPER.
@@ -34,13 +36,12 @@ export default function BuildYourOwnPage() {
       </div>
 
       <Reveal className="mb-12 max-w-2xl lg:mb-16">
-        <Eyebrow>Bespoke</Eyebrow>
+        <Eyebrow>{t.byo.eyebrow}</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">
-          Made for them, by you.
+          {t.byo.title}
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
-          Choose your budget, colours and preferences. We&apos;ll take care of the
-          flowers.
+          {t.byo.intro}
         </p>
       </Reveal>
 

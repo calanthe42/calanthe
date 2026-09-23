@@ -75,7 +75,7 @@ export async function ShopByOccasion() {
                           : "text-[0.6875rem] lg:text-[0.8125rem]",
                       )}
                     >
-                      {occasion.name}
+                      {t.occasionNames[occasion.slug] ?? occasion.name}
                     </span>
                     <span
                       aria-hidden
