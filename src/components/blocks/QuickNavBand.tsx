@@ -47,7 +47,7 @@ export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion
   const extra = [{ label: t.band.luxury, href: EXTRA_HREF }];
 
   const links = [
-    ...occasions.map((o) => ({ label: o.name, href: `/occasions/${o.slug}` })),
+    ...occasions.map((o) => ({ label: t.occasionNames[o.slug] ?? o.name, href: `/occasions/${o.slug}` })),
     ...extra,
   ];
 

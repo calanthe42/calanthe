@@ -565,7 +565,7 @@ export const byoOccasionOptions = [
   "Just Because",
 ] as const;
 
-export const BYO_VASE_PRICE_AED = 60;
+export const BYO_VASE_PRICE_AED = 150;
 
 /** FLAGGED: placeholder — replace with the client's exact disclaimer. */
 export const seasonalDisclaimer =

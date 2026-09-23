@@ -20,15 +20,14 @@ import { bespokeTotalAed, bespokeWhatsAppHref, type BespokeRequest } from "@/lib
 import { submitBespokeEnquiry } from "@backend/actions/enquiry";
 import { cn } from "@/lib/cn";
 import { useLenisInstance } from "@/lib/lenis-context";
+import { useT } from "@/lib/locale";
 import {
   BYO_VASE_PRICE_AED,
-  byoBudgetNote,
   byoBudgetsAed,
   BYO_MIN_BUDGET_AED,
   byoColours,
   byoColourSwatches,
   formatAed,
-  seasonalDisclaimer,
 } from "@/lib/data";
 
 /**
@@ -53,27 +52,42 @@ import {
  * rather talk it through.
  */
 
+/* The dictionary keys for `byoColours`, in the order that list declares
+   them — the palette names are content, so they translate like anything
+   else and are looked up by position rather than by their English text. */
+const COLOUR_KEYS = [
+  "whitesCreams",
+  "blushRose",
+  "peachApricot",
+  "sunlitYellows",
+  "burntOrangeRust",
+  "redsBurgundies",
+  "lilacPurples",
+  "greensFoliage",
+] as const;
+
 const STEPS = [
-  { id: "budget", title: "Your budget" },
-  { id: "colours", title: "Colours" },
-  { id: "vase", title: "A vase?" },
-  { id: "card", title: "The card" },
-  { id: "notes", title: "For the florist" },
+  { id: "budget" },
+  { id: "colours" },
+  { id: "vase" },
+  { id: "card" },
+  { id: "notes" },
   /* WHO RECEIVES THEM decides which details the atelier needs next, so it
      is asked before the details rather than after. A gift needs a second
      name and number to deliver to; an arrangement for yourself needs one
      address and no recipient at all. */
-  { id: "gift", title: "Who is it for?" },
+  { id: "gift" },
   /* A brief without a name is a brief the atelier cannot answer. This step
      is what turns Build Your Own from a WhatsApp draft into a real enquiry
      the florist can call back on. */
-  { id: "contact", title: "Where to reach you" },
+  { id: "contact" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
 
 export function BuildYourOwnForm() {
   const lenis = useLenisInstance();
+  const t = useT();
 
   const [budget, setBudget] = useState<number | "other" | null>(null);
   const [customBudget, setCustomBudget] = useState("");
@@ -142,8 +156,8 @@ export function BuildYourOwnForm() {
           ? {
               budget:
                 budget === "other" && customBudget
-                  ? `The smallest arrangement we compose is ${formatAed(BYO_MIN_BUDGET_AED)}.`
-                  : "Choose a budget so the florist knows where to begin.",
+                  ? t.byo.errors.budgetMin.replace("{min}", formatAed(BYO_MIN_BUDGET_AED))
+                  : t.byo.errors.budget,
             }
           : {}),
       }
@@ -306,7 +320,7 @@ export function BuildYourOwnForm() {
                 />
               ))}
               <Option
-                label="Another amount"
+                label={t.byo.budgetOther}
                 selected={budget === "other"}
                 onSelect={() => setBudget("other")}
               />
@@ -329,7 +343,7 @@ export function BuildYourOwnForm() {
                       value={customBudget}
                       onChange={(e) => setCustomBudget(e.target.value)}
                       placeholder={`From ${BYO_MIN_BUDGET_AED}`}
-                      aria-label="Your budget in AED"
+                      aria-label={t.byo.budgetOtherLabel}
                       className={cn(fieldClasses, "w-36 px-3 py-2.5")}
                     />
                   </label>
@@ -337,7 +351,7 @@ export function BuildYourOwnForm() {
               )}
             </AnimatePresence>
             <p className="mt-3 max-w-md text-base italic leading-relaxed text-ink-muted lg:text-sm">
-              {byoBudgetNote}
+              {t.byo.budgetNote}
             </p>
           </Step>
 
@@ -348,23 +362,23 @@ export function BuildYourOwnForm() {
             answer={
               [
                 ...colours,
-                ...(colourOther ? ["Florist's choice"] : []),
+                ...(colourOther ? [t.byo.floristChoiceAnswer] : []),
                 ...(colourNote.trim() ? [colourNote.trim()] : []),
               ].join(", ") || undefined
             }
-            hint="Choose as many as you like."
+            hint={t.byo.coloursHint}
           >
             {/* THE PALETTE LEADS, THE WORDS FOLLOW. "Peach & Apricot" in a
                 grey box asks someone to read a name and imagine the stems.
                 The three stops beside each name are what a florist would
                 actually put on the table. */}
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
-              {byoColours.map((c) => {
+              {byoColours.map((c, i) => {
                 const on = colours.includes(c);
                 return (
                   <Option
                     key={c}
-                    label={c}
+                    label={t.byo.colourNames[COLOUR_KEYS[i]!]}
                     swatch={byoColourSwatches[c]}
                     selected={on}
                     onSelect={() =>
@@ -376,8 +390,8 @@ export function BuildYourOwnForm() {
                 );
               })}
               <Option
-                label="Let the florist choose"
-                note="A palette picked on the morning"
+                label={t.byo.floristChoice}
+                note={t.byo.floristChoiceNote}
                 selected={colourOther}
                 onSelect={() => setColourOther((v) => !v)}
               />
@@ -396,44 +410,43 @@ export function BuildYourOwnForm() {
             */}
             <div className="mt-6">
               <label htmlFor="byo-colour-note" className={labelClasses}>
-                Anything else about the colours?
+                {t.byo.colourNoteLabel}
               </label>
               <textarea
                 id="byo-colour-note"
                 value={colourNote}
                 onChange={(e) => setColourNote(e.target.value.slice(0, 240))}
                 rows={2}
-                placeholder="A shade you love, a colour to avoid, something to match…"
+                placeholder={t.byo.colourNotePlaceholder}
                 className={cn(fieldClasses, "mt-2")}
               />
               <p className="mt-2 flex items-start gap-2 text-base leading-relaxed text-ink-muted lg:text-sm">
                 <span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-burnt-orange" />
                 <span>
-                  If a colour is not in season on the day, we will contact you
-                  before composing and agree the closest thing to it.
+                  {t.byo.colourSeasonNote}
                 </span>
               </p>
             </div>
           </Step>
 
-          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} answer={vase === null ? undefined : vase ? "With a vase" : "Hand-tied, no vase"}>
+          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} answer={vase === null ? undefined : vase ? t.byo.vaseAnswerYes : t.byo.vaseAnswerNo}>
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               <Option
-                label="Yes, in a vase"
+                label={t.byo.vaseYes}
                 note={`+${formatAed(BYO_VASE_PRICE_AED)}`}
                 selected={vase === true}
                 onSelect={() => setVase(true)}
               />
               <Option
-                label="No, hand-tied"
-                note="Wrapped in paper"
+                label={t.byo.vaseNo}
+                note={t.byo.vaseNoNote}
                 selected={vase === false}
                 onSelect={() => setVase(false)}
               />
             </div>
           </Step>
 
-          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={leaveBlank ? "Left blank" : message.trim() ? "Written" : undefined}>
+          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={leaveBlank ? t.byo.cardAnswerBlank : message.trim() ? t.byo.cardAnswerWritten : undefined}>
             <textarea
               value={message}
               onChange={(e) => {
@@ -457,32 +470,32 @@ export function BuildYourOwnForm() {
                   }}
                   className="h-4 w-4 accent-[#2b2f1b]"
                 />
-                Leave the card blank
+                {t.byo.cardLeaveBlank}
               </label>
               <span className="text-xs text-ink-muted">{message.length}/220</span>
             </div>
           </Step>
 
-          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={notes.trim() ? "Noted" : undefined} hint="Optional.">
+          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={notes.trim() ? t.byo.notesAnswer : undefined} hint={t.byo.notesHint}>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
               rows={3}
               aria-label="Notes for the florist"
-              placeholder="Allergies, flowers to avoid, a style you love — anything that helps."
+              placeholder={t.byo.notesPlaceholder}
               className={fieldClasses}
             />
           </Step>
 
-          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={isGift === null ? undefined : isGift ? "A gift" : "For yourself"}>
+          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={isGift === null ? undefined : isGift ? t.byo.giftAnswerYes : t.byo.giftAnswerNo}>
             <div
               className="grid grid-cols-2 gap-3"
               role="group"
               aria-label="Who is it for?"
             >
               {[
-                { value: true, label: "It's a gift", note: "Sent to someone else" },
-                { value: false, label: "For myself", note: "Delivered to me" },
+                { value: true, label: t.byo.giftYes, note: t.byo.giftYesNote },
+                { value: false, label: t.byo.giftNo, note: t.byo.giftNoNote },
               ].map((choice) => (
                 <button
                   key={String(choice.value)}
@@ -544,12 +557,11 @@ export function BuildYourOwnForm() {
                   id="byo-location"
                   value={deliveryLocation}
                   onChange={(e) => setDeliveryLocation(e.target.value.slice(0, 240))}
-                  placeholder="Al Reem Island, Abu Dhabi"
+                  placeholder={t.byo.placePlaceholder}
                   className={fieldClasses}
                 />
                 <p className="mt-2 text-base leading-relaxed text-ink-muted lg:text-sm">
-                  An area is enough for now — Delivery confirms the exact
-                  address with you.
+                  {t.byo.placeNote}
                 </p>
               </div>
             )}
@@ -559,7 +571,7 @@ export function BuildYourOwnForm() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="byo-name" className={labelClasses}>
-                  Your name
+                  {t.byo.yourName}
                 </label>
                 <input
                   id="byo-name"
@@ -572,7 +584,7 @@ export function BuildYourOwnForm() {
               </div>
               <div>
                 <label htmlFor="byo-phone" className={labelClasses}>
-                  Phone
+                  {t.byo.yourPhone}
                 </label>
                 <input
                   id="byo-phone"
@@ -587,7 +599,7 @@ export function BuildYourOwnForm() {
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="byo-email" className={labelClasses}>
-                  Email
+                  {t.byo.yourEmail}
                 </label>
                 <input
                   id="byo-email"
@@ -612,7 +624,7 @@ export function BuildYourOwnForm() {
         </ol>
 
         <p className="mt-10 max-w-md ps-14 text-base leading-relaxed text-ink-muted lg:ps-[4.25rem] lg:text-sm">
-          {seasonalDisclaimer}
+          {t.byo.seasonal}
         </p>
 
         {/* Phone: review before the sticky send button. */}
@@ -631,9 +643,9 @@ export function BuildYourOwnForm() {
           className="mt-6"
           onClick={handleSubmit}
           loading={sending}
-          loadingText="Sending…"
+          loadingText={t.byo.sending}
         >
-          Send to a Florist
+          {t.byo.send}
         </Button>
         <SendNote />
       </aside>
@@ -661,13 +673,13 @@ export function BuildYourOwnForm() {
         <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
           <div className="min-w-0">
             <p className="font-brand text-[0.5625rem] uppercase tracking-brand text-ink-muted">
-              Estimated total
+              {t.byo.summaryTotal}
             </p>
             <p className="font-display text-xl font-light leading-none text-olive">
               {totalAed > 0 ? formatAed(totalAed) : "—"}
             </p>
             <p className="sr-only" aria-live="polite">
-              {activeIndex} of {STEPS.length} questions answered
+              {activeIndex}/{STEPS.length}
             </p>
           </div>
           <Button
@@ -676,9 +688,9 @@ export function BuildYourOwnForm() {
             className="shrink-0"
             onClick={handleSubmit}
             loading={sending}
-            loadingText="Sending…"
+            loadingText={t.byo.sending}
           >
-            Send to a Florist
+            {t.byo.send}
           </Button>
         </div>
       </div>
@@ -687,10 +699,10 @@ export function BuildYourOwnForm() {
 }
 
 function SendNote() {
+  const t = useT();
   return (
     <p className="mt-3 text-base leading-relaxed text-ink-muted lg:text-sm">
-      Sends your request to the atelier. Nothing is ordered and nothing is
-      charged until a florist confirms it with you.
+      {t.byo.sendNote}
     </p>
   );
 }
@@ -812,6 +824,7 @@ function Step({
   const headingId = `byo-${step.id}`;
   const last = index === STEPS.length - 1;
   const reduced = useReducedMotion();
+  const t = useT();
   return (
     /*
      * THE EDITORIAL RAIL.
@@ -890,9 +903,12 @@ function Step({
             <Monogram className="w-4 lg:w-[1.125rem]" />
           </motion.span>
         ) : (
-          <span key="number" className="font-sans text-sm lg:text-base">
-            {index + 1}
-          </span>
+          /* A question still waiting is an empty ring, not a number. The
+             numbers counted a queue — "you are on 3 of 8" — which is the one
+             thing a consultation should not feel like. The rail already says
+             where you are: the mark is on the open question, a seal is on
+             every answered one, and the rest are simply not yet. */
+          <span key="waiting" className="h-1.5 w-1.5 rounded-full bg-hairline" />
         )}
       </span>
 
@@ -903,7 +919,7 @@ function Step({
           active || done ? "text-olive" : "text-olive/55",
         )}
       >
-        {step.title}
+        {t.byo.steps[step.id]}
       </h2>
       {done && answer ? (
         <p className="mt-1 text-sm text-burnt-orange">{answer}</p>
@@ -940,25 +956,26 @@ function Summary({
   notes: string;
   totalAed: number;
 }) {
+  const t = useT();
   const rows: { label: string; value: string | null; optional?: boolean }[] = [
-    { label: "Budget", value: budgetAed > 0 ? formatAed(budgetAed) : null },
-    { label: "Colours", value: colours.length > 0 ? colours.join(", ") : null },
+    { label: t.byo.summaryBudget, value: budgetAed > 0 ? formatAed(budgetAed) : null },
+    { label: t.byo.summaryColours, value: colours.length > 0 ? colours.join(", ") : null },
     /* Straight after the swatches, because it qualifies them. */
-    { label: "Colour note", value: colourNote.trim() || null, optional: true },
+    { label: t.byo.summaryColourNote, value: colourNote.trim() || null, optional: true },
     {
-      label: "Vase",
+      label: t.byo.summaryVase,
       value:
         vase === null
           ? null
           : vase
             ? `In a vase, +${formatAed(BYO_VASE_PRICE_AED)}`
-            : "Hand-tied",
+            : "Flower bag",
     },
     {
-      label: "Card",
+      label: t.byo.summaryCard,
       value: leaveBlank ? "Left blank" : message.trim() ? `“${message.trim()}”` : null,
     },
-    { label: "Notes", value: notes.trim() || null, optional: true },
+    { label: t.byo.summaryNotes, value: notes.trim() || null, optional: true },
   ];
 
   return (
@@ -967,7 +984,7 @@ function Summary({
       className="rounded-sm border border-hairline bg-cream/70 p-6"
     >
       <h2 id="byo-summary" className="font-display text-2xl font-light text-olive">
-        Your arrangement
+        {t.byo.summaryTitle}
       </h2>
       <dl className="mt-5 flex flex-col divide-y divide-hairline/70">
         {rows.map((row) => (
@@ -981,22 +998,21 @@ function Summary({
                 row.value ? "text-olive" : "text-ink-muted/80",
               )}
             >
-              {row.value ?? (row.optional ? "None" : "Not chosen yet")}
+              {row.value ?? (row.optional ? t.byo.summaryNone : t.byo.summaryEmpty)}
             </dd>
           </div>
         ))}
       </dl>
       <div className="mt-2 flex items-baseline justify-between border-t border-hairline pt-4">
         <p className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
-          Estimated total
+          {t.byo.summaryTotal}
         </p>
         <p className="font-display text-3xl text-olive" aria-live="polite">
           {totalAed > 0 ? formatAed(totalAed) : "—"}
         </p>
       </div>
       <p className="mt-3 text-base leading-relaxed text-ink-muted lg:hidden">
-        Sends your request to the atelier. Nothing is ordered and nothing is
-        charged until a florist confirms it with you.
+        {t.byo.sendNote}
       </p>
     </section>
   );

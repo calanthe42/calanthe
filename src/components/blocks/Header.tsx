@@ -174,7 +174,9 @@ function DesktopNavItem({
                       href={`/occasions/${occasion.slug}`}
                       className="flex min-h-11 items-center whitespace-nowrap text-base text-olive transition-colors duration-200 ease-bloom hover:text-burnt-orange focus-visible:text-burnt-orange"
                     >
-                      {occasion.name}
+                      {/* The stored name is the fallback, so an occasion added
+                          later still shows rather than disappearing. */}
+                      {t.occasionNames[occasion.slug] ?? occasion.name}
                     </Link>
                   </li>
                 ))}
