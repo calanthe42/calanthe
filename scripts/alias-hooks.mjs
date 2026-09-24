@@ -61,8 +61,14 @@ export async function resolve(specifier, context, next) {
     if (file) return { url: pathToFileURL(file).href, shortCircuit: true };
   }
 
-  /* A relative import that omits its extension, which TypeScript allows. */
-  if (specifier.startsWith(".") && !path.extname(specifier) && context.parentURL) {
+  /* A relative import TypeScript would resolve for us. This used to be
+     guarded by `!path.extname(specifier)`, which quietly excluded the one
+     import every suite needs: `../src/payload.config` has an "extension" of
+     ".config" as far as path.extname is concerned, so the hook declined it
+     and Node failed on the real file, payload.config.ts. resolveFile returns
+     null when nothing matches, so a genuine ESM specifier still falls
+     through to Node untouched. */
+  if (specifier.startsWith(".") && context.parentURL) {
     const parent = path.dirname(new URL(context.parentURL).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
     const file = resolveFile(path.resolve(parent, specifier));
     if (file) return { url: pathToFileURL(file).href, shortCircuit: true };

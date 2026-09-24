@@ -10,7 +10,138 @@ backend in one app. Staging: https://calanthe.vercel.app
 - **PostgreSQL (Neon)** via Payload's Drizzle adapter — migrations only, never push
 - **Tailwind CSS v4** — brand tokens in `src/styles/tokens.css` (only brand colors exist)
 - **Upstash Redis** (rate limits, OTP, idempotency) · **Sentry** · **Zod** at every boundary
+  — both Upstash and Sentry become **required in production** in A1; see Infrastructure below
 - **pnpm** · Vitest · ESLint + Prettier
+
+## Infrastructure
+
+Verified 2026-09-25.
+
+| | Region | Notes |
+| --- | --- | --- |
+| Neon (database) | `aws-ap-southeast-1` (Singapore) | project `calanthe-sg` / `purple-base-49227026`, Postgres 18 |
+| Vercel (functions) | `sin1` (Singapore) on preview; **still `iad1` on production** | `vercel.json` `regions`; production needs one deploy — see below |
+| Upstash Redis | `ap-southeast-1` to be created | **not configured yet**; rate limiting falls back to per-instance memory |
+| Sentry | — | **not configured**; the DSN in `.env.local` is a placeholder (`audit-placeholder@o0.ingest.sentry.io`) |
+
+Upstash and Sentry both become **required in production** in A1 — the server
+will refuse to boot without them.
+
+> **One step outstanding.** Everything below is done and verified, but the
+> live site still runs the deployment built on 2026-09-23, which carries the
+> old Ohio connection string and `iad1` functions — a deployment keeps the
+> environment it was created with, so nothing is half-moved and nothing is
+> broken. `vercel deploy --prod` completes the cutover; until it runs,
+> production is entirely on the old stack.
+
+### Why Singapore, and not Frankfurt
+
+Frankfurt is ~1,000 km closer to the UAE than Singapore, so on a map it is the
+obvious choice. It is also the slower one. Measured from Abu Dhabi, 30 TCP
+connects per region across three different AWS service endpoints, DNS resolved
+once so the figure is transport only:
+
+| Region | Median (run 1) | Median (run 2) | Fastest seen |
+| --- | --- | --- | --- |
+| `ap-southeast-1` Singapore | **89.0 ms** | **88.6 ms** | 84.0 ms |
+| `eu-central-1` Frankfurt | 116.1 ms | 119.3 ms | 106.9 ms |
+| `us-east-2` Ohio (previous) | 202.3 ms | 202.4 ms | 195.8 ms |
+
+Singapore is ~30 ms (25%) ahead of Frankfurt, consistently across both runs.
+Submarine cable routing out of the Gulf, not distance, decides this. Mumbai
+would very likely have beaten both, but **Neon does not offer it** — the
+region list is `aws-us-west-2, aws-ap-southeast-1, aws-ap-southeast-2,
+aws-eu-central-1, aws-us-east-2, aws-us-east-1, azure-eastus2`. Upstash is
+created in `ap-southeast-1` to sit beside the functions, so a rate-limit check
+is a local round trip.
+
+Reproduce with `scripts/latency-probe.ps1`.
+
+### The move, 2026-09-25
+
+Ohio → Singapore. Production held **0 orders and 0 customers**, so the write
+freeze cost nothing; 99 rows moved in total.
+
+Schema was **not** dumped. The new database was built by running the same ten
+reviewed migration files (`pnpm migrate`), which is what `push: false` exists
+to guarantee, and only rows were copied (`scripts/db-copy.mts`, one
+transaction, parents before children, sequences reset afterwards).
+
+Equality was then established twice over:
+
+| Check | Tool | Result |
+| --- | --- | --- |
+| Row counts, migrations, products, accounts | `scripts/db-inventory.mts`, diffed | identical, byte for byte |
+| Every column of every row | `scripts/db-checksum.mts` (md5 over sorted row text) | **30 tables, 99 rows, no mismatch** |
+| COD checkout end to end, on the preview branch | `scripts/cod-security-test.mts` | **27 passed, 0 failed** |
+
+The checksum matters more than the counts: two tables can hold the same
+number of different rows. It also settles the sign-in question without
+needing anyone's password — `users` hashes identically, so the salts and
+password hashes survived, and `PAYLOAD_SECRET` was deliberately never
+touched.
+
+**Preview is no longer production.** Until this move a single `DATABASE_URL`
+record covered Production, Preview *and* Development, so every preview
+deployment read and wrote the live database. There are now three separate
+records: Production → the new project's `production` branch, Preview and
+Development → its `preview` branch.
+
+### Sequences — the part a row copy silently gets wrong
+
+Copying rows does not move sequences, and the obvious fix is incomplete.
+`pg_get_serial_sequence()` only finds sequences **owned by a column**, and
+Calanthe has two that are not: `calanthe_order_number_seq` and
+`calanthe_enquiry_number_seq` are created standalone by their migrations and
+read with `nextval()` in a hook, deliberately, so the customer-facing number
+is not the row id. The first copy left both sitting at 1 while Ohio had
+already issued 19 order numbers and 17 enquiry numbers.
+
+For orders that was cosmetic — the table is empty, so nothing could collide.
+For enquiries it was a live defect in waiting: the one surviving enquiry holds
+`CAL-E-000017`, `enquiryNumber` is `unique: true`, and so the **seventeenth**
+real Build-Your-Own submission would have collided and failed for a customer.
+
+Both sequences are now set to match the source. The rule, for any future
+copy: a customer-facing number series may be ahead of its source, never
+behind.
+
+`scripts/db-sequences.mts` audits every sequence in `pg_sequences`, owned or
+not, `--fix` corrects them, and `--prove` inserts a real row into each copied
+table, checks the id the sequence handed out, deletes it and rolls back — a
+consumed sequence value survives a rollback, which is what makes it a proof
+rather than a simulation. On the preview branch: **10 tables, all pass, no
+test row survives.**
+
+### Credentials
+
+`neondb_owner` was rotated on both branches after the copy — the new
+project's original password had been echoed to a terminal by `neonctl` during
+creation. The rotated values went straight into Vercel's Production, Preview
+and Development records. `PAYLOAD_SECRET` is untouched.
+
+**The catalogue moved as it was, and it is hidden.** All ten products carry
+`available: false` and have no uploaded photography — only `legacyImages`
+pointing at an external host — which is why the live shop renders zero
+products today. That is unchanged by the move and is a content decision, not
+a fault: the products are marked available in `/admin` once their real
+photographs are in. The demo seed (`scripts/seed-demo-catalogue.mts`) has
+never run against production and must not.
+
+**Rollback, and the retention window.** The old Ohio project (`calanthe42` /
+`quiet-hat-06425104`) is kept, untouched and complete, and stays that way for
+**seven days after cutover** — do not delete it before then. To go back:
+reset `DATABASE_URL` from `neon connection-string production --project-id
+quiet-hat-06425104 --pooled`, remove `regions` from `vercel.json`, redeploy.
+Nothing in the move is destructive to it.
+
+Compute was matched to Ohio's (0.25–2 CU) on the production endpoint; the
+preview endpoint stays at 0.25 CU.
+
+**The one enquiry is a test.** `CAL-E-000017`, submitted 2026-09-19 from
+`dev.calanthe@gmail.com` — the developer account — and quoting the old
+AED 60 vase price. It is kept, not deleted, because it is the only row
+proving the Build-Your-Own path ever wrote to this table.
 
 ## Prerequisites
 
