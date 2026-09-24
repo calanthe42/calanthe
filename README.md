@@ -19,7 +19,7 @@ Verified 2026-09-25.
 
 | | Region | Notes |
 | --- | --- | --- |
-| Neon (database) | `aws-ap-southeast-1` (Singapore) | project `calanthe-sg` / `purple-base-49227026`, Postgres 18 |
+| Neon (database) | `aws-ap-southeast-1` (Singapore) | project `calanthe-sg`, Postgres 18 |
 | Vercel (functions) | `sin1` (Singapore) on preview; **still `iad1` on production** | `vercel.json` `regions`; production needs one deploy — see below |
 | Upstash Redis | `ap-southeast-1` to be created | **not configured yet**; rate limiting falls back to per-instance memory |
 | Sentry | — | **not configured**; the DSN in `.env.local` is a placeholder (`audit-placeholder@o0.ingest.sentry.io`) |
@@ -128,12 +128,17 @@ a fault: the products are marked available in `/admin` once their real
 photographs are in. The demo seed (`scripts/seed-demo-catalogue.mts`) has
 never run against production and must not.
 
-**Rollback, and the retention window.** The old Ohio project (`calanthe42` /
-`quiet-hat-06425104`) is kept, untouched and complete, and stays that way for
-**seven days after cutover** — do not delete it before then. To go back:
-reset `DATABASE_URL` from `neon connection-string production --project-id
-quiet-hat-06425104 --pooled`, remove `regions` from `vercel.json`, redeploy.
-Nothing in the move is destructive to it.
+**Rollback, and the retention window.** The old Ohio project is kept,
+untouched and complete, and stays that way for **seven days after cutover** —
+do not delete it before then. Nothing in the move is destructive to it, and
+the rollback is three steps: point `DATABASE_URL` back at it, remove
+`regions` from `vercel.json`, redeploy.
+
+Project and branch identifiers, and the exact rollback commands, are in
+`docs/infra-ids.local.md`. That file is **git-ignored on purpose** — the
+identifiers authenticate nothing by themselves, but they name our
+infrastructure and do not belong in a repository. Recover it after a fresh
+clone with `neon projects list` and `vercel project inspect`.
 
 Compute was matched to Ohio's (0.25–2 CU) on the production endpoint; the
 preview endpoint stays at 0.25 CU.
