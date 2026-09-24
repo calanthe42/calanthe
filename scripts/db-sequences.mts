@@ -37,6 +37,28 @@ import config from "../src/payload.config.ts";
 const FIX = process.argv.includes("--fix");
 const PROVE = process.argv.includes("--prove");
 
+/**
+ * Sequences deliberately restarted below their source, and the table that
+ * makes it safe.
+ *
+ * WHY THIS LIST EXISTS. Comparing a standalone sequence against its source is
+ * the right default — a number series must never walk backwards over numbers
+ * already issued. But a deliberate restart looks identical to the bug, so
+ * without a record of the decision the next `--fix` would quietly undo it.
+ * That is exactly the kind of silent reversal this script was written to
+ * prevent, so the decision is recorded in the repository rather than in
+ * someone's memory.
+ *
+ * A restart is honoured ONLY while the named table is empty. The moment a
+ * real row exists, the guard lapses and the sequence is judged normally.
+ */
+const DELIBERATELY_RESTARTED: Record<string, { table: string; note: string }> = {
+  calanthe_order_number_seq: {
+    table: "orders",
+    note: "restarted at CAL-000001 on 2026-09-25 by the owner — the 19 numbers the old project had issued were deleted test checkouts, never sent to anyone",
+  },
+};
+
 type QueryResult = { rows: Record<string, unknown>[] };
 type Client = {
   query: (sql: string, params?: unknown[]) => Promise<QueryResult>;
@@ -161,10 +183,33 @@ async function main() {
       }
       s.sourceNext = other.nextValue;
       const ok = s.nextValue >= other.nextValue;
-      if (!ok) broken.push(s);
-      console.log(
-        `  ${ok ? "OK    " : "BEHIND"}  ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`,
-      );
+
+      /* A recorded restart, still safe because its table is empty, is not a
+         fault and must not be "fixed". */
+      const restart = DELIBERATELY_RESTARTED[s.name];
+      let excused = false;
+      if (!ok && restart) {
+        const { rows: n } = await pool.query(`select count(*)::int as n from "${restart.table}"`);
+        excused = Number(n[0].n) === 0;
+        if (!excused) {
+          console.log(
+            `  BEHIND  ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`,
+          );
+          console.log(
+            `          the recorded restart no longer applies — "${restart.table}" has rows, so this series is live`,
+          );
+        }
+      }
+
+      if (!ok && !excused) broken.push(s);
+      if (excused) {
+        console.log(`  KEPT    ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`);
+        console.log(`          deliberate: ${restart!.note}`);
+      } else if (ok) {
+        console.log(`  OK      ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`);
+      } else if (!restart) {
+        console.log(`  BEHIND  ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`);
+      }
     }
     await source.end?.();
   } else if (standalone.length > 0) {
