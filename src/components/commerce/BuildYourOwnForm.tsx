@@ -468,7 +468,7 @@ export function BuildYourOwnForm() {
                     setLeaveBlank(e.target.checked);
                     if (e.target.checked) setMessage("");
                   }}
-                  className="h-4 w-4 accent-[#2b2f1b]"
+                  className="h-4 w-4 shrink-0 accent-[#2b2f1b]"
                 />
                 {t.byo.cardLeaveBlank}
               </label>

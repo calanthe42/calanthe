@@ -51,6 +51,58 @@ Applied so the build could continue. Each is reversible; confirm or correct.
 | 18 | Refund approval | **Owner only** | 2026-09-25 |
 | 19 | Tabby min/max | **Placeholders**, marked as such | 2026-09-25 |
 
+## The same vase costs two different prices
+
+**Found 2026-09-25 in the cart drawer, not by reading the code.**
+
+| Where | Price |
+| --- | --- |
+| Cart / product page add-on ("Vase") — `addons` in `lib/data.ts` | **AED 60** |
+| Build Your Own — `BYO_VASE_PRICE_AED` | **AED 150** |
+
+When the Build Your Own vase went from 60 to 150 on 2026-09-23, the add-on
+kept the old price. A customer who builds their own and then buys a ready
+arrangement sees the same vase at less than half the price, which for a
+luxury atelier reads as a mistake or as being overcharged.
+
+**A price is yours, not mine — I have not changed it.** Tell me which is
+right and I will make them agree. A1 moves both into Settings, where this
+cannot drift again.
+
+| # | Action | Blocks | Added |
+| --- | --- | --- | --- |
+| 21b | **Decide the vase price: AED 60 or AED 150?** | Nothing technically; it is live and inconsistent right now | 2026-09-25 |
+
+## Delivery — how we compare, and what only you can decide
+
+Added 2026-09-25 after looking at what UAE florists actually do
+(Flowers.ae, FNP, Floward, Bliss). Each row is a business rule, so none of
+it was guessed or built. Full workings in `docs/reports/ui-and-delivery.md`.
+
+| # | Question | What we do now | What they do | Added |
+| --- | --- | --- | --- | --- |
+| 22 | **What happens when the recipient is not in?** Nothing in the shop says, and there is no field for it. This is the most common failure in gift delivery and we have no answer for it. | Nothing | Call the recipient → redirect or leave with someone they know → failing that, call the sender for another number or a new date | 2026-09-25 |
+| 23 | **Redelivery fee?** | None defined | AED 30–45 Dubai/Sharjah, AED 45–65 elsewhere | 2026-09-25 |
+| 24 | **Is the 17:00 same-day cutoff right?** It is much earlier than the market and costs the whole evening. | 17:00 | 22:00 (Flowers.ae), 23:00 for their 1-hour service | 2026-09-25 |
+| 25 | **Is AED 350 the right free-delivery threshold?** | AED 350 | AED 275 | 2026-09-25 |
+| 26 | **Do you want a paid express tier?** A luxury atelier can charge for certainty. | No | Exact-time +AED 50, 60-minute +AED 75 | 2026-09-25 |
+| 27 | **Is 90 minutes the right lead time** between an order and a delivery window opening? I chose it so a composed-and-photographed arrangement is possible; it is now enforced. | 90 min (new) | Varies | 2026-09-25 |
+
+## Deferred to A1/A7 — needs the migration, so not done tonight
+
+| # | Item | Why it waits | Added |
+| --- | --- | --- | --- |
+| 28 | **Structured UAE address** — area/district, building or villa, and a landmark, instead of one free-text box. UAE addresses have no postcodes and couriers rely on landmarks; one textarea is where failed deliveries begin. | New order columns → belongs in A1's single migration | 2026-09-25 |
+| 29 | **Delivery instructions** field, and a **recipient-unavailable choice** at checkout (once #22 is answered) | Same migration | 2026-09-25 |
+| 30 | Delivery zones, fees, threshold, cutoff and windows read from Settings rather than `lib/data.ts` | A1 moves them; A7 builds the screen | 2026-09-25 |
+
+## Design decisions you may want to overrule
+
+| # | Decision | Added |
+| --- | --- | --- |
+| 31 | **Form labels are 10px** uppercase Cinzel across every form, including checkout. That is small for text a customer must read while entering a delivery address, and it is the one place the brand's label style meets a task that punishes misreading. I have **not** changed it — it is site-wide and yours to call. Raising it to 12px is a one-line change in `form-classes.ts`. | 2026-09-25 |
+| 32 | **Footer and header nav links are 12–14px.** Same reasoning; left alone. | 2026-09-25 |
+
 ## Blocked by tooling or permissions
 
 | # | Item | Added |

@@ -24,7 +24,6 @@ import {
   formatAed,
   occasions as occasionNames,
   sizes,
-  timeSlots,
   type AddonId,
   type Product,
   type ProductImage,
@@ -83,8 +82,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [giftMessage, setGiftMessage] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
-  const { days, selectedDay, setDay, slot, setSlot } =
-    useDeliverySchedule();
+  const { days, selectedDay, setDay, slots, slot, setSlot } = useDeliverySchedule();
 
   /* Same pricing rule the cart charges — never a second copy of it. */
   const totalAed = useMemo(
@@ -417,18 +415,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 ))}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {timeSlots.map((s) => (
+                {slots.map((s) => (
                   <button
-                    key={s}
+                    key={s.value}
                     type="button"
-                    aria-pressed={slot === s}
-                    onClick={() => setSlot(s)}
+                    disabled={s.disabled}
+                    aria-pressed={slot === s.value}
+                    onClick={() => setSlot(s.value)}
                     className={cn(
                       chipClasses,
-                      slot === s ? chipOnClasses : chipOffClasses,
+                      "flex-col gap-0 py-2",
+                      s.disabled && "cursor-not-allowed opacity-40",
+                      slot === s.value ? chipOnClasses : chipOffClasses,
                     )}
                   >
-                    <span className="text-sm text-olive">{s}</span>
+                    <span className="text-base text-olive">{s.value}</span>
+                    {s.disabled && s.reason && (
+                      <span className="text-xs text-ink-muted">{s.reason}</span>
+                    )}
                   </button>
                 ))}
               </div>

@@ -30,7 +30,6 @@ import {
   deliveryZones,
   formatAed,
   FREE_DELIVERY_THRESHOLD_AED,
-  timeSlots,
   type DeliveryZone,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
@@ -171,7 +170,7 @@ export function CheckoutForm() {
   /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
   const withRecipient = items.find((i) => i.recipientName);
-  const { days, selectedDay, setDay, slot, setSlot } = useDeliverySchedule({
+  const { days, selectedDay, setDay, slots, slot, setSlot } = useDeliverySchedule({
     day: preferred?.preferredDay,
     slot: preferred?.preferredSlot,
   });
@@ -380,6 +379,9 @@ export function CheckoutForm() {
        * password. POST keeps it in a body Next simply discards.
        */
       method="post"
+      /* Clearance for the sticky order bar on a phone, so the last field and
+         the WhatsApp line are never trapped underneath it. */
+      className="pb-28 lg:pb-0"
       onSubmit={(e) => {
         e.preventDefault();
         placeOrder();
@@ -474,7 +476,7 @@ export function CheckoutForm() {
                       type="checkbox"
                       checked={surprise}
                       onChange={(e) => setSurprise(e.target.checked)}
-                      className="h-4 w-4 accent-[#2b2f1b]"
+                      className="h-4 w-4 shrink-0 accent-[#2b2f1b]"
                     />
                     Keep it a surprise. Contact me, not them, about the delivery.
                   </label>
@@ -505,10 +507,18 @@ export function CheckoutForm() {
                 ))}
               </select>
               <FieldError id="zone-error" message={fieldErrors.zoneId} />
-              {zone && freeDelivery && (
-                <p className="mt-2 text-sm text-ink-muted">
-                  Delivery is complimentary on orders over{" "}
-                  {formatAed(FREE_DELIVERY_THRESHOLD_AED)}.
+              {/* This used to appear ONLY once free delivery had been earned,
+                  which told her about the threshold at the one moment it no
+                  longer mattered. The useful version is the one that says how
+                  far away it is while she can still act on it. */}
+              {freeDelivery ? (
+                <p className="mt-2 text-base text-ink-muted">
+                  Delivery is complimentary on this order.
+                </p>
+              ) : (
+                <p className="mt-2 text-base text-ink-muted">
+                  {formatAed(FREE_DELIVERY_THRESHOLD_AED - subtotalAed)} more for
+                  complimentary delivery.
                 </p>
               )}
             </div>
@@ -563,18 +573,26 @@ export function CheckoutForm() {
             <fieldset className="mt-5">
               <legend className={labelClasses}>Time window</legend>
               <div className="flex flex-wrap gap-2">
-                {timeSlots.map((s) => (
+                {slots.map((s) => (
                   <button
-                    key={s}
+                    key={s.value}
                     type="button"
-                    aria-pressed={slot === s}
-                    onClick={() => setSlot(s)}
+                    disabled={s.disabled}
+                    aria-pressed={slot === s.value}
+                    onClick={() => setSlot(s.value)}
                     className={cn(
                       chipClasses,
-                      slot === s ? chipOnClasses : chipOffClasses,
+                      "flex-col gap-0 py-2",
+                      s.disabled && "cursor-not-allowed opacity-40",
+                      slot === s.value ? chipOnClasses : chipOffClasses,
                     )}
                   >
-                    {s}
+                    <span className="text-base text-olive">{s.value}</span>
+                    {/* Says why, so a greyed window reads as a fact about
+                        today rather than as a broken button. */}
+                    {s.disabled && s.reason && (
+                      <span className="text-xs text-ink-muted">{s.reason}</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -690,10 +708,13 @@ export function CheckoutForm() {
                 {formError}
               </p>
             )}
+            {/* On a phone this is replaced by the sticky bar below: two
+                identical Place Order buttons a thumb's width apart is a
+                choice the customer should not have to make. */}
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="hidden w-full lg:flex"
               loading={pending}
               loadingText="Placing your order…"
             >
@@ -713,6 +734,39 @@ export function CheckoutForm() {
             </p>
           </div>
         </aside>
+      </div>
+
+      {/*
+        THE ORDER BUTTON, WHERE THE THUMB IS.
+        On a phone the only way to place the order was to reach the bottom of
+        a three-step form — past recipient, address, day, window and contact
+        details — with no running total in sight on the way. The product page
+        already solves this with a sticky bar; checkout, the page that takes
+        the money, did not have one. Same pattern, same tokens, same
+        safe-area inset, so it clears the home indicator on every iPhone
+        since the X.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-xl leading-tight text-olive">
+              {formatAed(totalAed)}
+            </p>
+            <p className="truncate text-sm text-ink-muted">
+              {items.length} {items.length === 1 ? "arrangement" : "arrangements"}
+              {zone ? ` · ${zone.name}` : " · choose an emirate"}
+            </p>
+          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            className="shrink-0 px-6"
+            loading={pending}
+            loadingText="Placing…"
+          >
+            Place Order
+          </Button>
+        </div>
       </div>
     </form>
   );

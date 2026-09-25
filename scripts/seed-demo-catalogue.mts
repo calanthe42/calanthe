@@ -137,6 +137,18 @@ for (const product of products) {
     images: imageIds.map((id) => ({ image: id })),
     available: true,
   };
+
+  /* Some imported products carry `trackStock` with a count of zero, and
+     validateProduct refuses to publish those — correctly, since a live
+     product nobody can buy is worse than a hidden one. The seed used to
+     ignore stock entirely and died partway through the catalogue on the
+     first such product, leaving it half seeded. Give a tracked product
+     something to sell; leave untracked ones alone, because made-to-order
+     arrangements are the norm here and turning tracking on would be a
+     change of meaning, not a fix. */
+  if (product.trackStock === true && (typeof product.stock !== "number" || product.stock <= 0)) {
+    update.stock = 25;
+  }
   if (copy && !product.shortDescription) update.shortDescription = copy.short;
   if (copy && !product.description) update.description = plainTextToLexical(copy.long);
 
