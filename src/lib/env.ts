@@ -20,6 +20,17 @@ const schema = z.object({
   /* --- Public --- */
   NEXT_PUBLIC_SERVER_URL: z.string().url().default("http://localhost:3000"),
 
+  /**
+   * The same DSN as SENTRY_DSN, exposed to the browser.
+   *
+   * A Sentry DSN is public by design — it is an ingest address, not a
+   * credential, and it can only write events. It needs the NEXT_PUBLIC_
+   * prefix because the server-only variable is not readable in the browser,
+   * which is why every client-side error on this site has gone unreported:
+   * Sentry was initialised on the server alone.
+   */
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
   /* --- Observability / infra (optional; a warning is logged in production) --- */
   SENTRY_DSN: z.string().url().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
