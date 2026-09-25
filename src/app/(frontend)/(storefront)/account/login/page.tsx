@@ -30,6 +30,14 @@ export default async function SignInPage({
           <p>
             <AuthLink href="/account/forgot-password">{t.account.forgotLink}</AuthLink>
           </p>
+          {/* An unverified account cannot sign in, and the message it gets
+              deliberately does not say so — telling a stranger which
+              addresses exist here is worse than a moment's confusion. This
+              gives the person who IS its owner a way through, without the
+              page ever confirming the account is real. */}
+          <p>
+            <AuthLink href="/account/verify">{t.account.resendLink}</AuthLink>
+          </p>
         </div>
       }
     >

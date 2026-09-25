@@ -321,6 +321,9 @@ export const en = {
     newHere: "New here?",
     haveAccount: "Already have an account?",
     forgotLink: "Forgotten your password?",
+    /* Neutral on purpose: it must not imply the address has an account,
+       or the sign-in page becomes a way to test which ones do. */
+    resendLink: "Didn't get your confirmation email?",
     rememberedIt: "Remembered it?",
     checkInbox: "Check {email} for a link to confirm your address. It expires in a few hours.",
     checkInboxNote:
@@ -643,6 +646,7 @@ export const ar: typeof en = {
     newHere: "جديدة هنا؟",
     haveAccount: "لديك حساب بالفعل؟",
     forgotLink: "نسيتِ كلمة المرور؟",
+    resendLink: "لم يصلكِ بريد التأكيد؟",
     rememberedIt: "تذكّرتِها؟",
     checkInbox: "تفقّدي {email} لرابط تأكيد بريدك. تنتهي صلاحيته خلال ساعات.",
     checkInboxNote:

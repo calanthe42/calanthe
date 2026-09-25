@@ -8,6 +8,7 @@ import { randomBytes } from "node:crypto";
 import { sendEmail } from "@backend/email/send";
 import { verifyAddress } from "@backend/email/templates";
 import { env } from "@/lib/env";
+import { collidingFields } from "@backend/payload/validation-errors";
 
 /**
  * The customer's own account.
@@ -175,13 +176,49 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
     });
     return { ok: true, email };
   } catch (error) {
-    /* A duplicate address must not be distinguishable from a fresh one, or
-       this endpoint becomes a way to test which emails have accounts here.
-       The caller shows the same "check your inbox" screen either way; the
-       person who already has an account receives nothing new, which is the
-       correct outcome and reveals nothing. */
-    const message = error instanceof Error ? error.message : "";
-    if (/duplicate|unique|already/i.test(message)) return { ok: true, email };
+    /*
+     * WHICH FIELD ACTUALLY COLLIDED.
+     *
+     * This used to test the error MESSAGE against /duplicate|unique|already/.
+     * Payload does not use any of those words: it says "The following field
+     * is invalid: email" and puts the detail in `data.errors[].path`. So the
+     * test never matched, every collision fell through to "We could not
+     * create that account just now", and a customer was told to try again at
+     * something that could never work.
+     *
+     * That is what happened on production on 2026-09-25: two registrations
+     * rejected on `path: email`, no account, no email, and a message that
+     * explained nothing.
+     */
+    const collided = collidingFields(error);
+
+    if (collided.includes("email")) {
+      /*
+       * The address is already registered. If that account has never been
+       * verified, the most likely person here is its owner, coming back
+       * because the first email never arrived — so send it again. This is
+       * the unlock for exactly that situation.
+       *
+       * If it IS verified, nothing is sent and the caller still shows the
+       * same screen. Distinguishing the two would turn this form into a way
+       * to test which addresses have accounts here.
+       */
+      await resendCustomerVerification(email).catch(() => undefined);
+      return { ok: true, email };
+    }
+
+    if (collided.includes("phone")) {
+      /* Nameable and fixable, unlike the generic message it replaces. The
+         phone column is unique by deliberate design (see Users.phone — it
+         becomes the OTP identity in B6), so the honest answer is to say so
+         and offer the way through. */
+      return {
+        ok: false,
+        field: "phone",
+        message:
+          "That phone number is already on an account. Sign in instead, or leave the phone blank and add it later.",
+      };
+    }
 
     console.error("customer registration failed", error);
     return {
@@ -190,6 +227,8 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
     };
   }
 }
+
+
 
 export async function resendCustomerVerification(email: string): Promise<AuthResult> {
   const address = email.trim().toLowerCase();
