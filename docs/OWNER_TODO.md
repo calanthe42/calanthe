@@ -125,18 +125,21 @@ Worth solving in A9 alongside the sitemap work.
 /product/quiet-devotion    500   (deterministic, 3/3)
 ```
 
-**Root cause — it is the photograph, not the move.** The one media record in
-the database has this URL:
+**My first diagnosis was wrong, and the owner caught it.** I reported the
+cause as a `localhost` URL on the media record. That URL was an artifact of
+my own script: `NEXT_PUBLIC_SERVER_URL` defaults to `http://localhost:3000`,
+and with no Blob credentials the storage plugin runs disabled, so Payload
+composed the URL from `serverURL`. The **stored** value is a relative path,
+`/api/media/file/...`, which is correct and portable.
 
-```
-http://localhost:3000/api/media/file/ChatGPT Image Sep 23, 2026, 12_29_25 AM.png
-```
-
-It was uploaded from a local dev session that had **no Vercel Blob
-credentials**, so Payload wrote the file to a laptop's `./uploads` folder and
-stored a `localhost` URL. The file has never existed in Blob. When the
-product was published, the live server was asked to render an image it cannot
-possibly fetch.
+**The real cause was the route, not the photograph** — see the fixed section
+above. What remains true about the photograph is smaller and separate: the
+file is genuinely **absent from the Blob store**. `/api/media/file/<name>`
+returns 404 from the live site. The row survived; the object never existed
+there. The likeliest explanation is an upload made from a local session back
+when Preview and Development still shared Production's `DATABASE_URL` — the
+isolation defect since fixed — which would put the row in production and the
+file on a laptop.
 
 **This predates the region move** — the identical row was in the Ohio
 database, and the checksums matched. Moving it changed nothing; publishing the
