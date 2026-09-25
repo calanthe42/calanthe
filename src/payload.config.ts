@@ -13,6 +13,7 @@ import { Orders } from "@/collections/Orders";
 import { Products } from "@/collections/Products";
 import { Users } from "@/collections/Users";
 import { EmailLog } from "@/collections/EmailLog";
+import { ActivityLog } from "@/collections/ActivityLog";
 import { calantheEmailAdapter } from "@backend/email/payload-adapter";
 import { MAX_UPLOAD_BYTES, buildStoragePlugins } from "@backend/payload/storage";
 import { env } from "@/lib/env";
@@ -51,7 +52,7 @@ export default buildConfig({
       titleSuffix: " · Calanthe Admin",
     },
   },
-  collections: [Users, Media, Occasions, Products, Orders, Events, Enquiries, Memberships, EmailLog],
+  collections: [Users, Media, Occasions, Products, Orders, Events, Enquiries, Memberships, EmailLog, ActivityLog],
   /* Payload's own verification and reset mail goes through the same path
      as everything else: allowlisted outside production, never thrown on
      failure, and always logged with the provider's id. */

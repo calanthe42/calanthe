@@ -1,5 +1,10 @@
 import type { CollectionConfig } from "payload";
-import { isAdmin, isAdminField, publicReadWhenLive } from "@backend/payload/access";
+import {
+  isAdmin,
+  isAdminField,
+  isStaff,
+  publicReadWhenLive,
+} from "@backend/payload/access";
 import { filsField } from "@backend/payload/fields/money";
 import { generateSlugFrom, validateSlug } from "@backend/payload/hooks/slug";
 import { validateProductState } from "@backend/payload/hooks/validateProduct";
@@ -35,12 +40,16 @@ export const Products: CollectionConfig = {
     /* Public sees only available products, enforced as a database query so
        an unavailable product cannot be reached by guessing its id. */
     read: publicReadWhenLive("available"),
-    /* Staff are read-only on the catalogue for now, as instructed: they
-       must not be able to change pricing or availability. docs/SECURITY.md §3
-       anticipates granting them gallery + description later; that is a
-       field-level widening of `update`, not a change to this line. */
-    create: isAdmin,
-    update: isAdmin,
+    /* Staff run the catalogue: they add arrangements, edit them, set the
+       price and hide or unhide them. That is the florist's daily work and
+       waiting for the owner to do it is how a shop goes stale.
+       DELETE STAYS WITH THE OWNER. Not because staff are not trusted, but
+       because a deleted product takes its photographs, its slug and its
+       history with it, and no order that referenced it can be read back
+       properly afterwards. Hiding achieves everything deleting does, and is
+       reversible — which is why staff have it. */
+    create: isStaff,
+    update: isStaff,
     delete: isAdmin,
   },
   hooks: {

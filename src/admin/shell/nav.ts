@@ -18,7 +18,17 @@ import type { IconName } from "@admin/ui/icons";
  * item would leave her with nowhere to look.
  */
 
-export type NavItem = { href: string; label: MessageKey; icon: IconName };
+export type NavItem = {
+  href: string;
+  label: MessageKey;
+  icon: IconName;
+  /**
+   * Hidden from staff. Hiding is a courtesy, NOT the enforcement — the page
+   * itself checks the session and Payload's own access rule refuses the
+   * query. A nav flag alone would be a locked door with the key in it.
+   */
+  ownerOnly?: boolean;
+};
 export type NavGroup = { heading: MessageKey; items: readonly NavItem[] };
 
 export const NAV_GROUPS: readonly NavGroup[] = [
@@ -49,11 +59,22 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   },
   {
     heading: "nav.sections.system",
-    items: [{ href: "/admin/team", label: "nav.staff", icon: "staff" }],
+    items: [
+      { href: "/admin/team", label: "nav.staff", icon: "staff" },
+      { href: "/admin/activity", label: "nav.activity", icon: "clock", ownerOnly: true },
+    ],
   },
 ];
 
 export function isActive(pathname: string, href: string): boolean {
   if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** The items this person may see. Staff never see an owner-only entry. */
+export function visibleGroups(isAdmin: boolean): NavGroup[] {
+  return NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((i) => !i.ownerOnly || isAdmin),
+  })).filter((g) => g.items.length > 0);
 }

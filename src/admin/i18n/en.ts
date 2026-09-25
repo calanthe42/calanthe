@@ -89,6 +89,7 @@ export const en = {
     memberships: "Memberships",
     campaigns: "Campaigns",
     staff: "Staff",
+    activity: "Activity",
     settings: "Settings",
     viewStore: "View store",
     account: "Account",

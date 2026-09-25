@@ -9,6 +9,7 @@ import * as migration_20260907_071945_media_storage from './20260907_071945_medi
 import * as migration_20260907_202357_catalog_legacy_fields from './20260907_202357_catalog_legacy_fields';
 import * as migration_20260910_185013_occasion_description from './20260910_185013_occasion_description';
 import * as migration_20260925_142230_a2_email_log from './20260925_142230_a2_email_log';
+import * as migration_20260925_181233_a3_activity_log from './20260925_181233_a3_activity_log';
 
 export const migrations = [
   {
@@ -64,6 +65,11 @@ export const migrations = [
   {
     up: migration_20260925_142230_a2_email_log.up,
     down: migration_20260925_142230_a2_email_log.down,
-    name: '20260925_142230_a2_email_log'
+    name: '20260925_142230_a2_email_log',
+  },
+  {
+    up: migration_20260925_181233_a3_activity_log.up,
+    down: migration_20260925_181233_a3_activity_log.down,
+    name: '20260925_181233_a3_activity_log'
   },
 ];

@@ -93,6 +93,7 @@ export const ar: Messages = {
     memberships: "العضويات",
     campaigns: "الحملات",
     staff: "فريق العمل",
+    activity: "السجل",
     settings: "الإعدادات",
     viewStore: "عرض المتجر",
     account: "الحساب",

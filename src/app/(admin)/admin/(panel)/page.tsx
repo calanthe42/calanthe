@@ -131,19 +131,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section aria-label={t("nav.sections.overview")} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label={t("dashboard.kpi.revenue")}
-          icon="trendUp"
-          value={money(data.current.revenueFils)}
-          trend={trend(data.current.revenueFils, data.previous.revenueFils)}
-          secondary={
-            <>
-              {t("dashboard.kpi.paid", { amount: money(data.current.paidFils) })}
-              <br />
-              {t("dashboard.kpi.revenueBasis")}
-            </>
-          }
-        />
+        {/* MONEY IS THE OWNER'S. Staff run the workshop and need orders,
+            deliveries and stock — not what the shop is taking. Hiding the
+            card is the visible half; getDashboardData returns no revenue to
+            a staff session at all, so there is nothing to read out of the
+            page source either. */}
+        {isOwner ? (
+          <StatCard
+            label={t("dashboard.kpi.revenue")}
+            icon="trendUp"
+            value={money(data.current.revenueFils)}
+            trend={trend(data.current.revenueFils, data.previous.revenueFils)}
+            secondary={
+              <>
+                {t("dashboard.kpi.paid", { amount: money(data.current.paidFils) })}
+                <br />
+                {t("dashboard.kpi.revenueBasis")}
+              </>
+            }
+          />
+        ) : null}
         <StatCard
           label={t("dashboard.kpi.orders")}
           icon="bag"
@@ -214,20 +221,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </Card>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader
-            title={t("dashboard.charts.revenue")}
-            description={plural("dashboard.lastDays", days)}
-            action={<span className="text-lg font-semibold text-ink tabular">{money(data.current.revenueFils)}</span>}
-          />
-          <div className="mt-4">
-            <BarChart
-              bars={revenueBars}
-              emptyText={t("dashboard.charts.emptyRevenue")}
-              summary={t("dashboard.charts.summary", { title: t("dashboard.charts.revenue"), total: money(data.current.revenueFils), days })}
+        {/* The revenue chart is the owner's too. */}
+        {isOwner ? (
+          <Card>
+            <CardHeader
+              title={t("dashboard.charts.revenue")}
+              description={plural("dashboard.lastDays", days)}
+              action={<span className="text-lg font-semibold text-ink tabular">{money(data.current.revenueFils)}</span>}
             />
-          </div>
-        </Card>
+            <div className="mt-4">
+              <BarChart
+                bars={revenueBars}
+                emptyText={t("dashboard.charts.emptyRevenue")}
+                summary={t("dashboard.charts.summary", { title: t("dashboard.charts.revenue"), total: money(data.current.revenueFils), days })}
+              />
+            </div>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader
             title={t("dashboard.charts.orders")}
