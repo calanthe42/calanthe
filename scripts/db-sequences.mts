@@ -184,21 +184,33 @@ async function main() {
       s.sourceNext = other.nextValue;
       const ok = s.nextValue >= other.nextValue;
 
-      /* A recorded restart, still safe because its table is empty, is not a
-         fault and must not be "fixed". */
       const restart = DELIBERATELY_RESTARTED[s.name];
       let excused = false;
-      if (!ok && restart) {
+
+      /*
+       * ONCE THE SERIES IS LIVE, THE SOURCE IS IRRELEVANT.
+       *
+       * Comparing a standalone sequence against the database it was copied
+       * from only means something for as long as this one has issued
+       * nothing. After the first real record the local series is the truth
+       * and the source is a frozen snapshot drifting further away every day.
+       *
+       * This is not theoretical: after the owner placed CAL-000001 on the
+       * new production database, this tool reported the order sequence as
+       * "BEHIND" the old Ohio project and advised `--fix` — which would have
+       * jumped live order numbers from 2 to 20 for no reason. A tool that
+       * confidently recommends the wrong action is worse than no tool.
+       */
+      if (restart) {
         const { rows: n } = await pool.query(`select count(*)::int as n from "${restart.table}"`);
-        excused = Number(n[0].n) === 0;
-        if (!excused) {
+        const rows = Number(n[0].n);
+        if (rows > 0) {
           console.log(
-            `  BEHIND  ${s.name.padEnd(w)}  here next=${s.nextValue}  source next=${other.nextValue}`,
+            `  LIVE    ${s.name.padEnd(w)}  next=${s.nextValue}  ("${restart.table}" has ${rows} row(s) — this series is in use; the source no longer applies)`,
           );
-          console.log(
-            `          the recorded restart no longer applies — "${restart.table}" has rows, so this series is live`,
-          );
+          continue;
         }
+        excused = !ok;
       }
 
       if (!ok && !excused) broken.push(s);

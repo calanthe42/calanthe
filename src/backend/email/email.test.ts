@@ -142,6 +142,37 @@ describe("the non-production allowlist", () => {
     ).toBe(true);
   });
 
+  /**
+   * THE ONE THAT MATTERS MOST. The allowlist exists to stop a test
+   * environment emailing real people. If it ever applied in production it
+   * would do the exact opposite — silently drop a real customer's order
+   * confirmation because their address was not on a developer's list. So
+   * production must ignore the list even when one is set, and must ignore
+   * it even when the list is set to something that excludes the customer.
+   */
+  it("IGNORES a populated allowlist in production — a real customer is never suppressed", () => {
+    const list = "only-the-developer@example.com";
+    for (const customer of [
+      "a-real-customer@gmail.com",
+      "someone@yahoo.co.uk",
+      "buyer@company.ae",
+    ]) {
+      const decision = decideRecipient(customer, {
+        vercelEnv: "production",
+        allowlist: list,
+      });
+      expect(decision.allowed).toBe(true);
+    }
+  });
+
+  it("suppresses those same addresses on preview, which is the whole point", () => {
+    const list = "only-the-developer@example.com";
+    expect(
+      decideRecipient("a-real-customer@gmail.com", { vercelEnv: "preview", allowlist: list })
+        .allowed,
+    ).toBe(false);
+  });
+
   it("blocks everything outside production when the list is empty", () => {
     const d = decideRecipient("stranger@example.com", { vercelEnv: "preview", allowlist: "" });
     expect(d.allowed).toBe(false);

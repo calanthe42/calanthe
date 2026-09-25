@@ -58,8 +58,28 @@ export const publicRead: Access = () => true;
  * boolean-only — it cannot accept the query constraint that the ordinary
  * Access signature allows. Same rule, narrower return type.
  */
+/**
+ * WHO MAY OPEN PAYLOAD'S OWN /cms — THE OWNER, AND NOBODY ELSE.
+ *
+ * This used to admit staff as well. It no longer does, for a reason that
+ * costs a customer if ignored: a fulfilment status changed in /cms sends NO
+ * email. The status email is deliberately not a collection hook — a hook
+ * writes to `email_log` through a second connection inside Payload's
+ * transaction, which deadlocks until the database terminates it — so the
+ * send lives in the /admin action instead. /cms edits the row directly and
+ * skips it.
+ *
+ * A florist moving an order to "out for delivery" in /cms would therefore
+ * see it change, and the customer would hear nothing. Staff have /admin,
+ * where that works, and where every screen is written for the job rather
+ * than for the schema. The owner keeps /cms as the developer's door.
+ *
+ * This gates ONLY /cms. The business admin authenticates through
+ * `getAdminSession` (backend/data/admin-session.ts), which still admits
+ * staff — nothing a florist uses is affected.
+ */
 export const canAccessAdminPanel = ({ req }: { req: PayloadRequest }): boolean =>
-  req.user?.role === "admin" || req.user?.role === "staff";
+  req.user?.role === "admin";
 
 /**
  * Catalogue read rule: internal users see every row, the public sees only
