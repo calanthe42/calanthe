@@ -31,6 +31,26 @@ const schema = z.object({
    */
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 
+  /* --- Email (A2) ---
+     Without RESEND_API_KEY nothing is sent: every message is written to the
+     log with status "skipped" and the app carries on. That is deliberate —
+     a shop that cannot email must still take orders. */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** e.g. `Calanthe <orders@calanthe.ae>` — must be on the verified domain. */
+  EMAIL_FROM: z.string().min(3).optional(),
+  /**
+   * Where a customer's reply goes, and — until the owner supplies real
+   * addresses — where owner and florist notifications are sent.
+   */
+  EMAIL_REPLY_TO: z.string().email().optional(),
+  /**
+   * Comma-separated addresses a NON-PRODUCTION deployment may email.
+   * Preview runs against a copy of real customer data; without this, testing
+   * a status change would email a real person from a test environment.
+   * Empty outside production means: send to nobody, log everything.
+   */
+  EMAIL_ALLOWLIST: z.string().optional(),
+
   /* --- Observability / infra (optional; a warning is logged in production) --- */
   SENTRY_DSN: z.string().url().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),

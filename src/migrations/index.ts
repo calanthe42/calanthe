@@ -8,6 +8,7 @@ import * as migration_20260907_033604_enquiries_and_memberships from './20260907
 import * as migration_20260907_071945_media_storage from './20260907_071945_media_storage';
 import * as migration_20260907_202357_catalog_legacy_fields from './20260907_202357_catalog_legacy_fields';
 import * as migration_20260910_185013_occasion_description from './20260910_185013_occasion_description';
+import * as migration_20260925_142230_a2_email_log from './20260925_142230_a2_email_log';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20260910_185013_occasion_description.up,
     down: migration_20260910_185013_occasion_description.down,
-    name: '20260910_185013_occasion_description'
+    name: '20260910_185013_occasion_description',
+  },
+  {
+    up: migration_20260925_142230_a2_email_log.up,
+    down: migration_20260925_142230_a2_email_log.down,
+    name: '20260925_142230_a2_email_log'
   },
 ];

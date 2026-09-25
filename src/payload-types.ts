@@ -75,6 +75,7 @@ export interface Config {
     events: Event;
     enquiries: Enquiry;
     memberships: Membership;
+    'email-log': EmailLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
+    'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -832,6 +834,55 @@ export interface Membership {
   createdAt: string;
 }
 /**
+ * Every email attempted, with the provider's id and outcome.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-log".
+ */
+export interface EmailLog {
+  id: number;
+  /**
+   * The address as it was given to the provider.
+   */
+  to: string;
+  type:
+    | 'verify-address'
+    | 'password-reset'
+    | 'order-confirmation'
+    | 'order-status'
+    | 'owner-new-order'
+    | 'florist-job-sheet'
+    | 'enquiry-received';
+  status: 'sent' | 'failed' | 'skipped' | 'suppressed';
+  subject: string;
+  /**
+   * The provider's message id. This is what proves delivery — look it up in Resend.
+   */
+  providerId?: string | null;
+  /**
+   * Why it failed, or why it was suppressed.
+   */
+  error?: string | null;
+  /**
+   * Which deployment sent it: production, preview, local.
+   */
+  environment?: string | null;
+  /**
+   * Set for order emails, so a row can be found by order.
+   */
+  orderNumber?: string | null;
+  /**
+   * The order this email belongs to, when there is one.
+   */
+  order?: (number | null) | Order;
+  /**
+   * If this was a resend, the row it was resent from.
+   */
+  resentFrom?: (number | null) | EmailLog;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -886,6 +937,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'memberships';
         value: number | Membership;
+      } | null)
+    | ({
+        relationTo: 'email-log';
+        value: number | EmailLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1285,6 +1340,24 @@ export interface MembershipsSelect<T extends boolean = true> {
   notes?: T;
   providerCustomerId?: T;
   providerSubscriptionId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-log_select".
+ */
+export interface EmailLogSelect<T extends boolean = true> {
+  to?: T;
+  type?: T;
+  status?: T;
+  subject?: T;
+  providerId?: T;
+  error?: T;
+  environment?: T;
+  orderNumber?: T;
+  order?: T;
+  resentFrom?: T;
   updatedAt?: T;
   createdAt?: T;
 }

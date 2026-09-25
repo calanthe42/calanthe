@@ -1,4 +1,6 @@
 import type { CollectionConfig } from "payload";
+import { passwordReset, verifyAddress } from "@backend/email/templates";
+import { env } from "@/lib/env";
 import {
   canAccessAdminPanel,
   isAdmin,
@@ -77,11 +79,29 @@ export const Users: CollectionConfig = {
     /* Payload's own verification, not a home-made flag. Customers must
        confirm their address; internally invited admin/staff are verified at
        creation by autoVerifyInvitedStaff because their identity was
-       established out of band.
-       Until the email provider lands (B3), Payload writes the verification
-       link to the server console — a real mechanism with a console
-       transport, not a stub. */
-    verify: true,
+       established out of band. */
+    verify: {
+      generateEmailSubject: () => verifyAddress({ url: "" }).subject,
+      generateEmailHTML: ({ token, user }) =>
+        verifyAddress({
+          name: (user as { firstName?: string; name?: string })?.firstName
+            ?? (user as { name?: string })?.name,
+          url: `${env.NEXT_PUBLIC_SERVER_URL}/account/verify?token=${token}`,
+        }).html,
+    },
+    forgotPassword: {
+      generateEmailSubject: () => passwordReset({ url: "" }).subject,
+      generateEmailHTML: (args) => {
+        const { token, user } = (args ?? {}) as {
+          token?: string;
+          user?: { firstName?: string; name?: string };
+        };
+        return passwordReset({
+          name: user?.firstName ?? user?.name,
+          url: `${env.NEXT_PUBLIC_SERVER_URL}/account/reset?token=${token ?? ""}`,
+        }).html;
+      },
+    },
   },
   admin: {
     group: "People",

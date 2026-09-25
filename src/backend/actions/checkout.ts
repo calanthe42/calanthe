@@ -6,6 +6,9 @@ import config from "@payload-config";
 import type { Product } from "@/payload-types";
 import { priceOrder, type CheckoutLineRequest } from "@backend/domain/pricing";
 import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
+import { buildOrderEmails, describeOptions } from "@backend/email/order-emails";
+import { sendAfterCommit } from "@backend/email/send";
+import { env } from "@/lib/env";
 
 /**
  * Cash on delivery checkout.
@@ -207,6 +210,60 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
         source: "web-checkout-cod",
       } as never,
     });
+
+    /* ---------- emails, AFTER the order exists ----------
+     * Never inside the create: an email that says "your order is confirmed"
+     * must not be able to arrive for an order that was rolled back. And
+     * never allowed to fail the order — sendEmail has no throwing path, so
+     * a provider outage costs a receipt, not a sale. Until the owner gives
+     * real addresses, owner and florist mail goes to EMAIL_REPLY_TO, which
+     * is recorded in docs/OWNER_TODO.md. */
+    try {
+      const internal = env.EMAIL_REPLY_TO
+        ? { owner: env.EMAIL_REPLY_TO, florist: env.EMAIL_REPLY_TO }
+        : {};
+      await sendAfterCommit(
+        payload,
+        buildOrderEmails(
+          {
+            orderId: order.id,
+            orderNumber: String(order.orderNumber),
+            customerName: request.customerName.trim(),
+            customerEmail: request.customerEmail.trim().toLowerCase(),
+            customerPhone: request.customerPhone.trim(),
+            deliveryAddress: request.deliveryAddress.trim(),
+            deliveryEmirate: request.deliveryEmirate,
+            deliveryDate: deliveryDate.toLocaleDateString("en-GB", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            }),
+            deliveryTimeSlot: request.deliveryTimeSlot.trim(),
+            deliveryNotes: request.deliveryNotes?.trim() || undefined,
+            recipientName: request.recipientName?.trim() || undefined,
+            recipientPhone: request.recipientPhone?.trim() || undefined,
+            cardMessage: request.cardMessage?.trim() || undefined,
+            lines: priced.lines.map((line) => ({
+              productName: line.productName,
+              quantity: line.quantity,
+              options: describeOptions(line.selectedOptions),
+            })),
+            subtotalFils: priced.subtotalFils,
+            deliveryFeeFils: priced.deliveryFeeFils,
+            totalFils: priced.totalFils,
+          },
+          internal,
+        ),
+      );
+    } catch (emailError) {
+      /* Belt and braces. sendAfterCommit is already non-throwing; this makes
+         it impossible for a future change there to cost a customer's order. */
+      payload.logger.error(
+        `order ${order.orderNumber} placed, but its emails could not be queued: ${
+          emailError instanceof Error ? emailError.message : "unknown"
+        }`,
+      );
+    }
 
     return { ok: true, orderNumber: String(order.orderNumber) };
   } catch (error) {
