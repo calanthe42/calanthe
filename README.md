@@ -29,6 +29,41 @@ Verified 2026-09-25.
 The region move is complete: production runs in Singapore and reads the
 Singapore database.
 
+### Email (A2)
+
+Registration on the live site sent nothing: Payload had no transport, so it
+wrote the verification link to the server console and reported success. The
+logs looked fine and the customer heard nothing.
+
+`backend/email` is a provider seam, not Resend imported everywhere — tests
+never touch the network and changing vendor is one file. Payload's own
+verification and reset mail routes through the same path, so it obeys the
+same rules and leaves the same evidence.
+
+Four rules hold it together:
+
+1. **The gifting rule is a compile error, not a review note.** A
+   recipient-facing email may never carry a price (`EMAILS.md` §3), so the
+   money never reaches those functions: `RecipientFacing` has no price
+   fields and types them `never`. Passing a priced order into the florist's
+   job sheet does not compile.
+2. **A failed email never fails an order.** `sendEmail` has no throwing
+   path — provider down, no API key, log write failed — every outcome
+   resolves to a logged row.
+3. **Nothing sends before the database commits.** A confirmation must not be
+   able to arrive for an order that was rolled back.
+4. **Preview cannot email a real customer.** Preview runs against a copy of
+   real customer data. Outside production only `EMAIL_ALLOWLIST` addresses
+   are sent to; anything else is *suppressed* — recorded with a reason,
+   never silently dropped.
+
+`email_log` is an audit trail: server-written, read-only in the admin, and
+undeletable by anyone including the owner. A resend writes a new row rather
+than mutating the old one. The provider's message id is stored because it is
+the only thing that can prove delivery afterwards.
+
+Domain `calanthe.ae` is verified in Resend — DKIM and all three SPF records.
+
 ### Redis keys are namespaced by environment
 
 Production and Preview share one Upstash database, and keys were written as
