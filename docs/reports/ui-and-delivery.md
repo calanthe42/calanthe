@@ -227,3 +227,35 @@ system: Cinzel eyebrows at 10–12px and chips at 14px. They are listed in
 Both runs were made against a **production build** (`next build` + `next
 start`), not the dev server, and against a disposable `ui-audit` Neon branch
 seeded with the ten demo products — never production, never the Ohio project.
+
+---
+
+## 7. Post-cutover live checks — 2026-09-25
+
+Run after `main` was pushed and Vercel deployed.
+
+| Check | Result |
+| --- | --- |
+| `/` · `/shop` · `/admin/login` · `/checkout` | **200** |
+| Function region | **`X-Vercel-Id: bom1::sin1::…`** — Mumbai edge, Singapore function |
+| Deployment functions | all `[sin1]` |
+| Live site reads the new database | **yes** — `/shop` lists `quiet-devotion`, published by the owner in the live admin after cutover |
+| Ohio took writes before cutover? | **No.** Ohio is byte-identical to the copy. The only differences are in the *new* database and are the owner's own admin edits. Nothing to copy back. |
+| Staff sign-in on live | **not run** — I do not have the staff password, and `PAYLOAD_SECRET` was never touched so sessions and hashes carry over. Owner to confirm. |
+| Media loads from blob | **FAILS — see below** |
+
+### `/product/quiet-devotion` returns 500
+
+Deterministic, 3 of 3. The single media record's URL is
+`http://localhost:3000/api/media/file/…`: it was uploaded from a local dev
+session with no Blob credentials, so the file went to a laptop's `./uploads`
+and the row kept a `localhost` URL. The live server is being asked to render
+an image it cannot fetch.
+
+**It is not the move.** The identical row was in Ohio and the checksums
+matched. Publishing the product is what exposed it.
+
+Not fixed here: it is production data, and the image file exists only on a
+local disk, so there is no valid Blob URL to write. Owner actions are
+`OWNER_TODO` #0a–0c. The code should also degrade an unreachable image to a
+placeholder rather than 500 the page — logged for A7/A8.

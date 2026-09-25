@@ -51,6 +51,47 @@ Applied so the build could continue. Each is reversible; confirm or correct.
 | 18 | Refund approval | **Owner only** | 2026-09-25 |
 | 19 | Tabby min/max | **Placeholders**, marked as such | 2026-09-25 |
 
+## ⚠ LIVE NOW — the published product's page returns 500
+
+**Found 2026-09-25 on www.calanthe.ae, after the cutover.**
+
+```
+/                          200
+/shop                      200
+/product/quiet-devotion    500   (deterministic, 3/3)
+```
+
+**Root cause — it is the photograph, not the move.** The one media record in
+the database has this URL:
+
+```
+http://localhost:3000/api/media/file/ChatGPT Image Sep 23, 2026, 12_29_25 AM.png
+```
+
+It was uploaded from a local dev session that had **no Vercel Blob
+credentials**, so Payload wrote the file to a laptop's `./uploads` folder and
+stored a `localhost` URL. The file has never existed in Blob. When the
+product was published, the live server was asked to render an image it cannot
+possibly fetch.
+
+**This predates the region move** — the identical row was in the Ohio
+database, and the checksums matched. Moving it changed nothing; publishing the
+product is what made it visible.
+
+| # | Action | Added |
+| --- | --- | --- |
+| 0a | **Re-upload that photograph through the live admin** (`/admin/media`), which does have Blob credentials, and re-attach it to Quiet Devotion. Then delete media record 9. | 2026-09-25 |
+| 0b | **Or unpublish Quiet Devotion** until the real photograph is ready — the shop is then empty again, but no page 500s. | 2026-09-25 |
+| 0c | **Never upload media from a local dev session again.** Without `BLOB_STORE_ID` the server says so on boot and writes to local disk; the row it creates is poison the moment it reaches production. | 2026-09-25 |
+
+I did not fix this myself: it is production data, and the rules say I never
+change it. It is also not repairable from here — the image file exists only on
+a local disk, so there is no valid Blob URL for me to write.
+
+**Worth hardening in code (A7/A8):** an unreachable image URL should render a
+placeholder, not take the whole product page down with a 500. One bad media
+row should never cost a sale.
+
 ## The same vase costs two different prices
 
 **Found 2026-09-25 in the cart drawer, not by reading the code.**
