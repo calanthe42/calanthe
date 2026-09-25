@@ -51,7 +51,71 @@ Applied so the build could continue. Each is reversible; confirm or correct.
 | 18 | Refund approval | **Owner only** | 2026-09-25 |
 | 19 | Tabby min/max | **Placeholders**, marked as such | 2026-09-25 |
 
-## ⚠ LIVE NOW — the published product's page returns 500
+## ⚠ Preview can delete production photographs
+
+**Found 2026-09-25.** Do not delete or re-upload media in the preview admin
+until this is fixed.
+
+`BLOB_STORE_ID` is **one Vercel record covering Production and Preview**, so
+both environments write to the same Blob store. The preview database is a
+copy of production, so its media rows carry the **identical `filename` and
+`prefix`**. `handleDelete` in `vercel-blob-oidc.ts` computes the object key
+from exactly those two fields and calls `del(fileKey)` — with no notion of
+environment:
+
+```ts
+handleDelete: async ({ doc: { prefix: docPrefix = "" }, filename }) => {
+  const { fileKey } = getFileKey({ collectionPrefix: prefix, docPrefix, filename });
+  await del(fileKey);
+}
+```
+
+So **deleting a media document in the preview admin deletes the live file**,
+and re-uploading under the same filename overwrites it. Today the only media
+row's file is already missing from Blob, so nothing is at risk yet — but it
+will be the moment real photography is uploaded.
+
+This is also why a `BLOB_READ_WRITE_TOKEN` is the wrong tool: it would be
+read-write access to production's files from any local machine.
+
+### Exact steps for a separate Preview store — not done, awaiting your go
+
+1. Vercel → **Storage** → **Create Database** → **Blob**. Name it
+   `calanthe-preview-blob`. Choose **private** access, matching the
+   production store — private is fixed for the life of a store and the
+   adapter is written for it.
+2. Connect it to the project and, in the environment selector, tick
+   **Preview only**. Vercel writes `BLOB_STORE_ID` for that environment.
+3. The existing `BLOB_STORE_ID` record currently covers *Production and
+   Preview*. Re-scope it to **Production only**, exactly as `DATABASE_URL`
+   was split, or the two records will collide.
+4. Redeploy Preview.
+5. Prove it: upload a file in the preview admin, confirm it appears in
+   `calanthe-preview-blob` and **not** in the production store; then delete
+   it and confirm the production store is untouched.
+
+Until then, preview is read-only for media.
+
+## ⚠ Soft 404: `notFound()` answers 200
+
+**Found 2026-09-25, pre-existing, separate from the 500.**
+
+| Path | Status |
+| --- | --- |
+| `/totally-unknown-path` (no route matches) | **404** — correct |
+| `/product/<unknown>`, `/occasions/<unknown>`, `/shop/<unknown>` | **200** with 404 content |
+
+A genuinely unmatched path returns a real 404, but `notFound()` called
+*inside* a matched route returns 200. That points at
+`experimental.globalNotFound: true` in `next.config.ts`, which exists for a
+good reason — two root layouts mean unmatched routes bypass both — so
+turning it off is a trade, not a fix, and I did not make that call tonight.
+
+It is not an outage. It is an SEO fault: Google treats a 200 as a real page,
+so every mistyped or retired product URL becomes an indexed empty page.
+Worth solving in A9 alongside the sitemap work.
+
+## ~~LIVE~~ FIXED on the ui branch — the product route returned 500
 
 **Found 2026-09-25 on www.calanthe.ae, after the cutover.**
 
@@ -83,6 +147,15 @@ product is what made it visible.
 | 0a | **Re-upload that photograph through the live admin** (`/admin/media`), which does have Blob credentials, and re-attach it to Quiet Devotion. Then delete media record 9. | 2026-09-25 |
 | 0b | **Or unpublish Quiet Devotion** until the real photograph is ready — the shop is then empty again, but no page 500s. | 2026-09-25 |
 | 0c | **Never upload media from a local dev session again.** Without `BLOB_STORE_ID` the server says so on boot and writes to local disk; the row it creates is poison the moment it reaches production. | 2026-09-25 |
+
+**UPDATE — the real cause was found and fixed.** It was never the
+photograph. `/product/[slug]` was an ISR route with `generateStaticParams`
+while the locale is read with `cookies()`; only build-time prerendered paths
+were safe, and with every product hidden that set was empty, so every product
+URL 500ed — including slugs that do not exist. Proven from the runtime logs
+(`digest: 'DYNAMIC_SERVER_USAGE'`) and fixed on `ui/device-audit-and-delivery`.
+The missing Blob file below is still real, but it is a separate, smaller
+problem: a broken image, not a broken page.
 
 I did not fix this myself: it is production data, and the rules say I never
 change it. It is also not repairable from here — the image file exists only on

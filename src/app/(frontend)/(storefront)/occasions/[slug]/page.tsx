@@ -4,16 +4,37 @@ import { Reveal } from "@/components/motion/Reveal";
 import { ShopGrid } from "@/components/commerce/ShopGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
-import { getActiveOccasionBySlug, getActiveOccasionSlugs } from "@backend/data/occasions";
+import { getActiveOccasionBySlug } from "@backend/data/occasions";
 import { getProductsForOccasion } from "@backend/data/products";
 
-/* The catalogue is now database-backed, so these pages must be allowed to
-   change without a redeploy — otherwise an edit in /admin would never reach
-   the site. Five minutes is a deliberate compromise: fresh enough that the
-   client sees her change while she is still looking, cheap enough that the
-   shop is served from cache under load. On-demand revalidation from a Payload
-   afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
-export const revalidate = 300;
+/*
+ * RENDERED PER REQUEST, DELIBERATELY.
+ *
+ * THE OUTAGE THIS FIXES. This route was ISR (`revalidate`) with
+ * `generateStaticParams`, and the locale is read with `cookies()`
+ * (lib/i18n/server.ts). That combination is only safe for paths Next
+ * prerendered at build time. Any other path renders on demand in static
+ * mode, where `cookies()` is illegal, and Next throws
+ * DYNAMIC_SERVER_USAGE -> 500.
+ *
+ * Here the trap is quieter than on /product, where it is already a live
+ * 500: the occasions that existed at build time WERE prerendered, so they
+ * work. An occasion the owner adds afterwards is not in that set, so its
+ * page would 500 on its first visit -- a new category that breaks the
+ * moment it is created. Same cause, same digest: DYNAMIC_SERVER_USAGE.
+ *
+ * `force-dynamic` makes `cookies()` legal, makes `notFound()` a real 404,
+ * and means a product published in /admin is live on its next request with
+ * no redeploy. The cost is the ISR cache, which is the right trade against
+ * a page that returns 500.
+ *
+ * THIS IS THE SMALL FIX, NOT THE FINAL ONE. A8 moves the locale into the URL
+ * (/en, /ar), after which these pages can be static again and
+ * `generateStaticParams` comes back. Until then, static generation here is
+ * a trap: it works in development, where products are seeded and available,
+ * and fails in production, where they are not.
+ */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -41,11 +62,6 @@ export async function generateMetadata({
       ...(image ? { images: [{ url: image, alt: occasion.image.alt }] } : {}),
     },
   };
-}
-
-export async function generateStaticParams() {
-  const slugs = await getActiveOccasionSlugs();
-  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function OccasionPage({
