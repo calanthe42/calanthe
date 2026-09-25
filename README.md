@@ -17,22 +17,57 @@ backend in one app. Staging: https://calanthe.vercel.app
 
 Verified 2026-09-25.
 
-| | Region | Notes |
+| | Where | Verified |
 | --- | --- | --- |
 | Neon (database) | `aws-ap-southeast-1` (Singapore) | project `calanthe-sg`, Postgres 18 |
-| Vercel (functions) | `sin1` (Singapore) on preview; **still `iad1` on production** | `vercel.json` `regions`; production needs one deploy — see below |
-| Upstash Redis | `ap-southeast-1` to be created | **not configured yet**; rate limiting falls back to per-instance memory |
-| Sentry | — | **not configured**; the DSN in `.env.local` is a placeholder (`audit-placeholder@o0.ingest.sentry.io`) |
+| Vercel (functions) | **`sin1`** (Singapore) | live: `X-Vercel-Id: bom1::sin1::…` |
+| Upstash Redis | `ap-southeast-1` (Singapore) | live: a failed sign-in on www.calanthe.ae wrote real rate-limit keys |
+| Sentry | project live, **EU (Germany)** region | ingest accepted a test event; client + server |
+| Resend | domain `calanthe.ae`, `eu-west-1` | SPF verified, DKIM verifying |
+| Stripe | **test keys only**, Preview + Development | `livemode: false`, AED, UAE account. Never in Production |
 
-Upstash and Sentry both become **required in production** in A1 — the server
-will refuse to boot without them.
+The region move is complete: production runs in Singapore and reads the
+Singapore database.
 
-> **One step outstanding.** Everything below is done and verified, but the
-> live site still runs the deployment built on 2026-09-23, which carries the
-> old Ohio connection string and `iad1` functions — a deployment keeps the
-> environment it was created with, so nothing is half-moved and nothing is
-> broken. `vercel deploy --prod` completes the cutover; until it runs,
-> production is entirely on the old stack.
+### Redis keys are namespaced by environment
+
+Production and Preview share one Upstash database, and keys were written as
+`rl:<bucket>:<identifier>` — so a preview deployment shared production's
+rate-limit buckets. A burst of testing could lock a real customer out of
+signing in, and once A5 lands, a webhook id replayed in preview would mark a
+production event already handled. Every key is now prefixed with `VERCEL_ENV`
+(`production:`, `preview:`, `local:`).
+
+### Preview shares production's Blob store — do not delete media there
+
+One `BLOB_STORE_ID` covers both environments, the preview database holds
+filenames copied from production, and `handleDelete` keys objects by filename
+alone. **Deleting a media document in the preview admin deletes the live
+file.** Steps for a separate preview store are in `docs/OWNER_TODO.md`.
+Until then, preview is read-only for media, and the preview catalogue is
+published from `legacyImages` — real photography, no Blob writes
+(`scripts/seed-preview-catalogue.mts`, which refuses to run against
+production).
+
+### A broken photograph can no longer take down a page
+
+`next/image` does not degrade: handed a URL whose host is not in
+`images.remotePatterns` it throws during render, and in a Server Component a
+throw is a 500. `checkImageSrc` now decides before the URL reaches
+`next/image`, so anything unrenderable becomes the botanical placeholder and
+is reported to Sentry instead. `FloralImage` is the single image slot for
+product, shop, home, occasions, cart and checkout, so one guard covers all
+six.
+
+### Product pages render per request
+
+`/product/[slug]`, `/occasions/[slug]` and `/shop/[slug]` were ISR routes
+with `generateStaticParams` while the locale is read with `cookies()` — safe
+only for paths prerendered at build time. With every product hidden, that set
+was empty and **every product URL returned 500**, including slugs that do not
+exist. They are `force-dynamic` until A8 moves the locale into the URL.
+Proven by `scripts/prove-dynamic-routes.mts`, which builds with zero
+available products and then publishes one without rebuilding.
 
 ### Why Singapore, and not Frankfurt
 
