@@ -4,6 +4,10 @@ import { cookies as nextCookies, headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
+import { randomBytes } from "node:crypto";
+import { sendEmail } from "@backend/email/send";
+import { verifyAddress } from "@backend/email/templates";
+import { env } from "@/lib/env";
 
 /**
  * The customer's own account.
@@ -207,15 +211,36 @@ export async function resendCustomerVerification(email: string): Promise<AuthRes
       limit: 1,
       overrideAccess: true,
     });
-    const user = docs[0] as { id: number | string; _verified?: boolean } | undefined;
+    const user = docs[0] as
+      | { id: number | string; _verified?: boolean; firstName?: string; name?: string }
+      | undefined;
     /* Already verified, or no such account: say the same thing either way. */
     if (user && !user._verified) {
-      /* Re-saving with a fresh token makes Payload send the email again. */
+      /*
+       * MINT A NEW TOKEN AND SEND IT OURSELVES.
+       *
+       * This used to re-save the user with `_verified: false` and trust
+       * Payload to notice. Payload sends its verification email on CREATE,
+       * and the field was already false, so the write was a no-op: the
+       * action returned ok, the throttle counted a use, and nothing was
+       * ever sent. "Resend" that sends nothing is worse than no button —
+       * the customer waits instead of asking for help.
+       */
+      const token = randomBytes(32).toString("hex");
       await payload.update({
         collection: "users",
         id: user.id,
         overrideAccess: true,
-        data: { _verified: false } as never,
+        data: { _verified: false, _verificationToken: token } as never,
+      });
+
+      await sendEmail(payload, {
+        to: address,
+        type: "verify-address",
+        rendered: verifyAddress({
+          name: user.firstName ?? user.name,
+          url: `${env.NEXT_PUBLIC_SERVER_URL}/account/verify?token=${token}`,
+        }),
       });
     }
   } catch (error) {

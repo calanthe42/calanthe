@@ -83,6 +83,7 @@ export const en = {
     orders: "Orders",
     customers: "Customers",
     enquiries: "Enquiries",
+    emails: "Emails",
     events: "Events",
     delivery: "Delivery",
     memberships: "Memberships",

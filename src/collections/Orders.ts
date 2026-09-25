@@ -14,6 +14,7 @@ import {
   validateOrderTotals,
 } from "@backend/payload/hooks/orderIntegrity";
 import { assignOrderNumber } from "@backend/payload/hooks/orderNumber";
+import { sendOrderStatusEmail } from "@backend/payload/hooks/orderStatusEmail";
 
 /**
  * An order is an immutable historical record, not a set of pointers.
@@ -73,6 +74,9 @@ export const Orders: CollectionConfig = {
   hooks: {
     beforeValidate: [validateOrderTotals, validateCustomerType],
     beforeChange: [assignOrderNumber, guardPaymentStatus],
+    /* After the save, never before: an email must describe something that
+       has actually happened, and it must never be able to fail the save. */
+    afterChange: [sendOrderStatusEmail],
   },
   defaultSort: "-createdAt",
   timestamps: true,

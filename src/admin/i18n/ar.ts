@@ -87,6 +87,7 @@ export const ar: Messages = {
     orders: "الطلبات",
     customers: "العملاء",
     enquiries: "الاستفسارات",
+    emails: "الرسائل",
     events: "الفعاليات",
     delivery: "التوصيل",
     memberships: "العضويات",

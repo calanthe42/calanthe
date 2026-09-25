@@ -199,6 +199,88 @@ export function ownerNewOrder(order: PricedOrder): RenderedEmail {
 /* ------------------------------------------------------------------ */
 
 /**
+ * "Your flowers are being prepared", and the rest of the journey.
+ *
+ * Takes `RecipientFacing` — a status update carries no money. The customer
+ * already has their confirmation and the total is not news; repeating a
+ * price in every update is also one more place it could reach the wrong
+ * person.
+ */
+export function orderStatus(
+  order: RecipientFacing,
+  status: OrderStatusUpdate,
+): RenderedEmail {
+  const copy = STATUS_COPY[status];
+  return {
+    subject: `${copy.subject} — ${order.orderNumber}`,
+    html: shell(
+      copy.heading,
+      para(`Hello ${escape(order.customerName)},`) +
+        para(copy.body) +
+        factsTable(order) +
+        (copy.note ? para(`<span style="font-size:13px;color:${SAGE};">${copy.note}</span>`) : ""),
+    ),
+    text: `Hello ${order.customerName},\n\n${copy.body.replace(/<[^>]+>/g, "")}\n\n${factsText(order)}\n${
+      copy.note ? `\n${copy.note}\n` : ""
+    }\nCalanthe`,
+  };
+}
+
+/** The statuses worth interrupting someone for. */
+export type OrderStatusUpdate =
+  | "CONFIRMED"
+  | "PREPARING"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED";
+
+/**
+ * NOT every status change emails. READY means "on the bench", which is
+ * workshop vocabulary and tells the customer nothing they can act on, and
+ * NEW is the state the confirmation already announced. An inbox is a
+ * finite resource.
+ */
+const STATUS_COPY: Record<
+  OrderStatusUpdate,
+  { subject: string; heading: string; body: string; note?: string }
+> = {
+  CONFIRMED: {
+    subject: "Your order is confirmed",
+    heading: "Confirmed",
+    body: "Your florist has your order and the flowers are reserved for your delivery day.",
+  },
+  PREPARING: {
+    subject: "Your flowers are being made",
+    heading: "Being composed now",
+    body: "Your arrangement is being composed by hand in the atelier.",
+    note: "You will get a photograph on WhatsApp for your approval before it leaves.",
+  },
+  OUT_FOR_DELIVERY: {
+    subject: "On the way",
+    heading: "On the way",
+    body: "Your flowers have left the atelier and are on their way.",
+    note: "Our courier may call on arrival.",
+  },
+  DELIVERED: {
+    subject: "Delivered",
+    heading: "Delivered",
+    body: "Your flowers have been delivered. We hope they are exactly right.",
+    note: "Payment is taken in cash on delivery.",
+  },
+  CANCELLED: {
+    subject: "Your order has been cancelled",
+    heading: "Cancelled",
+    body: "This order has been cancelled. Nothing has been charged.",
+    note: "If this is unexpected, reply to this email and a florist will look into it.",
+  },
+};
+
+/** Whether a move to this status is worth an email at all. */
+export function isEmailableStatus(status: string): status is OrderStatusUpdate {
+  return status in STATUS_COPY;
+}
+
+/**
  * The florist's job sheet. Takes `RecipientFacing`, so there is no total to
  * print even by accident: a florist needs the work, not the invoice.
  */
