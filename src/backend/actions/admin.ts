@@ -25,6 +25,7 @@ import {
   plainTextToLexical,
   sameDescription,
 } from "@backend/domain/richtext";
+import { sendStatusEmailAfterCommit } from "@backend/email/status-email";
 
 /**
  * Every write the business admin performs.
@@ -428,13 +429,32 @@ export async function updateOrderFulfilment(
 ): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    await payload.update({
+    /* Read the status first: the customer is told only when the order has
+       actually MOVED. Saving the same status twice — which happens when a
+       florist presses a button again because the screen looked stale —
+       must not send a second email. */
+    const before = (await payload
+      .findByID({ collection: "orders", id, depth: 0, overrideAccess: true })
+      .catch(() => null)) as Record<string, unknown> | null;
+    const previousStatus = String(before?.fulfilmentStatus ?? "");
+
+    const updated = await payload.update({
       collection: "orders",
       id,
       user,
       overrideAccess: false,
       data: { fulfilmentStatus } as never,
     });
+
+    /* AFTER the update returns, so the transaction has committed and no
+       email work happens inside it. Never throws. */
+    await sendStatusEmailAfterCommit(
+      payload,
+      updated as unknown as Record<string, unknown>,
+      previousStatus,
+      fulfilmentStatus,
+    );
+
     revalidatePath("/admin/orders");
     /* AND THE PAGE THE USER IS ACTUALLY LOOKING AT.
        Every other entity here revalidates its own detail route — products,
