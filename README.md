@@ -64,6 +64,27 @@ the only thing that can prove delivery afterwards.
 
 Domain `calanthe.ae` is verified in Resend — DKIM and all three SPF records.
 
+### /cms is owner-only
+
+A fulfilment status changed in Payload's own `/cms` sends **no email**. The
+status email is deliberately not a collection hook — a hook writes to
+`email_log` through a second connection inside Payload's transaction and
+deadlocks until the database terminates it — so the send lives in the
+`/admin` action, and a direct `/cms` edit skips it.
+
+Staff therefore work in `/admin`, where it fires. `canAccessAdminPanel`
+gates **only** `/cms`; the business admin authenticates through
+`getAdminSession`, which still admits staff.
+
+### Production never applies the email allowlist
+
+`decideRecipient` returns `allowed: true` on its first line when
+`VERCEL_ENV === "production"`, before the list is even parsed. `EMAIL_ALLOWLIST`
+is set on Preview and Development only. There is a test asserting that a
+populated list is ignored in production — the failure it guards against is a
+real customer's order confirmation being silently dropped because their
+address was not on a developer's list.
+
 ### Redis keys are namespaced by environment
 
 Production and Preview share one Upstash database, and keys were written as
