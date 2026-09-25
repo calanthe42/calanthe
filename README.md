@@ -64,6 +64,30 @@ the only thing that can prove delivery afterwards.
 
 Domain `calanthe.ae` is verified in Resend — DKIM and all three SPF records.
 
+### Payload's Local API skips access control by default
+
+`overrideAccess` defaults to **TRUE** in the Local API. Passing `user` says
+who is asking; it does not restrict what they get. Two customer account
+pages passed `user` alone, so `orders.read` was never consulted and every
+order in the database was returned — reachable by counting, because order
+numbers are sequential.
+
+**Any `payload.find` / `findByID` that represents a customer must pass
+`overrideAccess: false`.** The REST API enforces access by default, which is
+why `cod-security-test.mts` asserted the IDOR was closed and passed while
+the pages leaked: the test was right and its coverage stopped one layer
+short. It now checks the page, not only the API.
+
+### Registration errors name the field that actually collided
+
+Payload throws "The following field is invalid: email" and puts the truth in
+`data.errors[].path`. Matching the message against /duplicate|unique|already/
+never matched, so every collision fell through to "We could not create that
+account just now" — advice that could not work. `collidingFields` reads the
+path, and registration now resends the verification email when the address
+exists but was never verified, or names the phone when that is what
+collided.
+
 ### /cms is owner-only
 
 A fulfilment status changed in Payload's own `/cms` sends **no email**. The
