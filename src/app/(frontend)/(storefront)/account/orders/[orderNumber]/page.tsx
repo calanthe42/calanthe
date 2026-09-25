@@ -62,6 +62,21 @@ export default async function CustomerOrderPage({
     limit: 1,
     depth: 0,
     user,
+    /*
+     * WITHOUT THIS, ANY SIGNED-IN CUSTOMER COULD OPEN ANY ORDER.
+     *
+     * Payload's Local API defaults `overrideAccess` to TRUE, so passing
+     * `user` identified the caller without restricting them. Order numbers
+     * are sequential by design (CAL-000001, CAL-000002…), so guessing one is
+     * not an attack, it is counting — and the page returned the customer's
+     * name, phone, delivery address and total.
+     *
+     * `cod-security-test.mts` already asserted "Customer B cannot open
+     * customer A's order by id" and PASSED, because it exercises the REST
+     * API, which enforces access by default. This Server Component path was
+     * never covered. The test was right and the coverage was wrong.
+     */
+    overrideAccess: false,
   });
 
   const order = result.docs[0];

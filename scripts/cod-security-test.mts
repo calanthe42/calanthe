@@ -229,6 +229,35 @@ try {
   check("Customer B cannot open customer A's order by id", direct.status === 403 || direct.status === 404,
     `http ${direct.status}`);
 
+  /*
+   * THE SAME QUESTION, ASKED OF THE PAGE RATHER THAN THE API.
+   *
+   * The check above passed for months while the account PAGES leaked every
+   * order in the database. The REST API enforces access by default; Payload's
+   * Local API does the opposite — `overrideAccess` defaults to TRUE — so a
+   * Server Component that passes `user` without it identifies the caller
+   * without restricting them. The test was right; its coverage stopped one
+   * layer short of where customers actually look.
+   */
+  const bPage = await fetch(`${B}/account/orders/${encodeURIComponent(String(order.orderNumber))}`, {
+    headers: { Cookie: `payload-token=${otherTok}` }, redirect: "manual",
+  });
+  check(
+    "Customer B cannot open customer A's order PAGE by order number",
+    bPage.status === 404 || bPage.status === 403 || bPage.status === 307,
+    `http ${bPage.status}`,
+  );
+
+  const bList = await fetch(`${B}/account`, {
+    headers: { Cookie: `payload-token=${otherTok}` }, redirect: "manual",
+  });
+  const bListBody = bList.status === 200 ? await bList.text() : "";
+  check(
+    "Customer B's account page does not list customer A's order",
+    !bListBody.includes(String(order.orderNumber)),
+    `http ${bList.status}`,
+  );
+
   /* ---------------- admin access ---------------- */
   console.log("\n-- admin interface access --");
   for (const [who, tok, expected] of [

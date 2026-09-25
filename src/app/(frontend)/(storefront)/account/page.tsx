@@ -67,6 +67,20 @@ export default async function AccountPage() {
     limit: 50,
     depth: 0,
     user,
+    /*
+     * WITHOUT THIS, THIS PAGE LISTED EVERY ORDER IN THE DATABASE.
+     *
+     * Payload's Local API defaults `overrideAccess` to TRUE — it assumes
+     * server-side code is trusted and skips access control. Passing `user`
+     * alone does not enforce anything; it only tells Payload who is asking.
+     * So `orders.read`, which resolves to `{ customer: { equals: user.id } }`,
+     * was never consulted, and a customer who had just registered saw another
+     * person's order — name, address, phone and total.
+     *
+     * Found on production on 2026-09-25 by signing in as a brand-new account
+     * and being shown CAL-000001, a guest order belonging to someone else.
+     */
+    overrideAccess: false,
   });
 
   const name = [customer.firstName, customer.lastName].filter(Boolean).join(" ") || customer.email;
