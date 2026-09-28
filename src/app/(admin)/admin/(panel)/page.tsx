@@ -32,7 +32,13 @@ export async function generateMetadata() {
   return { title: t("nav.dashboard") };
 }
 
-type Attention = { key: string; tone: "danger" | "warning" | "info"; icon: IconName; text: string; href: string };
+type Attention = {
+  key: string;
+  tone: "danger" | "warning" | "info";
+  icon: IconName;
+  text: string;
+  href: string;
+};
 
 const PERIOD_LABEL: Record<number, MessageKey> = {
   7: "dashboard.range.d7",
@@ -51,29 +57,47 @@ const STATUS_COLOUR: Record<string, string> = {
 /* The owner is in Dubai; the server is not. */
 function greetingKey(): MessageKey {
   const hour = Number(
-    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Dubai" }).format(new Date()),
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "numeric",
+      hourCycle: "h23",
+      timeZone: "Asia/Dubai",
+    }).format(new Date()),
   );
   if (hour < 12) return "dashboard.greeting.morning";
   if (hour < 18) return "dashboard.greeting.afternoon";
   return "dashboard.greeting.evening";
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
   const { period: rawPeriod } = await searchParams;
   const period = parsePeriod(rawPeriod);
 
-  const [i18n, session, data] = await Promise.all([getAdminI18n(), getAdminSession(), getDashboardData(period)]);
+  const [i18n, session, data] = await Promise.all([
+    getAdminI18n(),
+    getAdminSession(),
+    getDashboardData(period),
+  ]);
   const { t, plural, money, number, date, label } = i18n;
   const isOwner = Boolean(session?.isAdmin);
-  const firstName = session ? displayName(session.user).split(" ")[0] ?? "" : "";
+  const firstName = session ? (displayName(session.user).split(" ")[0] ?? "") : "";
 
   const trend = (current: number, previous: number): Trend | undefined => {
     const change = percentChange(current, previous);
-    if (change === null) return current > 0 ? { direction: "flat", label: t("dashboard.kpi.noPrevious") } : undefined;
+    if (change === null)
+      return current > 0
+        ? { direction: "flat", label: t("dashboard.kpi.noPrevious") }
+        : undefined;
     if (change === 0) return { direction: "flat", label: t("dashboard.kpi.flat") };
     return change > 0
       ? { direction: "up", label: t("dashboard.kpi.up", { percent: change }) }
-      : { direction: "down", label: t("dashboard.kpi.down", { percent: Math.abs(change) }) };
+      : {
+          direction: "down",
+          label: t("dashboard.kpi.down", { percent: Math.abs(change) }),
+        };
   };
 
   const today = dubaiDateInputValue(new Date().toISOString());
@@ -81,19 +105,61 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const add = (count: number, key: PluralKey, item: Omit<Attention, "text" | "key">) => {
     if (count > 0) attention.push({ ...item, key, text: plural(key, count) });
   };
-  add(data.overdue, "dashboard.attention.overdue", { tone: "danger", icon: "clock", href: "/admin/orders?attention=overdue" });
-  add(data.newOrders, "dashboard.attention.newOrders", { tone: "warning", icon: "bag", href: "/admin/orders?status=NEW" });
-  add(data.enquiriesWaiting, "dashboard.attention.enquiries", { tone: "warning", icon: "message", href: "/admin/enquiries?status=waiting" });
-  add(data.followUpsDue, "dashboard.attention.followUps", { tone: "warning", icon: "calendar", href: "/admin/enquiries?followUp=due" });
-  add(data.products.outOfStock, "dashboard.attention.outOfStock", { tone: "danger", icon: "box", href: "/admin/products?availability=out-of-stock" });
-  add(data.products.noPhoto, "dashboard.attention.noPhoto", { tone: "info", icon: "image", href: "/admin/products?availability=no-photos" });
-  add(data.products.hidden, "dashboard.attention.hidden", { tone: "info", icon: "eye", href: "/admin/products?availability=hidden" });
-  add(data.todaysDeliveries.length, "dashboard.attention.deliveriesToday", { tone: "info", icon: "truck", href: `/admin/orders?from=${today}&to=${today}` });
+  add(data.overdue, "dashboard.attention.overdue", {
+    tone: "danger",
+    icon: "clock",
+    href: "/admin/orders?attention=overdue",
+  });
+  add(data.newOrders, "dashboard.attention.newOrders", {
+    tone: "warning",
+    icon: "bag",
+    href: "/admin/orders?status=NEW",
+  });
+  add(data.enquiriesWaiting, "dashboard.attention.enquiries", {
+    tone: "warning",
+    icon: "message",
+    href: "/admin/enquiries?status=waiting",
+  });
+  add(data.followUpsDue, "dashboard.attention.followUps", {
+    tone: "warning",
+    icon: "calendar",
+    href: "/admin/enquiries?followUp=due",
+  });
+  add(data.products.outOfStock, "dashboard.attention.outOfStock", {
+    tone: "danger",
+    icon: "box",
+    href: "/admin/products?availability=out-of-stock",
+  });
+  add(data.products.noPhoto, "dashboard.attention.noPhoto", {
+    tone: "info",
+    icon: "image",
+    href: "/admin/products?availability=no-photos",
+  });
+  add(data.products.hidden, "dashboard.attention.hidden", {
+    tone: "info",
+    icon: "eye",
+    href: "/admin/products?availability=hidden",
+  });
+  add(data.todaysDeliveries.length, "dashboard.attention.deliveriesToday", {
+    tone: "info",
+    icon: "truck",
+    href: `/admin/orders?from=${today}&to=${today}`,
+  });
 
   const days = data.series.length;
   const dayLabel = (day: string) => date(`${day}T12:00:00+04:00`, "short");
-  const revenueBars = data.series.map((p) => ({ key: p.day, label: dayLabel(p.day), value: p.revenueFils, display: money(p.revenueFils) }));
-  const orderBars = data.series.map((p) => ({ key: p.day, label: dayLabel(p.day), value: p.orders, display: number(p.orders) }));
+  const revenueBars = data.series.map((p) => ({
+    key: p.day,
+    label: dayLabel(p.day),
+    value: p.revenueFils,
+    display: money(p.revenueFils),
+  }));
+  const orderBars = data.series.map((p) => ({
+    key: p.day,
+    label: dayLabel(p.day),
+    value: p.orders,
+    display: number(p.orders),
+  }));
 
   return (
     <>
@@ -113,7 +179,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
       />
 
-      <section aria-label={t("dashboard.quick.label")} className="mb-6 flex flex-wrap gap-2">
+      <section
+        aria-label={t("dashboard.quick.label")}
+        className="mb-6 flex flex-wrap gap-2"
+      >
         {isOwner ? (
           <ButtonLink href="/admin/products/new" variant="primary" icon="plus">
             {t("dashboard.quick.addProduct")}
@@ -130,27 +199,39 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </ButtonLink>
       </section>
 
-      <section aria-label={t("nav.sections.overview")} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label={t("dashboard.kpi.revenue")}
-          icon="trendUp"
-          value={money(data.current.revenueFils)}
-          trend={trend(data.current.revenueFils, data.previous.revenueFils)}
-          secondary={
-            <>
-              {t("dashboard.kpi.paid", { amount: money(data.current.paidFils) })}
-              <br />
-              {t("dashboard.kpi.revenueBasis")}
-            </>
-          }
-        />
+      <section
+        aria-label={t("nav.sections.overview")}
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        {/* MONEY IS THE OWNER'S. Staff run the workshop and need orders,
+            deliveries and stock — not what the shop is taking. Hiding the
+            card is the visible half; getDashboardData returns no revenue to
+            a staff session at all, so there is nothing to read out of the
+            page source either. */}
+        {isOwner ? (
+          <StatCard
+            label={t("dashboard.kpi.revenue")}
+            icon="trendUp"
+            value={money(data.current.revenueFils)}
+            trend={trend(data.current.revenueFils, data.previous.revenueFils)}
+            secondary={
+              <>
+                {t("dashboard.kpi.paid", { amount: money(data.current.paidFils) })}
+                <br />
+                {t("dashboard.kpi.revenueBasis")}
+              </>
+            }
+          />
+        ) : null}
         <StatCard
           label={t("dashboard.kpi.orders")}
           icon="bag"
           href="/admin/orders"
           value={number(data.current.orders)}
           trend={trend(data.current.orders, data.previous.orders)}
-          secondary={t("dashboard.kpi.ordersAllTime", { count: number(data.ordersAllTime) })}
+          secondary={t("dashboard.kpi.ordersAllTime", {
+            count: number(data.ordersAllTime),
+          })}
         />
         <StatCard
           label={t("dashboard.kpi.customers")}
@@ -159,7 +240,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           value={data.customers ? number(data.customers.total) : "—"}
           secondary={
             data.customers
-              ? t("dashboard.kpi.customersNew", { count: number(data.customers.newInPeriod) })
+              ? t("dashboard.kpi.customersNew", {
+                  count: number(data.customers.newInPeriod),
+                })
               : t("dashboard.kpi.customersOwnerOnly")
           }
         />
@@ -181,8 +264,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="mt-2 flex items-start gap-3 rounded-md bg-success/[0.07] px-4 py-3">
             <Icon name="checkCircle" className="mt-0.5 text-success" />
             <div>
-              <p className="text-sm font-medium text-ink">{t("dashboard.attention.allClear")}</p>
-              <p className="mt-0.5 text-sm leading-relaxed text-ink-3">{t("dashboard.attention.allClearBody")}</p>
+              <p className="text-sm font-medium text-ink">
+                {t("dashboard.attention.allClear")}
+              </p>
+              <p className="mt-0.5 text-sm leading-relaxed text-ink-3">
+                {t("dashboard.attention.allClearBody")}
+              </p>
             </div>
           </div>
         ) : (
@@ -204,7 +291,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   >
                     <Icon name={item.icon} className="h-[18px] w-[18px]" />
                   </span>
-                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-ink">{item.text}</span>
+                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-ink">
+                    {item.text}
+                  </span>
                   <Icon name="chevronRight" className="h-4 w-4 text-ink-3" />
                 </Link>
               </li>
@@ -214,37 +303,60 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </Card>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader
-            title={t("dashboard.charts.revenue")}
-            description={plural("dashboard.lastDays", days)}
-            action={<span className="text-lg font-semibold text-ink tabular">{money(data.current.revenueFils)}</span>}
-          />
-          <div className="mt-4">
-            <BarChart
-              bars={revenueBars}
-              emptyText={t("dashboard.charts.emptyRevenue")}
-              summary={t("dashboard.charts.summary", { title: t("dashboard.charts.revenue"), total: money(data.current.revenueFils), days })}
+        {/* The revenue chart is the owner's too. */}
+        {isOwner ? (
+          <Card>
+            <CardHeader
+              title={t("dashboard.charts.revenue")}
+              description={plural("dashboard.lastDays", days)}
+              action={
+                <span className="text-lg font-semibold text-ink tabular">
+                  {money(data.current.revenueFils)}
+                </span>
+              }
             />
-          </div>
-        </Card>
+            <div className="mt-4">
+              <BarChart
+                bars={revenueBars}
+                emptyText={t("dashboard.charts.emptyRevenue")}
+                summary={t("dashboard.charts.summary", {
+                  title: t("dashboard.charts.revenue"),
+                  total: money(data.current.revenueFils),
+                  period: plural("dashboard.lastDays", days),
+                })}
+              />
+            </div>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader
             title={t("dashboard.charts.orders")}
             description={plural("dashboard.lastDays", days)}
-            action={<span className="text-lg font-semibold text-ink tabular">{number(data.current.orders)}</span>}
+            action={
+              <span className="text-lg font-semibold text-ink tabular">
+                {number(data.current.orders)}
+              </span>
+            }
           />
           <div className="mt-4">
             <BarChart
               bars={orderBars}
               tone="ink"
               emptyText={t("dashboard.charts.emptyOrders")}
-              summary={t("dashboard.charts.summary", { title: t("dashboard.charts.orders"), total: number(data.current.orders), days })}
+              summary={t("dashboard.charts.summary", {
+                title: t("dashboard.charts.orders"),
+                total: number(data.current.orders),
+                period: plural("dashboard.lastDays", days),
+              })}
             />
           </div>
         </Card>
       </section>
-      {data.current.orders === 0 ? <p className="mt-2 text-xs leading-relaxed text-ink-3">{t("dashboard.charts.quiet")}</p> : null}
+      {data.current.orders === 0 ? (
+        <p className="mt-2 text-xs leading-relaxed text-ink-3">
+          {t("dashboard.charts.quiet")}
+        </p>
+      ) : null}
 
       <section className="mt-6 grid gap-4 lg:grid-cols-3">
         <Card>
@@ -252,7 +364,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="mt-4">
             <StatusBar
               emptyText={t("dashboard.charts.emptyStatus")}
-              summary={data.openStatus.map((s) => `${label("fulfilment", s.status)}: ${s.count}`).join(", ")}
+              summary={data.openStatus
+                .map((s) => `${label("fulfilment", s.status)}: ${s.count}`)
+                .join(", ")}
               segments={data.openStatus.map((s) => ({
                 key: s.status,
                 label: label("fulfilment", s.status),
@@ -264,19 +378,35 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </Card>
 
         <Card>
-          <CardHeader title={t("dashboard.topProducts")} description={plural("dashboard.lastDays", days)} />
+          <CardHeader
+            title={t("dashboard.topProducts")}
+            description={plural("dashboard.lastDays", days)}
+          />
           {data.top.length === 0 ? (
-            <EmptyState variant="plain" icon="flower" title={t("dashboard.noSales")} body={t("dashboard.noSalesBody")} />
+            <EmptyState
+              variant="plain"
+              icon="flower"
+              title={t("dashboard.noSales")}
+              body={t("dashboard.noSalesBody")}
+            />
           ) : (
             <ol className="mt-3 divide-y divide-line">
               {data.top.map((row, index) => (
                 <li key={row.key} className="flex items-center gap-3 py-2.5">
-                  <span className="w-5 shrink-0 text-sm text-ink-3 tabular">{index + 1}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-ink">{row.name}</span>
-                    <span className="block text-xs text-ink-3">{plural("dashboard.unitsSold", row.units)}</span>
+                  <span className="w-5 shrink-0 text-sm text-ink-3 tabular">
+                    {index + 1}
                   </span>
-                  <span className="shrink-0 text-sm text-ink tabular">{money(row.revenueFils)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-ink">
+                      {row.name}
+                    </span>
+                    <span className="block text-xs text-ink-3">
+                      {plural("dashboard.unitsSold", row.units)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm text-ink tabular">
+                    {money(row.revenueFils)}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -286,7 +416,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Card>
           <CardHeader title={t("dashboard.todaysDeliveries")} />
           {data.todaysDeliveries.length === 0 ? (
-            <EmptyState variant="plain" icon="truck" title={t("dashboard.noDeliveries")} body={t("dashboard.noDeliveriesBody")} />
+            <EmptyState
+              variant="plain"
+              icon="truck"
+              title={t("dashboard.noDeliveries")}
+              body={t("dashboard.noDeliveriesBody")}
+            />
           ) : (
             <ul className="mt-2 divide-y divide-line">
               {data.todaysDeliveries.map((order) => (
@@ -295,16 +430,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`}
                     className="-mx-2 flex min-h-14 items-center gap-3 rounded-md px-2 py-2.5 transition-colors duration-150 hover:bg-hover"
                   >
-                    <span dir="ltr" className="w-24 shrink-0 text-xs font-medium text-ink-2 tabular">
+                    <span
+                      dir="ltr"
+                      className="w-24 shrink-0 text-xs font-medium text-ink-2 tabular"
+                    >
                       {order.deliveryTimeSlot}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-ink">{order.recipientName || order.customerName}</span>
+                      <span className="block truncate text-sm font-medium text-ink">
+                        {order.recipientName || order.customerName}
+                      </span>
                       <span className="block truncate text-xs text-ink-3">
                         {order.orderNumber} · {label("emirate", order.deliveryEmirate)}
                       </span>
                     </span>
-                    <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)}>{label("fulfilment", order.fulfilmentStatus)}</Badge>
+                    <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)}>
+                      {label("fulfilment", order.fulfilmentStatus)}
+                    </Badge>
                   </Link>
                 </li>
               ))}
@@ -316,15 +458,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <section className="mt-6 grid gap-4 xl:grid-cols-5">
         <div className="min-w-0 xl:col-span-3">
           <div className="mb-2 flex min-h-11 items-center justify-between gap-3">
-            <h2 className="text-[15px] font-semibold text-ink">{t("dashboard.recentOrders")}</h2>
+            <h2 className="text-[15px] font-semibold text-ink">
+              {t("dashboard.recentOrders")}
+            </h2>
             {data.recentOrders.length > 0 ? (
-              <ButtonLink href="/admin/orders" variant="ghost" size="sm" iconEnd="chevronRight">
+              <ButtonLink
+                href="/admin/orders"
+                variant="ghost"
+                size="sm"
+                iconEnd="chevronRight"
+              >
                 {t("dashboard.viewAll")}
               </ButtonLink>
             ) : null}
           </div>
           {data.recentOrders.length === 0 ? (
-            <EmptyState icon="bag" title={t("dashboard.noOrders")} body={t("dashboard.noOrdersBody")} />
+            <EmptyState
+              icon="bag"
+              title={t("dashboard.noOrders")}
+              body={t("dashboard.noOrdersBody")}
+            />
           ) : (
             <Table
               caption={t("dashboard.recentOrders")}
@@ -338,7 +491,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               {data.recentOrders.map((order) => (
                 <Tr key={order.id}>
                   <Td primary>
-                    <Link href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`} className="-my-3 py-3 font-medium text-ink hover:underline">
+                    <Link
+                      href={`/admin/orders/${encodeURIComponent(order.orderNumber ?? "")}`}
+                      className="-my-3 py-3 font-medium text-ink hover:underline"
+                    >
                       {order.orderNumber}
                     </Link>
                     <span className="block text-xs text-ink-3">
@@ -349,10 +505,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     {money(Number(order.totalFils))}
                   </Td>
                   <Td label={t("orders.columns.status")}>
-                    <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)}>{label("fulfilment", order.fulfilmentStatus)}</Badge>
+                    <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)}>
+                      {label("fulfilment", order.fulfilmentStatus)}
+                    </Badge>
                   </Td>
                   <Td label={t("orders.columns.payment")}>
-                    <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+                    <Badge tone={toneFor("payment", order.paymentStatus)}>
+                      {label("payment", order.paymentStatus)}
+                    </Badge>
                   </Td>
                 </Tr>
               ))}
@@ -362,15 +522,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         <div className="min-w-0 xl:col-span-2">
           <div className="mb-2 flex min-h-11 items-center justify-between gap-3">
-            <h2 className="text-[15px] font-semibold text-ink">{t("dashboard.recentEnquiries")}</h2>
+            <h2 className="text-[15px] font-semibold text-ink">
+              {t("dashboard.recentEnquiries")}
+            </h2>
             {data.recentEnquiries.length > 0 ? (
-              <ButtonLink href="/admin/enquiries" variant="ghost" size="sm" iconEnd="chevronRight">
+              <ButtonLink
+                href="/admin/enquiries"
+                variant="ghost"
+                size="sm"
+                iconEnd="chevronRight"
+              >
                 {t("dashboard.viewAll")}
               </ButtonLink>
             ) : null}
           </div>
           {data.recentEnquiries.length === 0 ? (
-            <EmptyState icon="message" title={t("dashboard.noEnquiries")} body={t("dashboard.noEnquiriesBody")} />
+            <EmptyState
+              icon="message"
+              title={t("dashboard.noEnquiries")}
+              body={t("dashboard.noEnquiriesBody")}
+            />
           ) : (
             <Card padded={false}>
               <ul className="divide-y divide-line">
@@ -381,12 +552,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       className="flex min-h-14 items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-hover"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-ink">{enquiry.subject}</span>
+                        <span className="block truncate text-sm font-medium text-ink">
+                          {enquiry.subject}
+                        </span>
                         <span className="block truncate text-xs text-ink-3">
-                          {enquiry.contactName} · {label("enquiryType", enquiry.type)} · {date(enquiry.createdAt, "short")}
+                          {enquiry.contactName} · {label("enquiryType", enquiry.type)} ·{" "}
+                          {date(enquiry.createdAt, "short")}
                         </span>
                       </span>
-                      <Badge tone={toneFor("enquiryStatus", enquiry.status)}>{label("enquiryStatus", enquiry.status)}</Badge>
+                      <Badge tone={toneFor("enquiryStatus", enquiry.status)}>
+                        {label("enquiryStatus", enquiry.status)}
+                      </Badge>
                     </Link>
                   </li>
                 ))}

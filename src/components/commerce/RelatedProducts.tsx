@@ -3,6 +3,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import type { Product } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * The row beneath a product. Uses the same card grammar as the homepage
@@ -13,16 +14,17 @@ import type { Product } from "@/lib/data";
  * Renders nothing at all when there is nothing to show. An empty
  * "You may also like" heading over blank space is worse than silence.
  */
-export function RelatedProducts({ products }: { products: readonly Product[] }) {
+export async function RelatedProducts({ products }: { products: readonly Product[] }) {
   if (products.length === 0) return null;
+  const { t } = await getDictionary();
 
   return (
     <section className="border-t border-hairline section-pad">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal>
-          <Eyebrow>Also from the atelier</Eyebrow>
+          <Eyebrow>{t.shop.alsoFromAtelier}</Eyebrow>
           <h2 className="display-2 mt-3 font-display font-light text-olive">
-            Composed in the same spirit.
+            {t.shop.sameSpirit}
           </h2>
         </Reveal>
       </div>

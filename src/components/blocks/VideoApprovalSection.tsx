@@ -2,28 +2,31 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
-import { VIDEO_APPROVAL } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * "See it before it's delivered" — the video-approval promise as a
  * quiet cream section. (UI now; wired to real WhatsApp later.)
  */
-export function VideoApprovalSection() {
+export async function VideoApprovalSection() {
+  const { t } = await getDictionary();
+  const copy = t.videoApproval;
+
   return (
     <section className="bg-cream section-pad">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 gutter lg:grid-cols-2 lg:items-center lg:gap-16">
         <Reveal>
-          <Eyebrow>{VIDEO_APPROVAL.eyebrow}</Eyebrow>
+          <Eyebrow>{copy.eyebrow}</Eyebrow>
           <h2 className="display-2 mt-3 font-display font-light text-olive">
-            {VIDEO_APPROVAL.title}
+            {copy.title}
           </h2>
           <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
-            {VIDEO_APPROVAL.copy}
+            {copy.copy}
           </p>
         </Reveal>
 
         <Stagger className="flex flex-col gap-6">
-          {VIDEO_APPROVAL.steps.map((step, i) => (
+          {copy.steps.map((step, i) => (
             <StaggerItem key={step}>
               <div className="flex items-center gap-4">
                 <span className="relative flex h-9 w-9 shrink-0 items-center justify-center">

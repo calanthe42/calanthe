@@ -1,0 +1,4376 @@
+CALANTHE — ARABIC REVIEW SHEET
+
+How to use this: read the Arabic against the English. Where it is wrong,
+write the correct Arabic on the CORRECTION line. Leave it blank if the
+Arabic is right. Nothing else needs filling in.
+
+A {word} in braces is replaced at runtime by a real value — a price, a
+name, a number. Keep it exactly as written, but move it to wherever it
+belongs in the Arabic sentence.
+
+844 strings in total. 0 are flagged below as likely problems.
+
+========================================================================
+EVERYTHING ELSE
+========================================================================
+
+
+--- occasionNames ---
+
+occasionNames.birthday
+  ENGLISH    Birthday
+  ARABIC     أعياد الميلاد
+  CORRECTION 
+
+occasionNames.graduation
+  ENGLISH    Graduation
+  ARABIC     التخرّج
+  CORRECTION 
+
+occasionNames.new-born
+  ENGLISH    New Born
+  ARABIC     المولود الجديد
+  CORRECTION 
+
+occasionNames.love
+  ENGLISH    Love
+  ARABIC     الحب
+  CORRECTION 
+
+occasionNames.just-because
+  ENGLISH    Just Because
+  ARABIC     بلا مناسبة
+  CORRECTION 
+
+
+--- flowerNames ---
+
+flowerNames.roses
+  ENGLISH    Roses
+  ARABIC     ورد
+  CORRECTION 
+
+flowerNames.peonies
+  ENGLISH    Peonies
+  ARABIC     فاوانيا
+  CORRECTION 
+
+flowerNames.orchids
+  ENGLISH    Orchids
+  ARABIC     أوركيد
+  CORRECTION 
+
+flowerNames.tulips
+  ENGLISH    Tulips
+  ARABIC     توليب
+  CORRECTION 
+
+flowerNames.lilies
+  ENGLISH    Lilies
+  ARABIC     زنبق
+  CORRECTION 
+
+flowerNames.wildflowers
+  ENGLISH    Wildflowers
+  ARABIC     زهور برية
+  CORRECTION 
+
+
+--- byo ---
+
+byo.eyebrow
+  ENGLISH    Bespoke
+  ARABIC     تصميم خاص
+  CORRECTION 
+
+byo.title
+  ENGLISH    Made for them, by you.
+  ARABIC     صُنع لهم، بيديكِ.
+  CORRECTION 
+
+byo.titleLine1
+  ENGLISH    Made for them,
+  ARABIC     صُنع لهم،
+  CORRECTION 
+
+byo.titleLine2
+  ENGLISH    by you.
+  ARABIC     بيديكِ.
+  CORRECTION 
+
+byo.createYours
+  ENGLISH    Create Yours
+  ARABIC     صمّمي باقتك
+  CORRECTION 
+
+byo.intro
+  ENGLISH    Choose your budget, colours and preferences. We'll take care of the flowers.
+  ARABIC     اختاري ميزانيتك وألوانك وتفضيلاتك، ونحن نتولى الزهور.
+  CORRECTION 
+
+byo.steps.budget
+  ENGLISH    Your budget
+  ARABIC     ميزانيتك
+  CORRECTION 
+
+byo.steps.colours
+  ENGLISH    Colours
+  ARABIC     الألوان
+  CORRECTION 
+
+byo.steps.vase
+  ENGLISH    A vase?
+  ARABIC     مع مزهرية؟
+  CORRECTION 
+
+byo.steps.card
+  ENGLISH    The card
+  ARABIC     البطاقة
+  CORRECTION 
+
+byo.steps.notes
+  ENGLISH    For the florist
+  ARABIC     ملاحظات لمنسّقة الزهور
+  CORRECTION 
+
+byo.steps.gift
+  ENGLISH    Who is it for?
+  ARABIC     لمن هي؟
+  CORRECTION 
+
+byo.steps.contact
+  ENGLISH    Where to reach you
+  ARABIC     كيف نصل إليك
+  CORRECTION 
+
+byo.budgetOther
+  ENGLISH    Another amount
+  ARABIC     مبلغ آخر
+  CORRECTION 
+
+byo.budgetOtherLabel
+  ENGLISH    Your budget in AED
+  ARABIC     ميزانيتك بالدرهم
+  CORRECTION 
+
+byo.budgetNote
+  ENGLISH    Every budget is composed with the same care — a smaller arrangement is simply a quieter one.
+  ARABIC     كل ميزانية تُنسَّق بالعناية نفسها — التنسيق الأصغر ببساطة أكثر هدوءًا.
+  CORRECTION 
+
+byo.coloursHint
+  ENGLISH    Choose as many as you like.
+  ARABIC     اختاري ما تشائين.
+  CORRECTION 
+
+byo.colourNames.whitesCreams
+  ENGLISH    Whites & Creams
+  ARABIC     أبيض وكريمي
+  CORRECTION 
+
+byo.colourNames.blushRose
+  ENGLISH    Blush & Rose
+  ARABIC     وردي فاتح
+  CORRECTION 
+
+byo.colourNames.peachApricot
+  ENGLISH    Peach & Apricot
+  ARABIC     خوخي ومشمشي
+  CORRECTION 
+
+byo.colourNames.sunlitYellows
+  ENGLISH    Sunlit Yellows
+  ARABIC     أصفر مشمس
+  CORRECTION 
+
+byo.colourNames.burntOrangeRust
+  ENGLISH    Burnt Orange & Rust
+  ARABIC     برتقالي محروق وصدئي
+  CORRECTION 
+
+byo.colourNames.redsBurgundies
+  ENGLISH    Reds & Burgundies
+  ARABIC     أحمر وعنابي
+  CORRECTION 
+
+byo.colourNames.lilacPurples
+  ENGLISH    Lilac & Purples
+  ARABIC     ليلكي وبنفسجي
+  CORRECTION 
+
+byo.colourNames.greensFoliage
+  ENGLISH    Greens & Foliage
+  ARABIC     أخضر وأوراق
+  CORRECTION 
+
+byo.floristChoice
+  ENGLISH    Let the florist choose
+  ARABIC     دعي منسّقة الزهور تختار
+  CORRECTION 
+
+byo.floristChoiceNote
+  ENGLISH    A palette picked on the morning
+  ARABIC     لوحة ألوان تُختار صباح التنسيق
+  CORRECTION 
+
+byo.floristChoiceAnswer
+  ENGLISH    Florist's choice
+  ARABIC     اختيار منسّقة الزهور
+  CORRECTION 
+
+byo.colourNoteLabel
+  ENGLISH    Anything else about the colours?
+  ARABIC     هل من شيء آخر عن الألوان؟
+  CORRECTION 
+
+byo.colourNotePlaceholder
+  ENGLISH    A shade you love, a colour to avoid, something to match…
+  ARABIC     درجة تحبينها، لون تتجنبينه، أو شيء يجب أن يتناسق معه…
+  CORRECTION 
+
+byo.colourSeasonNote
+  ENGLISH    If a colour is not in season on the day, we will contact you before composing and agree the closest thing to it.
+  ARABIC     إذا لم يكن اللون متوفرًا في موسمه ذلك اليوم، سنتواصل معك قبل التنسيق ونتفق على أقرب بديل له.
+  CORRECTION 
+
+byo.vaseYes
+  ENGLISH    Yes, in a vase
+  ARABIC     نعم، في مزهرية
+  CORRECTION 
+
+byo.vaseNo
+  ENGLISH    No
+  ARABIC     لا
+  CORRECTION 
+
+byo.vaseNoNote
+  ENGLISH    Flower bag
+  ARABIC     حقيبة زهور
+  CORRECTION 
+
+byo.vaseAnswerYes
+  ENGLISH    With a vase
+  ARABIC     مع مزهرية
+  CORRECTION 
+
+byo.vaseAnswerNo
+  ENGLISH    Flower bag
+  ARABIC     حقيبة زهور
+  CORRECTION 
+
+byo.cardPlaceholder
+  ENGLISH    Write the card message here…
+  ARABIC     اكتبي رسالة البطاقة هنا…
+  CORRECTION 
+
+byo.cardLeaveBlank
+  ENGLISH    Leave the card blank
+  ARABIC     اتركي البطاقة فارغة
+  CORRECTION 
+
+byo.cardAnswerBlank
+  ENGLISH    Left blank
+  ARABIC     تُركت فارغة
+  CORRECTION 
+
+byo.cardAnswerWritten
+  ENGLISH    Written
+  ARABIC     مكتوبة
+  CORRECTION 
+
+byo.notesHint
+  ENGLISH    Optional.
+  ARABIC     اختياري.
+  CORRECTION 
+
+byo.notesPlaceholder
+  ENGLISH    Allergies, flowers to avoid, a style you love — anything that helps.
+  ARABIC     حساسية، زهور تُتجنَّب، أسلوب تحبينه — أي شيء يساعدنا.
+  CORRECTION 
+
+byo.notesAnswer
+  ENGLISH    Noted
+  ARABIC     مسجّلة
+  CORRECTION 
+
+byo.giftYes
+  ENGLISH    It's a gift
+  ARABIC     إنها هدية
+  CORRECTION 
+
+byo.giftYesNote
+  ENGLISH    Sent to someone else
+  ARABIC     تُرسل إلى شخص آخر
+  CORRECTION 
+
+byo.giftNo
+  ENGLISH    For myself
+  ARABIC     لنفسي
+  CORRECTION 
+
+byo.giftNoNote
+  ENGLISH    Delivered to me
+  ARABIC     تُسلَّم إليّ
+  CORRECTION 
+
+byo.giftAnswerYes
+  ENGLISH    A gift
+  ARABIC     هدية
+  CORRECTION 
+
+byo.giftAnswerNo
+  ENGLISH    For yourself
+  ARABIC     لنفسك
+  CORRECTION 
+
+byo.recipientName
+  ENGLISH    Their name
+  ARABIC     اسم المستلم
+  CORRECTION 
+
+byo.recipientPhone
+  ENGLISH    Their phone
+  ARABIC     هاتف المستلم
+  CORRECTION 
+
+byo.recipientPhoneNote
+  ENGLISH    Used only to coordinate delivery. The price is never shown to them.
+  ARABIC     يُستخدم لتنسيق التوصيل فقط، ولا يظهر السعر له أبدًا.
+  CORRECTION 
+
+byo.place
+  ENGLISH    Where is it going?
+  ARABIC     إلى أين تذهب؟
+  CORRECTION 
+
+byo.placePlaceholder
+  ENGLISH    Al Reem Island, Abu Dhabi
+  ARABIC     جزيرة الريم، أبوظبي
+  CORRECTION 
+
+byo.placeNote
+  ENGLISH    An area is enough for now — Delivery confirms the exact address with you.
+  ARABIC     تكفي المنطقة الآن — قسم التوصيل يؤكد العنوان الدقيق معك.
+  CORRECTION 
+
+byo.yourName
+  ENGLISH    Your name
+  ARABIC     اسمك
+  CORRECTION 
+
+byo.yourPhone
+  ENGLISH    Your phone
+  ARABIC     هاتفك
+  CORRECTION 
+
+byo.yourEmail
+  ENGLISH    Your email
+  ARABIC     بريدك الإلكتروني
+  CORRECTION 
+
+byo.summaryTitle
+  ENGLISH    Your arrangement
+  ARABIC     تنسيقك
+  CORRECTION 
+
+byo.summaryBudget
+  ENGLISH    Budget
+  ARABIC     الميزانية
+  CORRECTION 
+
+byo.summaryColours
+  ENGLISH    Colours
+  ARABIC     الألوان
+  CORRECTION 
+
+byo.summaryColourNote
+  ENGLISH    Colour note
+  ARABIC     ملاحظة اللون
+  CORRECTION 
+
+byo.summaryVase
+  ENGLISH    Vase
+  ARABIC     المزهرية
+  CORRECTION 
+
+byo.summaryCard
+  ENGLISH    Card
+  ARABIC     البطاقة
+  CORRECTION 
+
+byo.summaryNotes
+  ENGLISH    Notes
+  ARABIC     ملاحظات
+  CORRECTION 
+
+byo.summaryFor
+  ENGLISH    For
+  ARABIC     لمن
+  CORRECTION 
+
+byo.summaryTotal
+  ENGLISH    Estimated total
+  ARABIC     الإجمالي التقديري
+  CORRECTION 
+
+byo.summaryEmpty
+  ENGLISH    Not chosen yet
+  ARABIC     لم يُختر بعد
+  CORRECTION 
+
+byo.summaryNone
+  ENGLISH    None
+  ARABIC     لا شيء
+  CORRECTION 
+
+byo.send
+  ENGLISH    Send to a Florist
+  ARABIC     أرسلي إلى الأتيليه
+  CORRECTION 
+
+byo.sending
+  ENGLISH    Sending…
+  ARABIC     جارٍ الإرسال…
+  CORRECTION 
+
+byo.sendNote
+  ENGLISH    Sends your request to the atelier. Nothing is ordered and nothing is charged until a florist confirms it with you.
+  ARABIC     يُرسل طلبك إلى الأتيليه. لا يتم أي طلب ولا أي خصم حتى تؤكّده منسّقة الزهور معك.
+  CORRECTION 
+
+byo.seasonal
+  ENGLISH    Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.
+  ARABIC     تخضع الزهور للتوفر الموسمي. قد تستبدل منسّقة الزهور بعض السيقان بأخرى مساوية أو أعلى قيمة مع الحفاظ على لوحة الألوان وروح التنسيق.
+  CORRECTION 
+
+byo.sentTitle
+  ENGLISH    Your request is with the atelier.
+  ARABIC     طلبك وصل إلى الأتيليه.
+  CORRECTION 
+
+byo.sentBody
+  ENGLISH    A florist will be in touch to confirm the arrangement, the delivery and the total of {total} before composing. Nothing has been charged.
+  ARABIC     ستتواصل معك منسّقة الزهور لتأكيد التنسيق والتوصيل والإجمالي البالغ {total} قبل البدء. لم يتم خصم أي مبلغ.
+  CORRECTION 
+
+byo.sentReference
+  ENGLISH    Reference {reference}
+  ARABIC     الرقم المرجعي {reference}
+  CORRECTION 
+
+byo.whatsapp
+  ENGLISH    Continue on WhatsApp
+  ARABIC     أكملي عبر واتساب
+  CORRECTION 
+
+byo.alsoWhatsapp
+  ENGLISH    Also message on WhatsApp
+  ARABIC     راسلينا أيضًا على واتساب
+  CORRECTION 
+
+byo.editChoices
+  ENGLISH    Edit My Choices
+  ARABIC     تعديل اختياراتي
+  CORRECTION 
+
+byo.budgetFrom
+  ENGLISH    From {min}
+  ARABIC     من {min}
+  CORRECTION 
+
+byo.notesLabel
+  ENGLISH    Notes for the florist
+  ARABIC     ملاحظات لمنسّقة الزهور
+  CORRECTION 
+
+byo.audience
+  ENGLISH    Who is it for?
+  ARABIC     لمن هي؟
+  CORRECTION 
+
+byo.backToShop
+  ENGLISH    Back to the shop
+  ARABIC     العودة إلى المتجر
+  CORRECTION 
+
+byo.errors.budget
+  ENGLISH    Choose a budget, or type one of your own.
+  ARABIC     اختاري ميزانية، أو اكتبي مبلغًا خاصًا بك.
+  CORRECTION 
+
+byo.errors.budgetMin
+  ENGLISH    The smallest arrangement we compose is {min}.
+  ARABIC     أصغر تنسيق نقوم بتنسيقه هو {min}.
+  CORRECTION 
+
+byo.errors.colours
+  ENGLISH    Choose a palette, or let the florist choose.
+  ARABIC     اختاري لوحة ألوان، أو دعي منسّقة الزهور تختار.
+  CORRECTION 
+
+byo.errors.vase
+  ENGLISH    Let us know whether it goes in a vase.
+  ARABIC     أخبرينا إن كانت في مزهرية.
+  CORRECTION 
+
+byo.errors.card
+  ENGLISH    Write the card, or choose to leave it blank.
+  ARABIC     اكتبي البطاقة، أو اختاري تركها فارغة.
+  CORRECTION 
+
+byo.errors.gift
+  ENGLISH    Tell us who it is for.
+  ARABIC     أخبرينا لمن هي.
+  CORRECTION 
+
+byo.errors.name
+  ENGLISH    Please tell us your name.
+  ARABIC     من فضلك اكتبي اسمك.
+  CORRECTION 
+
+byo.errors.phone
+  ENGLISH    Please add a phone number we can reach you on.
+  ARABIC     من فضلك أضيفي رقم هاتف نصل إليك عليه.
+  CORRECTION 
+
+byo.errors.email
+  ENGLISH    Please add an email address.
+  ARABIC     من فضلك أضيفي بريدًا إلكترونيًا.
+  CORRECTION 
+
+byo.errors.recipientName
+  ENGLISH    Please add the recipient's name.
+  ARABIC     من فضلك أضيفي اسم المستلم.
+  CORRECTION 
+
+
+--- nav ---
+
+nav.home
+  ENGLISH    Home
+  ARABIC     الرئيسية
+  CORRECTION 
+
+nav.about
+  ENGLISH    About Calanthe
+  ARABIC     عن كالانثي
+  CORRECTION 
+
+nav.shop
+  ENGLISH    Shop
+  ARABIC     المتجر
+  CORRECTION 
+
+nav.shopAll
+  ENGLISH    Shop all
+  ARABIC     كل المتجر
+  CORRECTION 
+
+nav.shopByOccasion
+  ENGLISH    Shop by Occasion
+  ARABIC     التسوق حسب المناسبة
+  CORRECTION 
+
+nav.readyToday
+  ENGLISH    Ready Made for Today
+  ARABIC     جاهز للتوصيل اليوم
+  CORRECTION 
+
+nav.buildYourOwn
+  ENGLISH    Build Your Own
+  ARABIC     صمّمي باقتك
+  CORRECTION 
+
+nav.memberships
+  ENGLISH    Memberships
+  ARABIC     العضويات
+  CORRECTION 
+
+nav.events
+  ENGLISH    Events
+  ARABIC     الفعاليات
+  CORRECTION 
+
+nav.eventsAll
+  ENGLISH    Events all
+  ARABIC     كل الفعاليات
+  CORRECTION 
+
+nav.guestFavors
+  ENGLISH    Guest Favors
+  ARABIC     هدايا الضيوف
+  CORRECTION 
+
+nav.eventArrangements
+  ENGLISH    Event Arrangements
+  ARABIC     تنسيقات الفعاليات
+  CORRECTION 
+
+nav.account
+  ENGLISH    Account
+  ARABIC     حسابي
+  CORRECTION 
+
+nav.search
+  ENGLISH    Search arrangements
+  ARABIC     ابحثي عن باقة
+  CORRECTION 
+
+nav.cart
+  ENGLISH    Cart
+  ARABIC     الحقيبة
+  CORRECTION 
+
+nav.wishlist
+  ENGLISH    Wishlist
+  ARABIC     المفضّلة
+  CORRECTION 
+
+nav.viewAll
+  ENGLISH    View all
+  ARABIC     عرض الكل
+  CORRECTION 
+
+nav.atelier
+  ENGLISH    Flower Atelier — UAE
+  ARABIC     أتيليه الزهور — الإمارات
+  CORRECTION 
+
+nav.byOccasion
+  ENGLISH    By occasion
+  ARABIC     حسب المناسبة
+  CORRECTION 
+
+nav.skipToContent
+  ENGLISH    Skip to content
+  ARABIC     تخطّي إلى المحتوى
+  CORRECTION 
+
+
+--- strip ---
+
+strip.emirates
+  ENGLISH    Delivering across all seven Emirates
+  ARABIC     نوصّل إلى الإمارات السبع
+  CORRECTION 
+
+strip.video
+  ENGLISH    Video approval on every order
+  ARABIC     موافقتك بالفيديو على كل طلب
+  CORRECTION 
+
+strip.composed
+  ENGLISH    Every arrangement composed by hand
+  ARABIC     كل باقة تُنسَّق يدويًا
+  CORRECTION 
+
+
+--- search ---
+
+search.label
+  ENGLISH    Search the atelier
+  ARABIC     ابحثي في الأتيليه
+  CORRECTION 
+
+search.placeholder
+  ENGLISH    Roses, birthday, Amber Hour…
+  ARABIC     ورد، عيد ميلاد، ساعة العنبر…
+  CORRECTION 
+
+search.close
+  ENGLISH    Close search
+  ARABIC     إغلاق البحث
+  CORRECTION 
+
+search.suggestionsTitle
+  ENGLISH    Popular right now
+  ARABIC     الأكثر بحثًا الآن
+  CORRECTION 
+
+search.resultsTitle
+  ENGLISH    Arrangements
+  ARABIC     الباقات
+  CORRECTION 
+
+search.viewAll
+  ENGLISH    View all results
+  ARABIC     عرض كل النتائج
+  CORRECTION 
+
+search.searchWhole
+  ENGLISH    Search the whole collection
+  ARABIC     ابحثي في المجموعة كاملة
+  CORRECTION 
+
+search.noResultsTitle
+  ENGLISH    Nothing by that name.
+  ARABIC     لا شيء بهذا الاسم.
+  CORRECTION 
+
+search.noResultsBody
+  ENGLISH    Try an occasion, a flower, or the name of an arrangement — or tell a florist what you have in mind.
+  ARABIC     جرّبي مناسبة، أو نوع زهرة، أو اسم باقة — أو أخبري منسّقة الزهور بما يدور في بالك.
+  CORRECTION 
+
+search.askFlorist
+  ENGLISH    Ask a florist on WhatsApp
+  ARABIC     اسألي منسّقة الزهور على واتساب
+  CORRECTION 
+
+search.browseAll
+  ENGLISH    Browse the collection
+  ARABIC     تصفّحي المجموعة
+  CORRECTION 
+
+
+--- hero ---
+
+hero.eyebrow
+  ENGLISH    Flower Atelier — UAE
+  ARABIC     أتيليه الزهور — الإمارات
+  CORRECTION 
+
+hero.headlineOne
+  ENGLISH    Where feelings
+  ARABIC     حيث تتّخذ المشاعر
+  CORRECTION 
+
+hero.headlineTwo
+  ENGLISH    take form.
+  ARABIC     شكلها.
+  CORRECTION 
+
+hero.shopFlowers
+  ENGLISH    Shop Flowers
+  ARABIC     تسوّقي الزهور
+  CORRECTION 
+
+hero.buildYourOwn
+  ENGLISH    Build Your Own
+  ARABIC     صمّمي باقتك
+  CORRECTION 
+
+
+--- band ---
+
+band.sendFlowersFor
+  ENGLISH    Send flowers for
+  ARABIC     أرسلي الزهور لـ
+  CORRECTION 
+
+band.luxury
+  ENGLISH    Luxury
+  ARABIC     الفاخرة
+  CORRECTION 
+
+
+--- sections ---
+
+sections.newArrivalsEyebrow
+  ENGLISH    New Arrivals
+  ARABIC     وصل حديثًا
+  CORRECTION 
+
+sections.newArrivalsTitle
+  ENGLISH    Fresh from the atelier.
+  ARABIC     طازجة من الأتيليه.
+  CORRECTION 
+
+sections.occasionsEyebrow
+  ENGLISH    Shop by Occasion
+  ARABIC     التسوق حسب المناسبة
+  CORRECTION 
+
+sections.occasionsTitle
+  ENGLISH    For every unspoken thing.
+  ARABIC     لكل ما لا يُقال.
+  CORRECTION 
+
+sections.bestSellersEyebrow
+  ENGLISH    Best Sellers
+  ARABIC     الأكثر طلبًا
+  CORRECTION 
+
+sections.bestSellersQuote
+  ENGLISH    The arrangements our couriers know by heart.
+  ARABIC     الباقات التي يعرفها مندوبونا عن ظهر قلب.
+  CORRECTION 
+
+sections.bestSellersAttribution
+  ENGLISH    The Atelier
+  ARABIC     الأتيليه
+  CORRECTION 
+
+sections.bestSellersTitle
+  ENGLISH    Loved, week after week.
+  ARABIC     محبوبة، أسبوعًا بعد أسبوع.
+  CORRECTION 
+
+sections.touchTitle
+  ENGLISH    The Calanthe Touch
+  ARABIC     لمسة كالانثي
+  CORRECTION 
+
+sections.promiseTitle
+  ENGLISH    Promised on every order.
+  ARABIC     نعِدُ به في كل طلب.
+  CORRECTION 
+
+sections.promiseAsk
+  ENGLISH    Questions before you order? A florist answers on
+  ARABIC     لديك سؤال قبل الطلب؟ تجيبك منسّقة الزهور عبر
+  CORRECTION 
+
+sections.instagramLine
+  ENGLISH    Arrangements as they leave the atelier, most mornings.
+  ARABIC     باقات تغادر الأتيليه، في معظم الصباحات.
+  CORRECTION 
+
+
+--- touch ---
+
+touch.handTitle
+  ENGLISH    Hand-arranged daily
+  ARABIC     تُنسّق يدويًا كل يوم
+  CORRECTION 
+
+touch.handCopy
+  ENGLISH    Every stem is chosen and placed by hand in our atelier, morning by morning.
+  ARABIC     كل ساق تُنتقى وتُنسّق يدويًا في الأتيليه، صباحًا بعد صباح.
+  CORRECTION 
+
+touch.wrapTitle
+  ENGLISH    Thoughtful presentation
+  ARABIC     تقديم يليق بها
+  CORRECTION 
+
+touch.wrapCopy
+  ENGLISH    Wrapped in embossed paper, tied and sealed with the Calanthe monogram.
+  ARABIC     تُغلّف بورق مزخرف، وتُربط وتُختم بشعار كالانثي.
+  CORRECTION 
+
+touch.deliverTitle
+  ENGLISH    Delivered with care
+  ARABIC     تُوصَّل بعناية
+  CORRECTION 
+
+touch.deliverCopy
+  ENGLISH    Kept cool and upright to your door, across all seven emirates.
+  ARABIC     تبقى منتعشة وقائمة حتى بابك، في الإمارات السبع.
+  CORRECTION 
+
+
+--- trust ---
+
+trust.sameDayTitle
+  ENGLISH    Delivered on your day
+  ARABIC     توصيل في يومك المختار
+  CORRECTION 
+
+trust.sameDayCopy
+  ENGLISH    Choose the day and the window that suit them.
+  ARABIC     اختاري اليوم والوقت المناسبين لهم.
+  CORRECTION 
+
+trust.videoTitle
+  ENGLISH    Video approval
+  ARABIC     موافقتك بالفيديو
+  CORRECTION 
+
+trust.videoCopy
+  ENGLISH    See your arrangement on WhatsApp before it leaves.
+  ARABIC     شاهدي باقتك عبر واتساب قبل أن تغادر.
+  CORRECTION 
+
+trust.freshTitle
+  ENGLISH    Freshness guarantee
+  ARABIC     ضمان النضارة
+  CORRECTION 
+
+trust.freshCopy
+  ENGLISH    Composed the morning of delivery, never before.
+  ARABIC     تُنسّق صباح التوصيل، لا قبل ذلك.
+  CORRECTION 
+
+trust.emiratesTitle
+  ENGLISH    All seven Emirates
+  ARABIC     الإمارات السبع
+  CORRECTION 
+
+trust.emiratesCopy
+  ENGLISH    One atelier, delivering across the UAE.
+  ARABIC     أتيليه واحد، يوصّل في أنحاء الدولة.
+  CORRECTION 
+
+
+--- empty ---
+
+empty.eyebrow
+  ENGLISH    Made to order
+  ARABIC     حسب الطلب
+  CORRECTION 
+
+empty.title
+  ENGLISH    Every arrangement can be made to order.
+  ARABIC     كل باقة يمكن أن تُصنع خصيصًا لك.
+  CORRECTION 
+
+empty.body
+  ENGLISH    The next collection is being composed. Until it arrives, tell us the moment, the colours and your budget, and a florist will compose it for you.
+  ARABIC     المجموعة القادمة قيد التنسيق. وحتى تصل، أخبرينا بالمناسبة والألوان والميزانية، وتنسّقها لك إحدى منسّقات الزهور.
+  CORRECTION 
+
+empty.messageFlorist
+  ENGLISH    Message a Florist
+  ARABIC     تواصلي مع منسّقة الزهور
+  CORRECTION 
+
+
+--- cart ---
+
+cart.title
+  ENGLISH    Your Cart
+  ARABIC     سلّتك
+  CORRECTION 
+
+cart.close
+  ENGLISH    Close cart
+  ARABIC     إغلاق السلة
+  CORRECTION 
+
+cart.empty
+  ENGLISH    Your cart is waiting to bloom.
+  ARABIC     سلّتك تنتظر أن تُزهر.
+  CORRECTION 
+
+cart.emptyBody
+  ENGLISH    Choose an arrangement, or have one composed for you.
+  ARABIC     اختاري باقة جاهزة، أو دعينا نُنسّق واحدة خصيصًا لك.
+  CORRECTION 
+
+cart.shopFlowers
+  ENGLISH    Shop Flowers
+  ARABIC     تسوّقي الزهور
+  CORRECTION 
+
+cart.buildYourOwn
+  ENGLISH    Build Your Own
+  ARABIC     صمّمي باقتك
+  CORRECTION 
+
+cart.loading
+  ENGLISH    Loading your cart
+  ARABIC     جارٍ تحميل سلّتك
+  CORRECTION 
+
+cart.subtotal
+  ENGLISH    Subtotal
+  ARABIC     المجموع الفرعي
+  CORRECTION 
+
+cart.delivery
+  ENGLISH    Delivery
+  ARABIC     التوصيل
+  CORRECTION 
+
+cart.deliveryAtCheckout
+  ENGLISH    Calculated at checkout
+  ARABIC     يُحتسب عند إتمام الطلب
+  CORRECTION 
+
+cart.deliveryFree
+  ENGLISH    Complimentary
+  ARABIC     مجاني
+  CORRECTION 
+
+cart.checkout
+  ENGLISH    Checkout
+  ARABIC     إتمام الطلب
+  CORRECTION 
+
+cart.continueShopping
+  ENGLISH    Continue shopping
+  ARABIC     متابعة التسوّق
+  CORRECTION 
+
+cart.remove
+  ENGLISH    Remove
+  ARABIC     إزالة
+  CORRECTION 
+
+cart.removeItem
+  ENGLISH    Remove {name} from cart
+  ARABIC     إزالة {name} من السلة
+  CORRECTION 
+
+cart.increase
+  ENGLISH    Increase quantity of {name}
+  ARABIC     زيادة كمية {name}
+  CORRECTION 
+
+cart.decrease
+  ENGLISH    Decrease quantity of {name}
+  ARABIC     إنقاص كمية {name}
+  CORRECTION 
+
+cart.quantity
+  ENGLISH    Quantity {n}
+  ARABIC     الكمية {n}
+  CORRECTION 
+
+cart.completeTheGift
+  ENGLISH    Complete the gift
+  ARABIC     أتمّي الهدية
+  CORRECTION 
+
+cart.freeDeliveryAway
+  ENGLISH    {amount} away from complimentary delivery
+  ARABIC     يفصلك {amount} عن التوصيل المجاني
+  CORRECTION 
+
+cart.freeDeliveryReached
+  ENGLISH    Your delivery is complimentary
+  ARABIC     توصيلك مجاني
+  CORRECTION 
+
+cart.giftMessageIncluded
+  ENGLISH    Gift message included
+  ARABIC     تتضمّن بطاقة إهداء
+  CORRECTION 
+
+cart.dropped.one
+  ENGLISH    One arrangement is no longer available and has been removed.
+  ARABIC     باقة واحدة لم تعد متوفرة وقد أُزيلت.
+  CORRECTION 
+
+cart.dropped.two
+  ENGLISH    {n} arrangements are no longer available and have been removed.
+  ARABIC     باقتان لم تعودا متوفرتين وقد أُزيلتا.
+  CORRECTION 
+
+cart.dropped.few
+  ENGLISH    {n} arrangements are no longer available and have been removed.
+  ARABIC     {n} باقات لم تعد متوفرة وقد أُزيلت.
+  CORRECTION 
+
+cart.dropped.many
+  ENGLISH    {n} arrangements are no longer available and have been removed.
+  ARABIC     {n} باقة لم تعد متوفرة وقد أُزيلت.
+  CORRECTION 
+
+cart.dropped.other
+  ENGLISH    {n} arrangements are no longer available and have been removed.
+  ARABIC     {n} باقة لم تعد متوفرة وقد أُزيلت.
+  CORRECTION 
+
+
+--- ui ---
+
+ui.navMain
+  ENGLISH    Main navigation
+  ARABIC     التنقّل الرئيسي
+  CORRECTION 
+
+ui.navMobile
+  ENGLISH    Mobile navigation
+  ARABIC     التنقّل على الهاتف
+  CORRECTION 
+
+ui.home
+  ENGLISH    Calanthe — home
+  ARABIC     كالانثي — الصفحة الرئيسية
+  CORRECTION 
+
+ui.membershipAndEvents
+  ENGLISH    Membership and events
+  ARABIC     العضوية والفعاليات
+  CORRECTION 
+
+ui.cart
+  ENGLISH    Cart
+  ARABIC     السلة
+  CORRECTION 
+
+ui.close
+  ENGLISH    Close
+  ARABIC     إغلاق
+  CORRECTION 
+
+ui.shopShortcuts
+  ENGLISH    Shop shortcuts
+  ARABIC     اختصارات المتجر
+  CORRECTION 
+
+ui.productCategories
+  ENGLISH    Product categories
+  ARABIC     فئات المنتجات
+  CORRECTION 
+
+ui.whatsappChat
+  ENGLISH    Chat with us on WhatsApp
+  ARABIC     تواصلي معنا على واتساب
+  CORRECTION 
+
+ui.monogram
+  ENGLISH    Calanthe monogram
+  ARABIC     شعار كالانثي
+  CORRECTION 
+
+ui.from
+  ENGLISH    from
+  ARABIC     من
+  CORRECTION 
+
+ui.viewArrangement
+  ENGLISH    View arrangement
+  ARABIC     عرض الباقة
+  CORRECTION 
+
+ui.badgeNew
+  ENGLISH    New
+  ARABIC     جديد
+  CORRECTION 
+
+ui.badgeFeatured
+  ENGLISH    Featured
+  ARABIC     مميّز
+  CORRECTION 
+
+ui.cartWith
+  ENGLISH    Cart, {items}
+  ARABIC     السلة، {items}
+  CORRECTION 
+
+ui.cartEmpty
+  ENGLISH    Cart, empty
+  ARABIC     السلة فارغة
+  CORRECTION 
+
+ui.addAddon
+  ENGLISH    Add {addon} to {product}, {price}
+  ARABIC     أضيفي {addon} إلى {product}، {price}
+  CORRECTION 
+
+
+--- categoryNames ---
+
+categoryNames.bouquet
+  ENGLISH    Bouquets
+  ARABIC     باقات
+  CORRECTION 
+
+categoryNames.vase-arrangement
+  ENGLISH    Vase Arrangements
+  ARABIC     تنسيقات المزهريات
+  CORRECTION 
+
+categoryNames.box-arrangement
+  ENGLISH    Box Arrangements
+  ARABIC     تنسيقات الصناديق
+  CORRECTION 
+
+categoryNames.basket
+  ENGLISH    Baskets
+  ARABIC     سلال
+  CORRECTION 
+
+categoryNames.single-stem
+  ENGLISH    Single Stems
+  ARABIC     سيقان مفردة
+  CORRECTION 
+
+categoryNames.plant
+  ENGLISH    Plants
+  ARABIC     نباتات
+  CORRECTION 
+
+categoryNames.event-piece
+  ENGLISH    Event Pieces
+  ARABIC     قطع الفعاليات
+  CORRECTION 
+
+
+--- enquiryForm ---
+
+enquiryForm.membershipThanks
+  ENGLISH    Thank you — a florist will be in touch.
+  ARABIC     شكرًا لك — ستتواصل معك منسّقة الزهور.
+  CORRECTION 
+
+enquiryForm.membershipDone
+  ENGLISH    We have your {plan} enquiry. Nothing has been charged and no membership has started — we will agree the details with you first.
+  ARABIC     وصلنا طلبك للعضوية {plan}. ولم يُخصم أي مبلغ ولم تبدأ أي عضوية — سنتفق معك على التفاصيل أولًا.
+  CORRECTION 
+
+enquiryForm.membershipTitle
+  ENGLISH    Begin your ritual.
+  ARABIC     ابدئي طقسك.
+  CORRECTION 
+
+enquiryForm.membershipIntro
+  ENGLISH    Tell us how you would like it to arrive and a florist will call to agree the details. Nothing is charged here.
+  ARABIC     أخبرينا كيف تودّين أن تصلك، وستتصل بك منسّقة الزهور للاتفاق على التفاصيل. ولا يُخصم شيء هنا.
+  CORRECTION 
+
+enquiryForm.howOften
+  ENGLISH    How often
+  ARABIC     كم مرة
+  CORRECTION 
+
+enquiryForm.whichDay
+  ENGLISH    Which day suits you
+  ARABIC     أي يوم يناسبك
+  CORRECTION 
+
+enquiryForm.whereItGoes
+  ENGLISH    Where it should go
+  ARABIC     إلى أين تُرسل
+  CORRECTION 
+
+enquiryForm.startFrom
+  ENGLISH    Start from (optional)
+  ARABIC     البداية من (اختياري)
+  CORRECTION 
+
+enquiryForm.areaOrAddress
+  ENGLISH    Area or address (optional)
+  ARABIC     المنطقة أو العنوان (اختياري)
+  CORRECTION 
+
+enquiryForm.areaPlaceholder
+  ENGLISH    Jumeirah, Dubai
+  ARABIC     جميرا، دبي
+  CORRECTION 
+
+enquiryForm.anythingToKnow
+  ENGLISH    Anything we should know (optional)
+  ARABIC     أي شيء ينبغي أن نعرفه (اختياري)
+  CORRECTION 
+
+enquiryForm.anythingPlaceholder
+  ENGLISH    Colours you love, anything to avoid, where to leave them…
+  ARABIC     الألوان التي تحبّينها، وما يُفضّل تجنّبه، وأين تُترك…
+  CORRECTION 
+
+enquiryForm.eventThanks
+  ENGLISH    Thank you — we have your event.
+  ARABIC     شكرًا لك — وصلتنا تفاصيل مناسبتك.
+  CORRECTION 
+
+enquiryForm.eventDone
+  ENGLISH    A florist will be in touch to talk through the venue, the palette and the scale. Nothing is committed and nothing has been charged.
+  ARABIC     ستتواصل معك منسّقة الزهور للحديث عن المكان ولوحة الألوان والحجم. ولا شيء مُلزِم ولم يُخصم أي مبلغ.
+  CORRECTION 
+
+enquiryForm.whatKind
+  ENGLISH    What kind of occasion
+  ARABIC     ما نوع المناسبة
+  CORRECTION 
+
+enquiryForm.company
+  ENGLISH    Company (optional)
+  ARABIC     الشركة (اختياري)
+  CORRECTION 
+
+enquiryForm.date
+  ENGLISH    Date (optional)
+  ARABIC     التاريخ (اختياري)
+  CORRECTION 
+
+enquiryForm.guests
+  ENGLISH    Guests (optional)
+  ARABIC     عدد الضيوف (اختياري)
+  CORRECTION 
+
+enquiryForm.venue
+  ENGLISH    Venue or area (optional)
+  ARABIC     المكان أو المنطقة (اختياري)
+  CORRECTION 
+
+enquiryForm.venuePlaceholder
+  ENGLISH    Four Seasons, Jumeirah
+  ARABIC     فور سيزونز، جميرا
+  CORRECTION 
+
+enquiryForm.alreadyKnow
+  ENGLISH    Anything you already know (optional)
+  ARABIC     أي تفاصيل تعرفينها من الآن (اختياري)
+  CORRECTION 
+
+enquiryForm.alreadyKnowPlaceholder
+  ENGLISH    Palette, style, the feeling of the day…
+  ARABIC     لوحة الألوان، والطابع، وإحساس اليوم…
+  CORRECTION 
+
+enquiryForm.yourName
+  ENGLISH    Your name
+  ARABIC     اسمك
+  CORRECTION 
+
+enquiryForm.phone
+  ENGLISH    Phone
+  ARABIC     الهاتف
+  CORRECTION 
+
+enquiryForm.email
+  ENGLISH    Email
+  ARABIC     البريد الإلكتروني
+  CORRECTION 
+
+enquiryForm.reference
+  ENGLISH    Reference {number}
+  ARABIC     المرجع {number}
+  CORRECTION 
+
+enquiryForm.send
+  ENGLISH    Send enquiry
+  ARABIC     إرسال الطلب
+  CORRECTION 
+
+enquiryForm.sending
+  ENGLISH    Sending…
+  ARABIC     جارٍ الإرسال…
+  CORRECTION 
+
+enquiryForm.preferToTalk
+  ENGLISH    Prefer to talk? Message a florist
+  ARABIC     تفضّلين الحديث؟ راسلي منسّقة الزهور
+  CORRECTION 
+
+enquiryForm.frequency.WEEKLY
+  ENGLISH    Weekly
+  ARABIC     أسبوعيًا
+  CORRECTION 
+
+enquiryForm.frequency.FORTNIGHTLY
+  ENGLISH    Fortnightly
+  ARABIC     كل أسبوعين
+  CORRECTION 
+
+enquiryForm.frequency.MONTHLY
+  ENGLISH    Monthly
+  ARABIC     شهريًا
+  CORRECTION 
+
+enquiryForm.place.home
+  ENGLISH    Home
+  ARABIC     المنزل
+  CORRECTION 
+
+enquiryForm.place.office
+  ENGLISH    Office
+  ARABIC     المكتب
+  CORRECTION 
+
+enquiryForm.place.gift
+  ENGLISH    A gift for someone
+  ARABIC     هدية لشخص ما
+  CORRECTION 
+
+enquiryForm.weekdays.Sun
+  ENGLISH    Sun
+  ARABIC     الأحد
+  CORRECTION 
+
+enquiryForm.weekdays.Mon
+  ENGLISH    Mon
+  ARABIC     الاثنين
+  CORRECTION 
+
+enquiryForm.weekdays.Tue
+  ENGLISH    Tue
+  ARABIC     الثلاثاء
+  CORRECTION 
+
+enquiryForm.weekdays.Wed
+  ENGLISH    Wed
+  ARABIC     الأربعاء
+  CORRECTION 
+
+enquiryForm.weekdays.Thu
+  ENGLISH    Thu
+  ARABIC     الخميس
+  CORRECTION 
+
+enquiryForm.weekdays.Fri
+  ENGLISH    Fri
+  ARABIC     الجمعة
+  CORRECTION 
+
+enquiryForm.weekdays.Sat
+  ENGLISH    Sat
+  ARABIC     السبت
+  CORRECTION 
+
+enquiryForm.eventKinds.Wedding
+  ENGLISH    Wedding
+  ARABIC     حفل زفاف
+  CORRECTION 
+
+enquiryForm.eventKinds.Private celebration
+  ENGLISH    Private celebration
+  ARABIC     احتفال خاص
+  CORRECTION 
+
+enquiryForm.eventKinds.Corporate
+  ENGLISH    Corporate
+  ARABIC     مناسبة للشركات
+  CORRECTION 
+
+enquiryForm.eventKinds.Launch or opening
+  ENGLISH    Launch or opening
+  ARABIC     إطلاق أو افتتاح
+  CORRECTION 
+
+enquiryForm.eventKinds.Something else
+  ENGLISH    Something else
+  ARABIC     شيء آخر
+  CORRECTION 
+
+
+--- alt ---
+
+alt.hero
+  ENGLISH    A Calanthe arrangement of garden roses, daisies and coral blossom in a white vase
+  ARABIC     تنسيق كالانثي من ورود الحدائق والأقحوان وزهور مرجانية في مزهرية بيضاء
+  CORRECTION 
+
+alt.bestSellers
+  ENGLISH    White lilies with a Calanthe lily hang tag tied among them
+  ARABIC     زنابق بيضاء مع بطاقة كالانثي مربوطة بينها
+  CORRECTION 
+
+alt.byoPetal
+  ENGLISH    A lily petal lit from behind, blush against warm light
+  ARABIC     بتلة زنبقة مُضاءة من الخلف، بلون وردي فاتح في ضوء دافئ
+  CORRECTION 
+
+alt.emptyCatalogue
+  ENGLISH    A white rose arrangement
+  ARABIC     تنسيق من الورد الأبيض
+  CORRECTION 
+
+alt.packagingTerracotta
+  ENGLISH    A Calanthe terracotta carrier holding white lisianthus and calla lilies
+  ARABIC     حاملة كالانثي بلون التيراكوتا تحمل ليزيانثوس أبيض وزنابق كالا
+  CORRECTION 
+
+alt.packagingOlive
+  ENGLISH    A Calanthe olive paper bag, printed tone on tone, holding a full autumn arrangement
+  ARABIC     حقيبة كالانثي الورقية بلون الزيتون، مطبوعة بالدرجة نفسها، تحمل تنسيقًا خريفيًا كاملًا
+  CORRECTION 
+
+alt.packagingBurgundy
+  ENGLISH    A Calanthe burgundy bag with its lily hang tag, holding roses and dahlias
+  ARABIC     حقيبة كالانثي العنّابية مع بطاقتها، تحمل ورودًا وداليا
+  CORRECTION 
+
+alt.sealBag
+  ENGLISH    A Calanthe arrangement in its burgundy bag against deep green velvet
+  ARABIC     تنسيق كالانثي في حقيبته العنّابية على مخمل أخضر غامق
+  CORRECTION 
+
+alt.aboutBag
+  ENGLISH    A Calanthe arrangement in its burgundy bag, against deep green velvet
+  ARABIC     تنسيق كالانثي في حقيبته العنّابية، على مخمل أخضر غامق
+  CORRECTION 
+
+alt.aboutOrchid
+  ENGLISH    Calanthe orchid buds, the flower the brand is named after
+  ARABIC     براعم أوركيد الكالانثي، الزهرة التي سُمّيت العلامة باسمها
+  CORRECTION 
+
+alt.aboutRibbon
+  ENGLISH    Terracotta ribbon printed with the Calanthe wordmark and monogram
+  ARABIC     شريط بلون التيراكوتا مطبوع باسم كالانثي وشعارها
+  CORRECTION 
+
+alt.aboutTag
+  ENGLISH    A die-cut lily hang tag resting among white lilies
+  ARABIC     بطاقة مقصوصة بشكل زنبقة بين زنابق بيضاء
+  CORRECTION 
+
+alt.aboutTissue
+  ENGLISH    Monogrammed tissue paper closed with a Calanthe sticker
+  ARABIC     ورق تغليف مطبوع بالشعار مُغلق بملصق كالانثي
+  CORRECTION 
+
+alt.aboutCard
+  ENGLISH    A burgundy Calanthe greeting card, debossed with lilies, its gold tab pressed with the monogram
+  ARABIC     بطاقة تهانٍ عنّابية من كالانثي، منقوشة بالزنابق، ولسانها الذهبي مضغوط بالشعار
+  CORRECTION 
+
+alt.aboutBloom
+  ENGLISH    A bloom opening, lit from within — Calanthe's key visual
+  ARABIC     زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي
+  CORRECTION 
+
+alt.eventArrangement
+  ENGLISH    A Calanthe event arrangement
+  ARABIC     تنسيق فعاليات من كالانثي
+  CORRECTION 
+
+alt.eventFavors
+  ENGLISH    Calanthe guest favors, wrapped by hand
+  ARABIC     هدايا الضيوف من كالانثي، مُغلّفة يدويًا
+  CORRECTION 
+
+alt.eventOccasion
+  ENGLISH    Calanthe florals for an occasion
+  ARABIC     زهور كالانثي لمناسبة
+  CORRECTION 
+
+alt.labelRibbon
+  ENGLISH    Printed ribbon
+  ARABIC     شريط مطبوع
+  CORRECTION 
+
+alt.labelTag
+  ENGLISH    Lily hang tag
+  ARABIC     بطاقة زنبقة
+  CORRECTION 
+
+alt.labelTissue
+  ENGLISH    Tissue and seal
+  ARABIC     ورق وختم
+  CORRECTION 
+
+alt.labelCard
+  ENGLISH    Debossed card
+  ARABIC     بطاقة منقوشة
+  CORRECTION 
+
+
+--- legal ---
+
+legal.placeholderNotice
+  ENGLISH    Placeholder structure — final wording arrives with the client's legal copy.
+  ARABIC     هيكل مبدئي — الصياغة النهائية تصل مع النص القانوني المعتمد.
+  CORRECTION 
+
+legal.placeholderBody
+  ENGLISH    This section is waiting for the wording approved by the client's counsel.
+  ARABIC     هذا القسم بانتظار الصياغة المعتمدة من المستشار القانوني.
+  CORRECTION 
+
+legal.terms.title
+  ENGLISH    Terms & Conditions
+  ARABIC     الشروط والأحكام
+  CORRECTION 
+
+legal.terms.headings.orders
+  ENGLISH    Orders and acceptance
+  ARABIC     الطلبات وقبولها
+  CORRECTION 
+
+legal.terms.headings.prices
+  ENGLISH    Prices and payment
+  ARABIC     الأسعار والدفع
+  CORRECTION 
+
+legal.terms.headings.delivery
+  ENGLISH    Delivery
+  ARABIC     التوصيل
+  CORRECTION 
+
+legal.terms.headings.substitutions
+  ENGLISH    Substitutions
+  ARABIC     الاستبدال
+  CORRECTION 
+
+legal.terms.headings.cancellations
+  ENGLISH    Cancellations
+  ARABIC     الإلغاء
+  CORRECTION 
+
+legal.terms.headings.liability
+  ENGLISH    Liability
+  ARABIC     المسؤولية
+  CORRECTION 
+
+legal.terms.headings.contact
+  ENGLISH    Contact
+  ARABIC     التواصل
+  CORRECTION 
+
+legal.privacy.title
+  ENGLISH    Privacy Policy
+  ARABIC     سياسة الخصوصية
+  CORRECTION 
+
+legal.privacy.headings.collect
+  ENGLISH    What we collect
+  ARABIC     البيانات التي نجمعها
+  CORRECTION 
+
+legal.privacy.headings.use
+  ENGLISH    How we use it
+  ARABIC     كيف نستخدمها
+  CORRECTION 
+
+legal.privacy.headings.sharing
+  ENGLISH    Sharing
+  ARABIC     مشاركة البيانات
+  CORRECTION 
+
+legal.privacy.headings.storage
+  ENGLISH    Storage and security
+  ARABIC     التخزين والأمان
+  CORRECTION 
+
+legal.privacy.headings.rights
+  ENGLISH    Your rights
+  ARABIC     حقوقك
+  CORRECTION 
+
+legal.privacy.headings.cookies
+  ENGLISH    Cookies
+  ARABIC     ملفات تعريف الارتباط
+  CORRECTION 
+
+legal.privacy.headings.contact
+  ENGLISH    Contact
+  ARABIC     التواصل
+  CORRECTION 
+
+legal.refunds.title
+  ENGLISH    Refund & Cancellation Policy
+  ARABIC     سياسة الاسترداد والإلغاء
+  CORRECTION 
+
+legal.refunds.headings.cancelling
+  ENGLISH    Cancelling an order
+  ARABIC     إلغاء الطلب
+  CORRECTION 
+
+legal.refunds.headings.changes
+  ENGLISH    Changes to an order
+  ARABIC     تعديل الطلب
+  CORRECTION 
+
+legal.refunds.headings.quality
+  ENGLISH    Quality concerns
+  ARABIC     ملاحظات الجودة
+  CORRECTION 
+
+legal.refunds.headings.method
+  ENGLISH    Refund method and timing
+  ARABIC     طريقة الاسترداد ومدته
+  CORRECTION 
+
+legal.refunds.headings.perishable
+  ENGLISH    Perishable goods
+  ARABIC     المنتجات سريعة التلف
+  CORRECTION 
+
+legal.refunds.headings.contact
+  ENGLISH    Contact
+  ARABIC     التواصل
+  CORRECTION 
+
+
+--- membership ---
+
+membership.nothingCharged
+  ENGLISH    Nothing is charged here. A florist confirms the details with you before any membership begins.
+  ARABIC     لا يُخصم شيء هنا. تؤكّد منسّقة الزهور التفاصيل معك قبل أن تبدأ أي عضوية.
+  CORRECTION 
+
+membership.andThen
+  ENGLISH    And then
+  ARABIC     وبعد ذلك
+  CORRECTION 
+
+membership.whichDay
+  ENGLISH    Which day suits you?
+  ARABIC     أي يوم يناسبك؟
+  CORRECTION 
+
+membership.whichDayBody
+  ENGLISH    One day a week is yours. We reserve your route and your stems, and a florist confirms it with you before anything begins.
+  ARABIC     يوم واحد في الأسبوع يكون لك. نحجز لك مسار التوصيل والسيقان، وتؤكّد منسّقة الزهور ذلك معك قبل أن يبدأ شيء.
+  CORRECTION 
+
+membership.howItWorks
+  ENGLISH    How it works
+  ARABIC     كيف تعمل
+  CORRECTION 
+
+membership.steps.0.title
+  ENGLISH    Choose your ritual
+  ARABIC     اختاري طقسك
+  CORRECTION 
+
+membership.steps.0.copy
+  ENGLISH    Pick the tier that suits your table — change it any time.
+  ARABIC     اختاري الفئة التي تناسب طاولتك — وغيّريها متى شئتِ.
+  CORRECTION 
+
+membership.steps.1.title
+  ENGLISH    Pick your day
+  ARABIC     اختاري يومك
+  CORRECTION 
+
+membership.steps.1.copy
+  ENGLISH    One day a week is yours. We reserve your route and your stems.
+  ARABIC     يوم واحد في الأسبوع يكون لك. نحجز لك مسار التوصيل والسيقان.
+  CORRECTION 
+
+membership.steps.2.title
+  ENGLISH    We deliver, weekly
+  ARABIC     نوصّل أسبوعيًا
+  CORRECTION 
+
+membership.steps.2.copy
+  ENGLISH    A fresh composition arrives at your door, four times a month.
+  ARABIC     يصل تنسيق طازج إلى بابك، أربع مرات في الشهر.
+  CORRECTION 
+
+membership.questionsAnswered
+  ENGLISH    Questions, answered
+  ARABIC     أسئلة، وأجوبتها
+  CORRECTION 
+
+membership.arrivesEvery
+  ENGLISH    Your flowers will arrive every {day}.
+  ARABIC     ستصلك زهورك أيام {day}.
+  CORRECTION 
+
+membership.dayFull.Sun
+  ENGLISH    Sunday
+  ARABIC     الأحد
+  CORRECTION 
+
+membership.dayFull.Mon
+  ENGLISH    Monday
+  ARABIC     الاثنين
+  CORRECTION 
+
+membership.dayFull.Tue
+  ENGLISH    Tuesday
+  ARABIC     الثلاثاء
+  CORRECTION 
+
+membership.dayFull.Wed
+  ENGLISH    Wednesday
+  ARABIC     الأربعاء
+  CORRECTION 
+
+membership.dayFull.Thu
+  ENGLISH    Thursday
+  ARABIC     الخميس
+  CORRECTION 
+
+membership.dayFull.Fri
+  ENGLISH    Friday
+  ARABIC     الجمعة
+  CORRECTION 
+
+membership.dayFull.Sat
+  ENGLISH    Saturday
+  ARABIC     السبت
+  CORRECTION 
+
+
+--- booth ---
+
+booth.eyebrow
+  ENGLISH    The Calanthe booth
+  ARABIC     جناح كالانثي
+  CORRECTION 
+
+booth.title
+  ENGLISH    Step inside the booth.
+  ARABIC     ادخلي إلى الجناح.
+  CORRECTION 
+
+booth.body
+  ENGLISH    Velvet arches, a panelled door, a standing mirror and our sculpted vessels, in the colours of the atelier. Modular by design, it is assembled on site, and its counter is where flowers are arranged on the spot.
+  ARABIC     أقواس مخملية، وباب بحشوات، ومرآة قائمة، وأوانينا المنحوتة، بألوان الأتيليه. صُمّم الجناح من وحدات تُركَّب في الموقع، ومنضدته هي حيث تُنسَّق الزهور في الحال.
+  CORRECTION 
+
+booth.viewsLabel
+  ENGLISH    Booth views
+  ARABIC     مشاهد الجناح
+  CORRECTION 
+
+booth.views.pano
+  ENGLISH    360°
+  ARABIC     360°
+  CORRECTION 
+
+booth.views.indoor
+  ENGLISH    Indoor
+  ARABIC     داخلي
+  CORRECTION 
+
+booth.views.outdoor
+  ENGLISH    Outdoor
+  ARABIC     خارجي
+  CORRECTION 
+
+booth.views.set
+  ENGLISH    Set III
+  ARABIC     التشكيل الثالث
+  CORRECTION 
+
+booth.captions.pano
+  ENGLISH    Drag to look around the booth.
+  ARABIC     اسحبي للتجوّل في أرجاء الجناح.
+  CORRECTION 
+
+booth.captions.indoor
+  ENGLISH    The full set, indoors.
+  ARABIC     التشكيل الكامل في مكان داخلي.
+  CORRECTION 
+
+booth.captions.outdoor
+  ENGLISH    The full set, outdoors.
+  ARABIC     التشكيل الكامل في الهواء الطلق.
+  CORRECTION 
+
+booth.captions.set
+  ENGLISH    The arch, the Calanthe panel and the counter.
+  ARABIC     القوس ولوحة كالانثي والمنضدة.
+  CORRECTION 
+
+booth.alts.indoor
+  ENGLISH    The Calanthe booth set indoors
+  ARABIC     جناح كالانثي في مكان داخلي
+  CORRECTION 
+
+booth.alts.outdoor
+  ENGLISH    The Calanthe booth set outdoors, in a garden
+  ARABIC     جناح كالانثي في الهواء الطلق، في حديقة
+  CORRECTION 
+
+booth.alts.set
+  ENGLISH    Set III of the Calanthe booth
+  ARABIC     التشكيل الثالث لجناح كالانثي
+  CORRECTION 
+
+booth.stepInside
+  ENGLISH    Step inside
+  ARABIC     ادخلي الجناح
+  CORRECTION 
+
+booth.opening
+  ENGLISH    Opening the booth…
+  ARABIC     جارٍ فتح الجناح…
+  CORRECTION 
+
+booth.hint
+  ENGLISH    Drag to look around
+  ARABIC     اسحبي للنظر حولك
+  CORRECTION 
+
+booth.viewLabel
+  ENGLISH    360° view of the Calanthe booth. Drag, or use the turn buttons.
+  ARABIC     عرض 360° لجناح كالانثي. اسحبي، أو استخدمي زرَّي الاستدارة.
+  CORRECTION 
+
+booth.turnLeft
+  ENGLISH    Turn left
+  ARABIC     استدارة لليسار
+  CORRECTION 
+
+booth.turnRight
+  ENGLISH    Turn right
+  ARABIC     استدارة لليمين
+  CORRECTION 
+
+booth.expand
+  ENGLISH    Full screen
+  ARABIC     ملء الشاشة
+  CORRECTION 
+
+booth.collapse
+  ENGLISH    Close full screen
+  ARABIC     إغلاق ملء الشاشة
+  CORRECTION 
+
+booth.unsupported
+  ENGLISH    This device cannot show the 360° view here.
+  ARABIC     لا يمكن لهذا الجهاز عرض الجولة بزاوية 360° هنا.
+  CORRECTION 
+
+booth.openExternal
+  ENGLISH    Open the 360° view
+  ARABIC     افتحي عرض 360°
+  CORRECTION 
+
+booth.arrangementsEyebrow
+  ENGLISH    The booth, arranged
+  ARABIC     الجناح بتشكيلاته
+  CORRECTION 
+
+booth.arrangementsTitle
+  ENGLISH    One booth, six arrangements.
+  ARABIC     جناح واحد، ستة تشكيلات.
+  CORRECTION 
+
+booth.arrangementsBody
+  ENGLISH    The five panels, the display vessels, two lamps and the counter recompose to suit the space, from the full stage to a single pair of panels.
+  ARABIC     تتبدّل مواضع اللوحات الخمس وأواني العرض والمصباحين والمنضدة لتناسب المكان، من المنصّة الكاملة إلى لوحتين فقط.
+  CORRECTION 
+
+booth.sets.0.label
+  ENGLISH    Set I
+  ARABIC     التشكيل الأول
+  CORRECTION 
+
+booth.sets.0.name
+  ENGLISH    The full stage
+  ARABIC     المنصّة الكاملة
+  CORRECTION 
+
+booth.sets.0.pieces
+  ENGLISH    Every panel on the stage, with the vessels, both lamps and the counter.
+  ARABIC     اللوحات كلها على المنصّة، مع الأواني والمصباحين والمنضدة.
+  CORRECTION 
+
+booth.sets.1.label
+  ENGLISH    Set II
+  ARABIC     التشكيل الثاني
+  CORRECTION 
+
+booth.sets.1.name
+  ENGLISH    The arch and the door
+  ARABIC     القوس والباب
+  CORRECTION 
+
+booth.sets.1.pieces
+  ENGLISH    The draped arch and the panelled door.
+  ARABIC     القوس بستارته، والباب ذو الحشوات.
+  CORRECTION 
+
+booth.sets.2.label
+  ENGLISH    Set III
+  ARABIC     التشكيل الثالث
+  CORRECTION 
+
+booth.sets.2.name
+  ENGLISH    The arch and the Calanthe panel
+  ARABIC     القوس ولوحة كالانثي
+  CORRECTION 
+
+booth.sets.2.pieces
+  ENGLISH    The draped arch and the velvet Calanthe panel.
+  ARABIC     القوس بستارته، ولوحة كالانثي المخملية.
+  CORRECTION 
+
+booth.sets.3.label
+  ENGLISH    Set IV
+  ARABIC     التشكيل الرابع
+  CORRECTION 
+
+booth.sets.3.name
+  ENGLISH    The Calanthe panel and the floral panel
+  ARABIC     لوحة كالانثي واللوحة المزهرة
+  CORRECTION 
+
+booth.sets.3.pieces
+  ENGLISH    The Calanthe panel, the floral panel and the standing mirror.
+  ARABIC     لوحة كالانثي، واللوحة المنقوشة بالزهور، والمرآة القائمة.
+  CORRECTION 
+
+booth.sets.4.label
+  ENGLISH    Set V
+  ARABIC     التشكيل الخامس
+  CORRECTION 
+
+booth.sets.4.name
+  ENGLISH    The door and the floral panel
+  ARABIC     الباب واللوحة المزهرة
+  CORRECTION 
+
+booth.sets.4.pieces
+  ENGLISH    The panelled door and the floral panel.
+  ARABIC     الباب ذو الحشوات، واللوحة المنقوشة بالزهور.
+  CORRECTION 
+
+booth.sets.5.label
+  ENGLISH    Set VI
+  ARABIC     التشكيل السادس
+  CORRECTION 
+
+booth.sets.5.name
+  ENGLISH    The door and the mirror
+  ARABIC     الباب والمرآة
+  CORRECTION 
+
+booth.sets.5.pieces
+  ENGLISH    The panelled door and the standing mirror.
+  ARABIC     الباب ذو الحشوات، والمرآة القائمة.
+  CORRECTION 
+
+booth.vesselsAlt
+  ENGLISH    Flowers in Calanthe’s sculpted vessels, in garden light
+  ARABIC     زهور في أواني كالانثي المنحوتة، في ضوء الحديقة
+  CORRECTION 
+
+booth.counterAlt
+  ENGLISH    The olive counter with a vase of roses
+  ARABIC     المنضدة الزيتونية وعليها مزهرية ورود
+  CORRECTION 
+
+
+--- events ---
+
+events.eyebrow
+  ENGLISH    Events
+  ARABIC     الفعاليات
+  CORRECTION 
+
+events.line1
+  ENGLISH    Flowers for
+  ARABIC     زهور تملأ
+  CORRECTION 
+
+events.line2
+  ENGLISH    the whole room.
+  ARABIC     المكان كلّه.
+  CORRECTION 
+
+events.intro
+  ENGLISH    Floral styling and arrangements for private celebrations, intimate gatherings and larger occasions — planned with you, composed by the atelier, delivered and set on the day.
+  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات الحميمة والمناسبات الأكبر — نخططها معك، ويُنسّقها الأتيليه، وتُوصّل وتُرتّب يوم المناسبة.
+  CORRECTION 
+
+events.enquireWhatsapp
+  ENGLISH    Enquire on WhatsApp
+  ARABIC     استفسري على واتساب
+  CORRECTION 
+
+events.seeWhatWeDo
+  ENGLISH    See what we do
+  ARABIC     اطّلعي على أعمالنا
+  CORRECTION 
+
+events.arrangementsEyebrow
+  ENGLISH    Event arrangements
+  ARABIC     تنسيقات الفعاليات
+  CORRECTION 
+
+events.arrangementsTitle
+  ENGLISH    Composed for the space, not the catalogue.
+  ARABIC     تُنسّق للمكان، لا للكتالوج.
+  CORRECTION 
+
+events.arrangementsBody
+  ENGLISH    We work from your venue, your palette and the feeling you want the room to have — then build to it.
+  ARABIC     نبدأ من مكانك، ولوحة ألوانك، والإحساس الذي تريدينه للمكان — ونبني عليه.
+  CORRECTION 
+
+events.arrangements.0
+  ENGLISH    Table centrepieces, low or statement height
+  ARABIC     قطع وسط الطاولات، منخفضة أو لافتة الارتفاع
+  CORRECTION 
+
+events.arrangements.1
+  ENGLISH    Entrance and welcome arrangements
+  ARABIC     تنسيقات المداخل والترحيب
+  CORRECTION 
+
+events.arrangements.2
+  ENGLISH    Ceremony and backdrop florals
+  ARABIC     زهور المراسم والخلفيات
+  CORRECTION 
+
+events.arrangements.3
+  ENGLISH    Installations for larger venues
+  ARABIC     تركيبات للقاعات الكبيرة
+  CORRECTION 
+
+events.favorsEyebrow
+  ENGLISH    Guest favors
+  ARABIC     هدايا الضيوف
+  CORRECTION 
+
+events.favorsTitle
+  ENGLISH    Something for everyone to take home.
+  ARABIC     شيء يأخذه الجميع معه.
+  CORRECTION 
+
+events.favorsBody
+  ENGLISH    Thoughtfully presented floral gifts finished with Calanthe's signature packaging and personal touches — made in the quantities your day needs.
+  ARABIC     هدايا زهور مُقدّمة بعناية، بتغليف كالانثي المميّز ولمسات شخصية — وبالكميات التي يحتاجها يومك.
+  CORRECTION 
+
+events.favors.0
+  ENGLISH    Single-stem favors, wrapped and tied by hand
+  ARABIC     هدايا بساق واحدة، مُغلّفة ومربوطة يدويًا
+  CORRECTION 
+
+events.favors.1
+  ENGLISH    Miniature vase arrangements for each place setting
+  ARABIC     تنسيقات مزهريات مصغّرة لكل مقعد
+  CORRECTION 
+
+events.favors.2
+  ENGLISH    Personalised cards, written out rather than printed
+  ARABIC     بطاقات شخصية، مكتوبة باليد لا مطبوعة
+  CORRECTION 
+
+events.favors.3
+  ENGLISH    Signature Calanthe packaging in your event's palette
+  ARABIC     تغليف كالانثي المميّز بلوحة ألوان مناسبتك
+  CORRECTION 
+
+events.beginEyebrow
+  ENGLISH    Begin
+  ARABIC     البداية
+  CORRECTION 
+
+events.beginTitle
+  ENGLISH    Tell us about the day.
+  ARABIC     أخبرينا عن اليوم.
+  CORRECTION 
+
+events.beginBody
+  ENGLISH    Send the date, the venue and roughly how many guests. We will come back with a proposal and a quote.
+  ARABIC     أرسلي التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليك بمقترح وعرض سعر.
+  CORRECTION 
+
+events.orEmail
+  ENGLISH    Or email
+  ARABIC     أو راسلينا على
+  CORRECTION 
+
+
+--- about ---
+
+about.eyebrow
+  ENGLISH    Abu Dhabi
+  ARABIC     أبوظبي
+  CORRECTION 
+
+about.title
+  ENGLISH    About Calanthe
+  ARABIC     عن كالانثي
+  CORRECTION 
+
+about.intro
+  ENGLISH    Calanthe is an Abu Dhabi-based floral brand created around the art of thoughtful giving.
+  ARABIC     كالانثي علامة زهور مقرّها أبوظبي، قامت على فنّ الإهداء المُعبِّر.
+  CORRECTION 
+
+about.beliefEyebrow
+  ENGLISH    Our belief
+  ARABIC     ما نؤمن به
+  CORRECTION 
+
+about.beliefTitle
+  ENGLISH    More than a beautiful gesture.
+  ARABIC     أكثر من لفتة جميلة.
+  CORRECTION 
+
+about.beliefBody1
+  ENGLISH    We believe flowers carry emotion, mark meaningful moments and express what words sometimes cannot.
+  ARABIC     نعتقد أن الزهور تحمل المشاعر، وتُخلّد اللحظات ذات المعنى، وتقول ما تعجز عنه الكلمات أحيانًا.
+  CORRECTION 
+
+about.beliefBody2
+  ENGLISH    Our arrangements combine classical elegance with a contemporary creative touch, bringing together carefully selected flowers, refined compositions and distinctive details. From intimate gestures to important celebrations, each Calanthe creation is designed with intention.
+  ARABIC     تجمع تنسيقاتنا بين الأناقة الكلاسيكية ولمسة إبداعية معاصرة، فتجتمع فيها زهور منتقاة بعناية، وتركيبات مصقولة، وتفاصيل مميّزة. ومن أبسط اللفتات إلى أكبر الاحتفالات، يُصمَّم كل عمل من كالانثي بعنايةٍ وقصد.
+  CORRECTION 
+
+about.servicesEyebrow
+  ENGLISH    What we do
+  ARABIC     ما نقدّمه
+  CORRECTION 
+
+about.servicesTitle
+  ENGLISH    Our services
+  ARABIC     خدماتنا
+  CORRECTION 
+
+about.services.signature.name
+  ENGLISH    Signature Florals
+  ARABIC     التنسيقات المميّزة
+  CORRECTION 
+
+about.services.signature.copy
+  ENGLISH    Handcrafted bouquets and vase arrangements for everyday gestures and special occasions.
+  ARABIC     باقات وتنسيقات مزهريات مُنسّقة يدويًا للّفتات اليومية والمناسبات الخاصة.
+  CORRECTION 
+
+about.services.bespoke.name
+  ENGLISH    Bespoke Florals
+  ARABIC     التنسيقات الخاصة
+  CORRECTION 
+
+about.services.bespoke.copy
+  ENGLISH    Personalised arrangements created around a preferred budget, colour palette, message or occasion.
+  ARABIC     تنسيقات تُصمّم حول ميزانية معيّنة، أو لوحة ألوان، أو رسالة، أو مناسبة.
+  CORRECTION 
+
+about.services.events.name
+  ENGLISH    Events
+  ARABIC     الفعاليات
+  CORRECTION 
+
+about.services.events.copy
+  ENGLISH    Floral styling and arrangements for private celebrations, intimate gatherings and larger occasions.
+  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات الحميمة والمناسبات الأكبر.
+  CORRECTION 
+
+about.services.memberships.name
+  ENGLISH    Memberships
+  ARABIC     العضويات
+  CORRECTION 
+
+about.services.memberships.copy
+  ENGLISH    Recurring floral deliveries designed to bring fresh flowers into homes or businesses throughout the month.
+  ARABIC     توصيلات زهور متكررة لتبقى الزهور الطازجة في المنازل والأعمال على مدار الشهر.
+  CORRECTION 
+
+about.services.gifting.name
+  ENGLISH    Gifting
+  ARABIC     الإهداء
+  CORRECTION 
+
+about.services.gifting.copy
+  ENGLISH    Thoughtfully presented floral gifts finished with Calanthe's signature packaging and personal touches.
+  ARABIC     هدايا زهور مُقدّمة بعناية، بتغليف كالانثي المميّز ولمسات شخصية.
+  CORRECTION 
+
+about.services.corporate.name
+  ENGLISH    Corporate
+  ARABIC     القطاع المؤسّسي
+  CORRECTION 
+
+about.services.corporate.copy
+  ENGLISH    Florals and gifting solutions for offices, businesses, clients and corporate occasions.
+  ARABIC     زهور وحلول إهداء للمكاتب والشركات والعملاء والمناسبات المؤسّسية.
+  CORRECTION 
+
+about.nameEyebrow
+  ENGLISH    The name
+  ARABIC     الاسم
+  CORRECTION 
+
+about.nameLine1
+  ENGLISH    kalos — beautiful.
+  ARABIC     kalos — جميل.
+  CORRECTION 
+
+about.nameLine2
+  ENGLISH    anthos — flower.
+  ARABIC     anthos — زهرة.
+  CORRECTION 
+
+about.nameBody
+  ENGLISH    Calanthe is an orchid, and its name is Greek. More than a flower, it reflects a philosophy of beauty that is quiet, timeless and deeply meaningful — which is the standard every arrangement that leaves this atelier is held to.
+  ARABIC     كالانثي زهرة أوركيد، واسمها يوناني. وهي أكثر من زهرة: فهي تعكس فلسفة جمال هادئة، لا يطويها زمن، وعميقة المعنى — وهذا هو المعيار الذي يُقاس به كل تنسيق يخرج من هذا الأتيليه.
+  CORRECTION 
+
+about.monogramNote
+  ENGLISH    The mark is built from the same flower: petals and leaves simplified, arranged symmetrically, and resolved until the outline reads as a {letter}.
+  ARABIC     الشعار مبنيّ من الزهرة نفسها: بتلات وأوراق مُبسّطة، مرتّبة بتناظر، ومصقولة حتّى يبدو الخطّ الخارجي كحرف {letter}.
+  CORRECTION 
+
+about.detailsEyebrow
+  ENGLISH    The details
+  ARABIC     التفاصيل
+  CORRECTION 
+
+about.detailsTitle
+  ENGLISH    Down to the ribbon.
+  ARABIC     حتّى الشريط.
+  CORRECTION 
+
+about.detailsBody
+  ENGLISH    Everything that reaches you is part of the gift — the tag, the tissue, the card, the ribbon that ties it.
+  ARABIC     كل ما يصلك جزء من الهدية — البطاقة المعلّقة، وورق التغليف، وبطاقة الإهداء، والشريط الذي يربطها.
+  CORRECTION 
+
+about.closingLine
+  ENGLISH    Where feelings take form.
+  ARABIC     حيث تتجسّد المشاعر.
+  CORRECTION 
+
+
+--- faq ---
+
+faq.site.0.q
+  ENGLISH    When will my flowers arrive?
+  ARABIC     متى تصل زهوري؟
+  CORRECTION 
+
+faq.site.0.a
+  ENGLISH    You choose the delivery day and the time window at checkout, and your arrangement is composed on the morning of that day. The picker offers only the days and windows the atelier can still reach.
+  ARABIC     تختارين يوم التوصيل والفترة الزمنية عند إتمام الطلب، ويُنسّق طلبك صباح ذلك اليوم. ولا تُعرض في القائمة إلا الأيام والفترات التي يمكن للأتيليه الوصول إليها.
+  CORRECTION 
+
+faq.site.1.q
+  ENGLISH    How fresh are the arrangements?
+  ARABIC     ما مدى طزاجة الباقات؟
+  CORRECTION 
+
+faq.site.1.a
+  ENGLISH    Every arrangement is composed by hand on the morning of its delivery — never the night before — and travels cool and upright.
+  ARABIC     تُنسّق كل باقة يدويًا صباح يوم توصيلها — وليس في الليلة السابقة — وتُنقل باردة ومنتصبة.
+  CORRECTION 
+
+faq.site.2.q
+  ENGLISH    What if a flower is out of season?
+  ARABIC     وماذا لو كانت إحدى الزهور خارج موسمها؟
+  CORRECTION 
+
+faq.site.2.a
+  ENGLISH    Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.
+  ARABIC     تخضع الزهور للتوفر الموسمي، وقد تستبدل منسّقات الزهور سيقانًا بأخرى مساوية أو أعلى قيمة، مع الحفاظ على لوحة الألوان وروح التنسيق.
+  CORRECTION 
+
+faq.site.3.q
+  ENGLISH    Can I see my arrangement before it is delivered?
+  ARABIC     هل يمكنني رؤية التنسيق قبل توصيله؟
+  CORRECTION 
+
+faq.site.3.a
+  ENGLISH    Yes — your florist sends a photo or video on WhatsApp for your approval before every delivery.
+  ARABIC     نعم — ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب لتوافقي عليه قبل كل توصيلة.
+  CORRECTION 
+
+faq.site.4.q
+  ENGLISH    How can I pay?
+  ARABIC     كيف يمكنني الدفع؟
+  CORRECTION 
+
+faq.site.4.a
+  ENGLISH    Cards are accepted at checkout, with Tabby instalments; wallet payments arrive soon. The recipient never sees the price.
+  ARABIC     نقبل الدفع بالبطاقة عند إتمام الطلب، مع إمكانية التقسيط عبر تابي، وتتوفّر المحافظ الإلكترونية قريبًا. ولا يرى المستلِم السعر أبدًا.
+  CORRECTION 
+
+faq.membership.0.q
+  ENGLISH    Can I pause or skip a week?
+  ARABIC     هل يمكنني إيقاف أسبوع أو تخطيه؟
+  CORRECTION 
+
+faq.membership.0.a
+  ENGLISH    Yes — pause, skip or resume any time from your account, up to 24 hours before your delivery day.
+  ARABIC     نعم — يمكنك الإيقاف أو التخطي أو الاستئناف في أي وقت من حسابك، حتّى 24 ساعة قبل يوم التوصيل.
+  CORRECTION 
+
+faq.membership.1.q
+  ENGLISH    What flowers will I receive?
+  ARABIC     أي زهور سأستلم؟
+  CORRECTION 
+
+faq.membership.1.a
+  ENGLISH    Each week our florists compose around the best stems of the season, in the palette you prefer. No two weeks are the same.
+  ARABIC     كل أسبوع تُنسّق منسّقاتنا حول أجمل سيقان الموسم، بلوحة الألوان التي تفضّلينها. ولا يتشابه أسبوعان.
+  CORRECTION 
+
+faq.membership.2.q
+  ENGLISH    Which areas do you deliver to?
+  ARABIC     إلى أي المناطق توصّلون؟
+  CORRECTION 
+
+faq.membership.2.a
+  ENGLISH    All seven emirates. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.
+  ARABIC     إلى الإمارات السبع جميعًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.
+  CORRECTION 
+
+faq.membership.3.q
+  ENGLISH    Can I gift a membership?
+  ARABIC     هل يمكنني إهداء عضوية؟
+  CORRECTION 
+
+faq.membership.3.a
+  ENGLISH    Beautifully. Choose gifting at checkout and we'll include a hand-written first-week card.
+  ARABIC     بكل سرور. اختاري الإهداء عند إتمام الطلب ونُرفق بطاقة مكتوبة بخط اليد مع الأسبوع الأول.
+  CORRECTION 
+
+
+--- tierCopy ---
+
+tierCopy.essential.blurb
+  ENGLISH    A single seasonal arrangement, composed weekly.
+  ARABIC     تنسيق موسمي واحد، يُنسّق أسبوعيًا.
+  CORRECTION 
+
+tierCopy.essential.includes.0
+  ENGLISH    4 deliveries a month
+  ARABIC     4 توصيلات شهريًا
+  CORRECTION 
+
+tierCopy.essential.includes.1
+  ENGLISH    Seasonal stems, florist's choice
+  ARABIC     سيقان موسمية، باختيار منسّقة الزهور
+  CORRECTION 
+
+tierCopy.essential.includes.2
+  ENGLISH    Kraft-wrapped, hand-tied
+  ARABIC     مُغلّفة بورق الكرافت، مربوطة يدويًا
+  CORRECTION 
+
+tierCopy.signature.blurb
+  ENGLISH    Our fullest weekly ritual — the atelier's signature scale.
+  ARABIC     أغنى طقوسنا الأسبوعية — الحجم المميّز للأتيليه.
+  CORRECTION 
+
+tierCopy.signature.includes.0
+  ENGLISH    4 deliveries a month
+  ARABIC     4 توصيلات شهريًا
+  CORRECTION 
+
+tierCopy.signature.includes.1
+  ENGLISH    Premium seasonal stems
+  ARABIC     سيقان موسمية فاخرة
+  CORRECTION 
+
+tierCopy.signature.includes.2
+  ENGLISH    Vase included with the first delivery
+  ARABIC     مزهرية مع التوصيلة الأولى
+  CORRECTION 
+
+tierCopy.signature.includes.3
+  ENGLISH    Priority delivery window
+  ARABIC     أولوية في فترة التوصيل
+  CORRECTION 
+
+tierCopy.grand.blurb
+  ENGLISH    Statement arrangements for entrances, tables and offices.
+  ARABIC     تنسيقات لافتة للمداخل والطاولات والمكاتب.
+  CORRECTION 
+
+tierCopy.grand.includes.0
+  ENGLISH    4 deliveries a month
+  ARABIC     4 توصيلات شهريًا
+  CORRECTION 
+
+tierCopy.grand.includes.1
+  ENGLISH    Grand-scale arrangements
+  ARABIC     تنسيقات كبيرة الحجم
+  CORRECTION 
+
+tierCopy.grand.includes.2
+  ENGLISH    Dedicated florist
+  ARABIC     منسّقة زهور مخصّصة
+  CORRECTION 
+
+tierCopy.grand.includes.3
+  ENGLISH    Same-morning refresh on request
+  ARABIC     تجديد في الصباح نفسه عند الطلب
+  CORRECTION 
+
+
+--- help ---
+
+help.eyebrow
+  ENGLISH    Help
+  ARABIC     مساعدة
+  CORRECTION 
+
+help.deliveryTitle
+  ENGLISH    Delivery, across all seven Emirates.
+  ARABIC     التوصيل، إلى الإمارات السبع جميعًا.
+  CORRECTION 
+
+help.deliveryIntro
+  ENGLISH    Choose the day and the window that suit them, across all seven Emirates. Delivery is complimentary on orders over {amount}.
+  ARABIC     اختاري اليوم والفترة المناسبين للمستلِم، في الإمارات السبع جميعًا. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
+  CORRECTION 
+
+help.deliveryWindows
+  ENGLISH    Delivery windows
+  ARABIC     فترات التوصيل
+  CORRECTION 
+
+help.approvalNote
+  ENGLISH    Before every delivery, your florist sends a photo or video of the finished arrangement on WhatsApp, and waits for your word before it leaves.
+  ARABIC     قبل كل توصيلة، ترسل لك منسّقة الزهور صورة أو مقطعًا للتنسيق النهائي على واتساب، وتنتظر موافقتك قبل أن تخرج.
+  CORRECTION 
+
+help.faqsTitle
+  ENGLISH    Questions, answered.
+  ARABIC     أسئلة، وأجوبتها.
+  CORRECTION 
+
+
+--- errors ---
+
+errors.eyebrow
+  ENGLISH    Something bloomed wrong
+  ARABIC     حدث خطأ ما
+  CORRECTION 
+
+errors.title
+  ENGLISH    A petal fell out of place.
+  ARABIC     سقطت بتلة من مكانها.
+  CORRECTION 
+
+errors.segmentBody
+  ENGLISH    This part of the page did not load. Everything else still works — try again, or carry on browsing while we put it right.
+  ARABIC     لم يُحمّل هذا الجزء من الصفحة، وكل ما عداه يعمل — حاولي مرة أخرى، أو تابعي التصفّح ريثما نُصلحه.
+  CORRECTION 
+
+errors.rootBody
+  ENGLISH    Something interrupted this page. It has been noted — please try again.
+  ARABIC     حدث ما قطع تحميل هذه الصفحة. سجّلنا ذلك — حاولي مرة أخرى.
+  CORRECTION 
+
+errors.tryAgain
+  ENGLISH    Try Again
+  ARABIC     حاولي مرة أخرى
+  CORRECTION 
+
+errors.browseCollection
+  ENGLISH    Browse the Collection
+  ARABIC     تصفّحي المجموعة
+  CORRECTION 
+
+errors.whatsappInstead
+  ENGLISH    Order on WhatsApp instead
+  ARABIC     اطلبي عبر واتساب بدلًا من ذلك
+  CORRECTION 
+
+errors.returnHome
+  ENGLISH    Return Home
+  ARABIC     العودة إلى الرئيسية
+  CORRECTION 
+
+errors.notFoundTitle
+  ENGLISH    This page has wilted.
+  ARABIC     هذه الصفحة ذبلت.
+  CORRECTION 
+
+errors.notFoundBody
+  ENGLISH    The address you followed is no longer in bloom — but the atelier is.
+  ARABIC     العنوان الذي اتّبعتِه لم يعد مُزهرًا — أمّا الأتيليه فما زال.
+  CORRECTION 
+
+errors.legal
+  ENGLISH    Legal
+  ARABIC     قانوني
+  CORRECTION 
+
+
+--- seal ---
+
+seal.eyebrow
+  ENGLISH    Sealed by hand
+  ARABIC     مختوم باليد
+  CORRECTION 
+
+seal.line1
+  ENGLISH    Nothing leaves
+  ARABIC     لا شيء يخرج
+  CORRECTION 
+
+seal.line2
+  ENGLISH    this atelier open.
+  ARABIC     من هذا الأتيليه مفتوحًا.
+  CORRECTION 
+
+seal.body
+  ENGLISH    Wrapped in embossed paper, tied with our printed ribbon, and closed with the monogram — pressed while the flowers are still cool from the studio.
+  ARABIC     يُغلّف بورق مُحفّر، ويُربط بشريطنا المطبوع، ويُختم بالشعار — يُضغط والزهور ما زالت باردة من الأتيليه.
+  CORRECTION 
+
+seal.shop
+  ENGLISH    Shop the collection
+  ARABIC     تسوّقي المجموعة
+  CORRECTION 
+
+seal.how
+  ENGLISH    How we wrap
+  ARABIC     كيف نُغلّف
+  CORRECTION 
+
+
+--- ritual ---
+
+ritual.eyebrow
+  ENGLISH    A Weekly Ritual
+  ARABIC     طقس أسبوعي
+  CORRECTION 
+
+ritual.title
+  ENGLISH    The Calanthe Membership
+  ARABIC     عضوية كالانثي
+  CORRECTION 
+
+ritual.body
+  ENGLISH    Fresh flowers, thoughtfully arranged and delivered to your door every week.
+  ARABIC     زهور طازجة، مُنسّقة بعناية، تصل إلى بابك كل أسبوع.
+  CORRECTION 
+
+ritual.cta
+  ENGLISH    Discover Membership
+  ARABIC     اكتشفي العضوية
+  CORRECTION 
+
+
+--- tiers ---
+
+tiers.mostLoved
+  ENGLISH    Most loved
+  ARABIC     المفضّلة
+  CORRECTION 
+
+tiers.perDelivery
+  ENGLISH    / delivery
+  ARABIC     / لكل توصيلة
+  CORRECTION 
+
+tiers.fourAMonth
+  ENGLISH    4 deliveries a month
+  ARABIC     4 توصيلات شهريًا
+  CORRECTION 
+
+tiers.begin
+  ENGLISH    Begin {name}
+  ARABIC     ابدئي العضوية {name}
+  CORRECTION 
+
+tiers.dialog
+  ENGLISH    Begin the {name} membership
+  ARABIC     بدء العضوية {name}
+  CORRECTION 
+
+tiers.label
+  ENGLISH    {name}
+  ARABIC     العضوية {name}
+  CORRECTION 
+
+
+--- videoApproval ---
+
+videoApproval.eyebrow
+  ENGLISH    Before it leaves the atelier
+  ARABIC     قبل أن تغادر الأتيليه
+  CORRECTION 
+
+videoApproval.title
+  ENGLISH    See it before it's delivered.
+  ARABIC     شاهديها قبل أن تصلك.
+  CORRECTION 
+
+videoApproval.copy
+  ENGLISH    When your arrangement is finished, your florist sends you a photo or video on WhatsApp. Nothing is delivered until you love it.
+  ARABIC     عندما تكتمل باقتك، ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب. ولا نوصّل شيئًا حتّى ينال إعجابك.
+  CORRECTION 
+
+videoApproval.steps.0
+  ENGLISH    We compose your arrangement by hand
+  ARABIC     نُنسّق باقتك يدويًا
+  CORRECTION 
+
+videoApproval.steps.1
+  ENGLISH    You receive a photo or video on WhatsApp
+  ARABIC     تصلك صورة أو مقطع على واتساب
+  CORRECTION 
+
+videoApproval.steps.2
+  ENGLISH    Approve it, and it's on its way
+  ARABIC     وافقي عليها، فتنطلق إليك
+  CORRECTION 
+
+
+--- tierNames ---
+
+tierNames.essential
+  ENGLISH    Essential
+  ARABIC     الأساسية
+  CORRECTION 
+
+tierNames.signature
+  ENGLISH    Signature
+  ARABIC     المميّزة
+  CORRECTION 
+
+tierNames.grand
+  ENGLISH    Grand
+  ARABIC     الكبرى
+  CORRECTION 
+
+
+--- occasionEmpty ---
+
+occasionEmpty.title
+  ENGLISH    The {name} collection is being composed.
+  ARABIC     مجموعة {name} قيد التنسيق.
+  CORRECTION 
+
+occasionEmpty.body
+  ENGLISH    Until it arrives, a florist can compose one for this moment. Tell us who it is for, the colours and your budget.
+  ARABIC     وحتّى تصل، يمكن لمنسّقة الزهور أن تنسّق واحدة لهذه اللحظة. أخبرينا لمن هي، والألوان، وميزانيتك.
+  CORRECTION 
+
+
+--- meta ---
+
+meta.home
+  ENGLISH    CALANTHE — Flower Atelier, UAE
+  ARABIC     CALANTHE — أتيليه الزهور، الإمارات
+  CORRECTION 
+
+meta.about
+  ENGLISH    About
+  ARABIC     عن كالانثي
+  CORRECTION 
+
+meta.account
+  ENGLISH    Your account
+  ARABIC     حسابك
+  CORRECTION 
+
+meta.order
+  ENGLISH    Order
+  ARABIC     الطلب
+  CORRECTION 
+
+meta.signIn
+  ENGLISH    Sign in
+  ARABIC     تسجيل الدخول
+  CORRECTION 
+
+meta.register
+  ENGLISH    Create an account
+  ARABIC     إنشاء حساب
+  CORRECTION 
+
+meta.forgotPassword
+  ENGLISH    Forgotten password
+  ARABIC     نسيت كلمة المرور
+  CORRECTION 
+
+meta.resetPassword
+  ENGLISH    Choose a new password
+  ARABIC     كلمة مرور جديدة
+  CORRECTION 
+
+meta.verify
+  ENGLISH    Confirm your email
+  ARABIC     تأكيد البريد الإلكتروني
+  CORRECTION 
+
+meta.buildYourOwn
+  ENGLISH    Build Your Own
+  ARABIC     صمّمي باقتك
+  CORRECTION 
+
+meta.checkout
+  ENGLISH    Checkout
+  ARABIC     إتمام الطلب
+  CORRECTION 
+
+meta.delivery
+  ENGLISH    Delivery Information
+  ARABIC     معلومات التوصيل
+  CORRECTION 
+
+meta.events
+  ENGLISH    Events
+  ARABIC     الفعاليات
+  CORRECTION 
+
+meta.faqs
+  ENGLISH    FAQs
+  ARABIC     الأسئلة الشائعة
+  CORRECTION 
+
+meta.membership
+  ENGLISH    Membership
+  ARABIC     العضوية
+  CORRECTION 
+
+meta.occasions
+  ENGLISH    Occasions
+  ARABIC     المناسبات
+  CORRECTION 
+
+meta.shop
+  ENGLISH    Shop
+  ARABIC     المتجر
+  CORRECTION 
+
+meta.wishlist
+  ENGLISH    Wishlist
+  ARABIC     قائمة الأمنيات
+  CORRECTION 
+
+meta.privacy
+  ENGLISH    Privacy Policy
+  ARABIC     سياسة الخصوصية
+  CORRECTION 
+
+meta.terms
+  ENGLISH    Terms & Conditions
+  ARABIC     الشروط والأحكام
+  CORRECTION 
+
+meta.refunds
+  ENGLISH    Refund & Cancellation Policy
+  ARABIC     سياسة الاسترداد والإلغاء
+  CORRECTION 
+
+
+--- wishlist ---
+
+wishlist.eyebrow
+  ENGLISH    Kept Close
+  ARABIC     قريبة إلى قلبك
+  CORRECTION 
+
+wishlist.title
+  ENGLISH    Wishlist
+  ARABIC     قائمة الأمنيات
+  CORRECTION 
+
+wishlist.emptyTitle
+  ENGLISH    Hearts you leave here never wilt.
+  ARABIC     ما تتركينه هنا لا يذبل أبدًا.
+  CORRECTION 
+
+wishlist.emptyBody
+  ENGLISH    Tap the heart on any arrangement to keep it close.
+  ARABIC     انقري على القلب في أي باقة لتبقى قريبة منك.
+  CORRECTION 
+
+
+--- shop ---
+
+shop.all
+  ENGLISH    All
+  ARABIC     الكل
+  CORRECTION 
+
+shop.anyPrice
+  ENGLISH    Any price
+  ARABIC     أي سعر
+  CORRECTION 
+
+shop.sortFeatured
+  ENGLISH    Featured
+  ARABIC     المميّزة
+  CORRECTION 
+
+shop.sortNew
+  ENGLISH    New
+  ARABIC     الأحدث
+  CORRECTION 
+
+shop.sortPriceAsc
+  ENGLISH    Price, low to high
+  ARABIC     السعر: من الأقل إلى الأعلى
+  CORRECTION 
+
+shop.sortPriceDesc
+  ENGLISH    Price, high to low
+  ARABIC     السعر: من الأعلى إلى الأقل
+  CORRECTION 
+
+shop.nothingFound
+  ENGLISH    No arrangements found for “{query}”.
+  ARABIC     لا توجد باقات باسم «{query}».
+  CORRECTION 
+
+shop.nothingYet
+  ENGLISH    Nothing blooms here yet.
+  ARABIC     لا شيء يُزهر هنا بعد.
+  CORRECTION 
+
+shop.noResults
+  ENGLISH    Try a different occasion, flower or price — or look through the whole collection.
+  ARABIC     جرّبي مناسبة أو زهرة أو سعرًا مختلفًا — أو تصفّحي المجموعة كاملة.
+  CORRECTION 
+
+shop.exploreAll
+  ENGLISH    Explore all arrangements
+  ARABIC     تصفّحي جميع الباقات
+  CORRECTION 
+
+shop.alsoFromAtelier
+  ENGLISH    Also from the atelier
+  ARABIC     من الأتيليه أيضًا
+  CORRECTION 
+
+shop.sameSpirit
+  ENGLISH    Composed in the same spirit.
+  ARABIC     مُنسّقة بالروح ذاتها.
+  CORRECTION 
+
+shop.atelier
+  ENGLISH    The Atelier
+  ARABIC     الأتيليه
+  CORRECTION 
+
+shop.priceBands.under-300
+  ENGLISH    Under AED 300
+  ARABIC     أقل من AED 300
+  CORRECTION 
+
+shop.priceBands.300-600
+  ENGLISH    AED 300 – 600
+  ARABIC     من AED 300 إلى 600
+  CORRECTION 
+
+shop.priceBands.over-600
+  ENGLISH    Over AED 600
+  ARABIC     أكثر من AED 600
+  CORRECTION 
+
+
+--- product ---
+
+product.eyebrow
+  ENGLISH    The Collection
+  ARABIC     المجموعة
+  CORRECTION 
+
+product.breadcrumbShop
+  ENGLISH    Shop
+  ARABIC     المتجر
+  CORRECTION 
+
+product.breadcrumbLabel
+  ENGLISH    Breadcrumb
+  ARABIC     مسار التنقل
+  CORRECTION 
+
+product.composedFor
+  ENGLISH    Composed for
+  ARABIC     تناسب
+  CORRECTION 
+
+product.listAnd
+  ENGLISH     and 
+  ARABIC      و
+  CORRECTION 
+
+product.listComma
+  ENGLISH    , 
+  ARABIC     ، 
+  CORRECTION 
+
+product.withExtras.one
+  ENGLISH     with {n} extra
+  ARABIC      مع إضافة واحدة
+  CORRECTION 
+
+product.withExtras.two
+  ENGLISH     with {n} extras
+  ARABIC      مع إضافتين
+  CORRECTION 
+
+product.withExtras.few
+  ENGLISH     with {n} extras
+  ARABIC      مع {n} إضافات
+  CORRECTION 
+
+product.withExtras.many
+  ENGLISH     with {n} extras
+  ARABIC      مع {n} إضافة
+  CORRECTION 
+
+product.withExtras.other
+  ENGLISH     with {n} extras
+  ARABIC      مع {n} إضافة
+  CORRECTION 
+
+product.promiseComposed
+  ENGLISH    Composed to order, and delivered on the day you choose.
+  ARABIC     تُنسّق خصيصًا لك، وتُوصّل في اليوم الذي تختارينه.
+  CORRECTION 
+
+product.promiseApproval
+  ENGLISH    A photo or video on WhatsApp for your approval before it leaves.
+  ARABIC     صورة أو مقطع على واتساب لتوافقي عليه قبل أن يخرج.
+  CORRECTION 
+
+product.promiseReach
+  ENGLISH    Delivered across all seven Emirates.
+  ARABIC     نوصّل إلى الإمارات السبع جميعًا.
+  CORRECTION 
+
+product.size
+  ENGLISH    Size
+  ARABIC     الحجم
+  CORRECTION 
+
+product.extras
+  ENGLISH    Something extra
+  ARABIC     لمسة إضافية
+  CORRECTION 
+
+product.deliveryDay
+  ENGLISH    Delivery day
+  ARABIC     يوم التوصيل
+  CORRECTION 
+
+product.cardSection
+  ENGLISH    Card and recipient
+  ARABIC     البطاقة والمستلِم
+  CORRECTION 
+
+product.cardAdded
+  ENGLISH    Added. You can change it at checkout too.
+  ARABIC     أُضيفت. ويمكنك تعديلها عند إتمام الطلب أيضًا.
+  CORRECTION 
+
+product.cardOptional
+  ENGLISH    Optional. Add a handwritten card and who is receiving it.
+  ARABIC     اختياري. أضيفي بطاقة مكتوبة بخط اليد، ومن سيستلمها.
+  CORRECTION 
+
+product.cardMessage
+  ENGLISH    Card message
+  ARABIC     نص البطاقة
+  CORRECTION 
+
+product.cardPlaceholder
+  ENGLISH    Write the words they'll keep…
+  ARABIC     اكتبي كلمات يحتفظون بها…
+  CORRECTION 
+
+product.recipientName
+  ENGLISH    Recipient name
+  ARABIC     اسم المستلِم
+  CORRECTION 
+
+product.recipientPhone
+  ENGLISH    Recipient phone
+  ARABIC     هاتف المستلِم
+  CORRECTION 
+
+product.phonePlaceholder
+  ENGLISH    050 123 4567
+  ARABIC     050 123 4567
+  CORRECTION 
+
+product.recipientNote
+  ENGLISH    Used only to coordinate delivery. The price is never shown to them.
+  ARABIC     يُستخدم لتنسيق التوصيل فقط. ولا يظهر لهم السعر أبدًا.
+  CORRECTION 
+
+product.addToCart
+  ENGLISH    Add to Cart
+  ARABIC     أضيفي إلى السلة
+  CORRECTION 
+
+product.addToCartWithTotal
+  ENGLISH    Add to Cart — {total}
+  ARABIC     أضيفي إلى السلة — {total}
+  CORRECTION 
+
+product.gallery
+  ENGLISH    Photographs of {name}
+  ARABIC     صور {name}
+  CORRECTION 
+
+product.galleryView
+  ENGLISH    View {n}
+  ARABIC     الصورة {n}
+  CORRECTION 
+
+
+--- sizeNames ---
+
+sizeNames.standard
+  ENGLISH    Standard
+  ARABIC     أساسي
+  CORRECTION 
+
+sizeNames.deluxe
+  ENGLISH    Deluxe
+  ARABIC     فاخر
+  CORRECTION 
+
+sizeNames.premium
+  ENGLISH    Premium
+  ARABIC     استثنائي
+  CORRECTION 
+
+
+--- sizeNotes ---
+
+sizeNotes.standard
+  ENGLISH    As photographed
+  ARABIC     كما في الصورة
+  CORRECTION 
+
+sizeNotes.deluxe
+  ENGLISH    A third fuller
+  ARABIC     أكبر بمقدار الثلث
+  CORRECTION 
+
+sizeNotes.premium
+  ENGLISH    Twice the stems
+  ARABIC     ضعف عدد السيقان
+  CORRECTION 
+
+
+--- addonNames ---
+
+addonNames.vase
+  ENGLISH    Vase
+  ARABIC     مزهرية
+  CORRECTION 
+
+addonNames.chocolates
+  ENGLISH    Chocolates
+  ARABIC     شوكولاتة
+  CORRECTION 
+
+addonNames.balloon
+  ENGLISH    Balloon
+  ARABIC     بالون
+  CORRECTION 
+
+addonNames.cake
+  ENGLISH    Bento Cake
+  ARABIC     كيكة بنتو
+  CORRECTION 
+
+addonNames.teddy
+  ENGLISH    Teddy Bear
+  ARABIC     دبدوب
+  CORRECTION 
+
+addonNames.polaroid
+  ENGLISH    Polaroid Card
+  ARABIC     بطاقة بولارويد
+  CORRECTION 
+
+
+--- server ---
+
+server.wait.moment
+  ENGLISH    Please wait a moment and try again.
+  ARABIC     انتظري لحظة ثم حاولي مرة أخرى.
+  CORRECTION 
+
+server.wait.minutes.one
+  ENGLISH    Please try again in {n} minute.
+  ARABIC     حاولي مرة أخرى بعد دقيقة.
+  CORRECTION 
+
+server.wait.minutes.two
+  ENGLISH    Please try again in {n} minutes.
+  ARABIC     حاولي مرة أخرى بعد دقيقتين.
+  CORRECTION 
+
+server.wait.minutes.few
+  ENGLISH    Please try again in {n} minutes.
+  ARABIC     حاولي مرة أخرى بعد {n} دقائق.
+  CORRECTION 
+
+server.wait.minutes.many
+  ENGLISH    Please try again in {n} minutes.
+  ARABIC     حاولي مرة أخرى بعد {n} دقيقة.
+  CORRECTION 
+
+server.wait.minutes.other
+  ENGLISH    Please try again in {n} minutes.
+  ARABIC     حاولي مرة أخرى بعد {n} دقيقة.
+  CORRECTION 
+
+server.wait.hours.one
+  ENGLISH    Please try again in about {n} hour.
+  ARABIC     حاولي مرة أخرى بعد ساعة تقريبًا.
+  CORRECTION 
+
+server.wait.hours.two
+  ENGLISH    Please try again in about {n} hours.
+  ARABIC     حاولي مرة أخرى بعد ساعتين تقريبًا.
+  CORRECTION 
+
+server.wait.hours.few
+  ENGLISH    Please try again in about {n} hours.
+  ARABIC     حاولي مرة أخرى بعد {n} ساعات تقريبًا.
+  CORRECTION 
+
+server.wait.hours.many
+  ENGLISH    Please try again in about {n} hours.
+  ARABIC     حاولي مرة أخرى بعد {n} ساعة تقريبًا.
+  CORRECTION 
+
+server.wait.hours.other
+  ENGLISH    Please try again in about {n} hours.
+  ARABIC     حاولي مرة أخرى بعد {n} ساعة تقريبًا.
+  CORRECTION 
+
+server.checkout.rateLimited
+  ENGLISH    Too many orders from this device. {wait}
+  ARABIC     طلبات كثيرة من هذا الجهاز. {wait}
+  CORRECTION 
+
+server.checkout.basketEmpty
+  ENGLISH    Your basket is empty.
+  ARABIC     سلّتك فارغة.
+  CORRECTION 
+
+server.checkout.nameRequired
+  ENGLISH    Please tell us your name.
+  ARABIC     أخبرينا باسمك.
+  CORRECTION 
+
+server.checkout.emailInvalid
+  ENGLISH    That email address does not look right.
+  ARABIC     البريد الإلكتروني يبدو غير صحيح.
+  CORRECTION 
+
+server.checkout.phoneFormat
+  ENGLISH    Enter your phone in international format, e.g. +971501234567.
+  ARABIC     اكتبي رقمك بالصيغة الدولية، مثال: +971501234567.
+  CORRECTION 
+
+server.checkout.addressRequired
+  ENGLISH    Please give us a delivery address.
+  ARABIC     أضيفي عنوان التوصيل.
+  CORRECTION 
+
+server.checkout.slotRequired
+  ENGLISH    Please choose a delivery time.
+  ARABIC     اختاري وقت التوصيل.
+  CORRECTION 
+
+server.checkout.recipientPhoneInvalid
+  ENGLISH    The recipient's phone number does not look right.
+  ARABIC     رقم هاتف المستلِم يبدو غير صحيح.
+  CORRECTION 
+
+server.checkout.dateRequired
+  ENGLISH    Please choose a delivery date.
+  ARABIC     اختاري تاريخ التوصيل.
+  CORRECTION 
+
+server.checkout.datePassed
+  ENGLISH    That delivery date has already passed.
+  ARABIC     تاريخ التوصيل هذا قد مضى.
+  CORRECTION 
+
+server.checkout.catalogueUnreachable
+  ENGLISH    We could not reach the catalogue. Please try again.
+  ARABIC     لم نتمكن من الوصول إلى المجموعة. حاولي مرة أخرى.
+  CORRECTION 
+
+server.checkout.productUnavailable
+  ENGLISH    One of the arrangements in your basket is no longer available. Please review your basket.
+  ARABIC     إحدى الباقات في سلّتك لم تعد متوفرة. راجعي سلّتك من فضلك.
+  CORRECTION 
+
+server.checkout.pricingRejected
+  ENGLISH    We could not price that basket. Please review your items and try again.
+  ARABIC     لم نتمكن من حساب قيمة السلّة. راجعي العناصر وحاولي مرة أخرى.
+  CORRECTION 
+
+server.checkout.creationFailed
+  ENGLISH    We could not place your order. Nothing has been charged — please try again.
+  ARABIC     لم نتمكن من تأكيد طلبك، ولم يُخصم أي مبلغ — حاولي مرة أخرى.
+  CORRECTION 
+
+server.account.credentialsRequired
+  ENGLISH    Enter your email and password.
+  ARABIC     اكتبي بريدك الإلكتروني وكلمة المرور.
+  CORRECTION 
+
+server.account.signInRateLimited
+  ENGLISH    Too many sign-in attempts. {wait}
+  ARABIC     محاولات دخول كثيرة. {wait}
+  CORRECTION 
+
+server.account.signInFailed
+  ENGLISH    We could not sign you in. Please try again.
+  ARABIC     لم نتمكن من تسجيل دخولك. حاولي مرة أخرى.
+  CORRECTION 
+
+server.account.staffAccount
+  ENGLISH    This is a staff account. Please use the admin sign-in.
+  ARABIC     هذا حساب لفريق العمل. استخدمي صفحة دخول لوحة الإدارة.
+  CORRECTION 
+
+server.account.signInRejected
+  ENGLISH    That email and password did not match, or the account is not yet verified.
+  ARABIC     البريد الإلكتروني وكلمة المرور غير متطابقين، أو أن الحساب لم يُفعَّل بعد.
+  CORRECTION 
+
+server.account.nameRequired
+  ENGLISH    Please tell us your name.
+  ARABIC     أخبرينا باسمك.
+  CORRECTION 
+
+server.account.emailInvalid
+  ENGLISH    Please check your email address.
+  ARABIC     تحقّقي من بريدك الإلكتروني.
+  CORRECTION 
+
+server.account.passwordTooShort
+  ENGLISH    Please use at least {min} characters.
+  ARABIC     استخدمي {min} أحرف على الأقل.
+  CORRECTION 
+
+server.account.passwordMismatch
+  ENGLISH    Those passwords do not match.
+  ARABIC     كلمتا المرور غير متطابقتين.
+  CORRECTION 
+
+server.account.registerRateLimited
+  ENGLISH    Too many accounts created from here. {wait}
+  ARABIC     حسابات كثيرة أُنشئت من هنا. {wait}
+  CORRECTION 
+
+server.account.registerFailed
+  ENGLISH    We could not create that account just now. Please try again.
+  ARABIC     لم نتمكن من إنشاء الحساب الآن. حاولي مرة أخرى.
+  CORRECTION 
+
+server.account.verifyLinkInvalid
+  ENGLISH    That verification link is not valid.
+  ARABIC     رابط التأكيد غير صالح.
+  CORRECTION 
+
+server.account.linkUsedOrExpired
+  ENGLISH    That link has expired or has already been used.
+  ARABIC     انتهت صلاحية الرابط أو أنّه استُخدم من قبل.
+  CORRECTION 
+
+server.account.resetLinkInvalid
+  ENGLISH    That reset link is not valid.
+  ARABIC     رابط إعادة التعيين غير صالح.
+  CORRECTION 
+
+server.account.phoneTaken
+  ENGLISH    That phone number is already on an account. Sign in instead, or leave the phone blank and add it later.
+  ARABIC     رقم الهاتف هذا مستخدم في حساب آخر. سجّلي الدخول، أو اتركي حقل الهاتف فارغًا وأضيفيه لاحقًا.
+  CORRECTION 
+
+server.enquiry.rateLimited
+  ENGLISH    That is a lot of enquiries at once. {wait}
+  ARABIC     هذا عدد كبير من الطلبات في وقت واحد. {wait}
+  CORRECTION 
+
+server.enquiry.nameRequired
+  ENGLISH    Please tell us your name.
+  ARABIC     أخبرينا باسمك.
+  CORRECTION 
+
+server.enquiry.emailInvalid
+  ENGLISH    Please check your email address.
+  ARABIC     تحقّقي من بريدك الإلكتروني.
+  CORRECTION 
+
+server.enquiry.phoneFormat
+  ENGLISH    Please include your phone number with its country code, like +9715…
+  ARABIC     اكتبي رقم هاتفك مع رمز الدولة، مثل +9715…
+  CORRECTION 
+
+server.enquiry.recordFailed
+  ENGLISH    We could not record that just now. Please try again, or message us on WhatsApp.
+  ARABIC     لم نتمكن من تسجيل ذلك الآن. حاولي مرة أخرى، أو راسلينا على واتساب.
+  CORRECTION 
+
+server.enquiry.budgetRequired
+  ENGLISH    Please choose a budget.
+  ARABIC     اختاري الميزانية.
+  CORRECTION 
+
+server.enquiry.eventTypeRequired
+  ENGLISH    Please tell us what kind of occasion it is.
+  ARABIC     أخبرينا بنوع المناسبة.
+  CORRECTION 
+
+server.enquiry.dateInvalid
+  ENGLISH    Please check the date.
+  ARABIC     تحقّقي من التاريخ.
+  CORRECTION 
+
+server.enquiry.frequencyRequired
+  ENGLISH    Please choose how often the flowers should arrive.
+  ARABIC     اختاري عدد مرات وصول الزهور.
+  CORRECTION 
+
+server.enquiry.deliveryPreferenceRequired
+  ENGLISH    Please choose where the flowers should go.
+  ARABIC     اختاري إلى أين تُرسل الزهور.
+  CORRECTION 
+
+server.enquiry.startDateInvalid
+  ENGLISH    Please check the start date.
+  ARABIC     تحقّقي من تاريخ البداية.
+  CORRECTION 
+
+server.enquiry.startDatePast
+  ENGLISH    Please choose a start date from today onward.
+  ARABIC     اختاري تاريخ بداية من اليوم أو بعده.
+  CORRECTION 
+
+
+--- checkout ---
+
+checkout.eyebrow
+  ENGLISH    Checkout
+  ARABIC     إتمام الطلب
+  CORRECTION 
+
+checkout.title
+  ENGLISH    Almost there.
+  ARABIC     بقيت خطوة واحدة.
+  CORRECTION 
+
+checkout.forWhom
+  ENGLISH    Who are the flowers for?
+  ARABIC     لمن هذه الزهور؟
+  CORRECTION 
+
+checkout.whenWhere
+  ENGLISH    When and where
+  ARABIC     الموعد والمكان
+  CORRECTION 
+
+checkout.yourDetails
+  ENGLISH    Your details
+  ARABIC     بياناتك
+  CORRECTION 
+
+checkout.payment
+  ENGLISH    Payment
+  ARABIC     الدفع
+  CORRECTION 
+
+checkout.audience
+  ENGLISH    Who the order is for
+  ARABIC     لمن هذا الطلب
+  CORRECTION 
+
+checkout.gift
+  ENGLISH    It is a gift
+  ARABIC     هدية
+  CORRECTION 
+
+checkout.myself
+  ENGLISH    For myself
+  ARABIC     لنفسي
+  CORRECTION 
+
+checkout.recipientName
+  ENGLISH    Recipient name
+  ARABIC     اسم المستلِم
+  CORRECTION 
+
+checkout.recipientNamePlaceholder
+  ENGLISH    Their name
+  ARABIC     الاسم
+  CORRECTION 
+
+checkout.recipientPhone
+  ENGLISH    Recipient phone (optional)
+  ARABIC     هاتف المستلِم (اختياري)
+  CORRECTION 
+
+checkout.phonePlaceholder
+  ENGLISH    050 123 4567
+  ARABIC     050 123 4567
+  CORRECTION 
+
+checkout.surprise
+  ENGLISH    Keep it a surprise. Contact me, not them, about the delivery.
+  ARABIC     أبقيها مفاجأة. تواصلوا معي بشأن التوصيل، لا مع المستلِم.
+  CORRECTION 
+
+checkout.emirate
+  ENGLISH    Delivery emirate
+  ARABIC     إمارة التوصيل
+  CORRECTION 
+
+checkout.emiratePlaceholder
+  ENGLISH    Choose your emirate
+  ARABIC     اختاري الإمارة
+  CORRECTION 
+
+checkout.emirateOption
+  ENGLISH    {name} — {fee} delivery
+  ARABIC     {name} — التوصيل {fee}
+  CORRECTION 
+
+checkout.deliveryFree
+  ENGLISH    Delivery is complimentary on this order.
+  ARABIC     التوصيل مجاني على هذا الطلب.
+  CORRECTION 
+
+checkout.deliveryFreeAway
+  ENGLISH    {amount} more for complimentary delivery.
+  ARABIC     يفصلك {amount} عن التوصيل المجاني.
+  CORRECTION 
+
+checkout.address
+  ENGLISH    Delivery address
+  ARABIC     عنوان التوصيل
+  CORRECTION 
+
+checkout.addressPlaceholder
+  ENGLISH    Villa or apartment, street, area
+  ARABIC     فيلا أو شقة، الشارع، المنطقة
+  CORRECTION 
+
+checkout.day
+  ENGLISH    Delivery day
+  ARABIC     يوم التوصيل
+  CORRECTION 
+
+checkout.window
+  ENGLISH    Time window
+  ARABIC     الفترة الزمنية
+  CORRECTION 
+
+checkout.name
+  ENGLISH    Your name
+  ARABIC     اسمك
+  CORRECTION 
+
+checkout.namePlaceholder
+  ENGLISH    Full name
+  ARABIC     الاسم الكامل
+  CORRECTION 
+
+checkout.phone
+  ENGLISH    Your phone
+  ARABIC     هاتفك
+  CORRECTION 
+
+checkout.email
+  ENGLISH    Email for order updates
+  ARABIC     البريد الإلكتروني لتحديثات الطلب
+  CORRECTION 
+
+checkout.emailPlaceholder
+  ENGLISH    you@example.com
+  ARABIC     you@example.com
+  CORRECTION 
+
+checkout.cod
+  ENGLISH    Cash on delivery
+  ARABIC     الدفع نقدًا عند التوصيل
+  CORRECTION 
+
+checkout.codBody
+  ENGLISH    Pay the courier when your flowers arrive. Nothing is charged now.
+  ARABIC     تدفعين لمندوب التوصيل عند وصول زهورك. لا يُخصم أي مبلغ الآن.
+  CORRECTION 
+
+checkout.yourOrder
+  ENGLISH    Your order
+  ARABIC     طلبك
+  CORRECTION 
+
+checkout.withCard
+  ENGLISH    With a handwritten card
+  ARABIC     مع بطاقة مكتوبة بخط اليد
+  CORRECTION 
+
+checkout.subtotal
+  ENGLISH    Subtotal
+  ARABIC     المجموع الفرعي
+  CORRECTION 
+
+checkout.delivery
+  ENGLISH    Delivery
+  ARABIC     التوصيل
+  CORRECTION 
+
+checkout.deliveryTo
+  ENGLISH    Delivery to {name}
+  ARABIC     التوصيل إلى {name}
+  CORRECTION 
+
+checkout.complimentary
+  ENGLISH    Complimentary
+  ARABIC     مجاني
+  CORRECTION 
+
+checkout.chooseEmirate
+  ENGLISH    Choose an emirate
+  ARABIC     اختاري الإمارة
+  CORRECTION 
+
+checkout.total
+  ENGLISH    Total
+  ARABIC     الإجمالي
+  CORRECTION 
+
+checkout.paidInCash
+  ENGLISH    Paid in cash when your flowers arrive.
+  ARABIC     يُدفع نقدًا عند وصول زهورك.
+  CORRECTION 
+
+checkout.showSummary
+  ENGLISH    Show order summary
+  ARABIC     إظهار ملخّص الطلب
+  CORRECTION 
+
+checkout.hideSummary
+  ENGLISH    Hide order summary
+  ARABIC     إخفاء ملخّص الطلب
+  CORRECTION 
+
+checkout.place
+  ENGLISH    Place Order
+  ARABIC     تأكيد الطلب
+  CORRECTION 
+
+checkout.placeWithTotal
+  ENGLISH    Place Order — {total}
+  ARABIC     تأكيد الطلب — {total}
+  CORRECTION 
+
+checkout.placing
+  ENGLISH    Placing your order…
+  ARABIC     جارٍ تأكيد طلبك…
+  CORRECTION 
+
+checkout.placingShort
+  ENGLISH    Placing…
+  ARABIC     جارٍ التأكيد…
+  CORRECTION 
+
+checkout.questions
+  ENGLISH    Questions first?
+  ARABIC     لديك سؤال أولًا؟
+  CORRECTION 
+
+checkout.messageFlorist
+  ENGLISH    Message a florist
+  ARABIC     راسلي منسّقة الزهور
+  CORRECTION 
+
+checkout.itemCount.one
+  ENGLISH    {n} arrangement
+  ARABIC     باقة واحدة
+  CORRECTION 
+
+checkout.itemCount.two
+  ENGLISH    {n} arrangements
+  ARABIC     باقتان
+  CORRECTION 
+
+checkout.itemCount.few
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقات
+  CORRECTION 
+
+checkout.itemCount.many
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقة
+  CORRECTION 
+
+checkout.itemCount.other
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقة
+  CORRECTION 
+
+checkout.pickEmirate
+  ENGLISH    choose an emirate
+  ARABIC     اختاري الإمارة
+  CORRECTION 
+
+checkout.formInvalid
+  ENGLISH    A few details need a second look. They are marked above.
+  ARABIC     بعض البيانات تحتاج مراجعة، وقد أشرنا إليها أعلاه.
+  CORRECTION 
+
+checkout.dayGone
+  ENGLISH    Your delivery day is no longer available. Choose another.
+  ARABIC     يوم التوصيل الذي اخترتِه لم يعد متاحًا. اختاري يومًا آخر.
+  CORRECTION 
+
+checkout.dayInvalid
+  ENGLISH    Choose a day we can still deliver on.
+  ARABIC     اختاري يومًا يمكننا التوصيل فيه.
+  CORRECTION 
+
+checkout.orderRef
+  ENGLISH    Order {number}
+  ARABIC     الطلب {number}
+  CORRECTION 
+
+checkout.placedTitle
+  ENGLISH    Your flowers are in our hands.
+  ARABIC     زهورك بين أيدينا الآن.
+  CORRECTION 
+
+checkout.placedBody
+  ENGLISH    Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval. Payment is taken in cash on delivery.
+  ARABIC     قبل أن يخرج تنسيقك من الأتيليه، ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب لتوافقي عليه. ويُدفع المبلغ نقدًا عند التوصيل.
+  CORRECTION 
+
+checkout.viewOrders
+  ENGLISH    View Your Orders
+  ARABIC     عرض طلباتك
+  CORRECTION 
+
+checkout.continueShopping
+  ENGLISH    Continue Shopping
+  ARABIC     متابعة التسوّق
+  CORRECTION 
+
+checkout.errors.recipientNameRequired
+  ENGLISH    Tell us who is receiving the flowers.
+  ARABIC     أخبرينا من سيستلم الزهور.
+  CORRECTION 
+
+checkout.errors.phoneInvalid
+  ENGLISH    Check the number, for example 050 123 4567.
+  ARABIC     تحقّقي من الرقم، مثال: 050 123 4567.
+  CORRECTION 
+
+checkout.errors.zoneRequired
+  ENGLISH    Choose the emirate we are delivering to.
+  ARABIC     اختاري الإمارة التي نوصّل إليها.
+  CORRECTION 
+
+checkout.errors.nameRequired
+  ENGLISH    Tell us your name.
+  ARABIC     أخبرينا باسمك.
+  CORRECTION 
+
+checkout.errors.phoneRequired
+  ENGLISH    We need a number to confirm the order on WhatsApp.
+  ARABIC     نحتاج رقمًا لتأكيد الطلب على واتساب.
+  CORRECTION 
+
+checkout.errors.emailRequired
+  ENGLISH    We send order updates to this address.
+  ARABIC     نرسل تحديثات الطلب إلى هذا البريد.
+  CORRECTION 
+
+checkout.errors.emailInvalid
+  ENGLISH    That email address does not look complete.
+  ARABIC     البريد الإلكتروني يبدو غير مكتمل.
+  CORRECTION 
+
+checkout.errors.addressRequired
+  ENGLISH    Where should we deliver?
+  ARABIC     إلى أين نوصّل؟
+  CORRECTION 
+
+
+--- schedule ---
+
+schedule.today
+  ENGLISH    Today
+  ARABIC     اليوم
+  CORRECTION 
+
+schedule.tomorrow
+  ENGLISH    Tomorrow
+  ARABIC     غدًا
+  CORRECTION 
+
+schedule.passed
+  ENGLISH    Passed
+  ARABIC     انتهت
+  CORRECTION 
+
+schedule.tooSoon
+  ENGLISH    Too soon
+  ARABIC     قريبة جدًا
+  CORRECTION 
+
+
+--- zoneNames ---
+
+zoneNames.dubai
+  ENGLISH    Dubai
+  ARABIC     دبي
+  CORRECTION 
+
+zoneNames.abu-dhabi
+  ENGLISH    Abu Dhabi
+  ARABIC     أبوظبي
+  CORRECTION 
+
+zoneNames.sharjah
+  ENGLISH    Sharjah
+  ARABIC     الشارقة
+  CORRECTION 
+
+zoneNames.ajman
+  ENGLISH    Ajman
+  ARABIC     عجمان
+  CORRECTION 
+
+zoneNames.umm-al-quwain
+  ENGLISH    Umm Al Quwain
+  ARABIC     أم القيوين
+  CORRECTION 
+
+zoneNames.ras-al-khaimah
+  ENGLISH    Ras Al Khaimah
+  ARABIC     رأس الخيمة
+  CORRECTION 
+
+zoneNames.fujairah
+  ENGLISH    Fujairah
+  ARABIC     الفجيرة
+  CORRECTION 
+
+
+--- account ---
+
+account.eyebrow
+  ENGLISH    Your account
+  ARABIC     حسابك
+  CORRECTION 
+
+account.signInTitle
+  ENGLISH    Welcome back.
+  ARABIC     أهلًا بعودتك.
+  CORRECTION 
+
+account.signInIntro
+  ENGLISH    Sign in to see your orders and the details we keep for your deliveries.
+  ARABIC     سجّلي الدخول لمتابعة طلباتك والتفاصيل التي نحفظها لتوصيلاتك.
+  CORRECTION 
+
+account.registerTitle
+  ENGLISH    Keep your details close.
+  ARABIC     احفظي تفاصيلك معنا.
+  CORRECTION 
+
+account.registerIntro
+  ENGLISH    An account remembers your addresses and your past arrangements. You never need one to order — every bouquet can be sent as a guest.
+  ARABIC     الحساب يحفظ عناوينك وباقاتك السابقة. ولستِ بحاجة إليه للطلب — كل باقة يمكن إرسالها كزائرة.
+  CORRECTION 
+
+account.forgotTitle
+  ENGLISH    Let's get you back in.
+  ARABIC     لنُعِدك إلى حسابك.
+  CORRECTION 
+
+account.forgotIntro
+  ENGLISH    Tell us the address you signed up with and we will send a link to choose a new password.
+  ARABIC     أخبرينا بالبريد الذي سجّلتِ به وسنرسل رابطًا لاختيار كلمة مرور جديدة.
+  CORRECTION 
+
+account.resetTitle
+  ENGLISH    Choose a new password.
+  ARABIC     اختاري كلمة مرور جديدة.
+  CORRECTION 
+
+account.resetIntro
+  ENGLISH    Pick something you have not used elsewhere.
+  ARABIC     اختاري كلمة لم تستخدميها في مكان آخر.
+  CORRECTION 
+
+account.verifiedTitle
+  ENGLISH    Your email is confirmed.
+  ARABIC     تم تأكيد بريدك.
+  CORRECTION 
+
+account.verifiedIntro
+  ENGLISH    That is everything. You can sign in with your email and password from now on — we will not ask you to confirm again.
+  ARABIC     هذا كل شيء. يمكنك تسجيل الدخول ببريدك وكلمة المرور من الآن — ولن نطلب التأكيد مرة أخرى.
+  CORRECTION 
+
+account.expiredTitle
+  ENGLISH    That link has expired.
+  ARABIC     انتهت صلاحية هذا الرابط.
+  CORRECTION 
+
+account.incompleteTitle
+  ENGLISH    That link is incomplete.
+  ARABIC     هذا الرابط غير مكتمل.
+  CORRECTION 
+
+account.incompleteIntro
+  ENGLISH    The reset link is missing its token. Ask for a new one and it will arrive within a minute or two.
+  ARABIC     رابط إعادة التعيين ينقصه الرمز. اطلبي رابطًا جديدًا وسيصلك خلال دقيقة أو دقيقتين.
+  CORRECTION 
+
+account.name
+  ENGLISH    Your name
+  ARABIC     الاسم
+  CORRECTION 
+
+account.email
+  ENGLISH    Email
+  ARABIC     البريد الإلكتروني
+  CORRECTION 
+
+account.phoneOptional
+  ENGLISH    Phone (optional)
+  ARABIC     الهاتف (اختياري)
+  CORRECTION 
+
+account.password
+  ENGLISH    Password
+  ARABIC     كلمة المرور
+  CORRECTION 
+
+account.newPassword
+  ENGLISH    New password
+  ARABIC     كلمة المرور الجديدة
+  CORRECTION 
+
+account.confirmPassword
+  ENGLISH    Confirm password
+  ARABIC     تأكيد كلمة المرور
+  CORRECTION 
+
+account.confirmNewPassword
+  ENGLISH    Confirm new password
+  ARABIC     تأكيد كلمة المرور الجديدة
+  CORRECTION 
+
+account.passwordHint
+  ENGLISH    At least 10 characters.
+  ARABIC     عشرة أحرف على الأقل.
+  CORRECTION 
+
+account.signIn
+  ENGLISH    Sign in
+  ARABIC     تسجيل الدخول
+  CORRECTION 
+
+account.createAccount
+  ENGLISH    Create account
+  ARABIC     إنشاء حساب
+  CORRECTION 
+
+account.creating
+  ENGLISH    Creating your account…
+  ARABIC     جارٍ إنشاء حسابك…
+  CORRECTION 
+
+account.signingIn
+  ENGLISH    Signing you in…
+  ARABIC     جارٍ تسجيل دخولك…
+  CORRECTION 
+
+account.sendLink
+  ENGLISH    Send the link
+  ARABIC     إرسال الرابط
+  CORRECTION 
+
+account.sendNewLink
+  ENGLISH    Send a new link
+  ARABIC     إرسال رابط جديد
+  CORRECTION 
+
+account.sending
+  ENGLISH    Sending…
+  ARABIC     جارٍ الإرسال…
+  CORRECTION 
+
+account.saveNewPassword
+  ENGLISH    Save new password
+  ARABIC     حفظ كلمة المرور
+  CORRECTION 
+
+account.saving
+  ENGLISH    Saving…
+  ARABIC     جارٍ الحفظ…
+  CORRECTION 
+
+account.resend
+  ENGLISH    Resend the email
+  ARABIC     إعادة إرسال البريد
+  CORRECTION 
+
+account.resent
+  ENGLISH    Sent again
+  ARABIC     تم الإرسال مجددًا
+  CORRECTION 
+
+account.backToSignIn
+  ENGLISH    Back to sign in
+  ARABIC     العودة لتسجيل الدخول
+  CORRECTION 
+
+account.newHere
+  ENGLISH    New here?
+  ARABIC     جديدة هنا؟
+  CORRECTION 
+
+account.haveAccount
+  ENGLISH    Already have an account?
+  ARABIC     لديك حساب بالفعل؟
+  CORRECTION 
+
+account.forgotLink
+  ENGLISH    Forgotten your password?
+  ARABIC     نسيتِ كلمة المرور؟
+  CORRECTION 
+
+account.resendLink
+  ENGLISH    Didn't get your confirmation email?
+  ARABIC     لم يصلكِ بريد التأكيد؟
+  CORRECTION 
+
+account.rememberedIt
+  ENGLISH    Remembered it?
+  ARABIC     تذكّرتِها؟
+  CORRECTION 
+
+account.checkInbox
+  ENGLISH    Check {email} for a link to confirm your address. It expires in a few hours.
+  ARABIC     تفقّدي {email} لرابط تأكيد بريدك. تنتهي صلاحيته خلال ساعات.
+  CORRECTION 
+
+account.checkInboxNote
+  ENGLISH    Nothing is active until you confirm — you can still order as a guest in the meantime.
+  ARABIC     لا شيء يُفعَّل قبل التأكيد — ويمكنك الطلب كزائرة في هذه الأثناء.
+  CORRECTION 
+
+account.resetSentIfExists
+  ENGLISH    If that address has an account with us, a link to choose a new password is on its way. It expires in about an hour.
+  ARABIC     إذا كان لهذا البريد حساب لدينا، فرابط اختيار كلمة مرور جديدة في طريقه إليك. تنتهي صلاحيته خلال ساعة تقريبًا.
+  CORRECTION 
+
+account.resendIfWaiting
+  ENGLISH    If that address is waiting to be confirmed, a new link is on its way.
+  ARABIC     إذا كان هذا البريد بانتظار التأكيد، فرابط جديد في طريقه إليك.
+  CORRECTION 
+
+account.passwordChanged
+  ENGLISH    Your password has been changed. You can sign in with it now.
+  ARABIC     تم تغيير كلمة المرور. يمكنك تسجيل الدخول بها الآن.
+  CORRECTION 
+
+account.orders
+  ENGLISH    Your orders
+  ARABIC     طلباتك
+  CORRECTION 
+
+account.noOrders
+  ENGLISH    No orders yet
+  ARABIC     لا توجد طلبات بعد
+  CORRECTION 
+
+account.noOrdersBody
+  ENGLISH    When you order, it will appear here with its progress.
+  ARABIC     عندما تطلبين، سيظهر الطلب هنا مع مراحل تقدّمه.
+  CORRECTION 
+
+account.visitShop
+  ENGLISH    Visit the shop
+  ARABIC     زيارة المتجر
+  CORRECTION 
+
+account.signInForOrders
+  ENGLISH    Sign in to see your orders. You do not need an account to buy — every arrangement can be ordered as a guest.
+  ARABIC     سجّلي الدخول لعرض طلباتك. ولا تحتاجين حسابًا للشراء — فكل باقة يمكن طلبها كزائرة.
+  CORRECTION 
+
+account.orderEyebrow
+  ENGLISH    Your order
+  ARABIC     طلبك
+  CORRECTION 
+
+account.pleaseSignIn
+  ENGLISH    Please sign in.
+  ARABIC     يُرجى تسجيل الدخول.
+  CORRECTION 
+
+account.signInForOrder
+  ENGLISH    Sign in to see this order. Orders are only ever shown to the account that placed them.
+  ARABIC     سجّلي الدخول لعرض هذا الطلب. ولا تُعرض الطلبات إلا للحساب الذي أنشأها.
+  CORRECTION 
+
+account.placedOn
+  ENGLISH    Placed {date}
+  ARABIC     طُلب في {date}
+  CORRECTION 
+
+account.whatYouOrdered
+  ENGLISH    What you ordered
+  ARABIC     ما طلبتِه
+  CORRECTION 
+
+account.deliveryFree
+  ENGLISH    Free
+  ARABIC     مجانًا
+  CORRECTION 
+
+account.payableOnDelivery
+  ENGLISH    Payable in cash on delivery.
+  ARABIC     يُدفع نقدًا عند التوصيل.
+  CORRECTION 
+
+account.paymentState
+  ENGLISH    Payment: {status}
+  ARABIC     الدفع: {status}
+  CORRECTION 
+
+account.deliveryHeading
+  ENGLISH    Delivery
+  ARABIC     التوصيل
+  CORRECTION 
+
+account.deliveryTo
+  ENGLISH    To {name}
+  ARABIC     إلى {name}
+  CORRECTION 
+
+account.backToOrders
+  ENGLISH    Back to your orders
+  ARABIC     العودة إلى طلباتك
+  CORRECTION 
+
+account.fulfilment.NEW
+  ENGLISH    New
+  ARABIC     جديد
+  CORRECTION 
+
+account.fulfilment.CONFIRMED
+  ENGLISH    Confirmed
+  ARABIC     مؤكَّد
+  CORRECTION 
+
+account.fulfilment.PREPARING
+  ENGLISH    Preparing
+  ARABIC     قيد التحضير
+  CORRECTION 
+
+account.fulfilment.READY
+  ENGLISH    Ready
+  ARABIC     جاهز
+  CORRECTION 
+
+account.fulfilment.OUT_FOR_DELIVERY
+  ENGLISH    Out for delivery
+  ARABIC     خرج للتوصيل
+  CORRECTION 
+
+account.fulfilment.DELIVERED
+  ENGLISH    Delivered
+  ARABIC     تم التسليم
+  CORRECTION 
+
+account.fulfilment.CANCELLED
+  ENGLISH    Cancelled
+  ARABIC     ملغى
+  CORRECTION 
+
+account.payment.PENDING
+  ENGLISH    Awaiting payment
+  ARABIC     بانتظار الدفع
+  CORRECTION 
+
+account.payment.AUTHORIZED
+  ENGLISH    Authorized
+  ARABIC     مُصرَّح به
+  CORRECTION 
+
+account.payment.PAID
+  ENGLISH    Paid
+  ARABIC     مدفوع
+  CORRECTION 
+
+account.payment.FAILED
+  ENGLISH    Payment failed
+  ARABIC     فشل الدفع
+  CORRECTION 
+
+account.payment.REFUNDED
+  ENGLISH    Refunded
+  ARABIC     مُسترَد
+  CORRECTION 
+
+account.payment.PARTIALLY_REFUNDED
+  ENGLISH    Partially refunded
+  ARABIC     مُسترَد جزئيًا
+  CORRECTION 
+
+
+--- pages ---
+
+pages.shopEyebrow
+  ENGLISH    The Collection
+  ARABIC     المجموعة
+  CORRECTION 
+
+pages.shopTitle
+  ENGLISH    Composed this morning, at your door on the day you choose.
+  ARABIC     تُنسّق صباحًا، وتصل إلى بابك في اليوم الذي تختارينه.
+  CORRECTION 
+
+pages.shopIntro
+  ENGLISH    Every arrangement is built stem by stem in the atelier — no two ever quite the same.
+  ARABIC     كل باقة تُبنى ساقًا بساق في الأتيليه — ولا تتشابه اثنتان.
+  CORRECTION 
+
+pages.shopReadyEyebrow
+  ENGLISH    Ready made for today
+  ARABIC     جاهز للتوصيل اليوم
+  CORRECTION 
+
+pages.shopReadyTitle
+  ENGLISH    Made this morning, gone by evening.
+  ARABIC     تُنسّق صباحًا، وتنفد مساءً.
+  CORRECTION 
+
+pages.arrangementCount.one
+  ENGLISH    {n} arrangement
+  ARABIC     باقة واحدة
+  CORRECTION 
+
+pages.arrangementCount.two
+  ENGLISH    {n} arrangements
+  ARABIC     باقتان
+  CORRECTION 
+
+pages.arrangementCount.few
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقات
+  CORRECTION 
+
+pages.arrangementCount.many
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقة
+  CORRECTION 
+
+pages.arrangementCount.other
+  ENGLISH    {n} arrangements
+  ARABIC     {n} باقة
+  CORRECTION 
+
+pages.occasionsEyebrow
+  ENGLISH    Occasions
+  ARABIC     المناسبات
+  CORRECTION 
+
+pages.occasionsTitle
+  ENGLISH    For every unspoken thing.
+  ARABIC     لكل ما لا يُقال.
+  CORRECTION 
+
+pages.occasionsIntro
+  ENGLISH    Some things are easier handed over than said. Begin with the moment, and we will compose the rest.
+  ARABIC     بعض الأشياء تُقدَّم أسهل مما تُقال. ابدئي باللحظة، ونتكفّل نحن بالباقي.
+  CORRECTION 
+
+pages.occasionCount.one
+  ENGLISH    {n} occasion
+  ARABIC     مناسبة واحدة
+  CORRECTION 
+
+pages.occasionCount.two
+  ENGLISH    {n} occasions
+  ARABIC     مناسبتان
+  CORRECTION 
+
+pages.occasionCount.few
+  ENGLISH    {n} occasions
+  ARABIC     {n} مناسبات
+  CORRECTION 
+
+pages.occasionCount.many
+  ENGLISH    {n} occasions
+  ARABIC     {n} مناسبة
+  CORRECTION 
+
+pages.occasionCount.other
+  ENGLISH    {n} occasions
+  ARABIC     {n} مناسبة
+  CORRECTION 
+
+
+--- footer ---
+
+footer.shop
+  ENGLISH    Shop
+  ARABIC     المتجر
+  CORRECTION 
+
+footer.help
+  ENGLISH    Help
+  ARABIC     المساعدة
+  CORRECTION 
+
+footer.contact
+  ENGLISH    Contact
+  ARABIC     تواصلي معنا
+  CORRECTION 
+
+footer.about
+  ENGLISH    About
+  ARABIC     عن كالانثي
+  CORRECTION 
+
+footer.memberships
+  ENGLISH    Memberships
+  ARABIC     العضويات
+  CORRECTION 
+
+footer.events
+  ENGLISH    Events
+  ARABIC     الفعاليات
+  CORRECTION 
+
+footer.delivery
+  ENGLISH    Delivery Information
+  ARABIC     معلومات التوصيل
+  CORRECTION 
+
+footer.faqs
+  ENGLISH    FAQs
+  ARABIC     الأسئلة الشائعة
+  CORRECTION 
+
+footer.terms
+  ENGLISH    Terms & Conditions
+  ARABIC     الشروط والأحكام
+  CORRECTION 
+
+footer.privacy
+  ENGLISH    Privacy Policy
+  ARABIC     سياسة الخصوصية
+  CORRECTION 
+
+footer.refunds
+  ENGLISH    Refund & Cancellation Policy
+  ARABIC     سياسة الاسترجاع والإلغاء
+  CORRECTION 
+
+footer.whatsapp
+  ENGLISH    WhatsApp
+  ARABIC     واتساب
+  CORRECTION 
+
+footer.instagram
+  ENGLISH    Instagram
+  ARABIC     إنستغرام
+  CORRECTION 
+
+footer.email
+  ENGLISH    Email
+  ARABIC     البريد الإلكتروني
+  CORRECTION 
+
+footer.rights
+  ENGLISH    © 2026 Calanthe
+  ARABIC     © 2026 كالانثي
+  CORRECTION 
+
+
+--- language ---
+
+language.label
+  ENGLISH    Language
+  ARABIC     اللغة
+  CORRECTION 
+
+language.english
+  ENGLISH    English
+  ARABIC     English
+  CORRECTION 
+
+language.arabic
+  ENGLISH    العربية
+  ARABIC     العربية
+  CORRECTION 
+
+language.toEnglish
+  ENGLISH    Switch to English
+  ARABIC     Switch to English
+  CORRECTION 
+
+language.toArabic
+  ENGLISH    التبديل إلى العربية
+  ARABIC     التبديل إلى العربية
+  CORRECTION 

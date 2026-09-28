@@ -47,19 +47,25 @@ export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion
   const extra = [{ label: t.band.luxury, href: EXTRA_HREF }];
 
   const links = [
-    ...occasions.map((o) => ({ label: t.occasionNames[o.slug] ?? o.name, href: `/occasions/${o.slug}` })),
+    ...occasions.map((o) => ({
+      label: t.occasionNames[o.slug] ?? o.name,
+      href: `/occasions/${o.slug}`,
+    })),
     ...extra,
   ];
 
   return (
     <nav
-      aria-label="Shop shortcuts"
+      aria-label={t.ui.shopShortcuts}
       className="relative isolate overflow-hidden border-b border-hairline/70 bg-canvas"
     >
       {/* The paper. Cropped hard by the band's own edges, so what shows is a
           fragment of a much larger flower — never a drawing sitting in a
           box. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <LilyField
           opacity={0.06}
           /* On a phone the band is short, so the crop matters: land it on the
@@ -73,7 +79,7 @@ export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion
         <div className="flex flex-col items-center gap-2">
           <Monogram className="h-7 w-7 text-burnt-orange/75 lg:h-8 lg:w-8" />
           <p className="font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-ink-muted lg:text-xs">
-            Send flowers for
+            {t.band.sendFlowersFor}
           </p>
         </div>
 

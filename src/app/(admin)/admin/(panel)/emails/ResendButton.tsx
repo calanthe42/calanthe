@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { resendLoggedEmail } from "@backend/actions/emails";
 import { Button } from "@admin/ui/Button";
+import { useI18n } from "@admin/i18n/client";
 
 /**
  * Sends a logged email again.
@@ -12,7 +13,16 @@ import { Button } from "@admin/ui/Button";
  * scanning a list of failures needs to see which ones she has already
  * retried without holding it in her head.
  */
-export function ResendButton({ id, disabled, reason }: { id: string; disabled?: boolean; reason?: string }) {
+export function ResendButton({
+  id,
+  disabled,
+  reason,
+}: {
+  id: string;
+  disabled?: boolean;
+  reason?: string;
+}) {
+  const { t } = useI18n();
   const [pending, start] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -35,13 +45,13 @@ export function ResendButton({ id, disabled, reason }: { id: string; disabled?: 
             const r = await resendLoggedEmail(id);
             setResult(
               r.ok
-                ? { ok: true, message: "Sent again" }
+                ? { ok: true, message: t("emailLog.resent") }
                 : { ok: false, message: r.message },
             );
           })
         }
       >
-        {pending ? "Sending…" : "Resend"}
+        {pending ? t("emailLog.resending") : t("emailLog.resend")}
       </Button>
       {result && (
         <span

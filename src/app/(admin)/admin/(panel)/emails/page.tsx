@@ -7,6 +7,7 @@ import { EmptyState } from "@admin/ui/States";
 import { Pagination, listHref, parsePage } from "@admin/ui/Pagination";
 import { internalEmailDestination } from "@backend/actions/emails";
 import { ResendButton } from "./ResendButton";
+import { getAdminI18n } from "@admin/i18n/server";
 
 /**
  * Every email the shop tried to send.
@@ -20,20 +21,12 @@ import { ResendButton } from "./ResendButton";
 
 export const dynamic = "force-dynamic";
 
-export function generateMetadata() {
-  return { title: "Emails" };
+export async function generateMetadata() {
+  const { t } = await getAdminI18n();
+  return { title: t("emailLog.title") };
 }
 
 const PAGE_SIZE = 30;
-
-const COLUMNS: readonly Column[] = [
-  { key: "when", label: "When" },
-  { key: "to", label: "To" },
-  { key: "subject", label: "Email" },
-  { key: "status", label: "Status" },
-  { key: "providerId", label: "Provider id" },
-  { key: "actions", label: "Actions", hidden: true, align: "end" },
-];
 
 const TONE: Record<string, Tone> = {
   sent: "success",
@@ -42,19 +35,21 @@ const TONE: Record<string, Tone> = {
   skipped: "neutral",
 };
 
-const EXPLAIN: Record<string, string> = {
-  sent: "Accepted by the provider",
-  failed: "The provider refused it",
-  suppressed: "Blocked by the non-production allowlist",
-  skipped: "No email provider configured",
-};
-
 export default async function AdminEmailsPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; status?: string }>;
 }) {
   const params = await searchParams;
+  const { t, label, date } = await getAdminI18n();
+  const COLUMNS: readonly Column[] = [
+    { key: "when", label: t("emailLog.when") },
+    { key: "to", label: t("emailLog.to") },
+    { key: "subject", label: t("emailLog.email") },
+    { key: "status", label: t("emailLog.status") },
+    { key: "providerId", label: t("emailLog.providerId") },
+    { key: "actions", label: t("emailLog.actions"), hidden: true, align: "end" },
+  ];
   const page = parsePage(params.page);
   const payload = await getPayload({ config });
 
@@ -73,69 +68,79 @@ export default async function AdminEmailsPage({
 
   return (
     <>
-      <PageHeader title="Emails" />
+      <PageHeader title={t("emailLog.title")} />
 
       {internal && (
         <p className="mb-6 text-sm text-ink-2">
-          Owner and florist notifications go to <strong>{internal}</strong> until real
-          addresses are set.
+          {t("emailLog.internalNote")
+            .split("{address}")
+            .map((part, i) => (
+              <span key={i}>
+                {i > 0 && <strong dir="ltr">{internal}</strong>}
+                {part}
+              </span>
+            ))}
         </p>
       )}
 
       {rows.length === 0 ? (
         <EmptyState
           icon="box"
-          title="No emails yet"
-          body="Emails appear here the moment the shop tries to send one."
+          title={t("emailLog.emptyTitle")}
+          body={t("emailLog.emptyBody")}
         />
       ) : (
         <>
-          <Table caption="Emails the shop has attempted to send" columns={COLUMNS}>
+          <Table caption={t("emailLog.caption")} columns={COLUMNS}>
             {rows.map((row) => {
               const status = String(row.status);
               /* Verification and reset links are one-time and deliberately
                  not stored, so resending one would send a dead link. */
-              const isAuth = row.type === "verify-address" || row.type === "password-reset";
+              const isAuth =
+                row.type === "verify-address" || row.type === "password-reset";
               return (
                 <Tr key={String(row.id)}>
-                  <Td label="When">
+                  <Td label={t("emailLog.when")}>
                     <span className="whitespace-nowrap">
-                      {new Date(String(row.createdAt)).toLocaleString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {date(String(row.createdAt), "datetime")}
                     </span>
                     {row.environment && row.environment !== "production" ? (
-                      <span className="ms-2 text-xs text-ink-2">{String(row.environment)}</span>
+                      <span className="ms-2 text-xs text-ink-2">
+                        {String(row.environment)}
+                      </span>
                     ) : null}
                   </Td>
-                  <Td label="To">
+                  <Td label={t("emailLog.to")}>
                     <span>{String(row.to)}</span>
                     {row.orderNumber ? (
-                      <span className="block text-xs text-ink-2">{String(row.orderNumber)}</span>
+                      <span className="block text-xs text-ink-2">
+                        {String(row.orderNumber)}
+                      </span>
                     ) : null}
                   </Td>
-                  <Td label="Email" primary>
+                  <Td label={t("emailLog.email")} primary>
                     {String(row.subject)}
                   </Td>
-                  <Td label="Status">
-                    <Badge tone={TONE[status] ?? "neutral"}>{status}</Badge>
+                  <Td label={t("emailLog.status")}>
+                    <Badge tone={TONE[status] ?? "neutral"}>
+                      {label("emailStatus", status)}
+                    </Badge>
                     <span className="mt-1 block max-w-xs text-xs text-ink-2">
-                      {row.error ? String(row.error) : (EXPLAIN[status] ?? "")}
+                      {/* A provider's own error text is kept as it came: it is
+                          evidence, and translating it would lose the detail. */}
+                      {row.error ? String(row.error) : label("emailExplain", status)}
                     </span>
                   </Td>
-                  <Td label="Provider id">
+                  <Td label={t("emailLog.providerId")}>
                     <code className="text-xs text-ink-2">
                       {row.providerId ? String(row.providerId) : "—"}
                     </code>
                   </Td>
-                  <Td label="Actions" actions align="end">
+                  <Td label={t("emailLog.actions")} actions align="end">
                     <ResendButton
                       id={String(row.id)}
                       disabled={isAuth}
-                      reason={isAuth ? "One-time link — ask for a new one" : undefined}
+                      reason={isAuth ? t("emailLog.oneTimeLink") : undefined}
                     />
                   </Td>
                 </Tr>

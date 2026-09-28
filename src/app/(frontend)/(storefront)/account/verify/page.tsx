@@ -4,7 +4,10 @@ import { ResendVerification } from "@/components/commerce/auth/ResendVerificatio
 import { verifyCustomerEmail } from "@backend/actions/account";
 import { getDictionary } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Confirm your email" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: t.meta.verify };
+}
 
 /* The token is single-use and is spent by rendering, so this must never be
    cached or prerendered. */
@@ -19,7 +22,7 @@ export default async function VerifyPage({
   const { t } = await getDictionary();
   const result = token
     ? await verifyCustomerEmail(token)
-    : ({ ok: false, message: "That verification link is not valid." } as const);
+    : ({ ok: false, message: t.server.account.verifyLinkInvalid } as const);
 
   if (result.ok) {
     return (

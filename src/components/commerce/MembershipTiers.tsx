@@ -7,6 +7,7 @@ import { MembershipEnquiryForm } from "@/components/commerce/MembershipEnquiryFo
 import { formatAed, membershipTiers } from "@/lib/data";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/locale";
 
 /**
  * The membership tiers, and the enquiry that begins one.
@@ -19,8 +20,11 @@ import { cn } from "@/lib/cn";
  * a conversation, as it was always meant to be.
  */
 export function MembershipTiers() {
+  const t = useT();
   const [openTier, setOpenTier] = useState<string | null>(null);
   useScrollLock(openTier !== null);
+  const openId = membershipTiers.find((x) => x.name === openTier)?.id;
+  const openLabel = (openId && t.tierNames[openId]) || openTier || "";
 
   return (
     <>
@@ -35,20 +39,24 @@ export function MembershipTiers() {
             >
               {tier.mostLoved && (
                 <p className="absolute -top-3 left-7 bg-burnt-orange px-3 py-1 font-brand text-[0.6875rem] font-medium uppercase tracking-brand text-cream">
-                  Most loved
+                  {t.tiers.mostLoved}
                 </p>
               )}
               <h2 className="font-brand text-sm font-medium uppercase tracking-brand text-olive">
-                {tier.name}
+                {t.tierNames[tier.id] ?? tier.name}
               </h2>
               <p className="mt-4 font-display text-3xl font-light text-olive">
-                from {formatAed(tier.fromAedPerDelivery)}
-                <span className="ml-1 text-base text-ink-muted">/ delivery</span>
+                {t.ui.from} {formatAed(tier.fromAedPerDelivery)}
+                <span className="ml-1 text-base text-ink-muted">
+                  {t.tiers.perDelivery}
+                </span>
               </p>
-              <p className="mt-1 text-sm text-ink-muted">4 deliveries a month</p>
-              <p className="mt-4 text-base leading-relaxed text-olive">{tier.blurb}</p>
+              <p className="mt-1 text-sm text-ink-muted">{t.tiers.fourAMonth}</p>
+              <p className="mt-4 text-base leading-relaxed text-olive">
+                {t.tierCopy[tier.id]?.blurb ?? tier.blurb}
+              </p>
               <ul className="mt-5 flex flex-1 flex-col gap-2">
-                {tier.includes.map((line) => (
+                {(t.tierCopy[tier.id]?.includes ?? tier.includes).map((line) => (
                   <li key={line} className="flex gap-2 text-sm text-ink-muted">
                     <span aria-hidden className="text-burnt-orange">
                       ·
@@ -65,7 +73,7 @@ export function MembershipTiers() {
                   "mt-7 w-full",
                 )}
               >
-                Begin {tier.name}
+                {t.tiers.begin.replace("{name}", t.tierNames[tier.id] ?? tier.name)}
               </button>
             </article>
           </StaggerItem>
@@ -76,7 +84,7 @@ export function MembershipTiers() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Begin the ${openTier} membership`}
+          aria-label={t.tiers.dialog.replace("{name}", openLabel)}
           /* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */
           data-lenis-prevent
           className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-olive/45 p-4 pt-[max(env(safe-area-inset-top),2rem)] pb-16 shadow-[0_0_0_100vmax_rgb(43_47_27/0.45)] backdrop-blur-sm"
@@ -87,7 +95,7 @@ export function MembershipTiers() {
           <div className="relative w-full max-w-xl rounded-sm border border-hairline bg-canvas p-6 shadow-[0_24px_60px_-24px_rgba(43,47,27,0.5)] lg:p-9">
             <button
               type="button"
-              aria-label="Close"
+              aria-label={t.ui.close}
               onClick={() => setOpenTier(null)}
               className="absolute end-3 top-3 flex h-11 w-11 items-center justify-center text-olive transition-opacity duration-200 ease-bloom hover:opacity-60"
             >
@@ -102,6 +110,7 @@ export function MembershipTiers() {
             </button>
             <MembershipEnquiryForm
               planName={openTier}
+              planLabel={openLabel}
               onClose={() => setOpenTier(null)}
             />
           </div>

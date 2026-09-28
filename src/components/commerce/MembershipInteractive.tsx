@@ -4,9 +4,11 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { cn } from "@/lib/cn";
-import { membershipFaq, weekDays, type FaqItem } from "@/lib/data";
+import { weekDays, type FaqItem } from "@/lib/data";
+import { useT } from "@/lib/locale";
 
 export function DayPicker() {
+  const t = useT();
   const [day, setDay] = useState<string>("Thu");
 
   return (
@@ -19,37 +21,23 @@ export function DayPicker() {
             aria-pressed={day === d}
             onClick={() => setDay(d)}
             className={cn(
-              "flex h-11 w-12 items-center justify-center rounded-sm border font-brand text-[0.6875rem] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ease-bloom",
+              "flex h-11 min-w-12 items-center justify-center rounded-sm border px-2 font-brand text-[0.6875rem] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ease-bloom",
               day === d
                 ? "border-cream bg-cream text-olive"
                 : "border-cream/30 text-cream hover:border-cream/70",
             )}
           >
-            {d}
+            {t.enquiryForm.weekdays[d] ?? d}
           </button>
         ))}
       </div>
       <p className="mt-4 text-center text-sm text-cream/70">
-        Your flowers will arrive every {dayName(day)}.
+        {t.membership.arrivesEvery.replace("{day}", t.membership.dayFull[day] ?? day)}
       </p>
     </div>
   );
 }
-
-function dayName(short: string): string {
-  const names: Record<string, string> = {
-    Sun: "Sunday",
-    Mon: "Monday",
-    Tue: "Tuesday",
-    Wed: "Wednesday",
-    Thu: "Thursday",
-    Fri: "Friday",
-    Sat: "Saturday",
-  };
-  return names[short] ?? short;
-}
-
-export function FaqAccordion({ items = membershipFaq }: { items?: readonly FaqItem[] }) {
+export function FaqAccordion({ items }: { items: readonly FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (

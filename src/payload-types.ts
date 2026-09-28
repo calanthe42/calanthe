@@ -76,6 +76,7 @@ export interface Config {
     enquiries: Enquiry;
     memberships: Membership;
     'email-log': EmailLog;
+    'activity-log': ActivityLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -92,6 +93,7 @@ export interface Config {
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
+    'activity-log': ActivityLogSelect<false> | ActivityLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -883,6 +885,57 @@ export interface EmailLog {
   createdAt: string;
 }
 /**
+ * Every action by staff and the owner. Append-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "activity-log".
+ */
+export interface ActivityLog {
+  id: number;
+  /**
+   * Kept as text so the entry survives the account being removed.
+   */
+  actorEmail: string;
+  actorName?: string | null;
+  actorRole: 'admin' | 'staff';
+  action: 'create' | 'update' | 'delete' | 'status' | 'email' | 'login';
+  area: 'orders' | 'products' | 'other';
+  /**
+   * Which table the item lives in.
+   */
+  collection?: string | null;
+  itemId?: string | null;
+  /**
+   * What the item is called, e.g. "Amber Hour" or "CAL-000021".
+   */
+  itemLabel?: string | null;
+  /**
+   * One readable line, e.g. "price AED 480 → 520" or "CAL-000021 NEW → PREPARING".
+   */
+  summary: string;
+  /**
+   * One row per field that actually changed.
+   */
+  changes?:
+    | {
+        field: string;
+        /**
+         * The field in the owner's words.
+         */
+        label?: string | null;
+        before?: string | null;
+        after?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Price changes, hides and deletions. Flagged so they can be found without reading everything.
+   */
+  notable?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -941,6 +994,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'email-log';
         value: number | EmailLog;
+      } | null)
+    | ({
+        relationTo: 'activity-log';
+        value: number | ActivityLog;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1358,6 +1415,33 @@ export interface EmailLogSelect<T extends boolean = true> {
   orderNumber?: T;
   order?: T;
   resentFrom?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "activity-log_select".
+ */
+export interface ActivityLogSelect<T extends boolean = true> {
+  actorEmail?: T;
+  actorName?: T;
+  actorRole?: T;
+  action?: T;
+  area?: T;
+  collection?: T;
+  itemId?: T;
+  itemLabel?: T;
+  summary?: T;
+  changes?:
+    | T
+    | {
+        field?: T;
+        label?: T;
+        before?: T;
+        after?: T;
+        id?: T;
+      };
+  notable?: T;
   updatedAt?: T;
   createdAt?: T;
 }

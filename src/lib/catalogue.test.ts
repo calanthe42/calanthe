@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { hasSecondView, leadWithOccasion, productBadge, uniqueProductViews } from "./catalogue";
+import {
+  hasSecondView,
+  leadWithOccasion,
+  productBadge,
+  uniqueProductViews,
+} from "./catalogue";
 import type { ProductImage } from "./data";
 
 const img = (src?: string, seed = "s"): ProductImage => ({
@@ -9,16 +14,18 @@ const img = (src?: string, seed = "s"): ProductImage => ({
 });
 
 describe("productBadge — badges are database state, never decoration", () => {
-  it("says New when the document says newArrival", () => {
-    expect(productBadge({ newArrival: true, featured: false })).toBe("New");
+  /* The badge is a token, not a word: the card names it from the dictionary,
+     so the label reads "New" or "جديد" depending on who is looking. */
+  it("says new when the document says newArrival", () => {
+    expect(productBadge({ newArrival: true, featured: false })).toBe("new");
   });
 
-  it("says Featured when the document says featured", () => {
-    expect(productBadge({ newArrival: false, featured: true })).toBe("Featured");
+  it("says featured when the document says featured", () => {
+    expect(productBadge({ newArrival: false, featured: true })).toBe("featured");
   });
 
-  it("shows at most one badge, and New outranks Featured", () => {
-    expect(productBadge({ newArrival: true, featured: true })).toBe("New");
+  it("shows at most one badge, and new outranks featured", () => {
+    expect(productBadge({ newArrival: true, featured: true })).toBe("new");
   });
 
   it("shows nothing when the document claims nothing", () => {
@@ -39,11 +46,15 @@ describe("uniqueProductViews — the gallery shows real photographs only", () =>
   });
 
   it("treats two different generated placeholders as two views", () => {
-    expect(uniqueProductViews([img(undefined, "x"), img(undefined, "y")])).toHaveLength(2);
+    expect(uniqueProductViews([img(undefined, "x"), img(undefined, "y")])).toHaveLength(
+      2,
+    );
   });
 
   it("treats the same generated placeholder as one view", () => {
-    expect(uniqueProductViews([img(undefined, "x"), img(undefined, "x")])).toHaveLength(1);
+    expect(uniqueProductViews([img(undefined, "x"), img(undefined, "x")])).toHaveLength(
+      1,
+    );
   });
 
   it("never invents a view for a product with a single image", () => {
@@ -85,8 +96,12 @@ describe("leadWithOccasion — the gallery's featured tile", () => {
   });
 
   it("leaves the order alone when the occasion is missing or already first", () => {
-    expect(leadWithOccasion(list, "weddings").map((o) => o.slug)).toEqual(list.map((o) => o.slug));
-    expect(leadWithOccasion(list, "birthday").map((o) => o.slug)).toEqual(list.map((o) => o.slug));
+    expect(leadWithOccasion(list, "weddings").map((o) => o.slug)).toEqual(
+      list.map((o) => o.slug),
+    );
+    expect(leadWithOccasion(list, "birthday").map((o) => o.slug)).toEqual(
+      list.map((o) => o.slug),
+    );
   });
 
   it("does not mutate the caller's array", () => {

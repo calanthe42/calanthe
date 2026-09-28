@@ -99,7 +99,12 @@ const MAX_KEYS = 20_000;
 const memory = new Map<string, number[]>();
 
 function memoryThrottle(key: string, bucket: Bucket, now: number): Throttled {
-  const decision = evaluate(memory.get(key) ?? [], now, bucket.limit, bucket.windowSeconds * 1000);
+  const decision = evaluate(
+    memory.get(key) ?? [],
+    now,
+    bucket.limit,
+    bucket.windowSeconds * 1000,
+  );
 
   if (decision.kept.length === 0) memory.delete(key);
   else {
@@ -164,7 +169,10 @@ export async function throttle(bucket: Bucket, identifier: string): Promise<Thro
     /* Upstash is reachable in principle but not right now. Counting in
        process is the closest thing to the intended behaviour; refusing
        everyone would turn their outage into ours. */
-    console.error(`[throttle] ${bucket.name} store unavailable, counting in process`, error);
+    console.error(
+      `[throttle] ${bucket.name} store unavailable, counting in process`,
+      error,
+    );
     return memoryThrottle(`${bucket.name}:${key}`, bucket, Date.now());
   }
 }
@@ -209,17 +217,45 @@ export async function guardByAddress(bucket: Bucket): Promise<string | null> {
 }
 
 /**
- * How long to wait, said the way a person would say it.
+ * The same guard, as a quantity rather than an English sentence, for the
+ * storefront — which has to say it in the visitor's language.
+ */
+export async function hintByAddress(bucket: Bucket): Promise<WaitHint | null> {
+  const result = await throttle(bucket, await clientAddress());
+  return result.allowed ? null : waitHint(result.retryAfterSeconds);
+}
+
+/**
+ * How long to wait, as a quantity rather than a sentence.
  *
- * "Try again in 583 seconds" is a machine talking. Rounding up to the next
- * minute is also deliberately generous — telling someone to wait slightly
- * longer than necessary is harmless, telling them to come back too early
- * means being refused twice.
+ * The sentence used to be built here, in English, and handed straight to a
+ * customer — so an Arabic visitor who was rate-limited was told to wait in a
+ * language the rest of her page was not in. The wording now belongs to
+ * whichever dictionary is in use; this decides only the number and the unit.
+ *
+ * Rounding up to the next minute is deliberately generous: telling someone
+ * to wait slightly longer than necessary is harmless, telling them to come
+ * back too early means being refused twice.
+ */
+export type WaitHint = { unit: "moment" } | { unit: "minutes" | "hours"; count: number };
+
+export function waitHint(retryAfterSeconds: number): WaitHint {
+  if (retryAfterSeconds <= 60) return { unit: "moment" };
+  const mins = Math.ceil(retryAfterSeconds / 60);
+  if (mins < 60) return { unit: "minutes", count: mins };
+  return { unit: "hours", count: Math.ceil(mins / 60) };
+}
+
+/**
+ * The English sentence, for callers that have no dictionary of their own.
+ * The admin has its own translator, so this is the storefront's fallback and
+ * the wording used in logs.
  */
 export function waitMessage(retryAfterSeconds: number): string {
-  if (retryAfterSeconds <= 60) return "Please wait a moment and try again.";
-  const mins = Math.ceil(retryAfterSeconds / 60);
-  if (mins < 60) return `Please try again in ${mins} minute${mins === 1 ? "" : "s"}.`;
-  const hrs = Math.ceil(mins / 60);
-  return `Please try again in about ${hrs} hour${hrs === 1 ? "" : "s"}.`;
+  const hint = waitHint(retryAfterSeconds);
+  if (hint.unit === "moment") return "Please wait a moment and try again.";
+  const plural = hint.count === 1 ? "" : "s";
+  return hint.unit === "minutes"
+    ? `Please try again in ${hint.count} minute${plural}.`
+    : `Please try again in about ${hint.count} hour${plural}.`;
 }

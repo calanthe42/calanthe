@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Reveal } from "@/components/motion/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
+import { useT } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
  * implemented with opacity only).
  */
 export function WeeklyRitual() {
+  const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
   const oliveRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotionPref();
@@ -55,17 +57,17 @@ export function WeeklyRitual() {
       <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center gutter section-pad text-center">
         <Reveal delay={0.15} className="flex flex-col items-center">
           <p className="font-brand text-xs font-medium uppercase tracking-brand text-cream/70">
-            A Weekly Ritual
+            {t.ritual.eyebrow}
           </p>
           <h2 className="display-2 mt-4 font-display font-light text-cream">
-            The Calanthe Membership
+            {t.ritual.title}
           </h2>
           <p className="mt-5 max-w-md text-base leading-relaxed text-cream/80">
-            Fresh flowers, thoughtfully arranged and delivered to your door every week.
+            {t.ritual.body}
           </p>
           <div className="mt-9">
             <ButtonLink href="/membership" variant="secondary-cream">
-              Discover Membership
+              {t.ritual.cta}
             </ButtonLink>
           </div>
         </Reveal>

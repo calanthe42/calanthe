@@ -6,6 +6,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
 import { CONTACT } from "@/lib/data";
+import { useT } from "@/lib/locale";
 
 /**
  * The storefront's OWN error boundary.
@@ -33,6 +34,8 @@ export default function StorefrontSectionError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useT();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -40,20 +43,19 @@ export default function StorefrontSectionError({
   return (
     <main className="mx-auto flex max-w-2xl flex-col items-center gap-6 gutter section-pad text-center">
       <Monogram className="w-14 text-hairline" />
-      <Eyebrow>Something bloomed wrong</Eyebrow>
+      <Eyebrow>{t.errors.eyebrow}</Eyebrow>
       <h1 className="font-display text-4xl font-light text-olive lg:text-5xl">
-        A petal fell out of place.
+        {t.errors.title}
       </h1>
       <p className="max-w-md text-base leading-relaxed text-ink-muted">
-        This part of the page did not load. Everything else still works — try
-        again, or carry on browsing while we put it right.
+        {t.errors.segmentBody}
       </p>
       <div className="mt-2 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
         <button type="button" onClick={reset} className={buttonClasses("primary")}>
-          Try Again
+          {t.errors.tryAgain}
         </button>
         <Link href="/shop" className={buttonClasses("secondary")}>
-          Browse the Collection
+          {t.errors.browseCollection}
         </Link>
       </div>
       <a
@@ -62,7 +64,7 @@ export default function StorefrontSectionError({
         rel="noreferrer"
         className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-olive underline decoration-hairline underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
       >
-        Order on WhatsApp instead
+        {t.errors.whatsappInstead}
       </a>
     </main>
   );

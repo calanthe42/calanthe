@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/blocks/PageHeader";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getActiveOccasions } from "@backend/data/occasions";
 import { getDictionary } from "@/lib/i18n/server";
+import { plural } from "@/lib/i18n/plural";
 import { leadWithOccasion } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 
@@ -18,10 +19,13 @@ import { cn } from "@/lib/cn";
    afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: "Occasions",
-  description: "Flowers for every unspoken thing — shop Calanthe by occasion.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description: "Flowers for every unspoken thing — shop Calanthe by occasion.",
+    title: t.meta.occasions,
+  };
+}
 
 /**
  * The occasion index carried a different visual grammar from the
@@ -35,7 +39,7 @@ export const metadata: Metadata = {
  */
 export default async function OccasionsPage() {
   /* The same featured occasion as the homepage band — one rule, one place. */
-  const [occasions, { t }] = await Promise.all([
+  const [occasions, { locale, t }] = await Promise.all([
     getActiveOccasions().then(leadWithOccasion),
     getDictionary(),
   ]);
@@ -49,7 +53,7 @@ export default async function OccasionsPage() {
         intro={t.pages.occasionsIntro}
         meta={
           occasions.length
-            ? `${occasions.length} ${occasions.length === 1 ? t.pages.occasionOne : t.pages.occasionMany}`
+            ? plural(locale, t.pages.occasionCount, occasions.length)
             : undefined
         }
       />
@@ -62,7 +66,11 @@ export default async function OccasionsPage() {
               taller on desktop — the page opens on one photograph
               rather than on a row of equals. */}
           <StaggerItem className="col-span-2 lg:col-span-2 lg:row-span-2">
-            <OccasionTile occasion={lead} lead />
+            <OccasionTile
+              occasion={lead}
+              name={t.occasionNames[lead.slug] ?? lead.name}
+              lead
+            />
           </StaggerItem>
           {rest.map((occasion, i) => {
             const span = finalTileSpan(rest.length, i);
@@ -75,7 +83,11 @@ export default async function OccasionsPage() {
                   span.desktop === 3 && "lg:col-span-3",
                 )}
               >
-                <OccasionTile occasion={occasion} span={span} />
+                <OccasionTile
+                  occasion={occasion}
+                  name={t.occasionNames[occasion.slug] ?? occasion.name}
+                  span={span}
+                />
               </StaggerItem>
             );
           })}
@@ -106,6 +118,8 @@ function finalTileSpan(count: number, index: number): TileSpan {
 }
 
 type OccasionTileProps = {
+  /** The occasion in the reader's language. */
+  name: string;
   occasion: Awaited<ReturnType<typeof getActiveOccasions>>[number];
   lead?: boolean;
   span?: TileSpan;
@@ -113,6 +127,7 @@ type OccasionTileProps = {
 
 function OccasionTile({
   occasion,
+  name,
   lead = false,
   span = { mobile: false, desktop: 1 },
 }: OccasionTileProps) {
@@ -154,7 +169,7 @@ function OccasionTile({
               lead ? "text-sm lg:text-xl" : "text-[0.6875rem] lg:text-[0.8125rem]",
             )}
           >
-            {occasion.name}
+            {name}
           </span>
           <span
             aria-hidden

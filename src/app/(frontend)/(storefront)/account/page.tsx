@@ -10,8 +10,15 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { formatFils } from "@/lib/money";
 import { getCustomerSession } from "@backend/actions/account";
 import { getDictionary } from "@/lib/i18n/server";
+import { formatDate } from "@/lib/i18n/date";
 
-export const metadata: Metadata = { title: "Your account", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    robots: { index: false },
+    title: t.meta.account,
+  };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -23,9 +30,9 @@ export const dynamic = "force-dynamic";
  */
 export default async function AccountPage() {
   const customer = await getCustomerSession();
-  const { t } = await getDictionary();
+  const { locale, t } = await getDictionary();
 
-/* A signed-out visitor gets an invitation to sign in rather than a redirect.
+  /* A signed-out visitor gets an invitation to sign in rather than a redirect.
    The storefront runs with `experimental.globalNotFound`, under which a
    redirect thrown from a page surfaces as the 404 shell — correct in that it
    leaks nothing, but a dead end for a customer who simply is not signed in. */
@@ -38,8 +45,7 @@ export default async function AccountPage() {
             {t.account.signInTitle}
           </h1>
           <p className="mt-4 text-base leading-relaxed text-ink-muted">
-            Sign in to see your orders. You do not need an account to buy — every arrangement
-            can be ordered as a guest.
+            {t.account.signInForOrders}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/account/login" className="whitespace-nowrap">
@@ -83,7 +89,8 @@ export default async function AccountPage() {
     overrideAccess: false,
   });
 
-  const name = [customer.firstName, customer.lastName].filter(Boolean).join(" ") || customer.email;
+  const name =
+    [customer.firstName, customer.lastName].filter(Boolean).join(" ") || customer.email;
 
   return (
     <main className="mx-auto max-w-6xl gutter section-pad">
@@ -96,16 +103,23 @@ export default async function AccountPage() {
         <CustomerLogout />
       </Reveal>
 
-      <h2 className="mb-4 font-display text-2xl font-light text-olive">Your orders</h2>
+      <h2 className="mb-4 font-display text-2xl font-light text-olive">
+        {t.account.orders}
+      </h2>
 
       {orders.docs.length === 0 ? (
         <div className="rounded-media border border-hairline bg-cream/40 px-6 py-14 text-center">
-          <p className="font-display text-xl font-light text-olive">No orders yet</p>
-          <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-ink-muted">
-            When you order, it will appear here with its progress.
+          <p className="font-display text-xl font-light text-olive">
+            {t.account.noOrders}
           </p>
-          <Link href="/shop" className="mt-4 inline-block text-sm text-olive underline underline-offset-4">
-            Visit the shop
+          <p className="mx-auto mt-2 max-w-sm text-base leading-relaxed text-ink-muted">
+            {t.account.noOrdersBody}
+          </p>
+          <Link
+            href="/shop"
+            className="mt-4 inline-block text-sm text-olive underline underline-offset-4"
+          >
+            {t.account.visitShop}
           </Link>
         </div>
       ) : (
@@ -119,15 +133,16 @@ export default async function AccountPage() {
                 <div>
                   <p className="font-medium text-olive">{order.orderNumber}</p>
                   <p className="text-sm text-ink-muted">
-                    {new Date(order.createdAt).toLocaleDateString("en-AE", {
-                      day: "numeric", month: "long", year: "numeric",
-                    })}
+                    {formatDate(locale, order.createdAt)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="tabular-nums text-olive">{formatFils(Number(order.totalFils))}</p>
+                  <p className="tabular-nums text-olive">
+                    {formatFils(Number(order.totalFils))}
+                  </p>
                   <p className="text-sm text-ink-muted">
-                    {order.fulfilmentStatus.toLowerCase().replace(/_/g, " ")}
+                    {t.account.fulfilment[order.fulfilmentStatus] ??
+                      order.fulfilmentStatus}
                   </p>
                 </div>
               </Link>

@@ -22,9 +22,9 @@ import type { Product, ProductImage } from "@/lib/data";
  */
 export function productBadge(
   product: Pick<Product, "featured" | "newArrival">,
-): "New" | "Featured" | null {
-  if (product.newArrival) return "New";
-  if (product.featured) return "Featured";
+): "new" | "featured" | null {
+  if (product.newArrival) return "new";
+  if (product.featured) return "featured";
   return null;
 }
 
@@ -40,9 +40,7 @@ export function productBadge(
  * Generated botanical art has no `src`, so it is keyed on its seed —
  * two different placeholders are genuinely two different pictures.
  */
-export function uniqueProductViews(
-  images: readonly ProductImage[],
-): ProductImage[] {
+export function uniqueProductViews(images: readonly ProductImage[]): ProductImage[] {
   const seen = new Set<string>();
   const unique: ProductImage[] = [];
   for (const image of images) {

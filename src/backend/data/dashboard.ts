@@ -171,11 +171,27 @@ export const getDashboardData = cache(async (period: DashboardPeriod): Promise<D
     if (product.available && product.trackStock && Number(product.stock ?? 0) <= 0) health.outOfStock += 1;
   }
 
+  /*
+   * MONEY IS THE OWNER'S, ON THE SERVER AS WELL AS ON THE SCREEN.
+   *
+   * Hiding the revenue card is the visible half. Without this, the figures
+   * would still be computed, serialised into the page payload and readable
+   * in the HTML source by any staff member who looked — which is the kind of
+   * "permission" that only holds until somebody presses Ctrl-U.
+   *
+   * `customers` was already nulled for staff on the same principle; this
+   * extends it to takings.
+   */
+  const blankMoney = <T extends { revenueFils: number; paidFils: number }>(t: T): T =>
+    isOwner ? t : { ...t, revenueFils: 0, paidFils: 0 };
+
   return {
     window,
-    current: summariseOrders(inPeriod),
-    previous: summariseOrders(before),
-    series: dailySeries(inPeriod, window),
+    current: blankMoney(summariseOrders(inPeriod)),
+    previous: blankMoney(summariseOrders(before)),
+    series: isOwner
+      ? dailySeries(inPeriod, window)
+      : dailySeries(inPeriod, window).map((d) => ({ ...d, revenueFils: 0 })),
     openStatus: openStatusCounts(openOrders.docs),
     openTotal: openOrders.docs.length,
     newOrders: openOrders.docs.filter((o) => o.fulfilmentStatus === "NEW").length,

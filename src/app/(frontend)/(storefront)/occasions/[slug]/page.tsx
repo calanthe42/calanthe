@@ -6,6 +6,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getActiveOccasionBySlug } from "@backend/data/occasions";
 import { getProductsForOccasion } from "@backend/data/products";
+import { getDictionary } from "@/lib/i18n/server";
 
 /*
  * RENDERED PER REQUEST, DELIBERATELY.
@@ -75,14 +76,20 @@ export default async function OccasionPage({
 
   /* The occasion -> product relationship now lives in the database, and the
      query returns available products only. */
-  const matches = await getProductsForOccasion(occasion.slug);
+  const [matches, { t }] = await Promise.all([
+    getProductsForOccasion(occasion.slug),
+    getDictionary(),
+  ]);
 
   return (
     <main className="mx-auto max-w-7xl gutter section-pad">
       <Reveal className="mb-10 max-w-2xl lg:mb-14">
-        <Eyebrow>Occasions</Eyebrow>
+        <Eyebrow>{t.pages.occasionsEyebrow}</Eyebrow>
+        {/* The header already names occasions from the dictionary; the page
+            heading used the stored English name, so the menu said
+            "عيد ميلاد" and the page it opened said "Birthday". */}
         <h1 className="display-2 mt-3 font-display font-light text-olive">
-          {occasion.name}
+          {t.occasionNames[occasion.slug] ?? occasion.name}
         </h1>
         {/* The owner's own words, when she has written them in /admin. */}
         {occasion.description ? (
@@ -94,8 +101,11 @@ export default async function OccasionPage({
 
       {matches.length === 0 ? (
         <CatalogueEmpty
-          title={`The ${occasion.name.toLowerCase()} collection is being composed.`}
-          message="Until it arrives, a florist can compose one for this moment. Tell us who it is for, the colours and your budget."
+          title={t.occasionEmpty.title.replace(
+            "{name}",
+            (t.occasionNames[occasion.slug] ?? occasion.name).toLowerCase(),
+          )}
+          message={t.occasionEmpty.body}
         />
       ) : (
         <ShopGrid products={matches} showOccasionFilter={false} />

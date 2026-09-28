@@ -11,7 +11,7 @@ import { Dialog } from "@admin/ui/Dialog";
 import { IconButton, IconLink } from "@admin/ui/IconButton";
 import { PulseBell } from "@admin/shell/AdminPulse";
 import { Icon } from "@admin/ui/icons";
-import { NAV_GROUPS, isActive } from "./nav";
+import { isActive, visibleGroups } from "./nav";
 import { LanguageSwitcher, ThemeSwitcher } from "./Preferences";
 
 /**
@@ -40,13 +40,15 @@ function Wordmark() {
   );
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, isOwner }: { onNavigate?: () => void; isOwner: boolean }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  /* Staff never see an owner-only entry. The page enforces it too. */
+  const groups = visibleGroups(isOwner);
 
   return (
     <nav aria-label={t("nav.primary")} className="px-3">
-      {NAV_GROUPS.map((group, index) => (
+      {groups.map((group, index) => (
         <div key={group.heading} className={index === 0 ? undefined : "mt-5"}>
           <p className="px-3 pb-1.5 font-brand text-[10px] uppercase tracking-brand text-nav-ink-2">
             {t(group.heading)}
@@ -146,7 +148,7 @@ export function AdminSidebar(props: ShellProps) {
         <Wordmark />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-4 [scrollbar-width:thin]">
-        <NavLinks />
+        <NavLinks isOwner={props.user.isOwner} />
       </div>
       <NavFooter {...props} />
     </aside>
@@ -194,7 +196,7 @@ export function AdminMobileBar(props: ShellProps) {
             <IconButton icon="close" tone="nav" label={t("nav.closeMenu")} onClick={() => setOpen(false)} className="-me-2" />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto pb-4">
-            <NavLinks onNavigate={() => setOpen(false)} />
+            <NavLinks onNavigate={() => setOpen(false)} isOwner={props.user.isOwner} />
           </div>
           <NavFooter {...props} />
         </div>

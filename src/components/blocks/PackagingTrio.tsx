@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getDictionary } from "@/lib/i18n/server";
 import { Parallax } from "@/components/motion/Parallax";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { LilyField } from "@/components/ui/LilyField";
@@ -30,7 +31,7 @@ import { LilyField } from "@/components/ui/LilyField";
 const BAGS = [
   {
     src: "/brand/bag-terracotta.webp",
-    alt: "A Calanthe terracotta carrier holding white lisianthus and calla lilies",
+    altKey: "packagingTerracotta",
     width: 900,
     height: 1320,
     /* Smallest, set low and behind — the one that starts the group. */
@@ -39,7 +40,7 @@ const BAGS = [
   },
   {
     src: "/brand/bag-olive.webp",
-    alt: "A Calanthe olive paper bag, printed tone on tone, holding a full autumn arrangement",
+    altKey: "packagingOlive",
     width: 1000,
     height: 1195,
     /* The tallest, centre, in front: the one the eye lands on. */
@@ -48,7 +49,7 @@ const BAGS = [
   },
   {
     src: "/brand/bag-burgundy.webp",
-    alt: "A Calanthe burgundy bag with its lily hang tag, holding roses and dahlias",
+    altKey: "packagingBurgundy",
     width: 847,
     height: 1031,
     className: "relative z-10 -ms-[12%] w-[39%] translate-y-[6%]",
@@ -56,12 +57,17 @@ const BAGS = [
   },
 ] as const;
 
-export function PackagingTrio({ className }: { className?: string }) {
+export async function PackagingTrio({ className }: { className?: string }) {
+  const { t } = await getDictionary();
+
   return (
     <div className={className}>
       <div className="relative isolate">
         {/* The surface they are printed on, cropped hard by the frame. */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        >
           <LilyField
             opacity={0.06}
             className="absolute -bottom-[45%] start-[-30%] w-[150%] text-olive rtl:-scale-x-100"
@@ -78,7 +84,7 @@ export function PackagingTrio({ className }: { className?: string }) {
               <Parallax speed={bag.speed} desktopOnly>
                 <Image
                   src={bag.src}
-                  alt={bag.alt}
+                  alt={t.alt[bag.altKey]}
                   width={bag.width}
                   height={bag.height}
                   sizes="(max-width: 1024px) 50vw, 18vw"

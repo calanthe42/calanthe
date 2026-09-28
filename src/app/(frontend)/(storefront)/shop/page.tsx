@@ -5,7 +5,7 @@ import { CatalogueEmpty } from "@/components/blocks/CatalogueEmpty";
 import { getAvailableProducts } from "@backend/data/products";
 import { getActiveOccasions } from "@backend/data/occasions";
 import { getDictionary } from "@/lib/i18n/server";
-import { SAME_DAY_CUTOFF_HOUR } from "@/lib/data";
+import { plural } from "@/lib/i18n/plural";
 
 /* The catalogue is now database-backed, so these pages must be allowed to
    change without a redeploy — otherwise an edit in /admin would never reach
@@ -15,18 +15,21 @@ import { SAME_DAY_CUTOFF_HOUR } from "@/lib/data";
    afterChange hook (docs/DATABASE.md §4) is the eventual upgrade. */
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: "Shop",
-  description:
-    "Hand-composed arrangements from the Calanthe atelier, delivered across the UAE.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description:
+      "Hand-composed arrangements from the Calanthe atelier, delivered across the UAE.",
+    title: t.meta.shop,
+  };
+}
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; flower?: string; price?: string; ready?: string }>;
+  searchParams: Promise<{ q?: string; price?: string; ready?: string }>;
 }) {
-  const { q = "", flower = "", price = "", ready = "" } = await searchParams;
+  const { q = "", price = "", ready = "" } = await searchParams;
 
   /* "Ready Made for Today" is the same catalogue, filtered to what the
      atelier can compose and deliver soonest — not a separate page
@@ -38,7 +41,7 @@ export default async function ShopPage({
      assigned to and whether it is assigned to any — the only filter is the
      one the data layer always applies, `available: true`. The limit is raised
      well past the catalogue's size so nothing is silently cut off. */
-  const [available, occasions, { t }] = await Promise.all([
+  const [available, occasions, { locale, t }] = await Promise.all([
     getAvailableProducts(500),
     getActiveOccasions(),
     getDictionary(),
@@ -52,15 +55,9 @@ export default async function ShopPage({
       <PageHeader
         eyebrow={readyToday ? t.pages.shopReadyEyebrow : t.pages.shopEyebrow}
         title={readyToday ? t.pages.shopReadyTitle : t.pages.shopTitle}
-        intro={
-          readyToday
-            ? `${t.pages.shopIntro} ${SAME_DAY_CUTOFF_HOUR}:00.`
-            : t.pages.shopIntro
-        }
+        intro={t.pages.shopIntro}
         meta={
-          list.length
-            ? `${list.length} ${list.length === 1 ? t.pages.arrangementOne : t.pages.arrangementMany}`
-            : undefined
+          list.length ? plural(locale, t.pages.arrangementCount, list.length) : undefined
         }
       />
 
@@ -71,7 +68,6 @@ export default async function ShopPage({
           products={list}
           occasions={occasions}
           initialQuery={q}
-          initialFlower={flower}
           initialPrice={price}
         />
       )}

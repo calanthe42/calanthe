@@ -5,11 +5,14 @@ import { BuildYourOwnForm } from "@/components/commerce/BuildYourOwnForm";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LilyField } from "@/components/ui/LilyField";
 
-export const metadata: Metadata = {
-  title: "Build Your Own",
-  description:
-    "Choose your budget, colours and preferences — Calanthe's florists take care of the flowers.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description:
+      "Choose your budget, colours and preferences — Calanthe's florists take care of the flowers.",
+    title: t.meta.buildYourOwn,
+  };
+}
 
 export default async function BuildYourOwnPage() {
   const { t } = await getDictionary();

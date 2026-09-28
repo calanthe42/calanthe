@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { getDictionary } from "@/lib/i18n/server";
 import { CheckoutForm } from "@/components/commerce/CheckoutForm";
 
-export const metadata: Metadata = {
-  title: "Checkout",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    robots: { index: false },
+    title: t.meta.checkout,
+  };
+}
 
 /* The heading lives in CheckoutForm: "Almost there." is only true while there
    is something in the cart, and the empty and confirmed states each need

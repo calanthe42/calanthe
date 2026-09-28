@@ -5,6 +5,7 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
+import { useT } from "@/lib/locale";
 
 /**
  * Storefront error boundary (docs/AUDIT.md finding B-4 — previously
@@ -19,6 +20,8 @@ export default function StorefrontError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useT();
+
   useEffect(() => {
     // Sentry client init lands in B8; console is the interim record.
     console.error(error);
@@ -27,24 +30,19 @@ export default function StorefrontError({
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-canvas px-6 text-center">
       <Monogram className="w-16 text-ink-muted" />
-      <Eyebrow>Something bloomed wrong</Eyebrow>
+      <Eyebrow>{t.errors.eyebrow}</Eyebrow>
       <h1 className="max-w-md font-display text-4xl font-light text-olive lg:text-5xl">
-        A petal fell out of place.
+        {t.errors.title}
       </h1>
       <p className="max-w-sm text-base leading-relaxed text-ink-muted">
-        Something interrupted this page. It has been noted — please try
-        again.
+        {t.errors.rootBody}
       </p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={reset}
-          className={buttonClasses("primary")}
-        >
-          Try Again
+        <button type="button" onClick={reset} className={buttonClasses("primary")}>
+          {t.errors.tryAgain}
         </button>
         <Link href="/" className={buttonClasses("secondary")}>
-          Return Home
+          {t.errors.returnHome}
         </Link>
       </div>
     </main>

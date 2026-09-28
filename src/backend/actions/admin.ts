@@ -26,6 +26,7 @@ import {
   sameDescription,
 } from "@backend/domain/richtext";
 import { sendStatusEmailAfterCommit } from "@backend/email/status-email";
+import { diffFields, recordActivity, type Actor } from "@backend/activity/record";
 
 /**
  * Every write the business admin performs.
@@ -62,6 +63,12 @@ async function authed() {
   const payload = await getPayload({ config });
   const { user } = await payload.auth({ headers: await nextHeaders() });
   return { payload, user };
+}
+
+/** The signed-in person, in the shape the activity log stores. */
+function actorOf(user: unknown): Actor {
+  const u = (user ?? {}) as { id?: number; email?: string; name?: string; role?: string };
+  return { id: u.id, email: u.email, name: u.name, role: u.role };
 }
 
 type ValidationDetail = { message?: unknown; path?: unknown };
@@ -176,6 +183,15 @@ export async function createProduct(form: FormData): Promise<ActionResult> {
       } as never,
     });
 
+    await recordActivity(payload, {
+      actor: actorOf(user),
+      action: "create",
+      area: "products",
+      collection: "products",
+      itemId: doc.id,
+      itemLabel: String(doc.name ?? "product"),
+    });
+
     revalidatePath("/admin/products");
     revalidateStorefront();
     return {
@@ -224,12 +240,30 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
       data.description = plainTextToLexical(parsed.descriptionText);
     }
 
-    await payload.update({
+    const updated = await payload.update({
       collection: "products",
       id,
       user,
       overrideAccess: false,
       data: data as never,
+    });
+
+    /* After the write, never inside it: a log row written through a second
+       connection while this one's transaction is open deadlocks until the
+       database gives up. Only the fields the form can actually change are
+       compared, so an untouched column never appears as an edit. */
+    await recordActivity(payload, {
+      actor: actorOf(user),
+      action: "update",
+      area: "products",
+      collection: "products",
+      itemId: id,
+      itemLabel: String(updated.name ?? existing.name ?? id),
+      changes: diffFields(
+        existing as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>,
+        ["name", "slug", "priceFils", "compareAtPriceFils", "available", "stock", "trackStock", "shortDescription"],
+      ),
     });
 
     revalidatePath("/admin/products");
@@ -266,7 +300,27 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
       };
     }
 
-    const doc = await payload.delete({ collection: "products", id, user, overrideAccess: false });
+    /* Read the name before the row is gone: "product 41 deleted" answers
+       nothing a week later. */
+    const doc = await payload.findByID({
+      collection: "products",
+      id,
+      depth: 0,
+      user,
+      overrideAccess: false,
+    });
+
+    await payload.delete({ collection: "products", id, user, overrideAccess: false });
+
+    await recordActivity(payload, {
+      actor: actorOf(user),
+      action: "delete",
+      area: "products",
+      collection: "products",
+      itemId: id,
+      itemLabel: String(doc.name ?? id),
+    });
+
     revalidatePath("/admin/products");
     revalidateStorefront();
     return {
@@ -454,6 +508,27 @@ export async function updateOrderFulfilment(
       previousStatus,
       fulfilmentStatus,
     );
+
+    if (previousStatus !== fulfilmentStatus) {
+      const label = String((updated as { orderNumber?: string }).orderNumber ?? id);
+      await recordActivity(payload, {
+        actor: actorOf(user),
+        action: "status",
+        area: "orders",
+        collection: "orders",
+        itemId: id,
+        itemLabel: label,
+        changes: [
+          {
+            field: "fulfilmentStatus",
+            label: "status",
+            before: previousStatus,
+            after: fulfilmentStatus,
+          },
+        ],
+        summary: `${label} ${previousStatus} → ${fulfilmentStatus}`,
+      });
+    }
 
     revalidatePath("/admin/orders");
     /* AND THE PAGE THE USER IS ACTUALLY LOOKING AT.

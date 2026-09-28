@@ -15,6 +15,7 @@ import {
 } from "@/lib/cart";
 import { addons, formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
 import { useLocale, useT } from "@/lib/locale";
+import { plural } from "@/lib/i18n/plural";
 import { useScrollLock } from "@/lib/useScrollLock";
 
 function QtyStepper({ item }: { item: CartItemType }) {
@@ -76,7 +77,7 @@ function CartLine({ item }: { item: CartItemType }) {
             {formatAed(itemUnitPrice(item) * item.qty)}
           </p>
         </div>
-        <p className="text-sm text-ink-muted">{describeCartItem(item)}</p>
+        <p className="text-sm text-ink-muted">{describeCartItem(item, t)}</p>
         {item.giftMessage && (
           <p className="text-sm italic text-ink-muted">{t.cart.giftMessageIncluded}</p>
         )}
@@ -118,10 +119,15 @@ function CompleteTheGift() {
             <button
               type="button"
               onClick={() => addAddonToItem(last.key, addon.id)}
-              aria-label={`Add ${addon.name} to ${last.name}, ${formatAed(addon.priceAed)}`}
+              aria-label={t.ui.addAddon
+                .replace("{addon}", t.addonNames[addon.id] ?? addon.name)
+                .replace("{product}", last.name)
+                .replace("{price}", formatAed(addon.priceAed))}
               className="flex min-h-11 w-full items-center justify-between gap-3 rounded-sm border border-hairline px-4 text-left transition-colors duration-200 ease-bloom hover:border-sage"
             >
-              <span className="text-sm text-olive">{addon.name}</span>
+              <span className="text-sm text-olive">
+                {t.addonNames[addon.id] ?? addon.name}
+              </span>
               <span className="text-sm text-ink-muted">+{formatAed(addon.priceAed)}</span>
             </button>
           </li>
@@ -137,7 +143,7 @@ export function CartDrawer() {
      slid in from +100%, which is correct in English and backwards in Arabic:
      the cart button sits top-start in RTL, so the panel was flying out from
      under the opposite corner. */
-  const { dir } = useLocale();
+  const { dir, locale } = useLocale();
   const t = useT();
   const fromEnd = dir === "rtl" ? "-100%" : "100%";
   const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
@@ -163,7 +169,7 @@ export function CartDrawer() {
         <>
           <motion.button
             type="button"
-            aria-label="Close cart"
+            aria-label={t.cart.close}
             onClick={closeCart}
             className="fixed inset-0 z-50 bg-olive/40"
             initial={{ opacity: 0 }}
@@ -173,7 +179,7 @@ export function CartDrawer() {
           />
           <motion.aside
             role="dialog"
-            aria-label="Cart"
+            aria-label={t.ui.cart}
             className="fixed inset-y-0 end-0 z-[60] flex w-full max-w-md flex-col bg-canvas pt-[env(safe-area-inset-top)] shadow-[0_-100vh_0_0_var(--color-canvas),0_100vh_0_0_var(--color-canvas)]"
             initial={{ x: fromEnd }}
             animate={{ x: 0 }}
@@ -254,9 +260,7 @@ export function CartDrawer() {
                     role="status"
                     className="border-b border-hairline bg-cream/60 px-6 py-3 text-sm leading-relaxed text-ink-muted"
                   >
-                    {droppedCount === 1
-                      ? t.cart.droppedOne
-                      : t.cart.droppedMany.replace("{n}", String(droppedCount))}
+                    {plural(locale, t.cart.dropped, droppedCount)}
                   </p>
                 )}
 
@@ -281,7 +285,10 @@ export function CartDrawer() {
                 </div>
 
                 {/* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */}
-                <ul data-lenis-prevent className="flex-1 divide-y divide-hairline overflow-y-auto px-6">
+                <ul
+                  data-lenis-prevent
+                  className="flex-1 divide-y divide-hairline overflow-y-auto px-6"
+                >
                   {items.map((item) => (
                     <CartLine key={item.key} item={item} />
                   ))}
@@ -326,11 +333,7 @@ export function CartDrawer() {
                   >
                     {t.cart.checkout}
                   </ButtonLink>
-                  <Button
-                    variant="text"
-                    onClick={closeCart}
-                    className="mt-1 w-full"
-                  >
+                  <Button variant="text" onClick={closeCart} className="mt-1 w-full">
                     {t.cart.continueShopping}
                   </Button>
                 </footer>

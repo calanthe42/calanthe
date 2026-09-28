@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  HERO_POSTER,
-  HERO_VIDEO_SRC,
-  HERO_VIDEO_SRC_MOBILE,
-} from "@/lib/hero-media";
+import { useT } from "@/lib/locale";
+import { HERO_POSTER, HERO_VIDEO_SRC, HERO_VIDEO_SRC_MOBILE } from "@/lib/hero-media";
 
 /**
  * The hero's visual layer: the photograph always, the film only when it
@@ -31,6 +28,7 @@ import {
  * frames nobody is looking at is pure battery.
  */
 export function HeroMedia() {
+  const t = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(false);
 
@@ -130,7 +128,7 @@ export function HeroMedia() {
         <source media="(min-aspect-ratio: 1/1)" srcSet={HERO_POSTER.desktop} />
         <img
           src={HERO_POSTER.mobile}
-          alt={HERO_POSTER.alt}
+          alt={t.alt.hero}
           width={HERO_POSTER.width}
           height={HERO_POSTER.height}
           fetchPriority="high"

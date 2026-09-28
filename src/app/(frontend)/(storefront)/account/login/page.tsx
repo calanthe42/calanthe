@@ -5,7 +5,10 @@ import { SignInForm } from "@/components/commerce/auth/SignInForm";
 import { getCustomerSession } from "@backend/actions/account";
 import { getDictionary } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Sign in" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: t.meta.signIn };
+}
 export const dynamic = "force-dynamic";
 
 export default async function SignInPage({
@@ -25,7 +28,8 @@ export default async function SignInPage({
       footer={
         <div className="flex flex-col gap-2">
           <p>
-            {t.account.newHere}{" "}<AuthLink href="/account/register">{t.account.createAccount}</AuthLink>
+            {t.account.newHere}{" "}
+            <AuthLink href="/account/register">{t.account.createAccount}</AuthLink>
           </p>
           <p>
             <AuthLink href="/account/forgot-password">{t.account.forgotLink}</AuthLink>

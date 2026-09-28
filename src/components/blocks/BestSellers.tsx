@@ -34,7 +34,7 @@ export async function BestSellers() {
             <Parallax speed={0.92} className="absolute inset-[-8%]">
               <FloralImage
                 image={{
-                  alt: "White lilies with a Calanthe lily hang tag tied among them",
+                  alt: t.alt.bestSellers,
                   src: "/brand/lilies-tag.webp",
                   placeholder: { seed: "bestseller-editorial", palette: "olive" },
                 }}
@@ -44,10 +44,10 @@ export async function BestSellers() {
             <div className="absolute inset-0 bg-olive/45" />
             <figure className="absolute inset-x-0 bottom-0 p-6 lg:p-10">
               <blockquote className="font-display text-2xl font-light italic leading-snug text-cream lg:text-4xl">
-                &ldquo;The arrangements our couriers know by heart.&rdquo;
+                &ldquo;{t.sections.bestSellersQuote}&rdquo;
               </blockquote>
               <figcaption className="mt-3 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-cream/70">
-                The Atelier
+                {t.sections.bestSellersAttribution}
               </figcaption>
             </figure>
           </div>

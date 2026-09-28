@@ -89,6 +89,7 @@ export const en = {
     memberships: "Memberships",
     campaigns: "Campaigns",
     staff: "Staff",
+    activity: "Activity",
     settings: "Settings",
     viewStore: "View store",
     account: "Account",
@@ -178,14 +179,18 @@ export const en = {
       emptyOrders: "No orders in this period.",
       emptyStatus: "No open orders right now.",
       quiet: "A quiet period is drawn as zero — that is real data, not missing data.",
-      summary: "{title}: {total} across {days} days",
+      summary: "{title}: {total} — {period}",
       bar: "{label}: {value}",
     },
     attention: {
       title: "Needs attention",
       allClear: "All clear",
-      allClearBody: "Nothing needs you right now. New orders, overdue deliveries and waiting enquiries appear here the moment they happen.",
-      newOrders: { one: "{count} new order to confirm", other: "{count} new orders to confirm" },
+      allClearBody:
+        "Nothing needs you right now. New orders, overdue deliveries and waiting enquiries appear here the moment they happen.",
+      newOrders: {
+        one: "{count} new order to confirm",
+        other: "{count} new orders to confirm",
+      },
       overdue: {
         one: "{count} order is past its delivery date",
         other: "{count} orders are past their delivery date",
@@ -220,7 +225,8 @@ export const en = {
     noOrdersBody: "Your first order will appear here the moment someone checks out.",
     recentEnquiries: "Recent enquiries",
     noEnquiries: "No enquiries yet",
-    noEnquiriesBody: "Wedding, event and contact enquiries will appear here as they come in.",
+    noEnquiriesBody:
+      "Wedding, event and contact enquiries will appear here as they come in.",
     topProducts: "Top products",
     noSales: "No sales in this period",
     noSalesBody: "Your best-selling arrangements will be ranked here once orders arrive.",
@@ -301,7 +307,8 @@ export const en = {
     edit: {
       live: "Live on the store",
       hidden: "Hidden from the store",
-      created: "Product created. It stays hidden until it has a photo and is set to available.",
+      created:
+        "Product created. It stays hidden until it has a photo and is set to available.",
       readOnly: "Only the owner can change products. Every detail is shown here.",
       importedNoPhoto:
         "This product came from the old website without a photo of its own. Add its real photograph under Media, then make it available.",
@@ -328,7 +335,8 @@ export const en = {
       shortDescription: "Short description",
       shortDescriptionHint: "One or two lines for product cards and search results.",
       description: "Full description",
-      descriptionHint: "The story on the product page. Leave a blank line between paragraphs.",
+      descriptionHint:
+        "The story on the product page. Leave a blank line between paragraphs.",
       price: "Price",
       priceHint: "What the customer pays.",
       compareAt: "Compare-at price",
@@ -357,7 +365,8 @@ export const en = {
       seoTitle: "Search title",
       seoTitleHint: "The headline in Google. Falls back to the product name.",
       seoDescription: "Search description",
-      seoDescriptionHint: "The line under the headline. Falls back to the short description.",
+      seoDescriptionHint:
+        "The line under the headline. Falls back to the short description.",
       noIndex: "Hide from search engines",
       noIndexHint: "Asks Google not to list this product. It stays on your store.",
       counter: "{length}/{max}",
@@ -412,7 +421,8 @@ export const en = {
     viewLabel: "View {name} on the store",
     new: {
       title: "Add an occasion",
-      description: "Eid, Mother’s Day, a new season — each occasion gets its own page on the store.",
+      description:
+        "Eid, Mother’s Day, a new season — each occasion gets its own page on the store.",
       ownerOnlyTitle: "Only the owner can add occasions",
       ownerOnlyBody: "You can edit the existing occasions from the list.",
       back: "Back to occasions",
@@ -425,7 +435,8 @@ export const en = {
       sections: {
         details: "Occasion details",
         image: "Image",
-        imageHint: "Shown on the occasion tiles. Without one, the store uses soft generated artwork.",
+        imageHint:
+          "Shown on the occasion tiles. Without one, the store uses soft generated artwork.",
         visibility: "Visibility",
       },
       name: "Name",
@@ -454,13 +465,17 @@ export const en = {
   media: {
     title: "Media",
     description: "Your photo library — for products and occasions.",
-    count: { one: "{count} photo in your library", other: "{count} photos in your library" },
+    count: {
+      one: "{count} photo in your library",
+      other: "{count} photos in your library",
+    },
     upload: {
       title: "Upload a photo",
       file: "Photo file",
       alt: "Alt text",
       altPlaceholder: "Blush peonies in a cream vase",
-      altHint: "Describe what the photo shows. It is read aloud to people using screen readers.",
+      altHint:
+        "Describe what the photo shows. It is read aloud to people using screen readers.",
       rules: "JPEG, PNG, WebP or AVIF, up to 4 MB.",
     },
     filters: {
@@ -505,7 +520,8 @@ export const en = {
       search: "Search your photos",
       uploadNew: "Upload a new photo",
       chooseFile: "Choose a photo file to upload.",
-      describeFirst: "Describe the photo first — for example “Blush peonies in a cream vase”.",
+      describeFirst:
+        "Describe the photo first — for example “Blush peonies in a cream vase”.",
       uploadedSelected: "Uploaded and selected.",
       emptyLibrary: "Your photo library is empty. Upload the first photo above.",
       nothingMatches: "Nothing matches “{query}”.",
@@ -563,7 +579,8 @@ export const en = {
       title: "Order {number}",
       placed: "Placed {date} · {source}",
       gift: "This is a gift",
-      giftBody: "The recipient must not see a price. Do not include a receipt in the delivery.",
+      giftBody:
+        "The recipient must not see a price. Do not include a receipt in the delivery.",
       items: "Items",
       itemsLabel: "Items in this order",
       openProduct: "Open product {name}",
@@ -578,7 +595,8 @@ export const en = {
       codPending:
         "Cash on delivery: collect payment when the flowers are handed over. Cash payments are not recorded in the system yet, so this order keeps showing “Awaiting payment”.",
       providerNote: "Payment status is updated automatically by the payment provider.",
-      noManualPayment: "Nobody can change a payment status by hand — not staff, and not the owner.",
+      noManualPayment:
+        "Nobody can change a payment status by hand — not staff, and not the owner.",
       customer: "Customer",
       guestCheckout: "Guest checkout",
       customerAccount: "Customer account",
@@ -599,7 +617,8 @@ export const en = {
       title: "Move this order on",
       delivered: "This order is delivered. There is nothing further to do.",
       cancelled: "This order is cancelled. There is nothing further to do.",
-      paymentUnaffected: "Payment is recorded separately and is not changed by any of these steps.",
+      paymentUnaffected:
+        "Payment is recorded separately and is not changed by any of these steps.",
       next: {
         CONFIRMED: "Confirm order",
         PREPARING: "Start preparing",
@@ -625,7 +644,8 @@ export const en = {
     description: "People who have created an account on the store.",
     count: {
       one: "{count} customer account. Guests who bought without an account are on their orders.",
-      other: "{count} customer accounts. Guests who bought without an account are on their orders.",
+      other:
+        "{count} customer accounts. Guests who bought without an account are on their orders.",
     },
     ownerOnlyTitle: "Customer details are for the owner",
     ownerOnlyBody:
@@ -696,7 +716,8 @@ export const en = {
       closed: "Closed",
       locked: "Locked out",
     },
-    lockedBody: "Too many wrong passwords. The lock lifts by itself, or you can lift it now.",
+    lockedBody:
+      "Too many wrong passwords. The lock lifts by itself, or you can lift it now.",
     lockedUntil: "Locked until {time}",
     attempts: {
       one: "{count} failed sign-in",
@@ -705,7 +726,8 @@ export const en = {
     invite: {
       button: "Add someone",
       title: "Add someone to the team",
-      description: "They can sign in as soon as you have given them the password shown after you save.",
+      description:
+        "They can sign in as soon as you have given them the password shown after you save.",
       firstName: "First name",
       lastName: "Last name",
       email: "Email",
@@ -722,9 +744,11 @@ export const en = {
       password: "Temporary password",
       copy: "Copy password",
       copied: "Copied",
-      warning: "Close this and the password is gone. You can issue a new one whenever you need to.",
+      warning:
+        "Close this and the password is gone. You can issue a new one whenever you need to.",
       done: "I have sent it",
-      emailNote: "When an email provider is connected, this will be sent for you instead.",
+      emailNote:
+        "When an email provider is connected, this will be sent for you instead.",
     },
     actions: {
       menu: "More for {name}",
@@ -738,19 +762,24 @@ export const en = {
     },
     confirm: {
       promoteTitle: "Make {name} an owner?",
-      promoteBody: "Owners see every customer, change prices, and can add or remove staff — including you.",
+      promoteBody:
+        "Owners see every customer, change prices, and can add or remove staff — including you.",
       promoteConfirm: "Make owner",
       demoteTitle: "Make {name} staff?",
-      demoteBody: "They keep orders, products and enquiries, and lose customers, prices and staff.",
+      demoteBody:
+        "They keep orders, products and enquiries, and lose customers, prices and staff.",
       demoteConfirm: "Make staff",
       suspendTitle: "Suspend {name}?",
-      suspendBody: "They cannot sign in until you restore them. Nothing they have already done is changed.",
+      suspendBody:
+        "They cannot sign in until you restore them. Nothing they have already done is changed.",
       suspendConfirm: "Suspend",
       resetTitle: "Issue a new password for {name}?",
-      resetBody: "Their current password stops working straight away, and you will see the new one once.",
+      resetBody:
+        "Their current password stops working straight away, and you will see the new one once.",
       resetConfirm: "Issue password",
       removeTitle: "Remove {name}?",
-      removeBody: "The account is deleted and they can no longer sign in. Orders they worked on are unaffected.",
+      removeBody:
+        "The account is deleted and they can no longer sign in. Orders they worked on are unaffected.",
       removeConfirm: "Remove",
     },
     result: {
@@ -954,6 +983,73 @@ export const en = {
     notFoundBody: "It may have been deleted, or the link may be out of date.",
   },
 
+  /**
+   * The owner's activity report and the email log. Both were built with their
+   * words written into the page in English, so an owner who reads the admin in
+   * Arabic met two screens that did not change language.
+   *
+   * The report's lines are built from what the log stores (the action, the
+   * item and each field's before and after), not from the English summary
+   * saved with the entry, so they read in whichever language is chosen.
+   */
+  activity: {
+    title: "Activity",
+    intro:
+      "Every action by you and your staff. Entries can never be edited or deleted — not by staff, and not by you.",
+    search: "Search by person, item or change",
+    person: "Person",
+    everyone: "Everyone",
+    type: "Type",
+    everything: "Everything",
+    show: "Show",
+    allActions: "All actions",
+    notableOnly: "Prices, hides and deletions",
+    emptyTitle: "Nothing yet",
+    emptyBody: "Actions appear here as they happen.",
+    caption: "Everything staff and the owner have done",
+    when: "When",
+    who: "Who",
+    what: "What changed",
+    area: "Area",
+    owner: "Owner",
+    staff: "Staff",
+    notable: "notable",
+    summary: {
+      created: "{item} created",
+      deleted: "{item} deleted",
+      emailed: "Email resent for {item}",
+      noChanges: "{item} saved with no changes",
+      more: "(+{count} more)",
+    },
+    items: { one: "{count} item", other: "{count} items" },
+  },
+  emailLog: {
+    title: "Emails",
+    internalNote:
+      "Owner and florist notifications go to {address} until real addresses are set.",
+    emptyTitle: "No emails yet",
+    emptyBody: "Emails appear here the moment the shop tries to send one.",
+    caption: "Emails the shop has attempted to send",
+    when: "When",
+    to: "To",
+    email: "Email",
+    status: "Status",
+    providerId: "Provider id",
+    actions: "Actions",
+    oneTimeLink: "One-time link — ask for a new one",
+    resend: "Resend",
+    resending: "Sending…",
+    resent: "Sent again",
+    errors: {
+      notStaff: "Only staff can resend an email.",
+      notInLog: "That email is not in the log.",
+      oneTimeLinks:
+        "Verification and password-reset links are one-time and are not stored. Ask the customer to request a new one from the sign-in page.",
+      orderGone: "This email cannot be rebuilt — its order no longer exists.",
+      notSent: "The email was {status}.",
+    },
+  },
+
   pulse: {
     alerts: "Alerts",
     unseen: { one: "{count} new", other: "{count} new" },
@@ -962,7 +1058,8 @@ export const en = {
     arrived: { one: "{first}", other: "{count} arrived — {first}, and more" },
     notificationBody: "Open the admin to see it.",
     order: "Order {number}",
-    nothingNew: "Nothing new. New orders and enquiries appear here the moment they arrive.",
+    nothingNew:
+      "Nothing new. New orders and enquiries appear here the moment they arrive.",
     markSeen: "Mark all as seen",
     turnOn: "Turn on alerts on this device",
     turnedOn: "Alerts are on. You will be told even when this tab is in the background.",
@@ -971,7 +1068,8 @@ export const en = {
   actions: {
     permission: "You do not have permission to do that.",
     slugTaken: "That web address is already in use. Choose a different one.",
-    fileNameTaken: "A photo with that file name is already in the library. Rename the file and upload it again.",
+    fileNameTaken:
+      "A photo with that file name is already in the library. Rename the file and upload it again.",
     valueTaken: "That value is already in use. Choose a different one.",
     product: {
       created: "“{name}” created.",
@@ -989,7 +1087,8 @@ export const en = {
     media: {
       chooseFile: "Choose a photograph to upload.",
       badType: "Use a JPEG, PNG, WebP or AVIF photograph.",
-      describe: "Describe the photograph first — for example “Blush peonies in a cream vase”.",
+      describe:
+        "Describe the photograph first — for example “Blush peonies in a cream vase”.",
       altTooLong: "Keep the alt text under 200 characters.",
       tooLarge: "That photo is larger than 4 MB. Please use a smaller file.",
       uploaded: "Photo uploaded.",
@@ -1077,6 +1176,49 @@ export const en = {
   },
 
   labels: {
+    activityArea: {
+      orders: "Orders",
+      products: "Products",
+      other: "Other",
+    },
+    activityField: {
+      priceFils: "price",
+      compareAtPriceFils: "compare-at price",
+      available: "availability",
+      name: "name",
+      slug: "web address",
+      shortDescription: "short description",
+      description: "description",
+      stock: "stock",
+      trackStock: "stock tracking",
+      fulfilmentStatus: "status",
+      paymentStatus: "payment status",
+      staffNotes: "internal notes",
+      images: "photographs",
+      occasions: "occasions",
+    },
+    activityValue: {
+      Available: "Available",
+      Hidden: "Hidden",
+      On: "On",
+      Off: "Off",
+      Yes: "Yes",
+      No: "No",
+      empty: "empty",
+      changed: "changed",
+    },
+    emailStatus: {
+      sent: "sent",
+      failed: "failed",
+      suppressed: "suppressed",
+      skipped: "skipped",
+    },
+    emailExplain: {
+      sent: "Accepted by the provider",
+      failed: "The provider refused it",
+      suppressed: "Blocked by the non-production allowlist",
+      skipped: "No email provider configured",
+    },
     fulfilment: {
       NEW: "New",
       CONFIRMED: "Confirmed",

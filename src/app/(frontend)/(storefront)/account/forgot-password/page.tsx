@@ -3,7 +3,10 @@ import { getDictionary } from "@/lib/i18n/server";
 import { AuthShell, AuthLink } from "@/components/commerce/auth/AuthShell";
 import { ForgotPasswordForm } from "@/components/commerce/auth/ForgotPasswordForm";
 
-export const metadata: Metadata = { title: "Forgotten password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: t.meta.forgotPassword };
+}
 
 export default async function ForgotPasswordPage() {
   const { t } = await getDictionary();
@@ -14,7 +17,8 @@ export default async function ForgotPasswordPage() {
       intro={t.account.forgotIntro}
       footer={
         <p>
-          {t.account.rememberedIt}{" "}<AuthLink href="/account/login">{t.account.signIn}</AuthLink>
+          {t.account.rememberedIt}{" "}
+          <AuthLink href="/account/login">{t.account.signIn}</AuthLink>
         </p>
       }
     >

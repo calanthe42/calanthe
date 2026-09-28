@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { CONTACT } from "@/lib/data";
+import { useT } from "@/lib/locale";
 
 export function WhatsAppButton() {
+  const t = useT();
   const pathname = usePathname();
   /* Pages with a sticky mobile action bar — float above it there. */
   const hasStickyBar =
@@ -123,7 +125,7 @@ export function WhatsAppButton() {
       href={CONTACT.whatsappHref}
       target="_blank"
       rel="noreferrer"
-      aria-label="Chat with us on WhatsApp"
+      aria-label={t.ui.whatsappChat}
       /* aria-hidden and tabIndex track visibility together: a control
          faded to zero must also leave the tab order, or a keyboard
          visitor lands on something they cannot see.

@@ -1,3 +1,4 @@
+import { getDictionary } from "@/lib/i18n/server";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
@@ -28,11 +29,16 @@ import { Monogram } from "@/components/ui/Monogram";
  * both. Motion is one idea — the rim turns; the photograph uncovers once and
  * then is still.
  */
-export function SealMoment() {
+export async function SealMoment() {
+  const { t } = await getDictionary();
+
   return (
     <section className="relative isolate overflow-hidden section-pad">
       {/* The paper this is printed on. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <LilyField
           opacity={0.07}
           className="absolute -top-[22%] end-[-42%] w-[145%] text-olive rtl:-scale-x-100 lg:-top-[30%] lg:end-[-14%] lg:w-[62%]"
@@ -45,7 +51,7 @@ export function SealMoment() {
           <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-sm shadow-soft sm:aspect-[3/4] lg:aspect-[4/5]">
             <FloralImage
               image={{
-                alt: "A Calanthe arrangement in its burgundy bag against deep green velvet",
+                alt: t.alt.sealBag,
                 src: "/brand/packaging-curtain.webp",
                 placeholder: { seed: "seal-moment", palette: "burgundy" },
               }}
@@ -90,27 +96,25 @@ export function SealMoment() {
         {/* The words, held to a short measure so the photograph leads. */}
         <div className="mt-14 lg:mt-0">
           <Reveal>
-            <Eyebrow>Sealed by hand</Eyebrow>
+            <Eyebrow>{t.seal.eyebrow}</Eyebrow>
           </Reveal>
           <SplitLines
             as="h2"
-            lines={["Nothing leaves", "this atelier open."]}
+            lines={[t.seal.line1, t.seal.line2]}
             className="display-2 mt-3 font-display font-light text-olive"
           />
           <Reveal delay={0.15}>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink-muted">
-              Wrapped in embossed paper, tied with our printed ribbon, and
-              closed with the monogram — pressed while the flowers are still
-              cool from the studio.
+              {t.seal.body}
             </p>
           </Reveal>
           <Reveal delay={0.25}>
             <div className="mt-8 flex flex-wrap gap-4">
               <ButtonLink href="/shop" variant="primary">
-                Shop the collection
+                {t.seal.shop}
               </ButtonLink>
               <ButtonLink href="/about" variant="secondary">
-                How we wrap
+                {t.seal.how}
               </ButtonLink>
             </div>
           </Reveal>

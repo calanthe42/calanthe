@@ -1,44 +1,35 @@
 import type { Metadata } from "next";
+import { getDictionary } from "@/lib/i18n/server";
 import { DayPicker, FaqAccordion } from "@/components/commerce/MembershipInteractive";
 import { MembershipTiers } from "@/components/commerce/MembershipTiers";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
-export const metadata: Metadata = {
-  title: "Membership",
-  description:
-    "The Calanthe Membership — fresh flowers, thoughtfully arranged and delivered every week.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description:
+      "The Calanthe Membership — fresh flowers, thoughtfully arranged and delivered every week.",
+    title: t.meta.membership,
+  };
+}
 
-const steps = [
-  {
-    title: "Choose your ritual",
-    copy: "Pick the tier that suits your table — change it any time.",
-  },
-  {
-    title: "Pick your day",
-    copy: "One day a week is yours. We reserve your route and your stems.",
-  },
-  {
-    title: "We deliver, weekly",
-    copy: "A fresh composition arrives at your door, four times a month.",
-  },
-] as const;
+export default async function MembershipPage() {
+  const { t } = await getDictionary();
 
-export default function MembershipPage() {
   return (
     <main>
       {/* Olive hero */}
       <section className="bg-olive">
         <div className="mx-auto flex max-w-7xl flex-col items-center gutter section-pad text-center">
           <Reveal className="flex flex-col items-center">
-            <Eyebrow className="text-cream/70">A Weekly Ritual</Eyebrow>
+            <Eyebrow className="text-cream/70">{t.ritual.eyebrow}</Eyebrow>
             <h1 className="display-2 mt-4 font-display font-light text-cream">
-              The Calanthe Membership
+              {t.ritual.title}
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-cream/80">
-              Fresh flowers, thoughtfully arranged and delivered to your door every week.
+              {t.ritual.body}
             </p>
           </Reveal>
         </div>
@@ -65,21 +56,19 @@ export default function MembershipPage() {
       <section className="mx-auto max-w-7xl gutter section-pad">
         <MembershipTiers />
         <p className="mt-6 text-center text-base text-ink-muted lg:text-sm">
-          Nothing is charged here. A florist confirms the details with you
-          before any membership begins.
+          {t.membership.nothingCharged}
         </p>
       </section>
 
       <section className="border-t border-hairline bg-cream">
         <div className="mx-auto flex max-w-3xl flex-col items-center gutter section-pad text-center">
           <Reveal className="w-full max-w-md">
-            <Eyebrow>And then</Eyebrow>
+            <Eyebrow>{t.membership.andThen}</Eyebrow>
             <h2 className="mt-3 font-display text-[2rem] font-light leading-tight text-olive lg:text-[2.5rem]">
-              Which day suits you?
+              {t.membership.whichDay}
             </h2>
             <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-ink-muted">
-              One day a week is yours. We reserve your route and your stems, and
-              a florist confirms it with you before anything begins.
+              {t.membership.whichDayBody}
             </p>
             <div className="mt-9">
               <DayPicker />
@@ -92,12 +81,14 @@ export default function MembershipPage() {
       <section className="bg-cream">
         <div className="mx-auto max-w-7xl gutter section-pad">
           <Reveal>
-            <Eyebrow>How it works</Eyebrow>
+            <Eyebrow>{t.membership.howItWorks}</Eyebrow>
           </Reveal>
           <Stagger className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
-            {steps.map((step, i) => (
+            {t.membership.steps.map((step, i) => (
               <StaggerItem key={step.title}>
-                <p className="font-display text-4xl font-light text-ink-muted">0{i + 1}</p>
+                <p className="font-display text-4xl font-light text-ink-muted">
+                  0{i + 1}
+                </p>
                 <h3 className="mt-3 font-brand text-xs font-medium uppercase tracking-brand text-olive">
                   {step.title}
                 </h3>
@@ -113,9 +104,9 @@ export default function MembershipPage() {
       {/* FAQ */}
       <section className="mx-auto max-w-3xl px-6 section-pad">
         <Reveal>
-          <Eyebrow>Questions, answered</Eyebrow>
+          <Eyebrow>{t.membership.questionsAnswered}</Eyebrow>
           <div className="mt-6">
-            <FaqAccordion />
+            <FaqAccordion items={t.faq.membership} />
           </div>
         </Reveal>
       </section>

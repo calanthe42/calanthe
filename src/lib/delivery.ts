@@ -5,18 +5,34 @@ export function uaeNow(): Date {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Dubai" }));
 }
 
+/*
+ * NO LANGUAGE IN HERE.
+ *
+ * These used to carry finished English: `label: "Today"`, `sub: "12 Oct"`
+ * from toLocaleDateString("en-GB"), `reason: "Passed"`. The day picker sits
+ * in the middle of the checkout, so an Arabic customer chose her delivery
+ * day from chips reading "Today", "Mon", "12 Oct" — the most important
+ * control on the page, in the wrong language, with no way to translate it
+ * because the words were minted three modules away from the dictionary.
+ *
+ * So this module now answers only what it actually knows: which day, whether
+ * it can be chosen, and why not. The words are chosen at the edge, in
+ * useDeliverySchedule, where the reader's language is known.
+ */
 export type DayOption = {
   key: string;
-  label: string;
-  sub: string;
+  /** The day itself, for the caller to format in the reader's language. */
+  date: Date;
+  /** A day with a name of its own; otherwise the weekday is named. */
+  relative: "today" | "tomorrow" | null;
   disabled: boolean;
 };
 
 export type SlotOption = {
   value: string;
   disabled: boolean;
-  /** Shown beside a disabled window so it reads as a fact, not a fault. */
-  reason?: string;
+  /** Why it cannot be chosen, so it reads as a fact, not a fault. */
+  reason?: "passed" | "tooSoon";
 };
 
 /**
@@ -58,8 +74,10 @@ export function buildSlots(now: Date, dayKey: string | null): SlotOption[] {
     opens.setHours(start.h, start.m, 0, 0);
     const minutesAway = (opens.getTime() - now.getTime()) / 60_000;
 
-    if (minutesAway <= 0) return { value, disabled: true, reason: "Passed" };
-    if (minutesAway < WINDOW_LEAD_MINUTES) return { value, disabled: true, reason: "Too soon" };
+    if (minutesAway <= 0) return { value, disabled: true, reason: "passed" };
+    if (minutesAway < WINDOW_LEAD_MINUTES) {
+      return { value, disabled: true, reason: "tooSoon" };
+    }
     return { value, disabled: false };
   });
 }
@@ -74,16 +92,10 @@ export function buildDays(now: Date): DayOption[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
-    const label =
-      i === 0
-        ? "Today"
-        : i === 1
-          ? "Tomorrow"
-          : d.toLocaleDateString("en-GB", { weekday: "short" });
     return {
       key: d.toDateString(),
-      label,
-      sub: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+      date: d,
+      relative: i === 0 ? "today" : i === 1 ? "tomorrow" : null,
       disabled: i === 0 && (pastCutoff || noWindowsLeft),
     };
   });

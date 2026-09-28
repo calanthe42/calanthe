@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ButtonLink } from "@/components/ui/Button";
+import { useT } from "@/lib/locale";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
 
@@ -19,6 +20,7 @@ const GHOST_WORDS = ["Budget", "Colours", "Details"] as const;
  * static.
  */
 export function BuildYourOwnBanner() {
+  const t = useT();
   const sectionRef = useRef<HTMLElement>(null);
   const reduced = useReducedMotionPref();
 
@@ -104,7 +106,7 @@ export function BuildYourOwnBanner() {
         <div className="byo-photo-inner h-full w-full">
           <FloralImage
             image={{
-              alt: "A lily petal lit from behind, blush against warm light",
+              alt: t.alt.byoPetal,
               src: "/brand/petal-blush.webp",
               placeholder: { seed: "byo-editorial", palette: "burgundy" },
             }}
@@ -137,18 +139,18 @@ export function BuildYourOwnBanner() {
             data-io
             className="byo-eyebrow io-reveal mb-4 font-brand text-xs font-medium uppercase tracking-brand text-cream/70"
           >
-            Bespoke
+            {t.byo.eyebrow}
           </p>
           <h2
             data-io
             className="io-lines mb-6 font-display text-4xl font-light leading-[1.08] text-cream lg:text-6xl"
           >
-            <span className="sr-only">Made for them, by you.</span>
+            <span className="sr-only">{t.byo.title}</span>
             <span aria-hidden className="block overflow-hidden">
-              <span className="byo-line io-line block">Made for them,</span>
+              <span className="byo-line io-line block">{t.byo.titleLine1}</span>
             </span>
             <span aria-hidden className="block overflow-hidden">
-              <span className="byo-line io-line block">by you.</span>
+              <span className="byo-line io-line block">{t.byo.titleLine2}</span>
             </span>
           </h2>
           <p
@@ -156,8 +158,7 @@ export function BuildYourOwnBanner() {
             className="byo-copy io-reveal mb-8 max-w-sm text-base leading-relaxed text-cream/80"
             style={{ transitionDelay: "0.25s" }}
           >
-            Choose your budget, colours and preferences. We&apos;ll take care of the
-            flowers.
+            {t.byo.intro}
           </p>
           <div
             data-io
@@ -165,7 +166,7 @@ export function BuildYourOwnBanner() {
             style={{ transitionDelay: "0.45s" }}
           >
             <ButtonLink href="/build-your-own" variant="primary">
-              Create Yours
+              {t.byo.createYours}
             </ButtonLink>
           </div>
         </div>

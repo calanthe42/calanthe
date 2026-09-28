@@ -39,9 +39,23 @@ export function RegisterForm() {
   if (sentTo) {
     return (
       <div>
+        {/*
+          The address is a fragment inside the sentence, and it is always
+          Latin script, so it keeps dir="ltr" wherever the sentence puts it.
+          Splitting the sentence around it is what made this English: the
+          dictionary owns the whole thing and names the slot.
+        */}
         <p className="text-base leading-relaxed text-olive">
-          Check <span dir="ltr" className="font-medium">{sentTo}</span> for a link to
-          confirm your address. It expires in a few hours.
+          {t.account.checkInbox.split("{email}").map((part, i) => (
+            <span key={i}>
+              {i > 0 && (
+                <span dir="ltr" className="font-medium">
+                  {sentTo}
+                </span>
+              )}
+              {part}
+            </span>
+          ))}
         </p>
         <p className="mt-4 text-sm leading-relaxed text-ink-muted">
           {t.account.checkInboxNote}
