@@ -3,6 +3,7 @@ import { JsonLd } from "@/components/blocks/JsonLd";
 import { CalantheTouch } from "@/components/blocks/CalantheTouch";
 import { Hero } from "@/components/blocks/Hero";
 import { SealMoment } from "@/components/blocks/SealMoment";
+import { EventsInvitation } from "@/components/blocks/EventsInvitation";
 import { InstagramMarquee } from "@/components/blocks/InstagramMarquee";
 import {
   LazyBuildYourOwnBanner,
@@ -33,6 +34,9 @@ export default async function HomePage() {
       <QuickNavBand occasions={occasions} />
       <NewArrivals />
       <ShopByOccasion />
+      {/* Added at the client's instruction: the way into Events and guest
+          favors, after the occasions a bouquet answers. */}
+      <EventsInvitation />
       <LazyBuildYourOwnBanner />
       <VideoApprovalSection />
       <BestSellers />

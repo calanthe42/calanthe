@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-844 strings in total. 0 are flagged below as likely problems.
+849 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -1451,18 +1451,18 @@ alt.emptyCatalogue
   CORRECTION 
 
 alt.packagingTerracotta
-  ENGLISH    A Calanthe terracotta carrier holding white lisianthus and calla lilies
-  ARABIC     حاملة كالانثي بلون التيراكوتا تحمل ليزيانثوس أبيض وزنابق كالا
+  ENGLISH    A Calanthe terracotta sleeve printed with orchids, holding blush roses, white lisianthus and eucalyptus
+  ARABIC     غلاف كالانثي بلون التيراكوتا مطبوع بزهور الأوركيد، يحمل ورودًا وردية فاتحة وليزيانثوس أبيض وأغصان الأوكالبتوس
   CORRECTION 
 
 alt.packagingOlive
-  ENGLISH    A Calanthe olive paper bag, printed tone on tone, holding a full autumn arrangement
-  ARABIC     حقيبة كالانثي الورقية بلون الزيتون، مطبوعة بالدرجة نفسها، تحمل تنسيقًا خريفيًا كاملًا
+  ENGLISH    A Calanthe olive bag printed tone on tone with orchids, holding white and blush roses
+  ARABIC     حقيبة كالانثي بلون الزيتون مطبوعة بزهور الأوركيد بالدرجة نفسها، تحمل ورودًا بيضاء ووردية فاتحة
   CORRECTION 
 
 alt.packagingBurgundy
-  ENGLISH    A Calanthe burgundy bag with its lily hang tag, holding roses and dahlias
-  ARABIC     حقيبة كالانثي العنّابية مع بطاقتها، تحمل ورودًا وداليا
+  ENGLISH    A Calanthe burgundy bag with a terracotta ribbon handle, holding white and blush roses with eucalyptus
+  ARABIC     حقيبة كالانثي العنّابية بمقبض من شريط التيراكوتا، تحمل ورودًا بيضاء ووردية فاتحة مع أغصان الأوكالبتوس
   CORRECTION 
 
 alt.sealBag
@@ -1513,11 +1513,6 @@ alt.eventArrangement
 alt.eventFavors
   ENGLISH    Calanthe guest favors, wrapped by hand
   ARABIC     هدايا الضيوف من كالانثي، مُغلّفة يدويًا
-  CORRECTION 
-
-alt.eventOccasion
-  ENGLISH    Calanthe florals for an occasion
-  ARABIC     زهور كالانثي لمناسبة
   CORRECTION 
 
 alt.labelRibbon
@@ -2135,6 +2130,39 @@ events.beginBody
 events.orEmail
   ENGLISH    Or email
   ARABIC     أو راسلينا على
+  CORRECTION 
+
+events.boothLink
+  ENGLISH    Step inside the booth
+  ARABIC     ادخلي إلى الجناح
+  CORRECTION 
+
+events.archAlt
+  ENGLISH    The Calanthe booth: the Calanthe panel, the arched mirror and the counter
+  ARABIC     جناح كالانثي: لوحة كالانثي والمرآة المقوّسة والمنضدة
+  CORRECTION 
+
+
+--- eventsInvite ---
+
+eventsInvite.eyebrow
+  ENGLISH    Events & guest favors
+  ARABIC     الفعاليات وهدايا الضيوف
+  CORRECTION 
+
+eventsInvite.title
+  ENGLISH    For the days everyone gathers.
+  ARABIC     للأيام التي يجتمع فيها الجميع.
+  CORRECTION 
+
+eventsInvite.body
+  ENGLISH    A booth that arrives in six arrangements, flowers for the whole room, and guest favors finished in our signature packaging.
+  ARABIC     جناحٌ يأتي بستة تشكيلات، وزهورٌ تملأ المكان كلّه، وهدايا للضيوف بتغليف كالانثي المميّز.
+  CORRECTION 
+
+eventsInvite.favors
+  ENGLISH    See guest favors
+  ARABIC     اكتشفي هدايا الضيوف
   CORRECTION 
 
 

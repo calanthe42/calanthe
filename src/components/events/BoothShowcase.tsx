@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { Reveal } from "@/components/motion/Reveal";
 import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { Icon360 } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/locale";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
@@ -110,7 +111,7 @@ export function BoothShowcase() {
     view === k || (k === "indoor" && view === "pano" && !ready);
 
   return (
-    <section className="relative bg-burgundy section-pad">
+    <section id="booth" className="relative scroll-mt-16 bg-burgundy section-pad">
       <div className="mx-auto max-w-7xl gutter">
         <Reveal className="grid gap-5 lg:grid-cols-2 lg:items-end lg:gap-16">
           <div>
@@ -203,26 +204,7 @@ export function BoothShowcase() {
                     onClick={() => setStarted(true)}
                     className={buttonClasses("primary", "gap-3")}
                   >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
-                      <ellipse
-                        cx="12"
-                        cy="12"
-                        rx="9"
-                        ry="4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                      <ellipse
-                        cx="12"
-                        cy="12"
-                        rx="4"
-                        ry="9"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                      />
-                    </svg>
+                    <Icon360 className="h-4 w-4" />
                     {b.stepInside}
                   </button>
                 </div>

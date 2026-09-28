@@ -2,58 +2,59 @@ import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
 import { Parallax } from "@/components/motion/Parallax";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { LilyField } from "@/components/ui/LilyField";
 
 /**
- * THE THREE BAGS — the brand's own packaging, photographed and cut out.
+ * THE THREE PIECES — the brand's own packaging, cut out of the client's
+ * packaging slide: the terracotta sleeve, the burgundy bag and the olive
+ * bag, each with its arrangement standing in it.
  *
- * This section is about craft: arranged, wrapped, delivered. Until now it
- * illustrated that with a stock photograph of somebody else's roses, hidden
- * below 1024px, which is the opposite of showing the work. Calanthe's
- * identity already contains the strongest possible picture of "wrapped" —
- * the olive, burgundy and terracotta paper bags, each with an arrangement
- * standing in it, shot as cut-outs with no background.
+ * They stand in the slide's order, at their true relative size, on one
+ * baseline — the way the atelier presents them. The earlier version set
+ * them at three different sizes for depth, which made two identical bags
+ * read as a small and a large; these are one bag in two colours and a
+ * sleeve, and the line-up says so.
  *
- * So they stand on the page's own cream, at three sizes, overlapping the way
- * they would on a counter. No cards, no frames, no drop shadows: the brand
- * prints tone-on-tone on paper, and cut-outs on canvas are that idea on a
- * screen. Behind them the lily linework, at a few percent, is the same
- * surface the bags themselves are printed with.
+ * THE OVERLAP. Each bouquet spreads wider than the paper beneath it, so the
+ * boxes overlap by exactly the spread and the paper bodies keep an even gap
+ * — bouquets touch, bags never do, as on a counter. The widths and the two
+ * negative margins sum to 100% of the column at every width, so the group
+ * fills it and can never push the page sideways. In Arabic the row mirrors;
+ * the pictures do not, because the wordmark is printed on them.
  *
- * MOTION. One idea: they rise and settle, 90ms apart, once, at 80% of the
- * viewport — the house stagger, nothing invented here. The drift as you
- * scroll past is desktop-only and very slight (the tallest bag moves least,
- * so the group reads as depth rather than as three separate animations).
- * Under reduced motion the primitives fall back to a plain fade on their
- * own; nothing here needs to know about it.
+ * A soft contact shadow under each body grounds the cut-outs on the page;
+ * without it they float. MOTION: the house stagger, once; a very slight
+ * drift on desktop only. Reduced motion falls back to a fade in the
+ * primitives themselves.
  */
 
 const BAGS = [
   {
-    src: "/brand/bag-terracotta.webp",
+    src: "/brand/packaging/sleeve-terracotta.webp",
     altKey: "packagingTerracotta",
-    width: 900,
-    height: 1320,
-    /* Smallest, set low and behind — the one that starts the group. */
-    className: "relative z-0 w-[35%] translate-y-[10%]",
+    width: 389,
+    height: 545,
+    className: "relative z-0 w-[35.9%]",
+    /* The sleeve's paper spans 29%–73% of its picture. */
+    shadow: "left-[27%] right-[25%]",
     speed: 0.97,
   },
   {
-    src: "/brand/bag-olive.webp",
-    altKey: "packagingOlive",
-    width: 1000,
-    height: 1195,
-    /* The tallest, centre, in front: the one the eye lands on. */
-    className: "relative z-20 -ms-[10%] w-[47%]",
+    src: "/brand/packaging/bag-burgundy.webp",
+    altKey: "packagingBurgundy",
+    width: 449,
+    height: 555,
+    className: "relative z-10 -ms-[11.4%] w-[41.5%]",
+    shadow: "left-[8%] right-[12%]",
     speed: 1,
   },
   {
-    src: "/brand/bag-burgundy.webp",
-    altKey: "packagingBurgundy",
-    width: 847,
-    height: 1031,
-    className: "relative z-10 -ms-[12%] w-[39%] translate-y-[6%]",
-    speed: 0.94,
+    src: "/brand/packaging/bag-olive.webp",
+    altKey: "packagingOlive",
+    width: 448,
+    height: 552,
+    className: "relative z-0 -ms-[7.4%] w-[41.4%]",
+    shadow: "left-[8%] right-[12%]",
+    speed: 0.95,
   },
 ] as const;
 
@@ -62,39 +63,28 @@ export async function PackagingTrio({ className }: { className?: string }) {
 
   return (
     <div className={className}>
-      <div className="relative isolate">
-        {/* The surface they are printed on, cropped hard by the frame. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-        >
-          <LilyField
-            opacity={0.06}
-            className="absolute -bottom-[45%] start-[-30%] w-[150%] text-olive rtl:-scale-x-100"
-          />
-        </div>
-
-        {/* OVERLAPPING, as they would stand on a counter. The widths and the
-            two negative margins sum to 99% of the column, so the group fills
-            it at every width and can never push the page sideways; the
-            olive bag sits in front, the terracotta behind. */}
-        <Stagger className="flex items-end justify-center">
-          {BAGS.map((bag) => (
-            <StaggerItem key={bag.src} className={bag.className}>
-              <Parallax speed={bag.speed} desktopOnly>
+      <Stagger className="flex items-end justify-center pb-2">
+        {BAGS.map((bag) => (
+          <StaggerItem key={bag.src} className={bag.className}>
+            <Parallax speed={bag.speed} desktopOnly>
+              <div className="relative">
+                <span
+                  aria-hidden
+                  className={`absolute -bottom-1.5 h-3 rounded-[50%] bg-olive/25 blur-[6px] ${bag.shadow}`}
+                />
                 <Image
                   src={bag.src}
                   alt={t.alt[bag.altKey]}
                   width={bag.width}
                   height={bag.height}
-                  sizes="(max-width: 1024px) 50vw, 18vw"
-                  className="h-auto w-full"
+                  sizes="(max-width: 1024px) 42vw, 20vw"
+                  className="relative h-auto w-full"
                 />
-              </Parallax>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </div>
+              </div>
+            </Parallax>
+          </StaggerItem>
+        ))}
+      </Stagger>
     </div>
   );
 }
