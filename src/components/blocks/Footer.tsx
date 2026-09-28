@@ -44,7 +44,7 @@ export async function Footer() {
       <div className="relative mx-auto max-w-7xl gutter">
         {/* Stacked lockup */}
         <div className="flex flex-col items-center gap-4">
-          <Monogram className="w-16 text-cream" title="Calanthe monogram" />
+          <Monogram className="w-16 text-cream" title={t.ui.monogram} />
           <p className="font-brand text-2xl font-medium uppercase tracking-[0.22em] text-cream">
             Calanthe
           </p>

@@ -17,7 +17,8 @@ import {
   labelClasses,
 } from "@/components/ui/form-classes";
 import { Monogram } from "@/components/ui/Monogram";
-import { useT } from "@/lib/locale";
+import { useLocale } from "@/lib/locale";
+import { plural } from "@/lib/i18n/plural";
 import { cn } from "@/lib/cn";
 import { describeCartItem, itemUnitPrice, useCart, type CartItem } from "@/lib/cart";
 import {
@@ -25,6 +26,7 @@ import {
   normalisePhone,
   type CheckoutField,
 } from "@/lib/checkout-fields";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 import {
   CONTACT,
   deliveryZones,
@@ -58,20 +60,23 @@ const FIELD_IDS: Record<CheckoutField, string> = {
 const OrderSummary = memo(function OrderSummary({
   items,
   subtotalAed,
-  zone,
+  zoneName,
   deliveryFee,
   totalAed,
+  t,
 }: {
   items: readonly CartItem[];
   subtotalAed: number;
-  zone: DeliveryZone | undefined;
+  /** The chosen emirate, already in the reader's language. */
+  zoneName: string | undefined;
   deliveryFee: number;
   totalAed: number;
+  t: Dictionary;
 }) {
   return (
     <div className="rounded-sm border border-hairline bg-cream/70 p-6">
       <h2 className="mb-5 font-brand text-xs font-medium uppercase tracking-brand text-olive">
-        Your order
+        {t.checkout.yourOrder}
       </h2>
       <ul className="flex flex-col gap-5">
         {items.map((item) => (
@@ -90,10 +95,12 @@ const OrderSummary = memo(function OrderSummary({
               </div>
               <p className="mt-1 text-sm text-ink-muted">
                 {item.qty > 1 && <>{item.qty} × </>}
-                {describeCartItem(item)}
+                {describeCartItem(item, t)}
               </p>
               {item.giftMessage && (
-                <p className="mt-1 text-sm italic text-ink-muted">With a handwritten card</p>
+                <p className="mt-1 text-sm italic text-ink-muted">
+                  {t.checkout.withCard}
+                </p>
               )}
             </div>
           </li>
@@ -102,28 +109,32 @@ const OrderSummary = memo(function OrderSummary({
       <hr className="my-5 border-0 border-t border-hairline" />
       <dl className="flex flex-col gap-2 text-sm">
         <div className="flex justify-between text-ink-muted">
-          <dt>Subtotal</dt>
+          <dt>{t.checkout.subtotal}</dt>
           <dd>{formatAed(subtotalAed)}</dd>
         </div>
         <div className="flex justify-between text-ink-muted">
-          <dt>Delivery{zone ? ` to ${zone.name}` : ""}</dt>
+          <dt>
+            {zoneName
+              ? t.checkout.deliveryTo.replace("{name}", zoneName)
+              : t.checkout.delivery}
+          </dt>
           <dd>
-            {zone
+            {zoneName
               ? deliveryFee === 0
-                ? "Complimentary"
+                ? t.checkout.complimentary
                 : formatAed(deliveryFee)
-              : "Choose an emirate"}
+              : t.checkout.chooseEmirate}
           </dd>
         </div>
         <div className="mt-2 flex items-baseline justify-between border-t border-hairline pt-4 text-olive">
           <dt className="font-brand text-xs font-medium uppercase tracking-brand">
-            Total
+            {t.checkout.total}
           </dt>
           <dd className="font-display text-2xl">{formatAed(totalAed)}</dd>
         </div>
       </dl>
       <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-        Paid in cash when your flowers arrive.
+        {t.checkout.paidInCash}
       </p>
     </div>
   );
@@ -153,6 +164,18 @@ function Step({
   );
 }
 
+/**
+ * The emirate in the reader's language.
+ *
+ * `deliveryZones` is a fee table in code, so its `name` is English. An
+ * emirate is not a product name — every reader here knows it in Arabic — so
+ * the dictionary answers first and the row is the fallback, which keeps a
+ * zone added later visible rather than blank.
+ */
+function zoneName(zone: DeliveryZone, t: Dictionary): string {
+  return t.zoneNames[zone.id] ?? zone.name;
+}
+
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
@@ -165,7 +188,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 export function CheckoutForm() {
   const { items, subtotalAed, clear } = useCart();
-  const t = useT();
+  const { locale, t } = useLocale();
 
   /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
@@ -216,6 +239,12 @@ export function CheckoutForm() {
     attempted &&
     (!selectedDay || !days.some((d) => d.key === selectedDay && !d.disabled));
 
+  /** The message for a field, in the reader's language, or nothing. */
+  function errorText(field: CheckoutField): string | undefined {
+    const code = fieldErrors[field];
+    return code ? t.checkout.errors[code] : undefined;
+  }
+
   /** Props that tie a field to its error for assistive technology. */
   function errorProps(field: CheckoutField) {
     const message = fieldErrors[field];
@@ -242,13 +271,13 @@ export function CheckoutForm() {
     const firstInvalid = FIELD_ORDER.find((field) => errors[field]);
     if (firstInvalid) {
       document.getElementById(FIELD_IDS[firstInvalid])?.focus();
-      setFormError("A few details need a second look. They are marked above.");
+      setFormError(t.checkout.formInvalid);
       return;
     }
     /* The schedule refreshes every minute, so a day that slipped past the
        cutoff while the form was open is caught here. */
     if (!selectedDay || !days.some((d) => d.key === selectedDay && !d.disabled)) {
-      setFormError("Your delivery day is no longer available. Choose another.");
+      setFormError(t.checkout.dayGone);
       return;
     }
 
@@ -276,6 +305,9 @@ export function CheckoutForm() {
         cardMessage: items.find((i) => i.giftMessage)?.giftMessage,
         /* The surprise choice used to be collected and dropped. The order has
            a delivery-notes field the atelier reads; this is where it goes. */
+        /* Staff-facing, and deliberately not translated: this is read in
+           the admin by whoever schedules the delivery, and the atelier
+           works in English. */
         deliveryNotes:
           mode === "gift" && surprise
             ? "Keep it a surprise: contact the sender, not the recipient, before delivery."
@@ -300,27 +332,26 @@ export function CheckoutForm() {
     return (
       <div className="flex min-h-[65svh] flex-col items-center justify-center gap-6 text-center">
         <Monogram className="w-16 text-burnt-orange" />
-        <Eyebrow>Order {placed}</Eyebrow>
+        <Eyebrow>{t.checkout.orderRef.replace("{number}", placed)}</Eyebrow>
         <h1
           ref={headingRef}
           tabIndex={-1}
           className="max-w-lg font-display text-4xl font-light leading-tight text-olive outline-none lg:text-5xl"
         >
-          Your flowers are in our hands.
+          {t.checkout.placedTitle}
         </h1>
         <p className="max-w-md text-base leading-relaxed text-ink-muted">
-          Before your arrangement leaves the atelier, your florist sends a photo or video
-          on WhatsApp for your approval. Payment is taken in cash on delivery.
+          {t.checkout.placedBody}
         </p>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/account"
             className={buttonClasses("secondary", "whitespace-nowrap")}
           >
-            View Your Orders
+            {t.checkout.viewOrders}
           </Link>
           <Link href="/shop" className={buttonClasses("secondary", "whitespace-nowrap")}>
-            Continue Shopping
+            {t.checkout.continueShopping}
           </Link>
         </div>
       </div>
@@ -388,24 +419,24 @@ export function CheckoutForm() {
       }}
     >
       <div className="mb-10 lg:mb-14">
-        <Eyebrow>Checkout</Eyebrow>
+        <Eyebrow>{t.checkout.eyebrow}</Eyebrow>
         <h1 className="display-2 mt-3 font-display font-light text-olive">
-          Almost there.
+          {t.checkout.title}
         </h1>
       </div>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
         <div className="flex flex-col gap-12">
-          <Step index={1} title="Who are the flowers for?">
+          <Step index={1} title={t.checkout.forWhom}>
             <div
               className="grid grid-cols-2 gap-3"
               role="group"
-              aria-label="Who the order is for"
+              aria-label={t.checkout.audience}
             >
               {(
                 [
-                  ["gift", "It's a gift"],
-                  ["myself", "For myself"],
+                  ["gift", t.checkout.gift],
+                  ["myself", t.checkout.myself],
                 ] as const
               ).map(([value, text]) => (
                 <button
@@ -435,39 +466,39 @@ export function CheckoutForm() {
                   <div className="grid grid-cols-1 gap-5 pt-6 sm:grid-cols-2">
                     <div>
                       <label className={labelClasses} htmlFor="rec-name">
-                        Recipient name
+                        {t.checkout.recipientName}
                       </label>
                       <input
                         id="rec-name"
                         value={recipientName}
                         onChange={(e) => setRecipientName(e.target.value)}
                         className={fieldClasses}
-                        placeholder="Their name"
+                        placeholder={t.checkout.recipientNamePlaceholder}
                         autoComplete="off"
                         {...errorProps("recipientName")}
                       />
                       <FieldError
                         id="rec-name-error"
-                        message={fieldErrors.recipientName}
+                        message={errorText("recipientName")}
                       />
                     </div>
                     <div>
                       <label className={labelClasses} htmlFor="rec-phone">
-                        Recipient phone (optional)
+                        {t.checkout.recipientPhone}
                       </label>
                       <input
                         id="rec-phone"
                         value={recipientPhone}
                         onChange={(e) => setRecipientPhone(e.target.value)}
                         className={fieldClasses}
-                        placeholder="050 123 4567"
+                        placeholder={t.checkout.phonePlaceholder}
                         inputMode="tel"
                         autoComplete="off"
                         {...errorProps("recipientPhone")}
                       />
                       <FieldError
                         id="rec-phone-error"
-                        message={fieldErrors.recipientPhone}
+                        message={errorText("recipientPhone")}
                       />
                     </div>
                   </div>
@@ -478,17 +509,17 @@ export function CheckoutForm() {
                       onChange={(e) => setSurprise(e.target.checked)}
                       className="h-4 w-4 shrink-0 accent-[#2b2f1b]"
                     />
-                    Keep it a surprise. Contact me, not them, about the delivery.
+                    {t.checkout.surprise}
                   </label>
                 </motion.div>
               )}
             </AnimatePresence>
           </Step>
 
-          <Step index={2} title="When and where">
+          <Step index={2} title={t.checkout.whenWhere}>
             <div>
               <label className={labelClasses} htmlFor="zone">
-                Delivery emirate
+                {t.checkout.emirate}
               </label>
               <select
                 id="zone"
@@ -498,34 +529,36 @@ export function CheckoutForm() {
                 {...errorProps("zoneId")}
               >
                 <option value="" disabled>
-                  Choose your emirate
+                  {t.checkout.emiratePlaceholder}
                 </option>
                 {deliveryZones.map((z) => (
                   <option key={z.id} value={z.id}>
-                    {z.name} — {formatAed(z.feeAed)} delivery
+                    {t.checkout.emirateOption
+                      .replace("{name}", zoneName(z, t))
+                      .replace("{fee}", formatAed(z.feeAed))}
                   </option>
                 ))}
               </select>
-              <FieldError id="zone-error" message={fieldErrors.zoneId} />
+              <FieldError id="zone-error" message={errorText("zoneId")} />
               {/* This used to appear ONLY once free delivery had been earned,
                   which told her about the threshold at the one moment it no
                   longer mattered. The useful version is the one that says how
                   far away it is while she can still act on it. */}
               {freeDelivery ? (
-                <p className="mt-2 text-base text-ink-muted">
-                  Delivery is complimentary on this order.
-                </p>
+                <p className="mt-2 text-base text-ink-muted">{t.checkout.deliveryFree}</p>
               ) : (
                 <p className="mt-2 text-base text-ink-muted">
-                  {formatAed(FREE_DELIVERY_THRESHOLD_AED - subtotalAed)} more for
-                  complimentary delivery.
+                  {t.checkout.deliveryFreeAway.replace(
+                    "{amount}",
+                    formatAed(FREE_DELIVERY_THRESHOLD_AED - subtotalAed),
+                  )}
                 </p>
               )}
             </div>
 
             <div className="mt-6">
               <label className={labelClasses} htmlFor="address">
-                Delivery address
+                {t.checkout.address}
               </label>
               <textarea
                 id="address"
@@ -533,15 +566,15 @@ export function CheckoutForm() {
                 onChange={(e) => setAddress(e.target.value)}
                 rows={2}
                 className={fieldClasses}
-                placeholder="Villa or apartment, street, area"
+                placeholder={t.checkout.addressPlaceholder}
                 autoComplete="street-address"
                 {...errorProps("address")}
               />
-              <FieldError id="address-error" message={fieldErrors.address} />
+              <FieldError id="address-error" message={errorText("address")} />
             </div>
 
             <fieldset className="mt-6">
-              <legend className={labelClasses}>Delivery day</legend>
+              <legend className={labelClasses}>{t.checkout.day}</legend>
               <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                 {days.map((day) => (
                   <button
@@ -563,15 +596,12 @@ export function CheckoutForm() {
                 ))}
               </div>
               {dayUnavailable && (
-                <FieldError
-                  id="day-error"
-                  message="Choose a day we can still deliver on."
-                />
+                <FieldError id="day-error" message={t.checkout.dayInvalid} />
               )}
             </fieldset>
 
             <fieldset className="mt-5">
-              <legend className={labelClasses}>Time window</legend>
+              <legend className={labelClasses}>{t.checkout.window}</legend>
               <div className="flex flex-wrap gap-2">
                 {slots.map((s) => (
                   <button
@@ -599,42 +629,42 @@ export function CheckoutForm() {
             </fieldset>
           </Step>
 
-          <Step index={3} title="Your details">
+          <Step index={3} title={t.checkout.yourDetails}>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label className={labelClasses} htmlFor="name">
-                  Your name
+                  {t.checkout.name}
                 </label>
                 <input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={fieldClasses}
-                  placeholder="Full name"
+                  placeholder={t.checkout.namePlaceholder}
                   autoComplete="name"
                   {...errorProps("name")}
                 />
-                <FieldError id="name-error" message={fieldErrors.name} />
+                <FieldError id="name-error" message={errorText("name")} />
               </div>
               <div>
                 <label className={labelClasses} htmlFor="phone">
-                  Your phone
+                  {t.checkout.phone}
                 </label>
                 <input
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className={fieldClasses}
-                  placeholder="050 123 4567"
+                  placeholder={t.checkout.phonePlaceholder}
                   inputMode="tel"
                   autoComplete="tel"
                   {...errorProps("phone")}
                 />
-                <FieldError id="phone-error" message={fieldErrors.phone} />
+                <FieldError id="phone-error" message={errorText("phone")} />
               </div>
               <div className="sm:col-span-2">
                 <label className={labelClasses} htmlFor="email">
-                  Email for order updates
+                  {t.checkout.email}
                 </label>
                 <input
                   id="email"
@@ -642,16 +672,16 @@ export function CheckoutForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={fieldClasses}
-                  placeholder="you@example.com"
+                  placeholder={t.checkout.emailPlaceholder}
                   autoComplete="email"
                   {...errorProps("email")}
                 />
-                <FieldError id="email-error" message={fieldErrors.email} />
+                <FieldError id="email-error" message={errorText("email")} />
               </div>
             </div>
           </Step>
 
-          <Step index={4} title="Payment">
+          <Step index={4} title={t.checkout.payment}>
             {/* The one method this checkout takes. It used to show a
                 disabled card form, a Tabby instalment offer and "Apple Pay
                 arrives later" — none of which a customer could use. */}
@@ -663,9 +693,9 @@ export function CheckoutForm() {
                 <span className="h-2 w-2 rounded-full bg-olive" />
               </span>
               <div>
-                <p className="text-base text-olive">Cash on delivery</p>
+                <p className="text-base text-olive">{t.checkout.cod}</p>
                 <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-                  Pay the courier when your flowers arrive. Nothing is charged now.
+                  {t.checkout.codBody}
                 </p>
               </div>
             </div>
@@ -682,7 +712,7 @@ export function CheckoutForm() {
             className="mb-3 flex min-h-12 w-full items-center justify-between border-y border-hairline lg:hidden"
           >
             <span className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
-              {summaryOpen ? "Hide" : "Show"} order summary
+              {summaryOpen ? t.checkout.hideSummary : t.checkout.showSummary}
             </span>
             <span className="font-display text-xl text-olive">{formatAed(totalAed)}</span>
           </button>
@@ -693,9 +723,10 @@ export function CheckoutForm() {
             <OrderSummary
               items={items}
               subtotalAed={subtotalAed}
-              zone={zone}
+              zoneName={zone ? zoneName(zone, t) : undefined}
               deliveryFee={deliveryFee}
               totalAed={totalAed}
+              t={t}
             />
           </div>
 
@@ -716,19 +747,19 @@ export function CheckoutForm() {
               variant="primary"
               className="hidden w-full lg:flex"
               loading={pending}
-              loadingText="Placing your order…"
+              loadingText={t.checkout.placing}
             >
-              Place Order — {formatAed(totalAed)}
+              {t.checkout.placeWithTotal.replace("{total}", formatAed(totalAed))}
             </Button>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-              Questions first?{" "}
+              {t.checkout.questions}{" "}
               <a
                 href={CONTACT.whatsappHref}
                 target="_blank"
                 rel="noreferrer"
                 className="text-olive underline decoration-hairline underline-offset-4 hover:decoration-burnt-orange"
               >
-                Message a florist
+                {t.checkout.messageFlorist}
               </a>
               .
             </p>
@@ -753,8 +784,9 @@ export function CheckoutForm() {
               {formatAed(totalAed)}
             </p>
             <p className="truncate text-sm text-ink-muted">
-              {items.length} {items.length === 1 ? "arrangement" : "arrangements"}
-              {zone ? ` · ${zone.name}` : " · choose an emirate"}
+              {plural(locale, t.checkout.itemCount, items.length)}
+              {" · "}
+              {zone ? zoneName(zone, t) : t.checkout.pickEmirate}
             </p>
           </div>
           <Button
@@ -762,9 +794,9 @@ export function CheckoutForm() {
             variant="primary"
             className="shrink-0 px-6"
             loading={pending}
-            loadingText="Placing…"
+            loadingText={t.checkout.placingShort}
           >
-            Place Order
+            {t.checkout.place}
           </Button>
         </div>
       </div>

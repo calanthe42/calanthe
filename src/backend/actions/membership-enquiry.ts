@@ -2,7 +2,9 @@
 
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { LIMITS, guardByAddress } from "@backend/security/throttle";
+import { LIMITS, hintByAddress } from "@backend/security/throttle";
+import { getDictionary } from "@/lib/i18n/server";
+import { withWait } from "@/lib/i18n/wait";
 
 /**
  * Membership interest, recorded in the system rather than thrown at WhatsApp.
@@ -46,8 +48,7 @@ export type MembershipEnquiryRequest = {
 };
 
 export type MembershipEnquiryResult =
-  | { ok: true; reference: string }
-  | { ok: false; code: string; message: string };
+  { ok: true; reference: string } | { ok: false; code: string; message: string };
 
 const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -70,8 +71,11 @@ export async function submitMembershipEnquiry(
   /* One bucket for every lead form. These write to the enquiry list the
      owner works through by hand, so spam here does not degrade a service —
      it wastes a florist's morning. */
-  const wait = await guardByAddress(LIMITS.enquiry);
-  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+  const { locale, t } = await getDictionary();
+  const m = t.server.enquiry;
+
+  const wait = await hintByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", withWait(locale, t, m.rateLimited, wait));
 
   const contactName = clean(request.contactName, 140);
   const contactEmail = clean(request.contactEmail, 200).toLowerCase();
@@ -79,19 +83,19 @@ export async function submitMembershipEnquiry(
   const planName = clean(request.planName, 60);
 
   if (contactName.length < 2) {
-    return fail("name", "Please tell us your name.");
+    return fail("name", m.nameRequired);
   }
   if (!EMAIL.test(contactEmail)) {
-    return fail("email", "Please check your email address.");
+    return fail("email", m.emailInvalid);
   }
   if (!E164.test(contactPhone)) {
-    return fail("phone", "Please include your phone number with its country code, like +9715…");
+    return fail("phone", m.phoneFormat);
   }
   if (!FREQUENCIES.includes(request.frequency)) {
-    return fail("frequency", "Please choose how often the flowers should arrive.");
+    return fail("frequency", m.frequencyRequired);
   }
   if (!PREFERENCES.includes(request.deliveryPreference)) {
-    return fail("deliveryPreference", "Please choose where the flowers should go.");
+    return fail("deliveryPreference", m.deliveryPreferenceRequired);
   }
 
   /* A date the visitor picked is only useful if it is a real one, and never
@@ -100,12 +104,12 @@ export async function submitMembershipEnquiry(
   if (request.preferredStartDate) {
     const parsed = new Date(request.preferredStartDate);
     if (Number.isNaN(parsed.getTime())) {
-      return fail("startDate", "Please check the start date.");
+      return fail("startDate", m.startDateInvalid);
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (parsed < today) {
-      return fail("startDate", "Please choose a start date from today onward.");
+      return fail("startDate", m.startDatePast);
     }
     preferredStartDate = parsed.toISOString();
   }
@@ -142,9 +146,7 @@ export async function submitMembershipEnquiry(
         contactName,
         contactEmail,
         contactPhone,
-        subject: planName
-          ? `Membership interest — ${planName}`
-          : "Membership interest",
+        subject: planName ? `Membership interest — ${planName}` : "Membership interest",
         /* Spread rather than `message: notes || undefined`: Payload's
            generated types reject an explicitly-undefined property, which is
            why every optional field in checkout.ts is written this way too. */
@@ -169,9 +171,6 @@ export async function submitMembershipEnquiry(
     /* The visitor is told something neutral; the detail goes to the server
        log. A failed enquiry must never look like a successful one. */
     console.error("membership enquiry failed", error);
-    return fail(
-      "unknown",
-      "We could not record that just now. Please try again, or message us on WhatsApp.",
-    );
+    return fail("unknown", m.recordFailed);
   }
 }

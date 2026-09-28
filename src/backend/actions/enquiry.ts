@@ -2,7 +2,10 @@
 
 import { getPayload, type RequiredDataFromCollectionSlug } from "payload";
 import config from "@payload-config";
-import { LIMITS, guardByAddress } from "@backend/security/throttle";
+import { LIMITS, hintByAddress } from "@backend/security/throttle";
+import { getDictionary } from "@/lib/i18n/server";
+import { withWait } from "@/lib/i18n/wait";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /**
  * The atelier's two remaining lead flows, recorded instead of discarded.
@@ -33,8 +36,7 @@ const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export type EnquiryResult =
-  | { ok: true; reference: string }
-  | { ok: false; code: string; message: string };
+  { ok: true; reference: string } | { ok: false; code: string; message: string };
 
 function fail(code: string, message: string): EnquiryResult {
   return { ok: false, code, message };
@@ -47,22 +49,22 @@ function clean(value: string | undefined, max: number): string {
 
 type Contact = { name: string; email: string; phone: string };
 
-function checkContact(c: Contact): EnquiryResult | null {
-  if (clean(c.name, 140).length < 2) return fail("name", "Please tell us your name.");
+type EnquiryMessages = Dictionary["server"]["enquiry"];
+
+function checkContact(c: Contact, m: EnquiryMessages): EnquiryResult | null {
+  if (clean(c.name, 140).length < 2) return fail("name", m.nameRequired);
   if (!EMAIL.test(clean(c.email, 200))) {
-    return fail("email", "Please check your email address.");
+    return fail("email", m.emailInvalid);
   }
   if (!E164.test(clean(c.phone, 40))) {
-    return fail(
-      "phone",
-      "Please include your phone number with its country code, like +9715…",
-    );
+    return fail("phone", m.phoneFormat);
   }
   return null;
 }
 
 async function create(
   data: RequiredDataFromCollectionSlug<"enquiries">,
+  m: EnquiryMessages,
 ): Promise<EnquiryResult> {
   try {
     const payload = await getPayload({ config });
@@ -72,18 +74,13 @@ async function create(
       data,
     });
     /* `assignEnquiryNumber` fills this in a beforeChange hook. */
-    const reference = String(
-      (doc as { enquiryNumber?: string }).enquiryNumber ?? doc.id,
-    );
+    const reference = String((doc as { enquiryNumber?: string }).enquiryNumber ?? doc.id);
     return { ok: true, reference };
   } catch (error) {
     /* Neutral for the visitor, detailed for the log. A failed enquiry must
        never be shown as a successful one. */
     console.error("enquiry failed", error);
-    return fail(
-      "unknown",
-      "We could not record that just now. Please try again, or message us on WhatsApp.",
-    );
+    return fail("unknown", m.recordFailed);
   }
 }
 
@@ -121,14 +118,17 @@ export async function submitBespokeEnquiry(
   /* One bucket for every lead form. These write to the enquiry list the
      owner works through by hand, so spam here does not degrade a service —
      it wastes a florist's morning. */
-  const wait = await guardByAddress(LIMITS.enquiry);
-  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+  const { locale, t } = await getDictionary();
+  const m = t.server.enquiry;
 
-  const invalid = checkContact(request);
+  const wait = await hintByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", withWait(locale, t, m.rateLimited, wait));
+
+  const invalid = checkContact(request, m);
   if (invalid) return invalid;
 
   if (!Number.isFinite(request.budgetAed) || request.budgetAed <= 0) {
-    return fail("budget", "Please choose a budget.");
+    return fail("budget", m.budgetRequired);
   }
 
   const colours = request.floristChoosesColours
@@ -158,7 +158,9 @@ export async function submitBespokeEnquiry(
     `Budget: AED ${request.budgetAed}`,
     ...forWhom,
     colours ? `Colours: ${colours}` : "",
-    clean(request.colourNote, 240) ? `Colour note: ${clean(request.colourNote, 240)}` : "",
+    clean(request.colourNote, 240)
+      ? `Colour note: ${clean(request.colourNote, 240)}`
+      : "",
     request.vase === null ? "" : `Vase: ${request.vase ? "yes" : "no"}`,
     request.leaveCardBlank
       ? "Card: leave blank"
@@ -172,29 +174,32 @@ export async function submitBespokeEnquiry(
     .join("\n")
     .slice(0, 8000);
 
-  return create({
-    type: "BUILD_YOUR_OWN",
-    status: "NEW",
-    priority: "NORMAL",
-    source: "WEBSITE",
-    contactName: clean(request.name, 140),
-    contactEmail: clean(request.email, 200).toLowerCase(),
-    contactPhone: clean(request.phone, 40),
-    subject: `Build your own — AED ${request.budgetAed}`,
-    message,
-    buildYourOwn: {
-      budgetFils: Math.round(request.budgetAed * 100),
-      ...(clean(request.deliveryLocation, 240)
-        ? { deliveryLocation: clean(request.deliveryLocation, 240) }
-        : {}),
-      ...(request.cardMessage && !request.leaveCardBlank
-        ? { cardMessage: clean(request.cardMessage, 300) }
-        : {}),
-      ...(clean(request.notes, 2000)
-        ? { specialInstructions: clean(request.notes, 2000) }
-        : {}),
+  return create(
+    {
+      type: "BUILD_YOUR_OWN",
+      status: "NEW",
+      priority: "NORMAL",
+      source: "WEBSITE",
+      contactName: clean(request.name, 140),
+      contactEmail: clean(request.email, 200).toLowerCase(),
+      contactPhone: clean(request.phone, 40),
+      subject: `Build your own — AED ${request.budgetAed}`,
+      message,
+      buildYourOwn: {
+        budgetFils: Math.round(request.budgetAed * 100),
+        ...(clean(request.deliveryLocation, 240)
+          ? { deliveryLocation: clean(request.deliveryLocation, 240) }
+          : {}),
+        ...(request.cardMessage && !request.leaveCardBlank
+          ? { cardMessage: clean(request.cardMessage, 300) }
+          : {}),
+        ...(clean(request.notes, 2000)
+          ? { specialInstructions: clean(request.notes, 2000) }
+          : {}),
+      },
     },
-  });
+    m,
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -216,21 +221,24 @@ export async function submitEventEnquiry(
   /* One bucket for every lead form. These write to the enquiry list the
      owner works through by hand, so spam here does not degrade a service —
      it wastes a florist's morning. */
-  const wait = await guardByAddress(LIMITS.enquiry);
-  if (wait) return fail("throttled", `That is a lot of enquiries at once. ${wait}`);
+  const { locale, t } = await getDictionary();
+  const m = t.server.enquiry;
 
-  const invalid = checkContact(request);
+  const wait = await hintByAddress(LIMITS.enquiry);
+  if (wait) return fail("throttled", withWait(locale, t, m.rateLimited, wait));
+
+  const invalid = checkContact(request, m);
   if (invalid) return invalid;
 
   if (!clean(request.eventType, 80)) {
-    return fail("eventType", "Please tell us what kind of occasion it is.");
+    return fail("eventType", m.eventTypeRequired);
   }
 
   let when: string | undefined;
   if (request.eventDate) {
     const parsed = new Date(request.eventDate);
     if (Number.isNaN(parsed.getTime())) {
-      return fail("eventDate", "Please check the date.");
+      return fail("eventDate", m.dateInvalid);
     }
     when = parsed.toISOString();
   }
@@ -245,28 +253,31 @@ export async function submitEventEnquiry(
     .join("\n")
     .slice(0, 8000);
 
-  return create({
-    type: "EVENT",
-    status: "NEW",
-    /* An event is a large, dated commitment — it should not sit in the queue
+  return create(
+    {
+      type: "EVENT",
+      status: "NEW",
+      /* An event is a large, dated commitment — it should not sit in the queue
        behind a single bouquet enquiry. */
-    priority: "HIGH",
-    source: "WEBSITE",
-    contactName: clean(request.name, 140),
-    contactEmail: clean(request.email, 200).toLowerCase(),
-    contactPhone: clean(request.phone, 40),
-    ...(clean(request.company ?? "", 140)
-      ? { company: clean(request.company, 140) }
-      : {}),
-    subject: `Event — ${clean(request.eventType, 80)}`,
-    /* Enquiries has no event detail group — an EVENT enquiry links to an
+      priority: "HIGH",
+      source: "WEBSITE",
+      contactName: clean(request.name, 140),
+      contactEmail: clean(request.email, 200).toLowerCase(),
+      contactPhone: clean(request.phone, 40),
+      ...(clean(request.company ?? "", 140)
+        ? { company: clean(request.company, 140) }
+        : {}),
+      subject: `Event — ${clean(request.eventType, 80)}`,
+      /* Enquiries has no event detail group — an EVENT enquiry links to an
        `events` record, which is a staff-created object holding the venue,
        guest count and services. Creating one from a public form would let
        anyone write into the operations calendar, so the details stay in the
        message until a florist has qualified the enquiry. */
-    message: when
-      ? `Date: ${new Date(when).toISOString().slice(0, 10)}
+      message: when
+        ? `Date: ${new Date(when).toISOString().slice(0, 10)}
 ${message}`
-      : message,
-  });
+        : message,
+    },
+    m,
+  );
 }

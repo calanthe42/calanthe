@@ -31,7 +31,7 @@ const instrument = Instrument_Sans({
 const DESCRIPTION =
   "Luxury flower atelier in the UAE. Hand-composed arrangements, delivered across all seven Emirates. Where feelings take form.";
 
-export const metadata: Metadata = {
+const BASE_METADATA: Metadata = {
   /* Without metadataBase, every relative Open Graph URL Next generates
      resolves against localhost and every share preview breaks in
      production — silently, because the page itself renders fine. */
@@ -64,6 +64,19 @@ export const metadata: Metadata = {
   /* No verification tokens and no `robots` here: robots.ts already
      governs indexing, and it correctly refuses preview deployments. */
 };
+
+/*
+ * The tab title follows the reader's language. The share card (Open Graph,
+ * Twitter) stays English: WhatsApp and search engines fetch the page without
+ * the language cookie, so English is all they are ever served anyway.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    ...BASE_METADATA,
+    title: { default: t.meta.home, template: "%s — CALANTHE" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f3efdf",

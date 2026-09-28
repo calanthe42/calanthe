@@ -12,6 +12,7 @@ import {
 } from "react";
 import type { AddonId, ProductImage, SizeId } from "@/lib/data";
 import { addons, sizes, timeSlots } from "@/lib/data";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { Product } from "@/lib/data";
 
 export type CartItem = {
@@ -44,11 +45,24 @@ export function itemUnitPrice(
   return item.basePriceAed + (size?.priceDeltaAed ?? 0) + addonTotal;
 }
 
-/** "Deluxe · Vase · Chocolates" — one description used by every cart view. */
-export function describeCartItem(item: Pick<CartItem, "sizeId" | "addonIds">): string {
+/**
+ * "Deluxe · Vase · Chocolates" — one description used by every cart view.
+ *
+ * The size and add-on names come from the `sizes` and `addons` tables, which
+ * are configuration in code and therefore English. That put three English
+ * words under every line of an Arabic cart and an Arabic order summary, so
+ * the dictionary answers first and the table is the fallback — which keeps an
+ * add-on introduced later visible rather than blank.
+ */
+export function describeCartItem(
+  item: Pick<CartItem, "sizeId" | "addonIds">,
+  t: Dictionary,
+): string {
   const parts = [
-    sizes.find((s) => s.id === item.sizeId)?.name,
-    ...item.addonIds.map((id) => addons.find((a) => a.id === id)?.name),
+    t.sizeNames[item.sizeId] ?? sizes.find((s) => s.id === item.sizeId)?.name,
+    ...item.addonIds.map(
+      (id) => t.addonNames[id] ?? addons.find((a) => a.id === id)?.name,
+    ),
   ].filter((x): x is string => Boolean(x));
   return parts.join(" · ");
 }

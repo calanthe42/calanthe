@@ -5,7 +5,10 @@ import { RegisterForm } from "@/components/commerce/auth/RegisterForm";
 import { getCustomerSession } from "@backend/actions/account";
 import { getDictionary } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Create an account" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: t.meta.register };
+}
 export const dynamic = "force-dynamic";
 
 export default async function RegisterPage() {
@@ -19,7 +22,8 @@ export default async function RegisterPage() {
       intro={t.account.registerIntro}
       footer={
         <p>
-          {t.account.haveAccount}{" "}<AuthLink href="/account/login">{t.account.signIn}</AuthLink>
+          {t.account.haveAccount}{" "}
+          <AuthLink href="/account/login">{t.account.signIn}</AuthLink>
         </p>
       }
     >

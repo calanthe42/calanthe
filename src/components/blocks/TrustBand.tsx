@@ -8,7 +8,7 @@ import { getDictionary } from "@/lib/i18n/server";
 /**
  * The service promise, stated once and plainly.
  *
- * Only things the atelier does on every order appear here (see TRUST in
+ * Only things the atelier does on every order appear here (see `trust` in the dictionary; formerly TRUST in
  * lib/data.ts for why there is no rating, count or press strip). The
  * heading sits beside the promises on desktop rather than centred above
  * them, so the band reads as a statement with its evidence, and the one
@@ -28,7 +28,10 @@ export async function TrustBand() {
       {/* The same pressed lily that runs through the top of the page, turned
           the other way and cropped by the opposite edge — the promise band
           is printed on the brand's paper too, not on a plain field. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+      >
         <LilyField
           opacity={0.055}
           className="absolute -bottom-[45%] end-[-35%] w-[135%] text-olive rtl:-scale-x-100 lg:-bottom-[60%] lg:end-[-10%] lg:w-[55%]"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getDictionary } from "@/lib/i18n/server";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -11,41 +12,32 @@ import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import Image from "next/image";
 import { LilyField } from "@/components/ui/LilyField";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "Calanthe is an Abu Dhabi-based floral brand created around the art of thoughtful giving — classical elegance with a contemporary creative touch.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description:
+      "Calanthe is an Abu Dhabi-based floral brand created around the art of thoughtful giving — classical elegance with a contemporary creative touch.",
+    title: t.meta.about,
+  };
+}
 
-/* The client's six services, in their own words (portfolio, p.3). */
-const SERVICES = [
-  {
-    name: "Signature Florals",
-    copy: "Handcrafted bouquets and vase arrangements for everyday gestures and special occasions.",
-  },
-  {
-    name: "Bespoke Florals",
-    copy: "Personalised arrangements created around a preferred budget, colour palette, message or occasion.",
-  },
-  {
-    name: "Events",
-    copy: "Floral styling and arrangements for private celebrations, intimate gatherings and larger occasions.",
-  },
-  {
-    name: "Memberships",
-    copy: "Recurring floral deliveries designed to bring fresh flowers into homes or businesses throughout the month.",
-  },
-  {
-    name: "Gifting",
-    copy: "Thoughtfully presented floral gifts finished with Calanthe's signature packaging and personal touches.",
-  },
-  {
-    name: "Corporate",
-    copy: "Florals and gifting solutions for offices, businesses, clients and corporate occasions.",
-  },
+/*
+ * The client's six services (portfolio, p.3), in the order she gave them.
+ * The words are in the dictionary; this is only the running order, which is
+ * client-approved and must not change.
+ */
+const SERVICE_ORDER = [
+  "signature",
+  "bespoke",
+  "events",
+  "memberships",
+  "gifting",
+  "corporate",
 ] as const;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { t } = await getDictionary();
+
   return (
     <main>
       {/* Opening — burgundy, the brand's intimate register (SKILL.md). */}
@@ -54,16 +46,15 @@ export default function AboutPage() {
         <div className="relative mx-auto max-w-7xl gutter">
           <div className="mx-auto max-w-3xl text-center">
             <MonogramBloom className="mx-auto w-12 text-burnt-orange" />
-            <Eyebrow className="mt-6 text-cream/60">Abu Dhabi</Eyebrow>
+            <Eyebrow className="mt-6 text-cream/60">{t.about.eyebrow}</Eyebrow>
             <SplitLines
               as="h1"
-              lines={["About Calanthe"]}
+              lines={[t.about.title]}
               className="mt-3 font-display text-[clamp(2.5rem,7vw,4rem)] font-light leading-[1.05] text-cream"
             />
             <Reveal delay={0.15}>
               <p className="mt-8 text-lg leading-relaxed text-cream/85">
-                Calanthe is an Abu Dhabi-based floral brand created around the art
-                of thoughtful giving.
+                {t.about.intro}
               </p>
             </Reveal>
           </div>
@@ -74,27 +65,22 @@ export default function AboutPage() {
       <section className="section-pad">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 gutter lg:grid-cols-2 lg:gap-20">
           <Reveal>
-            <Eyebrow>Our belief</Eyebrow>
+            <Eyebrow>{t.about.beliefEyebrow}</Eyebrow>
             <h2 className="display-2 mt-3 font-display font-light text-olive">
-              More than a beautiful gesture.
+              {t.about.beliefTitle}
             </h2>
             <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-              We believe flowers carry emotion, mark meaningful moments and express
-              what words sometimes cannot.
+              {t.about.beliefBody1}
             </p>
             <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">
-              Our arrangements combine classical elegance with a contemporary
-              creative touch, bringing together carefully selected flowers, refined
-              compositions and distinctive details. From intimate gestures to
-              important celebrations, each Calanthe creation is designed with
-              intention.
+              {t.about.beliefBody2}
             </p>
           </Reveal>
 
           <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">
             <FloralImage
               image={{
-                alt: "A Calanthe arrangement in its burgundy bag, against deep green velvet",
+                alt: t.alt.aboutBag,
                 src: "/brand/packaging-curtain.webp",
                 placeholder: { seed: "about-atelier", palette: "burgundy" },
               }}
@@ -108,20 +94,22 @@ export default function AboutPage() {
       <section className="bg-cream section-pad">
         <div className="mx-auto max-w-7xl gutter">
           <Reveal className="text-center">
-            <Eyebrow>What we do</Eyebrow>
+            <Eyebrow>{t.about.servicesEyebrow}</Eyebrow>
             <h2 className="display-2 mt-3 font-display font-light text-olive">
-              Our services
+              {t.about.servicesTitle}
             </h2>
           </Reveal>
 
           <Stagger className="mt-12 grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
-            {SERVICES.map((s) => (
-              <StaggerItem key={s.name}>
+            {SERVICE_ORDER.map((id) => (
+              <StaggerItem key={id}>
                 <div className="border-t border-hairline pt-5">
                   <h3 className="font-display text-2xl font-light text-olive">
-                    {s.name}
+                    {t.about.services[id].name}
                   </h3>
-                  <p className="mt-3 text-base leading-relaxed text-ink-muted">{s.copy}</p>
+                  <p className="mt-3 text-base leading-relaxed text-ink-muted">
+                    {t.about.services[id].copy}
+                  </p>
                 </div>
               </StaggerItem>
             ))}
@@ -142,7 +130,10 @@ export default function AboutPage() {
         until they make a "C".
       */}
       <section className="relative isolate overflow-hidden section-pad">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        >
           <LilyField
             opacity={0.05}
             className="absolute -top-[30%] start-[-40%] w-[130%] text-olive rtl:-scale-x-100 lg:w-[70%]"
@@ -153,7 +144,7 @@ export default function AboutPage() {
           <ClipReveal className="relative aspect-[3/4] w-full overflow-hidden rounded-media shadow-soft lg:order-2">
             <FloralImage
               image={{
-                alt: "Calanthe orchid buds, the flower the brand is named after",
+                alt: t.alt.aboutOrchid,
                 src: "/brand/orchid-buds.webp",
                 placeholder: { seed: "about-name", palette: "olive" },
               }}
@@ -163,19 +154,16 @@ export default function AboutPage() {
 
           <div className="lg:order-1">
             <Reveal>
-              <Eyebrow>The name</Eyebrow>
+              <Eyebrow>{t.about.nameEyebrow}</Eyebrow>
             </Reveal>
             <SplitLines
               as="h2"
-              lines={["kalos — beautiful.", "anthos — flower."]}
+              lines={[t.about.nameLine1, t.about.nameLine2]}
               className="display-2 mt-4 font-display font-light italic text-olive"
             />
             <Reveal delay={0.15}>
               <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-                Calanthe is an orchid, and its name is Greek. More than a
-                flower, it reflects a philosophy of beauty that is quiet,
-                timeless and deeply meaningful — which is the standard every
-                arrangement that leaves this atelier is held to.
+                {t.about.nameBody}
               </p>
             </Reveal>
 
@@ -183,11 +171,22 @@ export default function AboutPage() {
               <div className="mt-10 flex items-start gap-5 border-t border-hairline pt-8">
                 <Monogram className="mt-1 w-12 shrink-0 text-burnt-orange" />
                 <p className="max-w-sm text-base leading-relaxed text-ink-muted">
-                  The mark is built from the same flower: petals and leaves
-                  simplified, arranged symmetrically, and resolved until the
-                  outline reads as a{" "}
-                  {/* One glyph: tracking would only add a gap before the full stop. */}
-                  <span lang="en" className="font-brand text-olive">C</span>.
+                  {/*
+                    The "C" is one glyph in the brand face, set inside the
+                    sentence — so the sentence owns the slot and the glyph is
+                    dropped into it, rather than the sentence being split in
+                    two around it (which is what left this in English).
+                  */}
+                  {t.about.monogramNote.split("{letter}").map((part, i) => (
+                    <span key={i}>
+                      {i > 0 && (
+                        <span lang="en" className="font-brand text-olive">
+                          C
+                        </span>
+                      )}
+                      {part}
+                    </span>
+                  ))}
                 </p>
               </div>
             </Reveal>
@@ -207,22 +206,37 @@ export default function AboutPage() {
       <section className="bg-cream section-pad">
         <div className="mx-auto max-w-7xl gutter">
           <Reveal className="max-w-xl">
-            <Eyebrow>The details</Eyebrow>
+            <Eyebrow>{t.about.detailsEyebrow}</Eyebrow>
             <h2 className="display-2 mt-3 font-display font-light text-olive">
-              Down to the ribbon.
+              {t.about.detailsTitle}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-ink-muted">
-              Everything that reaches you is part of the gift — the tag, the
-              tissue, the card, the ribbon that ties it.
+              {t.about.detailsBody}
             </p>
           </Reveal>
 
           <Stagger className="mt-12 grid grid-cols-2 gap-4 lg:mt-16 lg:grid-cols-4 lg:gap-6">
             {[
-              { src: "/brand/ribbon.webp", alt: "Terracotta ribbon printed with the Calanthe wordmark and monogram", label: "Printed ribbon" },
-              { src: "/brand/lilies-tag.webp", alt: "A die-cut lily hang tag resting among white lilies", label: "Lily hang tag" },
-              { src: "/brand/wrap-sticker.webp", alt: "Monogrammed tissue paper closed with a Calanthe sticker", label: "Tissue and seal" },
-              { src: "/brand/cards-debossed.webp", alt: "A burgundy Calanthe greeting card, debossed with lilies, its gold tab pressed with the monogram", label: "Debossed card" },
+              {
+                src: "/brand/ribbon.webp",
+                alt: t.alt.aboutRibbon,
+                label: t.alt.labelRibbon,
+              },
+              {
+                src: "/brand/lilies-tag.webp",
+                alt: t.alt.aboutTag,
+                label: t.alt.labelTag,
+              },
+              {
+                src: "/brand/wrap-sticker.webp",
+                alt: t.alt.aboutTissue,
+                label: t.alt.labelTissue,
+              },
+              {
+                src: "/brand/cards-debossed.webp",
+                alt: t.alt.aboutCard,
+                label: t.alt.labelCard,
+              },
             ].map((item) => (
               <StaggerItem key={item.src}>
                 <figure>
@@ -251,7 +265,7 @@ export default function AboutPage() {
           <ClipReveal className="mx-auto mb-12 aspect-[16/7] w-full max-w-3xl overflow-hidden rounded-media">
             <FloralImage
               image={{
-                alt: "A bloom opening, lit from within — Calanthe's key visual",
+                alt: t.alt.aboutBloom,
                 src: "/brand/keyvisual-bloom.webp",
                 placeholder: { seed: "about-close", palette: "burgundy" },
               }}
@@ -260,16 +274,16 @@ export default function AboutPage() {
           </ClipReveal>
           <SplitLines
             as="p"
-            lines={["Where feelings take form."]}
+            lines={[t.about.closingLine]}
             className="font-display text-[clamp(1.75rem,4vw,2.75rem)] font-light italic text-cream"
           />
           <Reveal delay={0.15}>
             <div className="mt-10 flex flex-wrap justify-center gap-4">
               <ButtonLink href="/shop" variant="primary">
-                Shop Flowers
+                {t.cart.shopFlowers}
               </ButtonLink>
               <ButtonLink href="/build-your-own" variant="secondary-cream">
-                Build Your Own
+                {t.cart.buildYourOwn}
               </ButtonLink>
             </div>
           </Reveal>

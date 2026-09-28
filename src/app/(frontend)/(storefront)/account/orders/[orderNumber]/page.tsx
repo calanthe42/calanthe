@@ -8,8 +8,16 @@ import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { formatFils } from "@/lib/money";
 import { getCustomerSession } from "@backend/actions/account";
+import { getDictionary } from "@/lib/i18n/server";
+import { formatDate, formatDeliveryDate } from "@/lib/i18n/date";
 
-export const metadata: Metadata = { title: "Order", robots: { index: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    robots: { index: false },
+    title: t.meta.order,
+  };
+}
 export const dynamic = "force-dynamic";
 
 /**
@@ -27,8 +35,9 @@ export default async function CustomerOrderPage({
   params: Promise<{ orderNumber: string }>;
 }) {
   const customer = await getCustomerSession();
+  const { locale, t } = await getDictionary();
 
-/* A signed-out visitor gets an invitation to sign in rather than a redirect.
+  /* A signed-out visitor gets an invitation to sign in rather than a redirect.
    The storefront runs with `experimental.globalNotFound`, under which a
    redirect thrown from a page surfaces as the 404 shell — correct in that it
    leaks nothing, but a dead end for a customer who simply is not signed in. */
@@ -36,16 +45,18 @@ export default async function CustomerOrderPage({
     return (
       <main className="mx-auto max-w-3xl gutter section-pad">
         <Reveal>
-          <Eyebrow>Your order</Eyebrow>
-          <h1 className="display-2 mt-3 font-display font-light text-olive">Please sign in.</h1>
+          <Eyebrow>{t.account.orderEyebrow}</Eyebrow>
+          <h1 className="display-2 mt-3 font-display font-light text-olive">
+            {t.account.pleaseSignIn}
+          </h1>
           <p className="mt-4 text-base leading-relaxed text-ink-muted">
-            Sign in to see this order. Orders are only ever shown to the account that placed them.
+            {t.account.signInForOrder}
           </p>
           <Link
             href="/login"
             className="mt-6 inline-block text-base text-olive underline underline-offset-4"
           >
-            Sign in
+            {t.account.signIn}
           </Link>
         </Reveal>
       </main>
@@ -85,21 +96,21 @@ export default async function CustomerOrderPage({
   return (
     <main className="mx-auto max-w-3xl gutter section-pad">
       <Reveal className="mb-8">
-        <Eyebrow>Your order</Eyebrow>
-        <h1 className="display-2 mt-3 font-display font-light text-olive">{order.orderNumber}</h1>
+        <Eyebrow>{t.account.orderEyebrow}</Eyebrow>
+        <h1 className="display-2 mt-3 font-display font-light text-olive">
+          {order.orderNumber}
+        </h1>
         <p className="mt-2 text-base text-ink-muted">
-          Placed{" "}
-          {new Date(order.createdAt).toLocaleDateString("en-AE", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}{" "}
-          · {order.fulfilmentStatus.toLowerCase().replace(/_/g, " ")}
+          {t.account.placedOn.replace("{date}", formatDate(locale, order.createdAt))}
+          {" · "}
+          {t.account.fulfilment[order.fulfilmentStatus] ?? order.fulfilmentStatus}
         </p>
       </Reveal>
 
       <section className="rounded-media border border-hairline bg-cream/30 p-6">
-        <h2 className="font-display text-xl font-light text-olive">What you ordered</h2>
+        <h2 className="font-display text-xl font-light text-olive">
+          {t.account.whatYouOrdered}
+        </h2>
         <ul className="mt-4 space-y-3">
           {(order.items ?? []).map((item, i) => (
             <li key={i} className="flex justify-between gap-4 text-base">
@@ -121,43 +132,49 @@ export default async function CustomerOrderPage({
 
         <dl className="mt-5 space-y-1.5 border-t border-hairline pt-4 text-base">
           <div className="flex justify-between">
-            <dt className="text-ink-muted">Subtotal</dt>
+            <dt className="text-ink-muted">{t.checkout.subtotal}</dt>
             <dd className="tabular-nums">{formatFils(Number(order.subtotalFils))}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-ink-muted">Delivery</dt>
+            <dt className="text-ink-muted">{t.checkout.delivery}</dt>
             <dd className="tabular-nums">
               {Number(order.deliveryFeeFils) === 0
-                ? "Free"
+                ? t.account.deliveryFree
                 : formatFils(Number(order.deliveryFeeFils))}
             </dd>
           </div>
           <div className="flex justify-between border-t border-hairline pt-2 text-lg font-medium text-olive">
-            <dt>Total</dt>
+            <dt>{t.checkout.total}</dt>
             <dd className="tabular-nums">{formatFils(Number(order.totalFils))}</dd>
           </div>
         </dl>
 
         <p className="mt-4 text-sm leading-relaxed text-ink-muted">
           {order.paymentStatus === "PENDING"
-            ? "Payable in cash on delivery."
-            : `Payment: ${order.paymentStatus.toLowerCase().replace(/_/g, " ")}`}
+            ? t.account.payableOnDelivery
+            : t.account.paymentState.replace(
+                "{status}",
+                t.account.payment[order.paymentStatus] ?? order.paymentStatus,
+              )}
         </p>
       </section>
 
       <section className="mt-6 rounded-media border border-hairline bg-cream/30 p-6">
-        <h2 className="font-display text-xl font-light text-olive">Delivery</h2>
+        <h2 className="font-display text-xl font-light text-olive">
+          {t.account.deliveryHeading}
+        </h2>
         {order.recipientName ? (
-          <p className="mt-3 text-base text-olive">To {order.recipientName}</p>
+          <p className="mt-3 text-base text-olive">
+            {t.account.deliveryTo.replace("{name}", order.recipientName)}
+          </p>
         ) : null}
-        <p className="mt-1 whitespace-pre-line text-base text-olive">{order.deliveryAddress}</p>
+        <p className="mt-1 whitespace-pre-line text-base text-olive">
+          {order.deliveryAddress}
+        </p>
         <p className="mt-2 text-base text-ink-muted">
-          {new Date(order.deliveryDate).toLocaleDateString("en-AE", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}{" "}
-          · {order.deliveryTimeSlot}
+          {formatDeliveryDate(locale, order.deliveryDate)}
+          {" · "}
+          {order.deliveryTimeSlot}
         </p>
       </section>
 
@@ -165,7 +182,7 @@ export default async function CustomerOrderPage({
         href="/account"
         className="mt-8 inline-block text-sm text-olive underline underline-offset-4"
       >
-        Back to your orders
+        {t.account.backToOrders}
       </Link>
     </main>
   );

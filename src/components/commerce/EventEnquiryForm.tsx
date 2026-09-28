@@ -12,6 +12,7 @@ import {
 import { CONTACT } from "@/lib/data";
 import { cn } from "@/lib/cn";
 import { submitEventEnquiry } from "@backend/actions/enquiry";
+import { useT } from "@/lib/locale";
 
 const KINDS = [
   "Wedding",
@@ -35,6 +36,7 @@ const KINDS = [
  * WhatsApp remains underneath for anyone who would rather talk.
  */
 export function EventEnquiryForm() {
+  const t = useT();
   const [kind, setKind] = useState<string>("Wedding");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -64,14 +66,13 @@ export function EventEnquiryForm() {
       <div className="mx-auto max-w-lg text-center">
         <Monogram className="mx-auto w-12 text-cream/40" />
         <p className="mt-6 font-display text-3xl font-light italic text-cream">
-          Thank you — we have your event.
+          {t.enquiryForm.eventThanks}
         </p>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-cream/80">
-          A florist will be in touch to talk through the venue, the palette and
-          the scale. Nothing is committed and nothing has been charged.
+          {t.enquiryForm.eventDone}
         </p>
         <p className="mt-5 font-brand text-[0.625rem] uppercase tracking-brand text-cream/60">
-          Reference {done}
+          {t.enquiryForm.reference.replace("{number}", done)}
         </p>
       </div>
     );
@@ -81,7 +82,7 @@ export function EventEnquiryForm() {
     <form action={onSubmit} className="mx-auto flex max-w-xl flex-col gap-6">
       <fieldset>
         <legend className={cn(labelClasses, "text-cream/70")}>
-          What kind of occasion
+          {t.enquiryForm.whatKind}
         </legend>
         <div className="flex flex-wrap gap-2">
           {KINDS.map((k) => (
@@ -97,46 +98,97 @@ export function EventEnquiryForm() {
                   : "border-cream/30 text-cream hover:border-cream/60",
               )}
             >
-              {k}
+              {t.enquiryForm.eventKinds[k] ?? k}
             </button>
           ))}
         </div>
       </fieldset>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <Field id="ev-name" name="name" label="Your name" required autoComplete="name" invalid={error?.code === "name"} />
-        <Field id="ev-phone" name="phone" label="Phone" required inputMode="tel" autoComplete="tel" placeholder="+9715…" invalid={error?.code === "phone"} />
-        <Field id="ev-email" name="email" label="Email" type="email" required autoComplete="email" invalid={error?.code === "email"} />
-        <Field id="ev-company" name="company" label="Company (optional)" autoComplete="organization" />
-        <Field id="ev-date" name="date" label="Date (optional)" type="date" invalid={error?.code === "eventDate"} />
-        <Field id="ev-guests" name="guests" label="Guests (optional)" inputMode="numeric" placeholder="120" />
+        <Field
+          id="ev-name"
+          name="name"
+          label={t.enquiryForm.yourName}
+          required
+          autoComplete="name"
+          invalid={error?.code === "name"}
+        />
+        <Field
+          id="ev-phone"
+          name="phone"
+          label={t.enquiryForm.phone}
+          required
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="+9715…"
+          invalid={error?.code === "phone"}
+        />
+        <Field
+          id="ev-email"
+          name="email"
+          label={t.enquiryForm.email}
+          type="email"
+          required
+          autoComplete="email"
+          invalid={error?.code === "email"}
+        />
+        <Field
+          id="ev-company"
+          name="company"
+          label={t.enquiryForm.company}
+          autoComplete="organization"
+        />
+        <Field
+          id="ev-date"
+          name="date"
+          label={t.enquiryForm.date}
+          type="date"
+          invalid={error?.code === "eventDate"}
+        />
+        <Field
+          id="ev-guests"
+          name="guests"
+          label={t.enquiryForm.guests}
+          inputMode="numeric"
+          placeholder="120"
+        />
       </div>
 
-      <Field id="ev-venue" name="venue" label="Venue or area (optional)" placeholder="Four Seasons, Jumeirah" />
+      <Field
+        id="ev-venue"
+        name="venue"
+        label={t.enquiryForm.venue}
+        placeholder={t.enquiryForm.venuePlaceholder}
+      />
 
       <div>
         <label htmlFor="ev-notes" className={cn(labelClasses, "text-cream/70")}>
-          Anything you already know (optional)
+          {t.enquiryForm.alreadyKnow}
         </label>
         <textarea
           id="ev-notes"
           name="notes"
           rows={3}
-          placeholder="Palette, style, the feeling of the day…"
-          className={cn(fieldClasses, "border-cream/25 bg-cream/[0.06] text-cream placeholder:text-cream/40 focus:border-cream focus:shadow-none")}
+          placeholder={t.enquiryForm.alreadyKnowPlaceholder}
+          className={cn(
+            fieldClasses,
+            "border-cream/25 bg-cream/[0.06] text-cream placeholder:text-cream/40 focus:border-cream focus:shadow-none",
+          )}
         />
       </div>
 
       {error && (
         <p role="alert" className={cn(fieldErrorClasses, "text-cream")}>
-          <span aria-hidden className="text-burnt-orange">·</span>
+          <span aria-hidden className="text-burnt-orange">
+            ·
+          </span>
           {error.message}
         </p>
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Button type="submit" disabled={pending} className="sm:flex-none">
-          {pending ? "Sending…" : "Send enquiry"}
+          {pending ? t.enquiryForm.sending : t.enquiryForm.send}
         </Button>
         <a
           href={CONTACT.whatsappHref}
@@ -144,7 +196,7 @@ export function EventEnquiryForm() {
           rel="noreferrer"
           className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-cream underline decoration-cream/30 underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
         >
-          Prefer to talk? Message a florist
+          {t.enquiryForm.preferToTalk}
         </a>
       </div>
     </form>
@@ -156,7 +208,11 @@ function Field({
   label,
   invalid,
   ...rest
-}: React.ComponentPropsWithoutRef<"input"> & { id: string; label: string; invalid?: boolean }) {
+}: React.ComponentPropsWithoutRef<"input"> & {
+  id: string;
+  label: string;
+  invalid?: boolean;
+}) {
   return (
     <div>
       <label htmlFor={id} className={cn(labelClasses, "text-cream/70")}>

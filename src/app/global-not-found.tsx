@@ -4,6 +4,7 @@ import { Cinzel, Cormorant_Garamond, Instrument_Sans } from "next/font/google";
 import { buttonClasses } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Monogram } from "@/components/ui/Monogram";
+import { getDictionary } from "@/lib/i18n/server";
 import "./(frontend)/globals.css";
 
 /**
@@ -35,14 +36,22 @@ const instrument = Instrument_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Not Found — CALANTHE",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: `${t.errors.notFoundTitle} — CALANTHE`, robots: { index: false } };
+}
 
-export default function GlobalNotFound() {
+/*
+ * This page renders outside every layout, so nothing above it sets the
+ * language or the direction. It used to hard-code lang="en" and English
+ * copy: an Arabic visitor who followed a dead link got the one page on the
+ * site that was left-to-right and in English. It reads the same cookie as
+ * the storefront and uses the same words as (frontend)/not-found.tsx.
+ */
+export default async function GlobalNotFound() {
+  const { locale, dir, t } = await getDictionary();
   return (
-    <html lang="en">
+    <html lang={locale} dir={dir}>
       <body
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
@@ -50,14 +59,13 @@ export default function GlobalNotFound() {
           <Monogram className="w-16 text-cream/80" />
           <Eyebrow className="text-cream/60">404</Eyebrow>
           <h1 className="max-w-md font-display text-4xl font-light text-cream lg:text-5xl">
-            This page has wilted.
+            {t.errors.notFoundTitle}
           </h1>
           <p className="max-w-sm text-base leading-relaxed text-cream/70">
-            The address you followed is no longer in bloom — but the atelier
-            is.
+            {t.errors.notFoundBody}
           </p>
           <Link href="/" className={buttonClasses("secondary-cream", "mt-2")}>
-            Return Home
+            {t.errors.returnHome}
           </Link>
         </main>
       </body>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getAdminI18n } from "@admin/i18n/server";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
@@ -42,14 +43,16 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
   const { user } = await payload.auth({ headers: await nextHeaders() });
   const role = (user as { role?: string } | null)?.role;
   if (role !== "admin" && role !== "staff") {
-    return { ok: false, message: "Only staff can resend an email." };
+    return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.notStaff") };
   }
 
   const original = (await payload
     .findByID({ collection: "email-log", id, depth: 0, overrideAccess: true })
     .catch(() => null)) as Record<string, unknown> | null;
 
-  if (!original) return { ok: false, message: "That email is not in the log." };
+  if (!original) {
+    return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.notInLog") };
+  }
 
   const type = String(original.type) as EmailType;
   const to = String(original.to);
@@ -92,7 +95,8 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
               productName: String(i.productName ?? ""),
               quantity: Number(i.quantity ?? 1),
               options: describeOptions(
-                i.selectedOptions as { label?: string | null; value?: string | null }[] | null,
+                i.selectedOptions as
+                  { label?: string | null; value?: string | null }[] | null,
               ),
             }))
           : [],
@@ -104,14 +108,19 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
         customerEmail: String(order.customerEmail ?? ""),
         customerPhone: String(order.customerPhone ?? ""),
         subtotal: { fils: Number(order.subtotalFils ?? 0), currency: "AED" as const },
-        deliveryFee: { fils: Number(order.deliveryFeeFils ?? 0), currency: "AED" as const },
+        deliveryFee: {
+          fils: Number(order.deliveryFeeFils ?? 0),
+          currency: "AED" as const,
+        },
         total: { fils: Number(order.totalFils ?? 0), currency: "AED" as const },
       };
 
       if (type === "order-confirmation") rendered = orderConfirmation(priced);
-      else if (type === "owner-new-order") rendered = ownerNewOrder({ ...priced, audience: "owner" });
+      else if (type === "owner-new-order")
+        rendered = ownerNewOrder({ ...priced, audience: "owner" });
       /* Still RecipientFacing — a resend cannot leak a price either. */
-      else if (type === "florist-job-sheet") rendered = floristJobSheet({ ...facts, audience: "florist" });
+      else if (type === "florist-job-sheet")
+        rendered = floristJobSheet({ ...facts, audience: "florist" });
       else if (type === "order-status") {
         const status = String(order.fulfilmentStatus ?? "");
         if (isEmailableStatus(status)) rendered = orderStatus(facts, status);
@@ -125,25 +134,39 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
        fresh one from the site, which is the safer path anyway. */
     return {
       ok: false,
-      message:
-        "Verification and password-reset links are one-time and are not stored. Ask the customer to request a new one from the sign-in page.",
+      message: (await getAdminI18n()).t("emailLog.errors.oneTimeLinks"),
     };
   }
 
   if (!rendered) {
-    return { ok: false, message: "This email cannot be rebuilt — its order no longer exists." };
+    return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.orderGone") };
   }
 
   const outcome = await sendEmail(
     payload,
-    { to, type, rendered, orderId, orderNumber: original.orderNumber as string | undefined },
+    {
+      to,
+      type,
+      rendered,
+      orderId,
+      orderNumber: original.orderNumber as string | undefined,
+    },
     { resentFrom: id },
   );
 
   revalidatePath("/admin/emails");
-  return outcome.status === "sent"
-    ? { ok: true, status: outcome.status }
-    : { ok: false, message: outcome.error ?? `The email was ${outcome.status}.` };
+  if (outcome.status === "sent") return { ok: true, status: outcome.status };
+  /* A provider's own error is evidence and is kept as it came; only the
+     fallback sentence is ours to translate. */
+  const i18n = await getAdminI18n();
+  return {
+    ok: false,
+    message:
+      outcome.error ??
+      i18n.t("emailLog.errors.notSent", {
+        status: i18n.label("emailStatus", outcome.status),
+      }),
+  };
 }
 
 /** Where owner and florist mail is going today, for the admin to display. */

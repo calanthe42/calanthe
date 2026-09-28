@@ -1,3 +1,15 @@
+"use client";
+
+/*
+ * A CLIENT COMPONENT, so the card can read the dictionary.
+ *
+ * It carries three words of its own — "from", "View arrangement", and the
+ * New/Featured badge — and they were English on every card in every grid.
+ * The card cannot read the language on the server and be rendered inside
+ * ShopGrid, which is a client component, so it becomes a client component
+ * itself. Its two interactive children (TransitionLink, WishlistButton)
+ * already were, and the markup is still server-rendered in the first byte.
+ */
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { WishlistButton } from "@/components/commerce/WishlistButton";
@@ -5,6 +17,7 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { hasSecondView, productBadge } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 import { formatAed, type Product } from "@/lib/data";
+import { useT } from "@/lib/locale";
 
 type ProductCardProps = {
   product: Product;
@@ -40,6 +53,7 @@ export function ProductCard({
   showView = false,
   sizes = "(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 25vw",
 }: ProductCardProps) {
+  const t = useT();
   const [front, back] = product.images;
   /* Both rules are pure and tested — see lib/catalogue.ts. A card
      wearing two labels reads as a sale rack, and a product whose two
@@ -81,7 +95,7 @@ export function ProductCard({
 
         {badge && (
           <span className="pointer-events-none absolute left-3 top-3 font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-cream">
-            {badge}
+            {badge === "new" ? t.ui.badgeNew : t.ui.badgeFeatured}
           </span>
         )}
 
@@ -90,13 +104,13 @@ export function ProductCard({
             {product.name}
           </h3>
           <p className="shrink-0 text-sm text-ink-muted lg:text-base">
-            {showView && <span className="mr-1 text-xs">from</span>}
+            {showView && <span className="mr-1 text-xs">{t.ui.from}</span>}
             {formatAed(product.priceAed)}
           </p>
         </div>
         {showView && (
           <p className="mt-1.5 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted transition-colors duration-200 ease-bloom group-hover:text-burnt-orange">
-            View arrangement
+            {t.ui.viewArrangement}
           </p>
         )}
       </TransitionLink>

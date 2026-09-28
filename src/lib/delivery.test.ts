@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { SAME_DAY_CUTOFF_HOUR, timeSlots } from "@/lib/data";
-import { buildDays, buildSlots, cutoffCountdown, WINDOW_LEAD_MINUTES } from "@/lib/delivery";
+import {
+  buildDays,
+  buildSlots,
+  cutoffCountdown,
+  WINDOW_LEAD_MINUTES,
+} from "@/lib/delivery";
 
 /** A fixed local date, so these tests never depend on when they are run. */
 function at(hour: number, minute = 0): Date {
@@ -25,7 +30,7 @@ describe("buildSlots", () => {
     const slots = buildSlots(at(14), todayKey);
     const past = slots.find((s) => s.value.startsWith("10:00"));
     expect(past?.disabled).toBe(true);
-    expect(past?.reason).toBe("Passed");
+    expect(past?.reason).toBe("passed");
   });
 
   it("refuses a window that opens sooner than the atelier can compose", () => {
@@ -33,7 +38,7 @@ describe("buildSlots", () => {
     const slots = buildSlots(at(16), todayKey);
     const soon = slots.find((s) => s.value.startsWith("17:00"));
     expect(soon?.disabled).toBe(true);
-    expect(soon?.reason).toBe("Too soon");
+    expect(soon?.reason).toBe("tooSoon");
   });
 
   it("allows a window exactly at the lead-time boundary, and not a minute later", () => {
@@ -45,7 +50,8 @@ describe("buildSlots", () => {
 
     const oneMinuteLate = new Date(exactly.getTime() + 60_000);
     expect(
-      buildSlots(oneMinuteLate, todayKey).find((s) => s.value.startsWith("17:00"))?.disabled,
+      buildSlots(oneMinuteLate, todayKey).find((s) => s.value.startsWith("17:00"))
+        ?.disabled,
     ).toBe(true);
   });
 
@@ -65,11 +71,20 @@ describe("buildDays", () => {
     expect(buildDays(at(9))).toHaveLength(7);
   });
 
-  it("labels the first two days by name and the rest by weekday", () => {
+  /* The labels themselves are no longer this module's business: it reports
+     the relation and the date, and useDeliverySchedule turns that into words
+     in the reader's language. What still has to be true is the relation. */
+  it("marks the first two days as today and tomorrow, and no others", () => {
     const days = buildDays(at(9));
-    expect(days[0].label).toBe("Today");
-    expect(days[1].label).toBe("Tomorrow");
-    expect(days[2].label).not.toBe("Tomorrow");
+    expect(days[0].relative).toBe("today");
+    expect(days[1].relative).toBe("tomorrow");
+    expect(days.slice(2).every((d) => d.relative === null)).toBe(true);
+  });
+
+  it("carries the real date for each day, so it can be formatted anywhere", () => {
+    const days = buildDays(at(9));
+    expect(days[0].date.toDateString()).toBe(at(9).toDateString());
+    expect(days.map((d) => d.date.toDateString())).toEqual(days.map((d) => d.key));
   });
 
   it("disables today after the same-day cutoff", () => {
@@ -93,7 +108,11 @@ describe("buildDays", () => {
 
   it("never disables a future day", () => {
     for (const hour of [8, 16, 20, 23]) {
-      expect(buildDays(at(hour)).slice(1).every((d) => !d.disabled)).toBe(true);
+      expect(
+        buildDays(at(hour))
+          .slice(1)
+          .every((d) => !d.disabled),
+      ).toBe(true);
     }
   });
 });

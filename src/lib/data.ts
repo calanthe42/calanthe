@@ -82,7 +82,6 @@ export const OCCASION_PHOTOS = {
   justBecause: pexels("37418132"),
 } as const;
 
-
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
 
@@ -197,7 +196,12 @@ export const occasions: readonly Occasion[] = [
   {
     slug: "just-because",
     name: "Just Because",
-    image: img("occ-because", "olive", "Just because arrangements", OCCASION_PHOTOS.justBecause),
+    image: img(
+      "occ-because",
+      "olive",
+      "Just because arrangements",
+      OCCASION_PHOTOS.justBecause,
+    ),
   },
 ] as const;
 
@@ -210,7 +214,12 @@ export const products: readonly Product[] = [
     priceAed: 480,
     images: [
       img("amber-hour-a", "warm", "Amber Hour arrangement", PRODUCT_PHOTOS.amberInterior),
-      img("amber-hour-b", "olive", "Amber Hour arrangement, detail", PRODUCT_PHOTOS.amberVase),
+      img(
+        "amber-hour-b",
+        "olive",
+        "Amber Hour arrangement, detail",
+        PRODUCT_PHOTOS.amberVase,
+      ),
     ],
     occasions: ["birthday", "just-because"],
     flowers: ["roses", "tulips"],
@@ -249,7 +258,12 @@ export const products: readonly Product[] = [
     name: "The First Letter",
     priceAed: 420,
     images: [
-      img("first-letter-a", "warm", "The First Letter arrangement", PRODUCT_PHOTOS.blushRose),
+      img(
+        "first-letter-a",
+        "warm",
+        "The First Letter arrangement",
+        PRODUCT_PHOTOS.blushRose,
+      ),
       img(
         "first-letter-b",
         "olive",
@@ -294,7 +308,12 @@ export const products: readonly Product[] = [
     name: "Sage & Cinder",
     priceAed: 390,
     images: [
-      img("sage-cinder-a", "olive", "Sage & Cinder arrangement", PRODUCT_PHOTOS.cinderMuted),
+      img(
+        "sage-cinder-a",
+        "olive",
+        "Sage & Cinder arrangement",
+        PRODUCT_PHOTOS.cinderMuted,
+      ),
       img(
         "sage-cinder-b",
         "warm",
@@ -314,7 +333,12 @@ export const products: readonly Product[] = [
     name: "Dawn Procession",
     priceAed: 850,
     images: [
-      img("dawn-procession-a", "warm", "Dawn Procession arrangement", PRODUCT_PHOTOS.dawnDahlia),
+      img(
+        "dawn-procession-a",
+        "warm",
+        "Dawn Procession arrangement",
+        PRODUCT_PHOTOS.dawnDahlia,
+      ),
       img(
         "dawn-procession-b",
         "olive",
@@ -334,8 +358,18 @@ export const products: readonly Product[] = [
     name: "Velvet Hour",
     priceAed: 950,
     images: [
-      img("velvet-hour-a", "burgundy", "Velvet Hour arrangement", PRODUCT_PHOTOS.velvetLilac),
-      img("velvet-hour-b", "olive", "Velvet Hour arrangement, detail", PRODUCT_PHOTOS.velvetStem),
+      img(
+        "velvet-hour-a",
+        "burgundy",
+        "Velvet Hour arrangement",
+        PRODUCT_PHOTOS.velvetLilac,
+      ),
+      img(
+        "velvet-hour-b",
+        "olive",
+        "Velvet Hour arrangement, detail",
+        PRODUCT_PHOTOS.velvetStem,
+      ),
     ],
     occasions: ["love"],
     flowers: ["peonies"],
@@ -349,7 +383,12 @@ export const products: readonly Product[] = [
     name: "A Soft Reply",
     priceAed: 350,
     images: [
-      img("soft-reply-a", "warm", "A Soft Reply arrangement", PRODUCT_PHOTOS.softWhiteRose),
+      img(
+        "soft-reply-a",
+        "warm",
+        "A Soft Reply arrangement",
+        PRODUCT_PHOTOS.softWhiteRose,
+      ),
       img(
         "soft-reply-b",
         "warm",
@@ -369,7 +408,12 @@ export const products: readonly Product[] = [
     name: "The Long Stem",
     priceAed: 540,
     images: [
-      img("long-stem-a", "olive", "The Long Stem arrangement", PRODUCT_PHOTOS.longStemVase),
+      img(
+        "long-stem-a",
+        "olive",
+        "The Long Stem arrangement",
+        PRODUCT_PHOTOS.longStemVase,
+      ),
       img(
         "long-stem-b",
         "burgundy",
@@ -389,7 +433,12 @@ export const products: readonly Product[] = [
     name: "Meadow at Dusk",
     priceAed: 610,
     images: [
-      img("meadow-dusk-a", "olive", "Meadow at Dusk arrangement", PRODUCT_PHOTOS.meadowField),
+      img(
+        "meadow-dusk-a",
+        "olive",
+        "Meadow at Dusk arrangement",
+        PRODUCT_PHOTOS.meadowField,
+      ),
       img(
         "meadow-dusk-b",
         "warm",
@@ -542,7 +591,10 @@ export const byoColours = [
  * flowers; a florist would put the stems on the table. Three stops each,
  * because a real palette is a range rather than a colour.
  */
-export const byoColourSwatches: Record<(typeof byoColours)[number], readonly [string, string, string]> = {
+export const byoColourSwatches: Record<
+  (typeof byoColours)[number],
+  readonly [string, string, string]
+> = {
   "Whites & Creams": ["#FBF8F0", "#F0E9D8", "#DFD3B8"],
   "Blush & Rose": ["#F6DCDA", "#E8AFAE", "#CE7F84"],
   "Peach & Apricot": ["#FBE0CB", "#F2BC91", "#DE9364"],
@@ -627,50 +679,13 @@ export const membershipTiers: readonly MembershipTier[] = [
 
 export const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
+/*
+ * The questions themselves are NOT here any more: they live in
+ * lib/i18n/dictionary.ts as `faq.site` and `faq.membership`, in both
+ * languages, because the FAQ page rendered this list directly and so had no
+ * Arabic on it at all.
+ */
 export type FaqItem = { q: string; a: string };
-
-export const membershipFaq: readonly FaqItem[] = [
-  {
-    q: "Can I pause or skip a week?",
-    a: "Yes — pause, skip or resume any time from your account, up to 24 hours before your delivery day.",
-  },
-  {
-    q: "What flowers will I receive?",
-    a: "Each week our florists compose around the best stems of the season, in the palette you prefer. No two weeks are the same.",
-  },
-  {
-    q: "Which areas do you deliver to?",
-    a: "All seven emirates. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.",
-  },
-  {
-    q: "Can I gift a membership?",
-    a: "Beautifully. Choose gifting at checkout and we'll include a hand-written first-week card.",
-  },
-] as const;
-
-/** Site-wide FAQ (delivery/quality) — /faqs. */
-export const siteFaq: readonly FaqItem[] = [
-  {
-    q: "When will my flowers arrive?",
-    a: "Order before 5pm and we deliver the same day, anywhere in the UAE. You will choose a delivery day and time window at checkout.",
-  },
-  {
-    q: "How fresh are the arrangements?",
-    a: "Every arrangement is composed by hand on the morning of its delivery - never the night before - and travels cool and upright.",
-  },
-  {
-    q: "What if a flower is out of season?",
-    a: "Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.",
-  },
-  {
-    q: "Can I see my arrangement before it is delivered?",
-    a: "Yes - your florist sends a photo or video on WhatsApp for your approval before every delivery.",
-  },
-  {
-    q: "How can I pay?",
-    a: "Cards are accepted at checkout, with Tabby instalments; wallet payments arrive soon. The recipient never sees the price.",
-  },
-] as const;
 
 /* ------------------------------------------------------------------ */
 /* Mock orders (account area)                                          */
@@ -806,21 +821,6 @@ export const helpNavLinks = [
  * publish ratings for the same reason. Add real numbers or press here only
  * once the client supplies them.
  */
-export const TRUST = {
-  headline: "Promised on every order.",
-  guarantees: [
-    { title: "Same-day delivery", copy: "Ordered before 5pm, at their door today." },
-    {
-      title: "Video approval",
-      copy: "See your arrangement on WhatsApp before it leaves.",
-    },
-    {
-      title: "Freshness guarantee",
-      copy: "Composed the morning of delivery, never before.",
-    },
-    { title: "All seven Emirates", copy: "One atelier, delivering across the UAE." },
-  ],
-} as const;
 
 export const VIDEO_APPROVAL = {
   eyebrow: "Before it leaves the atelier",

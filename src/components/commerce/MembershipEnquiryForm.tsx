@@ -17,26 +17,22 @@ import {
   submitMembershipEnquiry,
   type MembershipEnquiryRequest,
 } from "@backend/actions/membership-enquiry";
+import { useT } from "@/lib/locale";
 
 type Props = {
-  /** The tier the visitor pressed "Begin" on. */
+  /** The tier the visitor pressed "Begin" on — recorded as-is. */
   planName: string;
+  /** The same tier in the reader's language, for display only. */
+  planLabel: string;
   onClose: () => void;
 };
 
-const FREQUENCIES = [
-  { id: "WEEKLY", label: "Weekly" },
-  { id: "FORTNIGHTLY", label: "Fortnightly" },
-  { id: "MONTHLY", label: "Monthly" },
-] as const;
+/* Ids only: the words are in the dictionary, keyed by id. */
+const FREQUENCIES = ["WEEKLY", "FORTNIGHTLY", "MONTHLY"] as const;
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-const PLACES = [
-  { id: "home", label: "Home" },
-  { id: "office", label: "Office" },
-  { id: "gift", label: "A gift for someone" },
-] as const;
+const PLACES = ["home", "office", "gift"] as const;
 
 /**
  * Membership interest, captured properly.
@@ -53,7 +49,8 @@ const PLACES = [
  * WhatsApp stays available underneath, because some people would simply rather
  * talk. It is now the second option rather than the only one.
  */
-export function MembershipEnquiryForm({ planName, onClose }: Props) {
+export function MembershipEnquiryForm({ planName, planLabel, onClose }: Props) {
+  const t = useT();
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
@@ -104,17 +101,16 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
       <div ref={panelRef} className="py-4 text-center">
         <Monogram className="mx-auto w-12 text-hairline" />
         <p className="mt-5 font-display text-2xl font-light italic text-olive">
-          Thank you — a florist will be in touch.
+          {t.enquiryForm.membershipThanks}
         </p>
         <p className="mx-auto mt-3 max-w-sm text-base text-ink-muted">
-          We have your {planName} enquiry. Nothing has been charged and no
-          membership has started — we will agree the details with you first.
+          {t.enquiryForm.membershipDone.replace("{plan}", planLabel)}
         </p>
         <p className="mt-4 font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
-          Reference {done}
+          {t.enquiryForm.reference.replace("{number}", done)}
         </p>
         <Button variant="secondary" onClick={onClose} className="mt-7">
-          Close
+          {t.ui.close}
         </Button>
       </div>
     );
@@ -123,39 +119,38 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
   return (
     <div ref={panelRef}>
       <p className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted">
-        {planName}
+        {t.tiers.label.replace("{name}", planLabel)}
       </p>
       <h3 className="mt-2 font-display text-2xl font-light text-olive lg:text-3xl">
-        Begin your ritual.
+        {t.enquiryForm.membershipTitle}
       </h3>
       <p className="mt-3 max-w-md text-base leading-relaxed text-ink-muted">
-        Tell us how you would like it to arrive and a florist will call to agree
-        the details. Nothing is charged here.
+        {t.enquiryForm.membershipIntro}
       </p>
 
       <form action={onSubmit} className="mt-7 flex flex-col gap-6">
         <fieldset>
-          <legend className={labelClasses}>How often</legend>
+          <legend className={labelClasses}>{t.enquiryForm.howOften}</legend>
           <div className="grid grid-cols-3 gap-2">
             {FREQUENCIES.map((f) => (
               <button
-                key={f.id}
+                key={f}
                 type="button"
-                aria-pressed={frequency === f.id}
-                onClick={() => setFrequency(f.id)}
+                aria-pressed={frequency === f}
+                onClick={() => setFrequency(f)}
                 className={cn(
                   chipClasses,
-                  frequency === f.id ? chipOnClasses : chipOffClasses,
+                  frequency === f ? chipOnClasses : chipOffClasses,
                 )}
               >
-                {f.label}
+                {t.enquiryForm.frequency[f] ?? f}
               </button>
             ))}
           </div>
         </fieldset>
 
         <fieldset>
-          <legend className={labelClasses}>Which day suits you</legend>
+          <legend className={labelClasses}>{t.enquiryForm.whichDay}</legend>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
             {DAYS.map((d) => (
               <button
@@ -165,27 +160,24 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
                 onClick={() => setDay(d)}
                 className={cn(chipClasses, day === d ? chipOnClasses : chipOffClasses)}
               >
-                {d}
+                {t.enquiryForm.weekdays[d] ?? d}
               </button>
             ))}
           </div>
         </fieldset>
 
         <fieldset>
-          <legend className={labelClasses}>Where it should go</legend>
+          <legend className={labelClasses}>{t.enquiryForm.whereItGoes}</legend>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {PLACES.map((p) => (
               <button
-                key={p.id}
+                key={p}
                 type="button"
-                aria-pressed={place === p.id}
-                onClick={() => setPlace(p.id)}
-                className={cn(
-                  chipClasses,
-                  place === p.id ? chipOnClasses : chipOffClasses,
-                )}
+                aria-pressed={place === p}
+                onClick={() => setPlace(p)}
+                className={cn(chipClasses, place === p ? chipOnClasses : chipOffClasses)}
               >
-                {p.label}
+                {t.enquiryForm.place[p] ?? p}
               </button>
             ))}
           </div>
@@ -194,7 +186,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="m-name" className={labelClasses}>
-              Your name
+              {t.enquiryForm.yourName}
             </label>
             <input
               ref={firstFieldRef}
@@ -208,7 +200,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
           </div>
           <div>
             <label htmlFor="m-phone" className={labelClasses}>
-              Phone
+              {t.enquiryForm.phone}
             </label>
             <input
               id="m-phone"
@@ -226,7 +218,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="m-email" className={labelClasses}>
-              Email
+              {t.enquiryForm.email}
             </label>
             <input
               id="m-email"
@@ -240,7 +232,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
           </div>
           <div>
             <label htmlFor="m-start" className={labelClasses}>
-              Start from (optional)
+              {t.enquiryForm.startFrom}
             </label>
             <input
               id="m-start"
@@ -254,26 +246,26 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
 
         <div>
           <label htmlFor="m-location" className={labelClasses}>
-            Area or address (optional)
+            {t.enquiryForm.areaOrAddress}
           </label>
           <input
             id="m-location"
             name="location"
             autoComplete="address-level2"
-            placeholder="Jumeirah, Dubai"
+            placeholder={t.enquiryForm.areaPlaceholder}
             className={fieldClasses}
           />
         </div>
 
         <div>
           <label htmlFor="m-notes" className={labelClasses}>
-            Anything we should know (optional)
+            {t.enquiryForm.anythingToKnow}
           </label>
           <textarea
             id="m-notes"
             name="notes"
             rows={3}
-            placeholder="Colours you love, anything to avoid, where to leave them…"
+            placeholder={t.enquiryForm.anythingPlaceholder}
             className={fieldClasses}
           />
         </div>
@@ -289,7 +281,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button type="submit" disabled={pending} className="sm:flex-none">
-            {pending ? "Sending…" : "Send enquiry"}
+            {pending ? t.enquiryForm.sending : t.enquiryForm.send}
           </Button>
           <a
             href={CONTACT.whatsappHref}
@@ -297,7 +289,7 @@ export function MembershipEnquiryForm({ planName, onClose }: Props) {
             rel="noreferrer"
             className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-olive underline decoration-hairline underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
           >
-            Prefer to talk? Message a florist
+            {t.enquiryForm.preferToTalk}
           </a>
         </div>
       </form>

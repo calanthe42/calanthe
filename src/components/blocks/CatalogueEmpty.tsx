@@ -40,7 +40,7 @@ export async function CatalogueEmpty({
       <ClipReveal className="relative aspect-[4/3] w-full overflow-hidden rounded-media lg:aspect-[5/6]">
         <FloralImage
           image={{
-            alt: "A white rose arrangement",
+            alt: t.alt.emptyCatalogue,
             src: PRODUCT_PHOTOS.softWhiteRose,
             placeholder: { seed: "catalogue-empty", palette: "warm" },
           }}

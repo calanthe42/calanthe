@@ -4,12 +4,11 @@ import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Monogram } from "@/components/ui/Monogram";
 import { cn } from "@/lib/cn";
+import { useT } from "@/lib/locale";
 import {
-  flowerTypes,
   occasions,
   priceBuckets,
   productCategoryNames,
-  type FlowerType,
   type PriceBucketId,
   type Product,
   type ProductCategory,
@@ -17,11 +16,18 @@ import {
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "new";
 
-const sortKeys: readonly { id: SortKey; label: string }[] = [
-  { id: "featured", label: "Featured" },
-  { id: "new", label: "New" },
-  { id: "price-asc", label: "Price, low to high" },
-  { id: "price-desc", label: "Price, high to low" },
+/*
+ * The sort order carries the key of its label, not the label. Written as
+ * English here it could not be translated at all, and this bar sits above
+ * every grid in the shop.
+ */
+type SortLabel = "sortFeatured" | "sortNew" | "sortPriceAsc" | "sortPriceDesc";
+
+const sortKeys: readonly { id: SortKey; key: SortLabel }[] = [
+  { id: "featured", key: "sortFeatured" },
+  { id: "new", key: "sortNew" },
+  { id: "price-asc", key: "sortPriceAsc" },
+  { id: "price-desc", key: "sortPriceDesc" },
 ];
 
 function FilterButton({
@@ -100,7 +106,6 @@ type ShopGridProps = {
   /** Hide the occasion row when the page itself is an occasion. */
   showOccasionFilter?: boolean;
   initialQuery?: string;
-  initialFlower?: string;
   initialPrice?: string;
 };
 
@@ -109,21 +114,16 @@ export function ShopGrid({
   occasions: occasionOptions = occasions,
   showOccasionFilter = true,
   initialQuery = "",
-  initialFlower = "",
   initialPrice = "",
 }: ShopGridProps) {
   const [category, setCategory] = useState<ProductCategory | "all">("all");
   const [occasion, setOccasion] = useState<string>("all");
-  const [flower, setFlower] = useState<FlowerType | "all">(
-    flowerTypes.some((f) => f.slug === initialFlower)
-      ? (initialFlower as FlowerType)
-      : "all",
-  );
   const [price, setPrice] = useState<PriceBucketId | "all">(
     priceBuckets.some((b) => b.id === initialPrice)
       ? (initialPrice as PriceBucketId)
       : "all",
   );
+  const t = useT();
   const [sort, setSort] = useState<SortKey>("featured");
   const query = initialQuery.trim().toLowerCase();
 
@@ -145,8 +145,12 @@ export function ShopGrid({
     }
     return (Object.keys(productCategoryNames) as ProductCategory[])
       .filter((id) => counts.has(id))
-      .map((id) => ({ id, name: productCategoryNames[id], count: counts.get(id) ?? 0 }));
-  }, [products]);
+      .map((id) => ({
+        id,
+        name: t.categoryNames[id] ?? productCategoryNames[id],
+        count: counts.get(id) ?? 0,
+      }));
+  }, [products, t.categoryNames]);
 
   const visible = useMemo(() => {
     let list = [...products];
@@ -162,9 +166,6 @@ export function ShopGrid({
     }
     if (occasion !== "all") {
       list = list.filter((p) => (p.occasions as readonly string[]).includes(occasion));
-    }
-    if (flower !== "all") {
-      list = list.filter((p) => p.flowers.includes(flower));
     }
     if (price !== "all") {
       const bucket = priceBuckets.find((b) => b.id === price);
@@ -188,7 +189,7 @@ export function ShopGrid({
         break;
     }
     return list;
-  }, [products, query, category, occasion, flower, price, sort]);
+  }, [products, query, category, occasion, price, sort]);
 
   return (
     <div>
@@ -212,13 +213,13 @@ export function ShopGrid({
       */}
       {categoryOptions.length > 1 && (
         <nav
-          aria-label="Product categories"
+          aria-label={t.ui.productCategories}
           className="no-scrollbar -mx-[--gutter] mb-1 flex gap-7 overflow-x-auto px-[--gutter] lg:mx-0 lg:px-0"
         >
           <CategoryTab
             active={category === "all"}
             onClick={() => setCategory("all")}
-            label="All"
+            label={t.shop.all}
             count={products.length}
           />
           {categoryOptions.map((c) => (
@@ -238,7 +239,7 @@ export function ShopGrid({
         {showOccasionFilter && (
           <div className="no-scrollbar flex gap-5 overflow-x-auto">
             <FilterButton active={occasion === "all"} onClick={() => setOccasion("all")}>
-              All
+              {t.shop.all}
             </FilterButton>
             {occasionOptions.map((o) => (
               <FilterButton
@@ -246,24 +247,14 @@ export function ShopGrid({
                 active={occasion === o.slug}
                 onClick={() => setOccasion(o.slug)}
               >
-                {o.name}
-              </FilterButton>
-            ))}
-            <span aria-hidden className="my-auto h-4 w-px shrink-0 bg-hairline" />
-            {flowerTypes.map((f) => (
-              <FilterButton
-                key={f.slug}
-                active={flower === f.slug}
-                onClick={() => setFlower(flower === f.slug ? "all" : f.slug)}
-              >
-                {f.name}
+                {t.occasionNames[o.slug] ?? o.name}
               </FilterButton>
             ))}
           </div>
         )}
         <div className="no-scrollbar flex items-center gap-5 overflow-x-auto">
           <FilterButton active={price === "all"} onClick={() => setPrice("all")}>
-            Any price
+            {t.shop.anyPrice}
           </FilterButton>
           {priceBuckets.map((band) => (
             <FilterButton
@@ -271,7 +262,7 @@ export function ShopGrid({
               active={price === band.id}
               onClick={() => setPrice(band.id)}
             >
-              {band.label}
+              {t.shop.priceBands[band.id] ?? band.label}
             </FilterButton>
           ))}
           <span aria-hidden className="h-4 w-px shrink-0 bg-hairline" />
@@ -281,7 +272,7 @@ export function ShopGrid({
               active={sort === key.id}
               onClick={() => setSort(key.id)}
             >
-              {key.label}
+              {t.shop[key.key]}
             </FilterButton>
           ))}
         </div>
@@ -295,24 +286,20 @@ export function ShopGrid({
           <Monogram className="w-14 text-hairline" />
           <p className="font-display text-2xl font-light italic text-olive">
             {query
-              ? `No arrangements found for “${initialQuery.trim()}”.`
-              : "Nothing blooms here yet."}
+              ? t.shop.nothingFound.replace("{query}", initialQuery.trim())
+              : t.shop.nothingYet}
           </p>
-          <p className="max-w-sm text-base text-ink-muted">
-            Try a different occasion, flower or price — or look through the
-            whole collection.
-          </p>
+          <p className="max-w-sm text-base text-ink-muted">{t.shop.noResults}</p>
           <button
             type="button"
             onClick={() => {
               setCategory("all");
               setOccasion("all");
-              setFlower("all");
               setPrice("all");
             }}
             className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-olive underline decoration-hairline underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
           >
-            Explore all arrangements
+            {t.shop.exploreAll}
           </button>
         </div>
       ) : (

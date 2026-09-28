@@ -148,7 +148,17 @@ export function BuildYourOwnForm() {
     if (!notes.trim()) return 4;
     if (isGift === null) return 5;
     return 6;
-  }, [budgetValue, colours, colourOther, colourNote, vase, message, leaveBlank, notes, isGift]);
+  }, [
+    budgetValue,
+    colours,
+    colourOther,
+    colourNote,
+    vase,
+    message,
+    leaveBlank,
+    notes,
+    isGift,
+  ]);
 
   const errors: Partial<Record<StepId, string>> = attempted
     ? {
@@ -165,13 +175,14 @@ export function BuildYourOwnForm() {
 
   async function handleSubmit() {
     setAttempted(true);
-    const missing: StepId | null = budgetValue === 0
+    const missing: StepId | null =
+      budgetValue === 0
         ? "budget"
         : isGift === null
-        ? "gift"
-        : !name.trim() || !phone.trim() || !email.trim()
-          ? "contact"
-          : null;
+          ? "gift"
+          : !name.trim() || !phone.trim() || !email.trim()
+            ? "contact"
+            : null;
     if (missing) {
       const step = stepRefs.current[missing];
       step?.scrollIntoView({ block: "center" });
@@ -227,16 +238,14 @@ export function BuildYourOwnForm() {
       <div className="mx-auto flex min-h-[60svh] max-w-xl flex-col items-center justify-center gap-6 pb-24 text-center lg:pb-12">
         <Monogram className="w-16 text-burnt-orange" />
         <h2 className="font-display text-3xl font-light leading-tight text-olive lg:text-4xl">
-          Your request is with the atelier.
+          {t.byo.sentTitle}
         </h2>
         <p className="max-w-md text-base leading-relaxed text-ink-muted">
-          A florist will be in touch to confirm the arrangement, the delivery and
-          the total of {formatAed(totalAed)} before composing. Nothing has been
-          charged.
+          {t.byo.sentBody.replace("{total}", formatAed(totalAed))}
         </p>
         {reference && (
           <p className="font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
-            Reference {reference}
+            {t.byo.sentReference.replace("{reference}", reference)}
           </p>
         )}
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -246,21 +255,21 @@ export function BuildYourOwnForm() {
             rel="noreferrer"
             className={buttonClasses("secondary", "whitespace-nowrap")}
           >
-            Also message on WhatsApp
+            {t.byo.alsoWhatsapp}
           </a>
           <button
             type="button"
             onClick={() => setSubmitted(false)}
             className={buttonClasses("secondary", "whitespace-nowrap")}
           >
-            Edit My Choices
+            {t.byo.editChoices}
           </button>
         </div>
         <Link
           href="/shop"
           className="min-h-11 content-center text-sm text-ink-muted underline decoration-hairline underline-offset-4 hover:text-olive"
         >
-          Continue shopping
+          {t.cart.continueShopping}
         </Link>
       </div>
     );
@@ -342,7 +351,10 @@ export function BuildYourOwnForm() {
                       min={BYO_MIN_BUDGET_AED}
                       value={customBudget}
                       onChange={(e) => setCustomBudget(e.target.value)}
-                      placeholder={`From ${BYO_MIN_BUDGET_AED}`}
+                      placeholder={t.byo.budgetFrom.replace(
+                        "{min}",
+                        String(BYO_MIN_BUDGET_AED),
+                      )}
                       aria-label={t.byo.budgetOtherLabel}
                       className={cn(fieldClasses, "w-36 px-3 py-2.5")}
                     />
@@ -422,14 +434,19 @@ export function BuildYourOwnForm() {
               />
               <p className="mt-2 flex items-start gap-2 text-base leading-relaxed text-ink-muted lg:text-sm">
                 <span aria-hidden className="mt-2.5 h-px w-4 shrink-0 bg-burnt-orange" />
-                <span>
-                  {t.byo.colourSeasonNote}
-                </span>
+                <span>{t.byo.colourSeasonNote}</span>
               </p>
             </div>
           </Step>
 
-          <Step index={2} active={activeIndex === 2} done={activeIndex > 2} answer={vase === null ? undefined : vase ? t.byo.vaseAnswerYes : t.byo.vaseAnswerNo}>
+          <Step
+            index={2}
+            active={activeIndex === 2}
+            done={activeIndex > 2}
+            answer={
+              vase === null ? undefined : vase ? t.byo.vaseAnswerYes : t.byo.vaseAnswerNo
+            }
+          >
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               <Option
                 label={t.byo.vaseYes}
@@ -446,7 +463,18 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={3} active={activeIndex === 3} done={activeIndex > 3} answer={leaveBlank ? t.byo.cardAnswerBlank : message.trim() ? t.byo.cardAnswerWritten : undefined}>
+          <Step
+            index={3}
+            active={activeIndex === 3}
+            done={activeIndex > 3}
+            answer={
+              leaveBlank
+                ? t.byo.cardAnswerBlank
+                : message.trim()
+                  ? t.byo.cardAnswerWritten
+                  : undefined
+            }
+          >
             <textarea
               value={message}
               onChange={(e) => {
@@ -455,8 +483,8 @@ export function BuildYourOwnForm() {
               }}
               rows={3}
               disabled={leaveBlank}
-              aria-label="Card message"
-              placeholder="Write the words they'll keep…"
+              aria-label={t.product.cardMessage}
+              placeholder={t.product.cardPlaceholder}
               className={cn(fieldClasses, "disabled:opacity-50")}
             />
             <div className="mt-2 flex items-center justify-between gap-4">
@@ -476,22 +504,39 @@ export function BuildYourOwnForm() {
             </div>
           </Step>
 
-          <Step index={4} active={activeIndex === 4} done={activeIndex > 4} answer={notes.trim() ? t.byo.notesAnswer : undefined} hint={t.byo.notesHint}>
+          <Step
+            index={4}
+            active={activeIndex === 4}
+            done={activeIndex > 4}
+            answer={notes.trim() ? t.byo.notesAnswer : undefined}
+            hint={t.byo.notesHint}
+          >
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value.slice(0, 400))}
               rows={3}
-              aria-label="Notes for the florist"
+              aria-label={t.byo.notesLabel}
               placeholder={t.byo.notesPlaceholder}
               className={fieldClasses}
             />
           </Step>
 
-          <Step index={5} active={activeIndex === 5} done={activeIndex > 5} answer={isGift === null ? undefined : isGift ? t.byo.giftAnswerYes : t.byo.giftAnswerNo}>
+          <Step
+            index={5}
+            active={activeIndex === 5}
+            done={activeIndex > 5}
+            answer={
+              isGift === null
+                ? undefined
+                : isGift
+                  ? t.byo.giftAnswerYes
+                  : t.byo.giftAnswerNo
+            }
+          >
             <div
               className="grid grid-cols-2 gap-3"
               role="group"
-              aria-label="Who is it for?"
+              aria-label={t.byo.audience}
             >
               {[
                 { value: true, label: t.byo.giftYes, note: t.byo.giftYesNote },
@@ -522,7 +567,7 @@ export function BuildYourOwnForm() {
               <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <label htmlFor="byo-rec-name" className={labelClasses}>
-                    Recipient name
+                    {t.product.recipientName}
                   </label>
                   <input
                     id="byo-rec-name"
@@ -533,7 +578,7 @@ export function BuildYourOwnForm() {
                 </div>
                 <div>
                   <label htmlFor="byo-rec-phone" className={labelClasses}>
-                    Recipient phone
+                    {t.product.recipientPhone}
                   </label>
                   <input
                     id="byo-rec-phone"
@@ -707,7 +752,6 @@ function SendNote() {
   );
 }
 
-
 /**
  * One way of choosing, used by every step.
  *
@@ -756,7 +800,9 @@ function Option({
           </span>
         )}
         <span className="min-w-0">
-          <span className={cn("block truncate", selected ? optionLabelOn : optionLabelOff)}>
+          <span
+            className={cn("block truncate", selected ? optionLabelOn : optionLabelOff)}
+          >
             {label}
           </span>
           {note && (
@@ -887,7 +933,9 @@ function Step({
                projects it away, invisible. */
             key="mark"
             layoutId="byo-mark"
-            transition={reduced ? { duration: 0 } : { layout: { duration: 0.7, ease: EASE_BLOOM } }}
+            transition={
+              reduced ? { duration: 0 } : { layout: { duration: 0.7, ease: EASE_BLOOM } }
+            }
             className="grid h-full w-full place-items-center"
           >
             <Monogram className="w-7 lg:w-8" />
@@ -959,7 +1007,10 @@ function Summary({
   const t = useT();
   const rows: { label: string; value: string | null; optional?: boolean }[] = [
     { label: t.byo.summaryBudget, value: budgetAed > 0 ? formatAed(budgetAed) : null },
-    { label: t.byo.summaryColours, value: colours.length > 0 ? colours.join(", ") : null },
+    {
+      label: t.byo.summaryColours,
+      value: colours.length > 0 ? colours.join(", ") : null,
+    },
     /* Straight after the swatches, because it qualifies them. */
     { label: t.byo.summaryColourNote, value: colourNote.trim() || null, optional: true },
     {

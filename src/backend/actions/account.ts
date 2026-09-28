@@ -3,7 +3,9 @@
 import { cookies as nextCookies, headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
-import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
+import { LIMITS, clientAddress, throttle, waitHint } from "@backend/security/throttle";
+import { getDictionary } from "@/lib/i18n/server";
+import { waitText, withWait } from "@/lib/i18n/wait";
 import { randomBytes } from "node:crypto";
 import { sendEmail } from "@backend/email/send";
 import { verifyAddress } from "@backend/email/templates";
@@ -24,11 +26,22 @@ import { collidingFields } from "@backend/payload/validation-errors";
 export type AuthResult = { ok: true } | { ok: false; message: string };
 
 export async function customerLogin(form: FormData): Promise<AuthResult> {
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  /*
+   * Refusals are read by whoever is trying to sign in, so they are written
+   * in the language she is reading. Every message in this file used to be an
+   * English string at the point of failure — an Arabic customer met an
+   * Arabic form and an English reason for being turned away.
+   */
+  const { locale, t } = await getDictionary();
+  const m = t.server.account;
+
+  const email = String(form.get("email") ?? "")
+    .trim()
+    .toLowerCase();
   const password = String(form.get("password") ?? "");
 
   if (!email || !password) {
-    return { ok: false, message: "Enter your email and password." };
+    return { ok: false, message: m.credentialsRequired };
   }
 
   /* Per network AND per address — see backend/security/throttle.ts for why
@@ -38,11 +51,20 @@ export async function customerLogin(form: FormData): Promise<AuthResult> {
     throttle(LIMITS.customerLogin, await clientAddress()),
     throttle(LIMITS.loginIdentity, `customer:${email}`),
   ]);
-  const blocked = !byNetwork.allowed ? byNetwork : !byIdentity.allowed ? byIdentity : null;
+  const blocked = !byNetwork.allowed
+    ? byNetwork
+    : !byIdentity.allowed
+      ? byIdentity
+      : null;
   if (blocked) {
     return {
       ok: false,
-      message: `Too many sign-in attempts. ${waitMessage(blocked.retryAfterSeconds)}`,
+      message: withWait(
+        locale,
+        t,
+        m.signInRateLimited,
+        waitHint(blocked.retryAfterSeconds),
+      ),
     };
   }
 
@@ -55,17 +77,14 @@ export async function customerLogin(form: FormData): Promise<AuthResult> {
     });
 
     if (!result.token) {
-      return { ok: false, message: "We could not sign you in. Please try again." };
+      return { ok: false, message: m.signInFailed };
     }
 
     /* Staff and the owner belong in /admin. Signing them in here would give
        them a storefront session they have no use for and muddle which
        identity is acting. */
     if (result.user?.role !== "customer") {
-      return {
-        ok: false,
-        message: "This is a staff account. Please use the admin sign-in.",
-      };
+      return { ok: false, message: m.staffAccount };
     }
 
     const jar = await nextCookies();
@@ -82,10 +101,7 @@ export async function customerLogin(form: FormData): Promise<AuthResult> {
     /* Deliberately one message for wrong password, unknown address, locked
        and unverified accounts alike: distinguishing them tells a stranger
        which email addresses have accounts here. */
-    return {
-      ok: false,
-      message: "That email and password did not match, or the account is not yet verified.",
-    };
+    return { ok: false, message: m.signInRejected };
   }
 }
 
@@ -125,27 +141,37 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MIN_PASSWORD = 10;
 
 export type RegisterResult =
-  | { ok: true; email: string }
-  | { ok: false; field?: string; message: string };
+  { ok: true; email: string } | { ok: false; field?: string; message: string };
 
 export async function customerRegister(form: FormData): Promise<RegisterResult> {
-  const name = String(form.get("name") ?? "").replace(/\s+/g, " ").trim().slice(0, 140);
-  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 200);
-  const phone = String(form.get("phone") ?? "").trim().slice(0, 40);
+  const { locale, t } = await getDictionary();
+  const m = t.server.account;
+
+  const name = String(form.get("name") ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
+  const email = String(form.get("email") ?? "")
+    .trim()
+    .toLowerCase()
+    .slice(0, 200);
+  const phone = String(form.get("phone") ?? "")
+    .trim()
+    .slice(0, 40);
   const password = String(form.get("password") ?? "");
   const confirm = String(form.get("confirmPassword") ?? "");
 
-  if (name.length < 2) return { ok: false, field: "name", message: "Please tell us your name." };
+  if (name.length < 2) return { ok: false, field: "name", message: m.nameRequired };
   if (!EMAIL_RE.test(email))
-    return { ok: false, field: "email", message: "Please check your email address." };
+    return { ok: false, field: "email", message: m.emailInvalid };
   if (password.length < MIN_PASSWORD)
     return {
       ok: false,
       field: "password",
-      message: `Please use at least ${MIN_PASSWORD} characters.`,
+      message: m.passwordTooShort.replace("{min}", String(MIN_PASSWORD)),
     };
   if (password !== confirm)
-    return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
+    return { ok: false, field: "confirmPassword", message: m.passwordMismatch };
 
   /* Account creation is the one public write to the users table. Without a
      limit it is a script that fills the customer list — the business's most
@@ -154,7 +180,12 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
   if (!registrations.allowed) {
     return {
       ok: false,
-      message: `Too many accounts created from here. ${waitMessage(registrations.retryAfterSeconds)}`,
+      message: withWait(
+        locale,
+        t,
+        m.registerRateLimited,
+        waitHint(registrations.retryAfterSeconds),
+      ),
     };
   }
 
@@ -212,34 +243,30 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
          phone column is unique by deliberate design (see Users.phone — it
          becomes the OTP identity in B6), so the honest answer is to say so
          and offer the way through. */
-      return {
-        ok: false,
-        field: "phone",
-        message:
-          "That phone number is already on an account. Sign in instead, or leave the phone blank and add it later.",
-      };
+      return { ok: false, field: "phone", message: m.phoneTaken };
     }
 
     console.error("customer registration failed", error);
-    return {
-      ok: false,
-      message: "We could not create that account just now. Please try again.",
-    };
+    return { ok: false, message: m.registerFailed };
   }
 }
 
-
-
 export async function resendCustomerVerification(email: string): Promise<AuthResult> {
+  const { locale, t } = await getDictionary();
+  const m = t.server.account;
+
   const address = email.trim().toLowerCase();
-  if (!EMAIL_RE.test(address)) return { ok: false, message: "Please check your email address." };
+  if (!EMAIL_RE.test(address)) return { ok: false, message: m.emailInvalid };
 
   /* Per address, not per network: this endpoint sends mail to whoever is
      named, so an unlimited one is a way to use Calanthe to bombard somebody
      else's inbox. Three is more than anyone needs and far short of abuse. */
   const resends = await throttle(LIMITS.verifyResend, address);
   if (!resends.allowed) {
-    return { ok: false, message: waitMessage(resends.retryAfterSeconds) };
+    return {
+      ok: false,
+      message: waitText(locale, t, waitHint(resends.retryAfterSeconds)),
+    };
   }
 
   const payload = await getPayload({ config });
@@ -289,22 +316,27 @@ export async function resendCustomerVerification(email: string): Promise<AuthRes
 }
 
 export async function verifyCustomerEmail(token: string): Promise<AuthResult> {
-  if (!token) return { ok: false, message: "That verification link is not valid." };
+  const { t } = await getDictionary();
+  const m = t.server.account;
+
+  if (!token) return { ok: false, message: m.verifyLinkInvalid };
   const payload = await getPayload({ config });
   try {
     await payload.verifyEmail({ collection: "users", token });
     return { ok: true };
   } catch {
-    return {
-      ok: false,
-      message: "That link has expired or has already been used.",
-    };
+    return { ok: false, message: m.linkUsedOrExpired };
   }
 }
 
 export async function requestCustomerPasswordReset(form: FormData): Promise<AuthResult> {
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
-  if (!EMAIL_RE.test(email)) return { ok: false, message: "Please check your email address." };
+  const { locale, t } = await getDictionary();
+  const m = t.server.account;
+
+  const email = String(form.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  if (!EMAIL_RE.test(email)) return { ok: false, message: m.emailInvalid };
 
   /*
    * Both counts happen BEFORE the lookup, so neither reveals anything: a
@@ -322,7 +354,10 @@ export async function requestCustomerPasswordReset(form: FormData): Promise<Auth
   ]);
   const blocked = !byEmail.allowed ? byEmail : !byNetwork.allowed ? byNetwork : null;
   if (blocked) {
-    return { ok: false, message: waitMessage(blocked.retryAfterSeconds) };
+    return {
+      ok: false,
+      message: waitText(locale, t, waitHint(blocked.retryAfterSeconds)),
+    };
   }
 
   const payload = await getPayload({ config });
@@ -343,26 +378,32 @@ export async function requestCustomerPasswordReset(form: FormData): Promise<Auth
 export type ResetResult = { ok: true } | { ok: false; field?: string; message: string };
 
 export async function resetCustomerPassword(form: FormData): Promise<ResetResult> {
+  const { locale, t } = await getDictionary();
+  const m = t.server.account;
+
   const token = String(form.get("token") ?? "");
   const password = String(form.get("password") ?? "");
   const confirm = String(form.get("confirmPassword") ?? "");
 
-  if (!token) return { ok: false, message: "That reset link is not valid." };
+  if (!token) return { ok: false, message: m.resetLinkInvalid };
   if (password.length < MIN_PASSWORD)
     return {
       ok: false,
       field: "password",
-      message: `Please use at least ${MIN_PASSWORD} characters.`,
+      message: m.passwordTooShort.replace("{min}", String(MIN_PASSWORD)),
     };
   if (password !== confirm)
-    return { ok: false, field: "confirmPassword", message: "Those passwords do not match." };
+    return { ok: false, field: "confirmPassword", message: m.passwordMismatch };
 
   /* The token is long and random, so guessing it is not a realistic attack —
      but an endpoint that will check an unlimited number of guesses is one
      tired algorithm away from becoming one, and the limit costs nothing. */
   const attempts = await throttle(LIMITS.passwordResetIp, await clientAddress());
   if (!attempts.allowed) {
-    return { ok: false, message: waitMessage(attempts.retryAfterSeconds) };
+    return {
+      ok: false,
+      message: waitText(locale, t, waitHint(attempts.retryAfterSeconds)),
+    };
   }
 
   const payload = await getPayload({ config });
@@ -374,6 +415,6 @@ export async function resetCustomerPassword(form: FormData): Promise<ResetResult
     });
     return { ok: true };
   } catch {
-    return { ok: false, message: "That link has expired or has already been used." };
+    return { ok: false, message: m.linkUsedOrExpired };
   }
 }

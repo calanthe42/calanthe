@@ -11,7 +11,8 @@ import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
-import { useT } from "@/lib/locale";
+import { useLocale, useT } from "@/lib/locale";
+import { plural } from "@/lib/i18n/plural";
 import { CONTACT, navTree } from "@/lib/data";
 import { LanguageToggle } from "@/components/blocks/LanguageToggle";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -212,6 +213,7 @@ export function Header({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { count, openCart } = useCart();
   const t = useT();
+  const { locale } = useLocale();
 
   /**
    * THE HEADER PUBLISHES ITS OWN HEIGHT.
@@ -417,7 +419,7 @@ export function Header({
             </span>
           </button>
 
-          <nav aria-label="Main" className="hidden items-center gap-8 lg:flex">
+          <nav aria-label={t.ui.navMain} className="hidden items-center gap-8 lg:flex">
             {NAV_LEFT.map((group) => (
               <DesktopNavItem
                 key={group.href}
@@ -454,7 +456,7 @@ export function Header({
         */}
         <Link
           href="/"
-          aria-label="Calanthe — home"
+          aria-label={t.ui.home}
           data-travel-mark
           /* PENDING, NOT TRAVELLING.
              This used to be `data-travelling="true"` from the server, meant
@@ -501,7 +503,7 @@ export function Header({
         {/* Right — Occasions + Membership (desktop), icons (always) */}
         <div className="flex items-center gap-1">
           <nav
-            aria-label="Membership and events"
+            aria-label={t.ui.membershipAndEvents}
             className="mr-2 hidden items-center gap-8 lg:flex"
           >
             {NAV_RIGHT.map((group) => (
@@ -522,7 +524,7 @@ export function Header({
           >
             <button
               type="button"
-              aria-label="Search"
+              aria-label={t.nav.search}
               onClick={() => setSearchOpen(true)}
               className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
             >
@@ -551,7 +553,14 @@ export function Header({
             <button
               type="button"
               id="header-cart"
-              aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
+              aria-label={
+                count === 0
+                  ? t.ui.cartEmpty
+                  : t.ui.cartWith.replace(
+                      "{items}",
+                      plural(locale, t.checkout.itemCount, count),
+                    )
+              }
               onClick={openCart}
               className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
             >
@@ -678,7 +687,7 @@ export function Header({
             <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/70" />
           </button>
 
-          <nav aria-label="Mobile" className="mt-7">
+          <nav aria-label={t.ui.navMobile} className="mt-7">
             <ul className="menu-links flex flex-col">
               <li className="border-b border-cream/10">
                 <Link

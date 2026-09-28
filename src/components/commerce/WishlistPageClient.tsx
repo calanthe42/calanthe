@@ -6,12 +6,10 @@ import { buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import type { Product } from "@/lib/data";
 import { useWishlist } from "@/lib/wishlist";
+import { useT } from "@/lib/locale";
 
-export function WishlistPageClient({
-  products = [],
-}: {
-  products?: readonly Product[];
-}) {
+export function WishlistPageClient({ products = [] }: { products?: readonly Product[] }) {
+  const t = useT();
   const { ids } = useWishlist();
   const saved = products.filter((p) => ids.includes(p.id));
 
@@ -20,13 +18,13 @@ export function WishlistPageClient({
       <div className="flex flex-col items-center gap-6 py-24 text-center">
         <Monogram className="w-14 text-ink-muted" />
         <p className="max-w-sm font-display text-2xl font-light italic text-olive">
-          Hearts you leave here never wilt.
+          {t.wishlist.emptyTitle}
         </p>
         <p className="max-w-xs text-base text-ink-muted lg:text-sm">
-          Tap the heart on any arrangement to keep it close.
+          {t.wishlist.emptyBody}
         </p>
         <Link href="/shop" className={buttonClasses("secondary")}>
-          Shop Flowers
+          {t.cart.shopFlowers}
         </Link>
       </div>
     );

@@ -53,33 +53,53 @@ export type CheckoutFieldValues = {
 
 export type CheckoutField = keyof Omit<CheckoutFieldValues, "mode">;
 
-/** Field -> message, for every field that would stop the order. */
+/**
+ * WHY THESE ARE CODES AND NOT SENTENCES.
+ *
+ * This function used to return finished English — "Tell us your name." — so
+ * every validation message on the checkout appeared in English however the
+ * page was set, and the only way to translate one was to translate a
+ * sentence back into a field. A code names the problem; the dictionary owns
+ * the wording. `checkout.errors` in the dictionary is typed against this
+ * union, so a new code cannot be added without its Arabic.
+ */
+export type CheckoutErrorCode =
+  | "recipientNameRequired"
+  | "phoneInvalid"
+  | "zoneRequired"
+  | "nameRequired"
+  | "phoneRequired"
+  | "emailRequired"
+  | "emailInvalid"
+  | "addressRequired";
+
+/** Field -> reason, for every field that would stop the order. */
 export function checkoutFieldErrors(
   values: CheckoutFieldValues,
-): Partial<Record<CheckoutField, string>> {
-  const errors: Partial<Record<CheckoutField, string>> = {};
+): Partial<Record<CheckoutField, CheckoutErrorCode>> {
+  const errors: Partial<Record<CheckoutField, CheckoutErrorCode>> = {};
 
   if (values.mode === "gift") {
     if (!values.recipientName.trim()) {
-      errors.recipientName = "Tell us who is receiving the flowers.";
+      errors.recipientName = "recipientNameRequired";
     }
     if (values.recipientPhone.trim() && !isValidPhone(values.recipientPhone)) {
-      errors.recipientPhone = "Check the number, for example 050 123 4567.";
+      errors.recipientPhone = "phoneInvalid";
     }
   }
-  if (!values.zoneId) errors.zoneId = "Choose the emirate we are delivering to.";
-  if (!values.name.trim()) errors.name = "Tell us your name.";
+  if (!values.zoneId) errors.zoneId = "zoneRequired";
+  if (!values.name.trim()) errors.name = "nameRequired";
   if (!values.phone.trim()) {
-    errors.phone = "We need a number to confirm the order on WhatsApp.";
+    errors.phone = "phoneRequired";
   } else if (!isValidPhone(values.phone)) {
-    errors.phone = "Check the number, for example 050 123 4567.";
+    errors.phone = "phoneInvalid";
   }
   if (!values.email.trim()) {
-    errors.email = "We send order updates to this address.";
+    errors.email = "emailRequired";
   } else if (!isValidEmail(values.email)) {
-    errors.email = "That email address does not look complete.";
+    errors.email = "emailInvalid";
   }
-  if (!values.address.trim()) errors.address = "Where should we deliver?";
+  if (!values.address.trim()) errors.address = "addressRequired";
 
   return errors;
 }

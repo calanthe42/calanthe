@@ -3,7 +3,10 @@ import { getDictionary } from "@/lib/i18n/server";
 import { AuthShell, AuthLink } from "@/components/commerce/auth/AuthShell";
 import { ResetPasswordForm } from "@/components/commerce/auth/ResetPasswordForm";
 
-export const metadata: Metadata = { title: "Choose a new password" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: t.meta.resetPassword };
+}
 
 export default async function ResetPasswordPage({
   searchParams,

@@ -5,7 +5,9 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Product } from "@/payload-types";
 import { priceOrder, type CheckoutLineRequest } from "@backend/domain/pricing";
-import { LIMITS, clientAddress, throttle, waitMessage } from "@backend/security/throttle";
+import { LIMITS, clientAddress, throttle, waitHint } from "@backend/security/throttle";
+import { getDictionary } from "@/lib/i18n/server";
+import { withWait } from "@/lib/i18n/wait";
 import { buildOrderEmails, describeOptions } from "@backend/email/order-emails";
 import { sendAfterCommit } from "@backend/email/send";
 import { env } from "@/lib/env";
@@ -50,17 +52,27 @@ export type CheckoutRequest = {
 };
 
 export type CheckoutResult =
-  | { ok: true; orderNumber: string }
-  | { ok: false; code: string; message: string };
+  { ok: true; orderNumber: string } | { ok: false; code: string; message: string };
 
 const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-function fail(code: string, message: string): CheckoutResult {
-  return { ok: false, code, message };
-}
-
 export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutResult> {
+  /*
+   * The language the order was placed in.
+   *
+   * Every refusal below used to be an English sentence written at the point
+   * of failure, so a customer who filled in an Arabic checkout was turned
+   * away in English. The dictionary is read once, here, and `fail` names a
+   * key in it.
+   */
+  const { locale, t } = await getDictionary();
+  const messages = t.server.checkout;
+  const fail = (code: string, key: keyof typeof messages): CheckoutResult => ({
+    ok: false,
+    code,
+    message: messages[key],
+  });
   /*
    * Cash on delivery takes no card, so there is no payment step to reject a
    * fake order. An unlimited create is therefore a script that fills the
@@ -73,45 +85,51 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
    */
   const orders = await throttle(LIMITS.checkout, await clientAddress());
   if (!orders.allowed) {
-    return fail("RATE_LIMITED", `Too many orders from this device. ${waitMessage(orders.retryAfterSeconds)}`);
+    return {
+      ok: false,
+      code: "RATE_LIMITED",
+      message: withWait(
+        locale,
+        t,
+        messages.rateLimited,
+        waitHint(orders.retryAfterSeconds),
+      ),
+    };
   }
 
   const payload = await getPayload({ config });
 
   /* ---------- shape and identity validation ---------- */
   if (!Array.isArray(request.lines) || request.lines.length === 0) {
-    return fail("INVALID_ORDER", "Your basket is empty.");
+    return fail("INVALID_ORDER", "basketEmpty");
   }
   if (!request.customerName?.trim()) {
-    return fail("INVALID_CUSTOMER", "Please tell us your name.");
+    return fail("INVALID_CUSTOMER", "nameRequired");
   }
   if (!EMAIL.test(request.customerEmail ?? "")) {
-    return fail("INVALID_CUSTOMER", "That email address does not look right.");
+    return fail("INVALID_CUSTOMER", "emailInvalid");
   }
   if (!E164.test(request.customerPhone ?? "")) {
-    return fail(
-      "INVALID_CUSTOMER",
-      "Enter your phone in international format, e.g. +971501234567.",
-    );
+    return fail("INVALID_CUSTOMER", "phoneFormat");
   }
   if (!request.deliveryAddress?.trim()) {
-    return fail("INVALID_DELIVERY", "Please give us a delivery address.");
+    return fail("INVALID_DELIVERY", "addressRequired");
   }
   if (!request.deliveryTimeSlot?.trim()) {
-    return fail("INVALID_DELIVERY", "Please choose a delivery time.");
+    return fail("INVALID_DELIVERY", "slotRequired");
   }
   if (request.recipientPhone && !E164.test(request.recipientPhone)) {
-    return fail("INVALID_DELIVERY", "The recipient's phone number does not look right.");
+    return fail("INVALID_DELIVERY", "recipientPhoneInvalid");
   }
 
   const deliveryDate = new Date(request.deliveryDate);
   if (Number.isNaN(deliveryDate.getTime())) {
-    return fail("INVALID_DELIVERY", "Please choose a delivery date.");
+    return fail("INVALID_DELIVERY", "dateRequired");
   }
   /* Yesterday is never deliverable. One day of slack absorbs timezone drift
      between the customer's browser and the server. */
   if (deliveryDate.getTime() < Date.now() - 24 * 60 * 60 * 1000) {
-    return fail("INVALID_DELIVERY", "That delivery date has already passed.");
+    return fail("INVALID_DELIVERY", "datePassed");
   }
 
   /* ---------- authoritative product load ---------- */
@@ -127,14 +145,11 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
     });
     products = new Map(found.docs.map((doc) => [String(doc.id), doc]));
   } catch {
-    return fail("ORDER_CREATION_FAILED", "We could not reach the catalogue. Please try again.");
+    return fail("ORDER_CREATION_FAILED", "catalogueUnreachable");
   }
 
   if (products.size !== ids.length) {
-    return fail(
-      "PRODUCT_UNAVAILABLE",
-      "One of the arrangements in your basket is no longer available. Please review your basket.",
-    );
+    return fail("PRODUCT_UNAVAILABLE", "productUnavailable");
   }
 
   /* ---------- server-side pricing ---------- */
@@ -145,10 +160,7 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
     const raw = error instanceof Error ? error.message : "INVALID_TOTAL";
     const [code] = raw.split(":");
     payload.logger.warn(`checkout pricing rejected: ${raw}`);
-    return fail(
-      code || "INVALID_TOTAL",
-      "We could not price that basket. Please review your items and try again.",
-    );
+    return fail(code || "INVALID_TOTAL", "pricingRejected");
   }
 
   /* ---------- link to a signed-in customer, if there is one ---------- */
@@ -184,7 +196,9 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
         ...(request.recipientPhone?.trim()
           ? { recipientPhone: request.recipientPhone.trim() }
           : {}),
-        ...(request.cardMessage?.trim() ? { cardMessage: request.cardMessage.trim() } : {}),
+        ...(request.cardMessage?.trim()
+          ? { cardMessage: request.cardMessage.trim() }
+          : {}),
 
         items: priced.lines.map((line) => ({
           product: Number(line.product.id),
@@ -270,9 +284,6 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
     payload.logger.error(
       `order creation failed: ${error instanceof Error ? error.message : "unknown"}`,
     );
-    return fail(
-      "ORDER_CREATION_FAILED",
-      "We could not place your order. Nothing has been charged — please try again.",
-    );
+    return fail("ORDER_CREATION_FAILED", "creationFailed");
   }
 }

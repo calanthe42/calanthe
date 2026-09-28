@@ -1,42 +1,41 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/blocks/LegalPage";
+import { getDictionary } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Terms & Conditions",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    robots: { index: false },
+    title: t.meta.terms,
+  };
+}
 
-const sections = [
-  {
-    heading: "Orders and acceptance",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Prices and payment",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Delivery",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Substitutions",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Cancellations",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Liability",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
-  {
-    heading: "Contact",
-    body: "Placeholder copy - the client's approved wording for this section will be placed here before launch.",
-  },
+/*
+ * The section order. The headings and the placeholder body are in the
+ * dictionary (`legal.terms`), in both languages. The bodies are still
+ * placeholders: the client's counsel-approved wording has not arrived, and
+ * none is invented here. See the note above `legal` in the dictionary.
+ */
+const ORDER = [
+  "orders",
+  "prices",
+  "delivery",
+  "substitutions",
+  "cancellations",
+  "liability",
+  "contact",
 ] as const;
 
-export default function Page() {
-  return <LegalPage title="Terms & Conditions" sections={sections} />;
+export default async function Page() {
+  const { t } = await getDictionary();
+  const doc = t.legal.terms;
+  return (
+    <LegalPage
+      title={doc.title}
+      sections={ORDER.map((id) => ({
+        heading: doc.headings[id],
+        body: t.legal.placeholderBody,
+      }))}
+    />
+  );
 }

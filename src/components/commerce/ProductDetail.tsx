@@ -30,6 +30,9 @@ import {
   type SizeId,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
+import { useLocale } from "@/lib/locale";
+import { plural } from "@/lib/i18n/plural";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 type ProductDetailProps = {
   product: Product;
@@ -47,15 +50,23 @@ function OptionHeading({ children, id }: { children: React.ReactNode; id?: strin
   );
 }
 
-/** "birthday" -> "Birthday", using the catalogue's own names where known. */
-function occasionName(slug: string): string {
+/**
+ * "birthday" -> "Birthday" / "عيد ميلاد".
+ *
+ * Occasions are rows in the database, so the catalogue's name is English
+ * whatever the reader's language. The dictionary holds a translation per
+ * slug; the row is the fallback, and an occasion added later still shows.
+ */
+function occasionName(slug: string, t: Dictionary): string {
   return (
+    t.occasionNames[slug] ??
     occasionNames.find((o) => o.slug === slug)?.name ??
     slug.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase())
   );
 }
 
 export function ProductDetail({ product }: ProductDetailProps) {
+  const { locale, t } = useLocale();
   const { addItem } = useCart();
   const reduced = useReducedMotion();
 
@@ -160,14 +171,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   return (
     <div className="mx-auto max-w-7xl gutter pb-32 pt-6 lg:pb-20 lg:pt-12">
-      <nav aria-label="Breadcrumb" className="mb-6 lg:mb-10">
+      <nav aria-label={t.product.breadcrumbLabel} className="mb-6 lg:mb-10">
         <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <li>
             <Link
               href="/shop"
               className="inline-flex min-h-11 items-center underline-offset-4 hover:text-olive hover:underline"
             >
-              Shop
+              {t.product.breadcrumbShop}
             </Link>
           </li>
           <li aria-hidden>/</li>
@@ -221,12 +232,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
           {/* A single-photograph product gets no thumbnail strip: one
               thumbnail under one image is a control that does nothing. */}
           {views.length > 1 && (
-            <div className="mt-3 flex gap-3" role="group" aria-label="Photographs">
+            <div
+              className="mt-3 flex gap-3"
+              role="group"
+              aria-label={t.product.gallery.replace("{name}", product.name)}
+            >
               {views.map((v, i) => (
                 <button
                   key={v.src ?? v.placeholder.seed}
                   type="button"
-                  aria-label={`Show photograph ${i + 1} of ${views.length}`}
+                  aria-label={t.product.galleryView.replace("{n}", String(i + 1))}
                   aria-pressed={view === i}
                   onClick={() => setView(i)}
                   className={cn(
@@ -246,7 +261,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         {/* ---- Story, then price and promise, then choices ---- */}
         <div className="flex flex-col">
           <Reveal>
-            <Eyebrow>The Collection</Eyebrow>
+            <Eyebrow>{t.product.eyebrow}</Eyebrow>
             <h1 className="mt-3 font-display text-[2.5rem] font-light leading-[1.05] text-olive lg:text-6xl">
               {product.name}
             </h1>
@@ -257,15 +272,18 @@ export function ProductDetail({ product }: ProductDetailProps) {
             )}
             {product.occasions.length > 0 && (
               <p className="mt-4 text-sm text-ink-muted">
-                Composed for{" "}
+                {t.product.composedFor}{" "}
                 {product.occasions.map((slug, i) => (
                   <span key={slug}>
-                    {i > 0 && (i === product.occasions.length - 1 ? " and " : ", ")}
+                    {i > 0 &&
+                      (i === product.occasions.length - 1
+                        ? t.product.listAnd
+                        : t.product.listComma)}
                     <Link
                       href={`/occasions/${slug}`}
                       className="text-olive underline decoration-hairline underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
                     >
-                      {occasionName(slug).toLowerCase()}
+                      {occasionName(slug, t).toLowerCase()}
                     </Link>
                   </span>
                 ))}
@@ -280,9 +298,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 {formatAed(totalAed)}
               </p>
               <p className="text-sm text-ink-muted">
-                {size?.name}
+                {size ? (t.sizeNames[size.id] ?? size.name) : null}
                 {addonIds.length > 0 &&
-                  ` with ${addonIds.length} extra${addonIds.length === 1 ? "" : "s"}`}
+                  plural(locale, t.product.withExtras, addonIds.length)}
               </p>
             </div>
             <ul className="mt-5 flex flex-col gap-2.5 text-base text-olive">
@@ -294,17 +312,15 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     the atelier does not offer. The delivery day is chosen
                     from the real schedule in the picker below; this line
                     now says what is actually true of every arrangement. */}
-                <span>Composed to order, and delivered on the day you choose.</span>
+                <span>{t.product.promiseComposed}</span>
               </li>
               <li className="flex gap-3">
                 <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-burnt-orange" />
-                <span>
-                  A photo or video on WhatsApp for your approval before it leaves.
-                </span>
+                <span>{t.product.promiseApproval}</span>
               </li>
               <li className="flex gap-3">
                 <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-burnt-orange" />
-                <span>Delivered across all seven Emirates.</span>
+                <span>{t.product.promiseReach}</span>
               </li>
             </ul>
           </Reveal>
@@ -312,7 +328,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <div className="mt-8 flex flex-col gap-9">
             {/* Size */}
             <section aria-labelledby="size-heading">
-              <OptionHeading id="size-heading">Size</OptionHeading>
+              <OptionHeading id="size-heading">{t.product.size}</OptionHeading>
               <div className="grid grid-cols-3 gap-2.5">
                 {sizes.map((s) => (
                   <button
@@ -326,9 +342,13 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       sizeId === s.id ? chipOnClasses : chipOffClasses,
                     )}
                   >
-                    <span className="text-base text-olive">{s.name}</span>
+                    <span className="text-base text-olive">
+                      {t.sizeNames[s.id] ?? s.name}
+                    </span>
                     <span className="text-xs text-ink-muted">
-                      {s.priceDeltaAed > 0 ? `+${formatAed(s.priceDeltaAed)}` : s.note}
+                      {s.priceDeltaAed > 0
+                        ? `+${formatAed(s.priceDeltaAed)}`
+                        : (t.sizeNotes[s.id] ?? s.note)}
                     </span>
                   </button>
                 ))}
@@ -340,7 +360,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 bear", which showed the customer something that was not the
                 thing she was paying for. */}
             <section aria-labelledby="extras-heading">
-              <OptionHeading id="extras-heading">Something extra</OptionHeading>
+              <OptionHeading id="extras-heading">{t.product.extras}</OptionHeading>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {addons.map((addon) => {
                   const on = addonIds.includes(addon.id);
@@ -381,7 +401,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
                           </svg>
                         )}
                       </span>
-                      <span className="flex-1 text-base text-olive">{addon.name}</span>
+                      <span className="flex-1 text-base text-olive">
+                        {t.addonNames[addon.id] ?? addon.name}
+                      </span>
                       <span className="text-sm text-ink-muted">
                         +{formatAed(addon.priceAed)}
                       </span>
@@ -393,7 +415,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
             {/* Delivery */}
             <section aria-labelledby="delivery-heading">
-              <OptionHeading id="delivery-heading">Delivery day</OptionHeading>
+              <OptionHeading id="delivery-heading">{t.product.deliveryDay}</OptionHeading>
               <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
                 {days.map((day) => (
                   <button
@@ -443,12 +465,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
                 <span>
                   <span className="block font-brand text-xs font-medium uppercase tracking-brand text-olive">
-                    Card and recipient
+                    {t.product.cardSection}
                   </span>
                   <span className="mt-1 block text-sm text-ink-muted">
-                    {cardDetailsCount > 0
-                      ? "Added. You can change it at checkout too."
-                      : "Optional. Add a handwritten card and who is receiving it."}
+                    {cardDetailsCount > 0 ? t.product.cardAdded : t.product.cardOptional}
                   </span>
                 </span>
                 <span
@@ -462,14 +482,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <div className="flex flex-col gap-5 pb-6 pt-2">
                 <div>
                   <label className={labelClasses} htmlFor="gift-message">
-                    Card message
+                    {t.product.cardMessage}
                   </label>
                   <textarea
                     id="gift-message"
                     value={giftMessage}
                     onChange={(e) => setGiftMessage(e.target.value.slice(0, 220))}
                     rows={3}
-                    placeholder="Write the words they'll keep…"
+                    placeholder={t.product.cardPlaceholder}
                     className={fieldClasses}
                   />
                   <p className="mt-1.5 text-right text-xs text-ink-muted">
@@ -498,7 +518,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className={labelClasses} htmlFor="pd-recipient-name">
-                      Recipient name
+                      {t.product.recipientName}
                     </label>
                     <input
                       id="pd-recipient-name"
@@ -510,21 +530,21 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   </div>
                   <div>
                     <label className={labelClasses} htmlFor="pd-recipient-phone">
-                      Recipient phone
+                      {t.product.recipientPhone}
                     </label>
                     <input
                       id="pd-recipient-phone"
                       value={recipientPhone}
                       onChange={(e) => setRecipientPhone(e.target.value)}
                       inputMode="tel"
-                      placeholder="050 123 4567"
+                      placeholder={t.product.phonePlaceholder}
                       className={fieldClasses}
                       autoComplete="off"
                     />
                   </div>
                 </div>
                 <p className="-mt-1 text-base text-ink-muted lg:text-sm">
-                  Used only to coordinate delivery. The price is never shown to them.
+                  {t.product.recipientNote}
                 </p>
               </div>
             </details>
@@ -532,7 +552,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             {/* Desktop add-to-cart */}
             <div className="hidden lg:block">
               <Button variant="primary" className="w-full" onClick={handleAdd}>
-                Add to Cart — {formatAed(totalAed)}
+                {t.product.addToCartWithTotal.replace("{total}", formatAed(totalAed))}
               </Button>
             </div>
           </div>
@@ -550,7 +570,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <p className="text-sm text-ink-muted">{formatAed(totalAed)}</p>
           </div>
           <Button variant="primary" className="shrink-0 px-6" onClick={handleAdd}>
-            Add to Cart
+            {t.product.addToCart}
           </Button>
         </div>
       </div>

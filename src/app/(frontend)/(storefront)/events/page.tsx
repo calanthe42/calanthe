@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { getDictionary } from "@/lib/i18n/server";
 import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
+import { BoothArrangements } from "@/components/events/BoothArrangements";
+import { BoothShowcase } from "@/components/events/BoothShowcase";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -9,29 +12,20 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { CONTACT, PHOTOS, PRODUCT_PHOTOS } from "@/lib/data";
+import { CONTACT, PHOTOS } from "@/lib/data";
 
-export const metadata: Metadata = {
-  title: "Events",
-  description:
-    "Floral styling for private celebrations, intimate gatherings and larger occasions — plus guest favors finished in Calanthe's signature packaging.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    description:
+      "Floral styling for private celebrations, intimate gatherings and larger occasions — plus guest favors finished in Calanthe's signature packaging.",
+    title: t.meta.events,
+  };
+}
 
-const FAVORS = [
-  "Single-stem favors, wrapped and tied by hand",
-  "Miniature vase arrangements for each place setting",
-  "Personalised cards, written out rather than printed",
-  "Signature Calanthe packaging in your event's palette",
-] as const;
+export default async function EventsPage() {
+  const { t } = await getDictionary();
 
-const ARRANGEMENTS = [
-  "Table centrepieces, low or statement height",
-  "Entrance and welcome arrangements",
-  "Ceremony and backdrop florals",
-  "Installations for larger venues",
-] as const;
-
-export default function EventsPage() {
   return (
     <main>
       {/* Opening */}
@@ -40,24 +34,22 @@ export default function EventsPage() {
         <div className="relative mx-auto max-w-7xl gutter">
           <div className="max-w-2xl">
             <MonogramBloom className="w-11 text-burnt-orange" />
-            <Eyebrow className="mt-6 text-cream/60">Events</Eyebrow>
+            <Eyebrow className="mt-6 text-cream/60">{t.events.eyebrow}</Eyebrow>
             <SplitLines
               as="h1"
-              lines={["Flowers for", "the whole room."]}
+              lines={[t.events.line1, t.events.line2]}
               className="mt-3 font-display text-[clamp(2.5rem,7vw,4.25rem)] font-light leading-[1.04] text-cream"
             />
             <Reveal delay={0.15}>
               <p className="mt-7 max-w-lg text-base leading-relaxed text-cream/80">
-                Floral styling and arrangements for private celebrations, intimate
-                gatherings and larger occasions — planned with you, composed by the
-                atelier, delivered and set on the day.
+                {t.events.intro}
               </p>
               <div className="mt-9 flex flex-wrap gap-4">
                 <ButtonLink href={CONTACT.whatsappHref} variant="primary">
-                  Enquire on WhatsApp
+                  {t.events.enquireWhatsapp}
                 </ButtonLink>
                 <ButtonLink href="#arrangements" variant="secondary-cream">
-                  See what we do
+                  {t.events.seeWhatWeDo}
                 </ButtonLink>
               </div>
             </Reveal>
@@ -65,14 +57,22 @@ export default function EventsPage() {
         </div>
       </section>
 
+      {/* The booth: the client's 360° panorama and renders in one frame,
+          then the six arrangements from the booth deliverable. */}
+      <BoothShowcase />
+      <BoothArrangements />
+
       {/* Event arrangements */}
-      <section id="arrangements" className="scroll-mt-24 section-pad">
+      <section
+        id="arrangements"
+        className="scroll-mt-24 border-t border-hairline section-pad"
+      >
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 gutter lg:grid-cols-2 lg:gap-20">
           <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft lg:order-2">
             <FloralImage
               image={{
-                alt: "A Calanthe event arrangement",
-                src: PRODUCT_PHOTOS.longStemVase,
+                alt: t.booth.vesselsAlt,
+                src: "/brand/booth/vessels.webp",
                 placeholder: { seed: "events-arrangements", palette: "olive" },
               }}
               sizes="(max-width: 1024px) 92vw, 46vw"
@@ -80,16 +80,15 @@ export default function EventsPage() {
           </ClipReveal>
 
           <Reveal className="lg:order-1">
-            <Eyebrow>Event arrangements</Eyebrow>
+            <Eyebrow>{t.events.arrangementsEyebrow}</Eyebrow>
             <h2 className="display-2 mt-3 font-display font-light text-olive">
-              Composed for the space, not the catalogue.
+              {t.events.arrangementsTitle}
             </h2>
             <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-              We work from your venue, your palette and the feeling you want the
-              room to have — then build to it.
+              {t.events.arrangementsBody}
             </p>
             <ul className="mt-8 flex flex-col divide-y divide-hairline border-y border-hairline">
-              {ARRANGEMENTS.map((line) => (
+              {t.events.arrangements.map((line) => (
                 <li key={line} className="flex items-start gap-3 py-3.5">
                   <Monogram className="mt-1 w-3.5 shrink-0 text-burnt-orange" />
                   <span className="text-base leading-relaxed text-olive">{line}</span>
@@ -106,8 +105,8 @@ export default function EventsPage() {
           <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">
             <FloralImage
               image={{
-                alt: "Calanthe guest favors, wrapped by hand",
-                src: PRODUCT_PHOTOS.softGypsophila,
+                alt: t.booth.counterAlt,
+                src: "/brand/booth/counter.webp",
                 placeholder: { seed: "events-favors", palette: "warm" },
               }}
               sizes="(max-width: 1024px) 92vw, 46vw"
@@ -115,17 +114,15 @@ export default function EventsPage() {
           </ClipReveal>
 
           <Reveal>
-            <Eyebrow>Guest favors</Eyebrow>
+            <Eyebrow>{t.events.favorsEyebrow}</Eyebrow>
             <h2 className="display-2 mt-3 font-display font-light text-olive">
-              Something for everyone to take home.
+              {t.events.favorsTitle}
             </h2>
             <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-              Thoughtfully presented floral gifts finished with Calanthe&rsquo;s
-              signature packaging and personal touches — made in the quantities
-              your day needs.
+              {t.events.favorsBody}
             </p>
             <ul className="mt-8 flex flex-col divide-y divide-hairline border-y border-hairline">
-              {FAVORS.map((line) => (
+              {t.events.favors.map((line) => (
                 <li key={line} className="flex items-start gap-3 py-3.5">
                   <Monogram className="mt-1 w-3.5 shrink-0 text-burnt-orange" />
                   <span className="text-base leading-relaxed text-olive">{line}</span>
@@ -141,17 +138,16 @@ export default function EventsPage() {
         <div className="relative mx-auto max-w-7xl gutter text-center">
           <Stagger className="mx-auto max-w-2xl">
             <StaggerItem>
-              <Eyebrow className="text-cream/60">Begin</Eyebrow>
+              <Eyebrow className="text-cream/60">{t.events.beginEyebrow}</Eyebrow>
             </StaggerItem>
             <StaggerItem>
               <h2 className="display-2 mt-3 font-display font-light text-cream">
-                Tell us about the day.
+                {t.events.beginTitle}
               </h2>
             </StaggerItem>
             <StaggerItem>
               <p className="mt-6 text-base leading-relaxed text-cream/80">
-                Send the date, the venue and roughly how many guests. We will come
-                back with a proposal and a quote.
+                {t.events.beginBody}
               </p>
             </StaggerItem>
             {/* A real form, not two links off-site. Events are the atelier's
@@ -164,7 +160,7 @@ export default function EventsPage() {
             </StaggerItem>
             <StaggerItem>
               <p className="mt-8 text-sm text-cream/60">
-                Or email{" "}
+                {t.events.orEmail}{" "}
                 <a
                   href={`mailto:${CONTACT.email}`}
                   className="underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-burnt-orange"
@@ -178,7 +174,7 @@ export default function EventsPage() {
           <ClipReveal className="mx-auto mt-14 aspect-[16/6] w-full max-w-3xl overflow-hidden rounded-media">
             <FloralImage
               image={{
-                alt: "Calanthe florals for an occasion",
+                alt: t.alt.eventOccasion,
                 src: PHOTOS.poppyMeadow,
                 placeholder: { seed: "events-close", palette: "burgundy" },
               }}
