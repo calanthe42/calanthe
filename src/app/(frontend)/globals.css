@@ -267,6 +267,17 @@ body::after {
   transform: scale(1.1);
 }
 
+/* Bloom: light opening outward from one point (--bloom-at), the way a
+   flower opens from its heart. Used where a single image should arrive as
+   a pool of light rather than lift like a sheet. */
+.io-bloom {
+  clip-path: circle(75% at var(--bloom-at, 50% 50%));
+  transition: clip-path 0.9s var(--ease-bloom) 0.1s;
+}
+.js .io-bloom:not([data-io-in]) {
+  clip-path: circle(0% at var(--bloom-at, 50% 50%));
+}
+
 /* SplitLines (scroll mode): lines rise out of masks, 80ms apart. */
 .io-lines .io-line {
   transition: transform 0.85s var(--ease-bloom);
@@ -824,6 +835,7 @@ body.overlay-open .floating-whatsapp {
   .io-stagger > *,
   .io-clip,
   .io-clip-inner,
+  .io-bloom,
   .io-lines .io-line,
   .io-hairline,
   .io-mono path {
@@ -841,6 +853,10 @@ body.overlay-open .floating-whatsapp {
   }
   .js .io-clip:not([data-io-in]) .io-clip-inner {
     transform: none;
+  }
+  .js .io-bloom:not([data-io-in]) {
+    clip-path: circle(75% at var(--bloom-at, 50% 50%));
+    opacity: 0;
   }
   .js .io-lines:not([data-io-in]) .io-line {
     transform: none;

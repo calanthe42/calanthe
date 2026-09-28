@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
 import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
 import { BoothArrangements } from "@/components/events/BoothArrangements";
 import { BoothShowcase } from "@/components/events/BoothShowcase";
+import { BloomReveal } from "@/components/motion/BloomReveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { SplitLines } from "@/components/motion/SplitLines";
+import { Arch } from "@/components/ui/Arch";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { FloralImage } from "@/components/ui/FloralImage";
+import { Icon360 } from "@/components/ui/icons";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { CONTACT, PHOTOS } from "@/lib/data";
+import { CONTACT } from "@/lib/data";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -28,10 +32,18 @@ export default async function EventsPage() {
 
   return (
     <main>
-      {/* Opening */}
-      <section className="relative overflow-hidden bg-olive section-pad">
-        <Monogram className="pointer-events-none absolute -left-[16%] -bottom-[30%] w-[62%] text-cream/[0.04] lg:-left-[6%] lg:w-[30%]" />
-        <div className="relative mx-auto max-w-7xl gutter">
+      {/* OPENING. The olive of the bag, printed with the orchid from the
+          client's own wallpaper, as the bag is. The right half used to be
+          empty olive; it now holds the booth itself, through an arch cut
+          like the booth's mirror, and the arch is the way in to it. */}
+      <section className="relative overflow-hidden bg-olive bg-[url(/brand/print/orchid-olive.webp)] bg-[length:32rem_auto] bg-repeat section-pad lg:bg-[length:44rem_auto]">
+        {/* From a laptop up the print gives way behind the words and keeps
+            its full strength behind the arch. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(to_right,var(--color-olive)_28%,transparent_72%)] lg:block rtl:bg-[linear-gradient(to_left,var(--color-olive)_28%,transparent_72%)]"
+        />
+        <div className="relative mx-auto grid max-w-7xl gap-14 gutter lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-16">
           <div className="max-w-2xl">
             <MonogramBloom className="w-11 text-burnt-orange" />
             <Eyebrow className="mt-6 text-cream/60">{t.events.eyebrow}</Eyebrow>
@@ -54,6 +66,26 @@ export default async function EventsPage() {
               </div>
             </Reveal>
           </div>
+
+          <a
+            href="#booth"
+            className="group mx-auto block w-[78%] max-w-[24rem] sm:w-[56%] lg:w-full lg:max-w-[27rem] lg:justify-self-end"
+          >
+            <Arch ring="cream">
+              <Image
+                src="/brand/booth/arch.webp"
+                alt={t.events.archAlt}
+                fill
+                priority
+                sizes="(max-width: 640px) 78vw, (max-width: 1024px) 56vw, 27rem"
+                className="object-cover transition-transform duration-700 ease-bloom group-hover:scale-[1.03]"
+              />
+            </Arch>
+            <span className="mt-4 flex min-h-11 items-center justify-center gap-3 font-brand text-xs font-medium uppercase tracking-brand text-cream">
+              <Icon360 className="h-4 w-4 text-burnt-orange" />
+              {t.events.boothLink}
+            </span>
+          </a>
         </div>
       </section>
 
@@ -171,16 +203,31 @@ export default async function EventsPage() {
             </StaggerItem>
           </Stagger>
 
-          <ClipReveal className="mx-auto mt-14 aspect-[16/6] w-full max-w-3xl overflow-hidden rounded-media">
-            <FloralImage
-              image={{
-                alt: t.alt.eventOccasion,
-                src: PHOTOS.poppyMeadow,
-                placeholder: { seed: "events-close", palette: "burgundy" },
-              }}
-              sizes="(max-width: 1024px) 92vw, 60vw"
-            />
-          </ClipReveal>
+          {/* THE CLOSE. The client's wallpaper is this burgundy, printed
+              with orchids a shade darker — so the page ends on a panel of
+              it, cut as an arch. As it arrives, one orchid lights up in
+              cream from its heart outward: the print, coming alive.
+              Decorative, so it says nothing to a screen reader. */}
+          <div aria-hidden className="mx-auto mt-16 w-[68%] max-w-[19rem] lg:mt-20 lg:w-[21rem] lg:max-w-none">
+            <Arch ring="cream">
+              <Image
+                src="/brand/print/orchid-arch.webp"
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 68vw, 21rem"
+                className="object-cover"
+              />
+              <BloomReveal at="50% 50%" className="absolute inset-0">
+                <Image
+                  src="/brand/print/orchid-arch-lit.webp"
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 68vw, 21rem"
+                  className="object-cover"
+                />
+              </BloomReveal>
+            </Arch>
+          </div>
         </div>
       </section>
     </main>

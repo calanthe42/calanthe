@@ -437,11 +437,11 @@ export const en = {
     byoPetal: "A lily petal lit from behind, blush against warm light",
     emptyCatalogue: "A white rose arrangement",
     packagingTerracotta:
-      "A Calanthe terracotta carrier holding white lisianthus and calla lilies",
+      "A Calanthe terracotta sleeve printed with orchids, holding blush roses, white lisianthus and eucalyptus",
     packagingOlive:
-      "A Calanthe olive paper bag, printed tone on tone, holding a full autumn arrangement",
+      "A Calanthe olive bag printed tone on tone with orchids, holding white and blush roses",
     packagingBurgundy:
-      "A Calanthe burgundy bag with its lily hang tag, holding roses and dahlias",
+      "A Calanthe burgundy bag with a terracotta ribbon handle, holding white and blush roses with eucalyptus",
     sealBag: "A Calanthe arrangement in its burgundy bag against deep green velvet",
     aboutBag: "A Calanthe arrangement in its burgundy bag, against deep green velvet",
     aboutOrchid: "Calanthe orchid buds, the flower the brand is named after",
@@ -453,7 +453,6 @@ export const en = {
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
     eventArrangement: "A Calanthe event arrangement",
     eventFavors: "Calanthe guest favors, wrapped by hand",
-    eventOccasion: "Calanthe florals for an occasion",
 
     /* The four packaging details on the About page carry a caption too. */
     labelRibbon: "Printed ribbon",
@@ -673,6 +672,17 @@ export const en = {
     beginBody:
       "Send the date, the venue and roughly how many guests. We will come back with a proposal and a quote.",
     orEmail: "Or email",
+
+    boothLink: "Step inside the booth",
+    archAlt: "The Calanthe booth: the Calanthe panel, the arched mirror and the counter",
+  },
+
+  /* The homepage's way into the Events page. */
+  eventsInvite: {
+    eyebrow: "Events & guest favors",
+    title: "For the days everyone gathers.",
+    body: "A booth that arrives in six arrangements, flowers for the whole room, and guest favors finished in our signature packaging.",
+    favors: "See guest favors",
   },
   /**
    * THE ABOUT PAGE.
@@ -1785,10 +1795,12 @@ export const ar: typeof en = {
     bestSellers: "زنابق بيضاء مع بطاقة كالانثي مربوطة بينها",
     byoPetal: "بتلة زنبقة مُضاءة من الخلف، بلون وردي فاتح في ضوء دافئ",
     emptyCatalogue: "تنسيق من الورد الأبيض",
-    packagingTerracotta: "حاملة كالانثي بلون التيراكوتا تحمل ليزيانثوس أبيض وزنابق كالا",
+    packagingTerracotta:
+      "غلاف كالانثي بلون التيراكوتا مطبوع بزهور الأوركيد، يحمل ورودًا وردية فاتحة وليزيانثوس أبيض وأغصان الأوكالبتوس",
     packagingOlive:
-      "حقيبة كالانثي الورقية بلون الزيتون، مطبوعة بالدرجة نفسها، تحمل تنسيقًا خريفيًا كاملًا",
-    packagingBurgundy: "حقيبة كالانثي العنّابية مع بطاقتها، تحمل ورودًا وداليا",
+      "حقيبة كالانثي بلون الزيتون مطبوعة بزهور الأوركيد بالدرجة نفسها، تحمل ورودًا بيضاء ووردية فاتحة",
+    packagingBurgundy:
+      "حقيبة كالانثي العنّابية بمقبض من شريط التيراكوتا، تحمل ورودًا بيضاء ووردية فاتحة مع أغصان الأوكالبتوس",
     sealBag: "تنسيق كالانثي في حقيبته العنّابية على مخمل أخضر غامق",
     aboutBag: "تنسيق كالانثي في حقيبته العنّابية، على مخمل أخضر غامق",
     aboutOrchid: "براعم أوركيد الكالانثي، الزهرة التي سُمّيت العلامة باسمها",
@@ -1800,7 +1812,6 @@ export const ar: typeof en = {
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
     eventArrangement: "تنسيق فعاليات من كالانثي",
     eventFavors: "هدايا الضيوف من كالانثي، مُغلّفة يدويًا",
-    eventOccasion: "زهور كالانثي لمناسبة",
 
     labelRibbon: "شريط مطبوع",
     labelTag: "بطاقة زنبقة",
@@ -1988,6 +1999,16 @@ export const ar: typeof en = {
     beginTitle: "أخبرينا عن اليوم.",
     beginBody: "أرسلي التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليك بمقترح وعرض سعر.",
     orEmail: "أو راسلينا على",
+
+    boothLink: "ادخلي إلى الجناح",
+    archAlt: "جناح كالانثي: لوحة كالانثي والمرآة المقوّسة والمنضدة",
+  },
+
+  eventsInvite: {
+    eyebrow: "الفعاليات وهدايا الضيوف",
+    title: "للأيام التي يجتمع فيها الجميع.",
+    body: "جناحٌ يأتي بستة تشكيلات، وزهورٌ تملأ المكان كلّه، وهدايا للضيوف بتغليف كالانثي المميّز.",
+    favors: "اكتشفي هدايا الضيوف",
   },
   about: {
     eyebrow: "أبوظبي",

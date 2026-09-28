@@ -29,7 +29,6 @@ export const PHOTOS = {
   dahliaDark: photo("1638884703877-36d2f4137ff9"),
   blushKraft: photo("1710858775474-08799a698bbc"),
   redRoses: photo("1767810164592-d167c543f1ea"),
-  poppyMeadow: photo("1699017494672-2eb201788e72"),
   peachRoses: photo("1652680882466-e83b0cccab34"),
   moodyProtea: photo("1558473720-cf2dbe8a1f91"),
   whiteOrchid: photo("1755502046743-78265e184cc3"),

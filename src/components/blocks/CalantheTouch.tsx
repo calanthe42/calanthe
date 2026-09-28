@@ -38,7 +38,7 @@ export async function CalantheTouch() {
        three distinct ideas read as a single slab. Alternating the ground is
        cheaper and stronger than any divider. */
     <section className="section-pad">
-      <div className="mx-auto grid max-w-7xl gutter lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-20">
+      <div className="mx-auto grid max-w-7xl gutter lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20">
         {/* The title held the rail alone and left roughly 450px of empty
             cream beneath it — a void, not whitespace. A photograph of the
             work itself belongs here: this section is about craft, so the

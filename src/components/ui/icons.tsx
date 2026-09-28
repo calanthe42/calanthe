@@ -50,3 +50,13 @@ export function IconUser({ className }: IconProps) {
     </svg>
   );
 }
+
+/* Two crossed orbits: "you can look all the way round" — the booth's 360°. */
+export function Icon360({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <ellipse cx="12" cy="12" rx="9" ry="4" stroke="currentColor" strokeWidth="1.4" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
