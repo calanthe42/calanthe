@@ -141,7 +141,7 @@ export function BoothShowcase() {
               className={cn(
                 "overflow-hidden bg-burgundy",
                 expanded
-                  ? "fixed inset-0 z-[90] h-[100svh] w-full"
+                  ? "fixed inset-0 z-[90] h-[100svh] w-full shadow-[0_0_0_100vmax_var(--color-burgundy)]"
                   : "absolute inset-0 rounded-[2px]",
               )}
             >

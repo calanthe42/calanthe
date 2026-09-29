@@ -16,10 +16,17 @@ import { cn } from "@/lib/cn";
  *   text             an underlined phrase — "remove", "edit", inline actions
  *   danger           olive rule that turns burgundy — destructive, never red-filled
  *
- * WHAT EVERY VARIANT SHARES, so the family reads as one: 48px minimum height
- * (44px for `text`, which is a phrase rather than a slab), 2px corners,
- * Cinzel uppercase at 0.18em, the same 200ms bloom easing, the same 2px
- * offset focus ring, and the same 0.985 press.
+ * WHAT EVERY VARIANT SHARES, so the family reads as one: 44px height — the
+ * tap-target floor, and no more — 2px corners, Cinzel uppercase at 12px and
+ * 0.18em, the same 200ms bloom easing, the same 2px offset focus ring, and
+ * the same 0.985 press.
+ *
+ * SIZE. These were 48px tall with 32px sides and 13px capitals — heavier
+ * than the navigation and every other line of brand type on the page, so a
+ * pair of them read as two slabs. They now sit at the navigation's weight.
+ * In Arabic the type is a step larger, because Arabic set at a Latin
+ * capital's size reads a size smaller, and it is never tracked (see
+ * globals.css).
  *
  * STATES ARE BUILT IN, not left to each call site. `loading` shows a spinner
  * and blocks the press — a double-submitted order is a real cost, and every
@@ -46,7 +53,7 @@ export type ButtonSize = "default" | "compact" | "icon";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-sm " +
-  "font-brand text-[0.8125rem] font-medium uppercase tracking-brand " +
+  "font-brand text-xs font-medium uppercase tracking-brand rtl:text-sm " +
   "transition-[opacity,filter,transform,border-color,background-color] duration-200 ease-bloom " +
   "select-none focus-visible:outline-2 focus-visible:outline-offset-2 " +
   "active:scale-[0.985] " +
@@ -57,10 +64,10 @@ const base =
   "aria-disabled:pointer-events-none aria-disabled:opacity-45";
 
 const sizes: Record<ButtonSize, string> = {
-  default: "min-h-12 px-8 py-3",
-  /* Inside a drawer or a card, where a 48px slab with 32px padding would
-     dominate the thing it sits in. Still 44px — the tap-target floor. */
-  compact: "min-h-11 px-5 py-2.5",
+  default: "min-h-11 px-6 py-2.5",
+  /* Inside a drawer or a card: the same height (44px is the tap-target
+     floor), tighter sides and a step smaller type. */
+  compact: "min-h-11 px-4 py-2 text-[0.6875rem]",
   icon: "h-11 w-11 shrink-0 p-0",
 };
 

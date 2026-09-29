@@ -11,7 +11,10 @@ type LogotypeProps = {
  */
 export function Logotype({ className }: LogotypeProps) {
   return (
+    /* lang="en": the name is Latin even on an Arabic page, so it keeps its
+       tracking when Arabic brand type loses it (see globals.css). */
     <span
+      lang="en"
       className={cn(
         "font-brand text-xl font-medium uppercase tracking-[0.22em] text-olive",
         className,

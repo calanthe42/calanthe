@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-849 strings in total. 0 are flagged below as likely problems.
+850 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -1278,13 +1278,13 @@ enquiryForm.date
   CORRECTION 
 
 enquiryForm.guests
-  ENGLISH    Guests (optional)
-  ARABIC     عدد الضيوف (اختياري)
+  ENGLISH    Guests
+  ARABIC     عدد الضيوف
   CORRECTION 
 
 enquiryForm.venue
-  ENGLISH    Venue or area (optional)
-  ARABIC     المكان أو المنطقة (اختياري)
+  ENGLISH    Venue or area
+  ARABIC     المكان أو المنطقة
   CORRECTION 
 
 enquiryForm.venuePlaceholder
@@ -1332,9 +1332,9 @@ enquiryForm.sending
   ARABIC     جارٍ الإرسال…
   CORRECTION 
 
-enquiryForm.preferToTalk
-  ENGLISH    Prefer to talk? Message a florist
-  ARABIC     تفضّلين الحديث؟ راسلي منسّقة الزهور
+enquiryForm.messageUs
+  ENGLISH    Message us
+  ARABIC     راسلينا
   CORRECTION 
 
 enquiryForm.frequency.WEEKLY
@@ -2125,11 +2125,6 @@ events.beginTitle
 events.beginBody
   ENGLISH    Send the date, the venue and roughly how many guests. We will come back with a proposal and a quote.
   ARABIC     أرسلي التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليك بمقترح وعرض سعر.
-  CORRECTION 
-
-events.orEmail
-  ENGLISH    Or email
-  ARABIC     أو راسلينا على
   CORRECTION 
 
 events.boothLink
@@ -3405,6 +3400,16 @@ server.enquiry.eventTypeRequired
 server.enquiry.dateInvalid
   ENGLISH    Please check the date.
   ARABIC     تحقّقي من التاريخ.
+  CORRECTION 
+
+server.enquiry.guestsRequired
+  ENGLISH    Please tell us roughly how many guests.
+  ARABIC     أخبرينا بعدد الضيوف تقريبًا.
+  CORRECTION 
+
+server.enquiry.venueRequired
+  ENGLISH    Please tell us the venue or area.
+  ARABIC     أخبرينا بالمكان أو المنطقة.
   CORRECTION 
 
 server.enquiry.frequencyRequired

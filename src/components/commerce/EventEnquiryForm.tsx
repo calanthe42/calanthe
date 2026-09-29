@@ -33,7 +33,8 @@ const KINDS = [
  * This writes a real Enquiry (type EVENT, priority HIGH — an event should not
  * queue behind a single bouquet). It stays deliberately short: an event is a
  * conversation, and six fields are enough for a florist to call back prepared.
- * WhatsApp remains underneath for anyone who would rather talk.
+ * "Message us" (WhatsApp) remains beside the button for anyone who would
+ * rather talk.
  */
 export function EventEnquiryForm() {
   const t = useT();
@@ -52,8 +53,8 @@ export function EventEnquiryForm() {
       company: String(formData.get("company") ?? "") || undefined,
       eventType: kind,
       eventDate: String(formData.get("date") ?? "") || undefined,
-      guests: String(formData.get("guests") ?? "") || undefined,
-      venue: String(formData.get("venue") ?? "") || undefined,
+      guests: String(formData.get("guests") ?? ""),
+      venue: String(formData.get("venue") ?? ""),
       notes: String(formData.get("notes") ?? "") || undefined,
     });
     setPending(false);
@@ -149,8 +150,10 @@ export function EventEnquiryForm() {
           id="ev-guests"
           name="guests"
           label={t.enquiryForm.guests}
+          required
           inputMode="numeric"
           placeholder="120"
+          invalid={error?.code === "guests"}
         />
       </div>
 
@@ -158,7 +161,9 @@ export function EventEnquiryForm() {
         id="ev-venue"
         name="venue"
         label={t.enquiryForm.venue}
+        required
         placeholder={t.enquiryForm.venuePlaceholder}
+        invalid={error?.code === "venue"}
       />
 
       <div>
@@ -186,7 +191,7 @@ export function EventEnquiryForm() {
         </p>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <Button type="submit" disabled={pending} className="sm:flex-none">
           {pending ? t.enquiryForm.sending : t.enquiryForm.send}
         </Button>
@@ -196,7 +201,7 @@ export function EventEnquiryForm() {
           rel="noreferrer"
           className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-cream underline decoration-cream/30 underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
         >
-          {t.enquiryForm.preferToTalk}
+          {t.enquiryForm.messageUs}
         </a>
       </div>
     </form>

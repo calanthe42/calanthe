@@ -4,7 +4,6 @@ import { getDictionary } from "@/lib/i18n/server";
 import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
 import { BoothArrangements } from "@/components/events/BoothArrangements";
 import { BoothShowcase } from "@/components/events/BoothShowcase";
-import { BloomReveal } from "@/components/motion/BloomReveal";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
@@ -190,44 +189,23 @@ export default async function EventsPage() {
                 <EventEnquiryForm />
               </div>
             </StaggerItem>
-            <StaggerItem>
-              <p className="mt-8 text-sm text-cream/60">
-                {t.events.orEmail}{" "}
-                <a
-                  href={`mailto:${CONTACT.email}`}
-                  className="underline decoration-cream/30 underline-offset-4 transition-colors hover:decoration-burnt-orange"
-                >
-                  {CONTACT.email}
-                </a>
-              </p>
-            </StaggerItem>
           </Stagger>
 
-          {/* THE CLOSE. The client's wallpaper is this burgundy, printed
-              with orchids a shade darker — so the page ends on a panel of
-              it, cut as an arch. As it arrives, one orchid lights up in
-              cream from its heart outward: the print, coming alive.
-              Decorative, so it says nothing to a screen reader. */}
-          <div aria-hidden className="mx-auto mt-16 w-[68%] max-w-[19rem] lg:mt-20 lg:w-[21rem] lg:max-w-none">
-            <Arch ring="cream">
+          {/* THE CLOSE. The booth again, as it would stand in a garden —
+              the client's outdoor render, in the same cream moulding as the
+              frame at the top of the page, so the page ends where the
+              booth began: set up and waiting. */}
+          <ClipReveal className="mx-auto mt-16 max-w-5xl rounded-[4px] border border-cream/25 p-2 sm:p-3 lg:mt-20">
+            <div className="relative aspect-[3/2] overflow-hidden rounded-[2px] lg:aspect-[16/9]">
               <Image
-                src="/brand/print/orchid-arch.webp"
-                alt=""
+                src="/brand/booth/outdoor.webp"
+                alt={t.booth.alts.outdoor}
                 fill
-                sizes="(max-width: 1024px) 68vw, 21rem"
+                sizes="(max-width: 1024px) 92vw, 64rem"
                 className="object-cover"
               />
-              <BloomReveal at="50% 50%" className="absolute inset-0">
-                <Image
-                  src="/brand/print/orchid-arch-lit.webp"
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 68vw, 21rem"
-                  className="object-cover"
-                />
-              </BloomReveal>
-            </Arch>
-          </div>
+            </div>
+          </ClipReveal>
         </div>
       </section>
     </main>
