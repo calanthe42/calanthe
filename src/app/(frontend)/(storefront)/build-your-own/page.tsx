@@ -3,7 +3,7 @@ import { getDictionary } from "@/lib/i18n/server";
 import { Reveal } from "@/components/motion/Reveal";
 import { BuildYourOwnForm } from "@/components/commerce/BuildYourOwnForm";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { LilyField } from "@/components/ui/LilyField";
+import { OrchidPrint } from "@/components/ui/OrchidPrint";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -20,23 +20,14 @@ export default async function BuildYourOwnPage() {
     /*
      * THE CONSULTATION HAPPENS ON THE SHOP'S OWN PAPER.
      *
-     * One lily, drawn as line art at four times the width of the column,
-     * cropped by the top and the reading edge, printed tone on tone in olive
-     * at 5% — the same treatment the brand gives its paper bags and presses
-     * into its greeting cards. It sits behind everything and moves with the
-     * page; nothing animates it, because the brand's rule for this surface is
-     * that it is texture, never the subject.
+     * The client's orchid wallpaper, printed tone on tone in olive at about
+     * 5% — the same treatment the brand gives its paper bags and the booth's
+     * panels. It sits behind everything and moves with the page; nothing
+     * animates it, because the brand's rule for this surface is that it is
+     * texture, never the subject.
      */
     <main className="relative isolate mx-auto max-w-6xl gutter section-pad">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-      >
-        <LilyField
-          opacity={0.045}
-          className="absolute -top-[38%] end-[-55%] w-[min(190vw,78rem)] text-olive rtl:-scale-x-100 lg:-top-[30%] lg:end-[-25%]"
-        />
-      </div>
+      <OrchidPrint ground="canvas" />
 
       <Reveal className="mb-12 max-w-2xl lg:mb-16">
         <Eyebrow>{t.byo.eyebrow}</Eyebrow>

@@ -10,7 +10,7 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import Image from "next/image";
-import { LilyField } from "@/components/ui/LilyField";
+import { OrchidPrint } from "@/components/ui/OrchidPrint";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -130,15 +130,7 @@ export default async function AboutPage() {
         until they make a "C".
       */}
       <section className="relative isolate overflow-hidden section-pad">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-        >
-          <LilyField
-            opacity={0.05}
-            className="absolute -top-[30%] start-[-40%] w-[130%] text-olive rtl:-scale-x-100 lg:w-[70%]"
-          />
-        </div>
+        <OrchidPrint ground="canvas" />
 
         <div className="mx-auto grid max-w-7xl gutter gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-20">
           <ClipReveal className="relative aspect-[3/4] w-full overflow-hidden rounded-media shadow-soft lg:order-2">
