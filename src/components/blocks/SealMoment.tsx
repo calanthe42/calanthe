@@ -5,7 +5,7 @@ import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { FloralImage } from "@/components/ui/FloralImage";
-import { LilyField } from "@/components/ui/LilyField";
+import { OrchidPrint } from "@/components/ui/OrchidPrint";
 
 /**
  * THE SEAL — the first thing after the hero.
@@ -16,8 +16,8 @@ import { LilyField } from "@/components/ui/LilyField";
  * photograph carries the section on its own.
  *
  * COMPOSITION. Asymmetric: the photograph holds the reading edge and runs
- * taller than the text beside it, and the lily linework is printed across
- * the ground behind both. The photograph uncovers once and then is still.
+ * taller than the text beside it, and the client's orchid wallpaper is
+ * printed tone on tone across the ground behind both. The photograph uncovers once and then is still.
  */
 export async function SealMoment() {
   const { t } = await getDictionary();
@@ -25,15 +25,7 @@ export async function SealMoment() {
   return (
     <section className="relative isolate overflow-hidden section-pad">
       {/* The paper this is printed on. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-      >
-        <LilyField
-          opacity={0.07}
-          className="absolute -top-[22%] end-[-42%] w-[145%] text-olive rtl:-scale-x-100 lg:-top-[30%] lg:end-[-14%] lg:w-[62%]"
-        />
-      </div>
+      <OrchidPrint ground="canvas" />
 
       <div className="mx-auto grid max-w-7xl gutter gap-10 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:items-center lg:gap-16">
         <div className="relative">

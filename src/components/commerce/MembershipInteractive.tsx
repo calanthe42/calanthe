@@ -13,7 +13,10 @@ export function DayPicker() {
 
   return (
     <div>
-      <div className="flex flex-wrap justify-center gap-2">
+      {/* Phone: an even 4 + 3, the short row centred (an 8-column grid,
+          each day two columns wide, the fifth day starting one column in).
+          Wider screens: one row of seven. */}
+      <div className="mx-auto grid max-w-sm grid-cols-8 gap-2 [&>*]:col-span-2 [&>*:nth-child(5)]:col-start-2 sm:flex sm:max-w-none sm:flex-wrap sm:justify-center">
         {weekDays.map((d) => (
           <button
             key={d}
@@ -21,17 +24,21 @@ export function DayPicker() {
             aria-pressed={day === d}
             onClick={() => setDay(d)}
             className={cn(
-              "flex h-11 min-w-12 items-center justify-center rounded-sm border px-2 font-brand text-[0.6875rem] font-medium uppercase tracking-[0.08em] transition-colors duration-200 ease-bloom",
+              /* Styled for the cream section it sits on. It was written for
+                 a dark ground — cream text on a cream band — so six of the
+                 seven days and the line below were invisible, and the
+                 section read as an empty space with one word in it. */
+              "flex h-12 min-w-[3.25rem] items-center justify-center rounded-sm border px-2.5 font-brand text-xs font-medium uppercase tracking-[0.08em] transition-colors duration-200 ease-bloom focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive",
               day === d
-                ? "border-cream bg-cream text-olive"
-                : "border-cream/30 text-cream hover:border-cream/70",
+                ? "border-olive bg-olive text-cream"
+                : "border-hairline bg-canvas/70 text-olive hover:border-sage",
             )}
           >
             {t.enquiryForm.weekdays[d] ?? d}
           </button>
         ))}
       </div>
-      <p className="mt-4 text-center text-sm text-cream/70">
+      <p aria-live="polite" className="mt-7 text-center font-display text-2xl font-light text-olive lg:text-3xl">
         {t.membership.arrivesEvery.replace("{day}", t.membership.dayFull[day] ?? day)}
       </p>
     </div>

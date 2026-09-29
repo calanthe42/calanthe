@@ -5,6 +5,7 @@ import { MembershipTiers } from "@/components/commerce/MembershipTiers";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { OrchidPrint } from "@/components/ui/OrchidPrint";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -60,7 +61,8 @@ export default async function MembershipPage() {
         </p>
       </section>
 
-      <section className="border-t border-hairline bg-cream">
+      <section className="relative isolate border-t border-hairline bg-cream">
+        <OrchidPrint ground="cream" />
         <div className="mx-auto flex max-w-3xl flex-col items-center gutter section-pad text-center">
           <Reveal className="w-full max-w-md">
             <Eyebrow>{t.membership.andThen}</Eyebrow>

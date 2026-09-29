@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LilyField } from "@/components/ui/LilyField";
+import { OrchidPrint } from "@/components/ui/OrchidPrint";
 import { Monogram } from "@/components/ui/Monogram";
 import type { Occasion } from "@/lib/data";
 import { useT } from "@/lib/locale";
@@ -59,21 +59,9 @@ export function QuickNavBand({ occasions = [] }: { occasions?: readonly Occasion
       aria-label={t.ui.shopShortcuts}
       className="relative isolate overflow-hidden border-b border-hairline/70 bg-canvas"
     >
-      {/* The paper. Cropped hard by the band's own edges, so what shows is a
-          fragment of a much larger flower — never a drawing sitting in a
-          box. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-      >
-        <LilyField
-          opacity={0.06}
-          /* On a phone the band is short, so the crop matters: land it on the
-             petal fan, not the stems — a fragment of flower reads as paper,
-             a fragment of stem reads as stray lines. */
-          className="absolute -top-[72%] start-[-52%] w-[185%] text-olive rtl:-scale-x-100 lg:-top-[190%] lg:start-[-8%] lg:w-[58%]"
-        />
-      </div>
+      {/* The paper: the client's orchid wallpaper, tone on tone, cropped by
+          the band's own edges. */}
+      <OrchidPrint ground="canvas" />
 
       <div className="mx-auto max-w-7xl gutter py-10 lg:py-14">
         <div className="flex flex-col items-center gap-2">
