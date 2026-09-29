@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
   return {
     description:
-      "Flower delivery across all seven Emirates — days, fees and time windows for Calanthe deliveries.",
+      "Flower delivery across Abu Dhabi — days, fees and time windows for Calanthe deliveries.",
     title: t.meta.delivery,
   };
 }

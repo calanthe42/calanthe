@@ -48,7 +48,7 @@ describe("prices come from the database, never the request", () => {
 
   it("computes the total from the catalogue, not from a claimed subtotal", () => {
     const products = new Map([["1", product({ priceFils: 95000 })]]);
-    const order = priceOrder([line({ quantity: 2 })], products, "dubai");
+    const order = priceOrder([line({ quantity: 2 })], products, "abu-dhabi");
     /* 950 x 2 = 1900 AED, over the free-delivery threshold. */
     expect(order.subtotalFils).toBe(190000);
     expect(order.deliveryFeeFils).toBe(0);
@@ -71,7 +71,7 @@ describe("refusals", () => {
   });
 
   it("refuses an unknown product id", () => {
-    expect(() => priceOrder([line({ productId: "999" })], new Map(), "dubai")).toThrow(
+    expect(() => priceOrder([line({ productId: "999" })], new Map(), "abu-dhabi")).toThrow(
       /INVALID_PRODUCT/,
     );
   });
@@ -91,18 +91,24 @@ describe("refusals", () => {
   });
 
   it("refuses an empty basket", () => {
-    expect(() => priceOrder([], new Map(), "dubai")).toThrow(/INVALID_ORDER/);
+    expect(() => priceOrder([], new Map(), "abu-dhabi")).toThrow(/INVALID_ORDER/);
   });
 
   it("refuses an unsupported emirate", () => {
     expect(() => deliveryFeeFils("mars", 1000)).toThrow(/INVALID_DELIVERY/);
   });
+
+  it("refuses an emirate the atelier does not serve, even when delivery would be free", () => {
+    /* Abu Dhabi only. Dubai used to slip through above the free threshold. */
+    expect(() => deliveryFeeFils("dubai", 1000)).toThrow(/INVALID_DELIVERY/);
+    expect(() => deliveryFeeFils("dubai", 1_000_000)).toThrow(/INVALID_DELIVERY/);
+  });
 });
 
 describe("delivery fees", () => {
   it("charges the emirate's fee below the threshold", () => {
-    /* Abu Dhabi is 35 AED; 100 AED subtotal is under the 350 threshold. */
-    expect(deliveryFeeFils("abu-dhabi", 10000)).toBe(3500);
+    /* Abu Dhabi is 30 AED; 100 AED subtotal is under the 350 threshold. */
+    expect(deliveryFeeFils("abu-dhabi", 10000)).toBe(3000);
   });
 
   it("waives delivery at exactly the threshold", () => {
@@ -110,22 +116,22 @@ describe("delivery fees", () => {
   });
 
   it("still charges one fils under the threshold", () => {
-    expect(deliveryFeeFils("abu-dhabi", 34999)).toBe(3500);
+    expect(deliveryFeeFils("abu-dhabi", 34999)).toBe(3000);
   });
 });
 
 describe("totals reconcile exactly", () => {
   it("total equals subtotal plus delivery", () => {
     const products = new Map([["1", product({ priceFils: 10000 })]]);
-    const order = priceOrder([line()], products, "dubai");
+    const order = priceOrder([line()], products, "abu-dhabi");
     expect(order.subtotalFils).toBe(10000);
-    expect(order.deliveryFeeFils).toBe(2500);
+    expect(order.deliveryFeeFils).toBe(3000);
     expect(order.totalFils).toBe(order.subtotalFils + order.deliveryFeeFils - order.discountFils);
   });
 
   it("every amount is a whole number of fils", () => {
     const products = new Map([["1", product({ priceFils: 39050 })]]);
-    const order = priceOrder([line({ quantity: 3 })], products, "sharjah");
+    const order = priceOrder([line({ quantity: 3 })], products, "abu-dhabi");
     for (const value of [order.subtotalFils, order.deliveryFeeFils, order.totalFils]) {
       expect(Number.isInteger(value)).toBe(true);
     }

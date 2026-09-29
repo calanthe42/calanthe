@@ -11,7 +11,7 @@ const complete: CheckoutFieldValues = {
   mode: "gift",
   recipientName: "Layla",
   recipientPhone: "",
-  zoneId: "dubai",
+  zoneId: "abu-dhabi",
   name: "Sara",
   phone: "050 123 4567",
   email: "sara@example.com",

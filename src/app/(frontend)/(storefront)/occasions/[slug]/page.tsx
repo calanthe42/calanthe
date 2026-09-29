@@ -48,7 +48,7 @@ export async function generateMetadata({
 
   const description =
     occasion.description ||
-    `${occasion.name} flowers, hand-composed by the Calanthe atelier and delivered across the UAE.`;
+    `${occasion.name} flowers, hand-composed by the Calanthe atelier and delivered across Abu Dhabi.`;
   const image = occasion.image.src;
 
   return {

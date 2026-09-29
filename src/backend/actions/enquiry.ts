@@ -209,9 +209,10 @@ export async function submitBespokeEnquiry(
 export type EventEnquiryRequest = Contact & {
   company?: string;
   eventType: string;
-  eventDate?: string;
-  /* Required: a florist cannot price or plan an event without the size of
-     it and where it is. Free text, so "80–100" is as welcome as "90". */
+  eventDate: string;
+  /* Required: a florist cannot price or plan an event without its date,
+     its size and where it is. Guests is free text, so "80–100" is as
+     welcome as "90". */
   guests: string;
   venue: string;
   notes?: string;
@@ -243,15 +244,15 @@ export async function submitEventEnquiry(
   if (!clean(request.venue, 240)) {
     return fail("venue", m.venueRequired);
   }
-
-  let when: string | undefined;
-  if (request.eventDate) {
-    const parsed = new Date(request.eventDate);
-    if (Number.isNaN(parsed.getTime())) {
-      return fail("eventDate", m.dateInvalid);
-    }
-    when = parsed.toISOString();
+  /* Required: the date decides whether the atelier can take the event. */
+  if (!clean(request.eventDate, 40)) {
+    return fail("eventDate", m.dateRequired);
   }
+  const parsed = new Date(request.eventDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return fail("eventDate", m.dateInvalid);
+  }
+  const when = parsed.toISOString();
 
   const message = [
     `Occasion: ${clean(request.eventType, 80)}`,
@@ -283,10 +284,8 @@ export async function submitEventEnquiry(
        guest count and services. Creating one from a public form would let
        anyone write into the operations calendar, so the details stay in the
        message until a florist has qualified the enquiry. */
-      message: when
-        ? `Date: ${new Date(when).toISOString().slice(0, 10)}
-${message}`
-        : message,
+      message: `Date: ${when.slice(0, 10)}
+${message}`,
     },
     m,
   );

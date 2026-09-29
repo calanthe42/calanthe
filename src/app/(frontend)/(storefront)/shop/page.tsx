@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
   return {
     description:
-      "Hand-composed arrangements from the Calanthe atelier, delivered across the UAE.",
+      "Hand-composed arrangements from the Calanthe atelier, delivered across Abu Dhabi.",
     title: t.meta.shop,
   };
 }
