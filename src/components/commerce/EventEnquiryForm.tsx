@@ -52,7 +52,7 @@ export function EventEnquiryForm() {
       phone: String(formData.get("phone") ?? ""),
       company: String(formData.get("company") ?? "") || undefined,
       eventType: kind,
-      eventDate: String(formData.get("date") ?? "") || undefined,
+      eventDate: String(formData.get("date") ?? ""),
       guests: String(formData.get("guests") ?? ""),
       venue: String(formData.get("venue") ?? ""),
       notes: String(formData.get("notes") ?? "") || undefined,
@@ -144,6 +144,7 @@ export function EventEnquiryForm() {
           name="date"
           label={t.enquiryForm.date}
           type="date"
+          required
           invalid={error?.code === "eventDate"}
         />
         <Field

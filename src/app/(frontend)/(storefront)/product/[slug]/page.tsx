@@ -52,7 +52,7 @@ export async function generateMetadata({
   /* The description is generated from real fields only — the name and
      the price. There is no marketing copy field on the document yet,
      and writing one here would be inventing product claims. */
-  const description = `${product.name} — hand-composed by the Calanthe atelier, from ${formatAed(product.priceAed)}. Delivered across the UAE.`;
+  const description = `${product.name} — hand-composed by the Calanthe atelier, from ${formatAed(product.priceAed)}. Delivered across Abu Dhabi.`;
   const image = product.images[0]?.src;
 
   return {

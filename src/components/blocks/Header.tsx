@@ -231,7 +231,7 @@ export function Header({
    * ResizeObserver keeps it true through rotation, toolbar collapse and a
    * language switch that changes the strip's line count.
    */
-  const headerRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
@@ -340,7 +340,28 @@ export function Header({
   const solid = (!overlay || scrolled) && !menuOpen;
 
   return (
-    <header
+    /*
+     * THE PINNED BAR IS A WRAPPER, AND IT TELLS iPHONE SAFARI ITS COLOUR.
+     *
+     * Safari 26 on iPhone paints the page behind the status bar (the clock,
+     * battery and signal) and fills that strip only from the pinned element
+     * at the top of the screen: it walks up from a point just inside the top
+     * edge to the first `fixed`/`sticky` box and reads that box's OWN
+     * background-color, live. A transparent box gives it nothing to read, so
+     * it freezes a sampled colour for as long as the box exists — and this
+     * bar exists for the whole visit. That is the "cut-off" strip above the
+     * navbar: content scrolling through where a cream bar should be.
+     *
+     * So: when the bar is solid, this wrapper carries the solid cream and
+     * Safari fills the strip with it. While the bar is clear over the hero
+     * (or under the open menu), the wrapper is `visibility: hidden`, which
+     * Safari skips — the <header> inside stays visible, and so do its
+     * landmark and its contents. The background change is instant on
+     * phones, so Safari never reads a half-transparent value mid-fade.
+     * (A strip drawn ABOVE the bar does nothing: Safari never paints above
+     * the viewport. That was the previous attempt.)
+     */
+    <div
       ref={headerRef}
       className={cn(
         /* THE STACKING CONTEXT IS THE BUG, NOT THE NUMBER.
@@ -352,7 +373,7 @@ export function Header({
            exactly the bleed-through: page chrome painted over a full-screen
            overlay. While an overlay is open the whole header is promoted above
            them; the layers inside it keep working unchanged. */
-        "site-header sticky top-0 transition-[background-color,border-color,backdrop-filter] duration-300 ease-bloom",
+        "site-header sticky top-0 transition-[border-color] duration-300 ease-bloom lg:transition-[background-color,border-color,backdrop-filter]",
         menuOpen || searchOpen ? "z-[70]" : "z-40",
         /* Blur is desktop-only: on a phone, backdrop-blur re-renders
            every frame as content moves under it, which is one of the
@@ -360,78 +381,81 @@ export function Header({
            Phones get a near-solid bar instead — same look, no cost. */
         solid
           ? "border-b border-hairline/60 bg-canvas lg:bg-canvas/85 lg:backdrop-blur-md"
-          : "border-b border-transparent bg-transparent",
+          : "invisible border-b border-transparent bg-transparent",
       )}
     >
-      {/* Over the hero the whole header is one soft fade into the
+      {/* `visible` undoes the wrapper's `invisible` for everything inside,
+          so only the wrapper box itself is hidden from Safari. */}
+      <header className="visible">
+        {/* Over the hero the whole header is one soft fade into the
           photograph, so the service strip and the navigation row read as a
           single pane of air rather than two stacked bands with an edge
           between them. Nothing paints a rectangle; the gradient ends at
           nothing. */}
-      {!solid && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[190%] bg-gradient-to-b from-olive/70 via-olive/35 to-transparent"
-        />
-      )}
+        {!solid && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[190%] bg-gradient-to-b from-olive/70 via-olive/35 to-transparent"
+          />
+        )}
 
-      <AnnouncementBar onDark={onDark} />
+        <AnnouncementBar onDark={onDark} />
 
-      {/* A hairline between the strip and the navigation — but only on a
+        {/* A hairline between the strip and the navigation — but only on a
           solid bar, where it divides two areas of one surface. Over the
           photograph there is nothing to divide. */}
-      <div
-        className={cn(
-          "mx-auto h-px max-w-7xl transition-colors duration-300 ease-bloom",
-          solid ? "bg-hairline/50" : "bg-transparent",
-        )}
-      />
+        <div
+          className={cn(
+            "mx-auto h-px max-w-7xl transition-colors duration-300 ease-bloom",
+            solid ? "bg-hairline/50" : "bg-transparent",
+          )}
+        />
 
-      <div
-        data-nav-row
-        className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-[4.5rem] lg:px-8"
-      >
-        {/* Left — hamburger (mobile) / Shop + Build Your Own (desktop) */}
-        <div className="flex items-center">
-          <button
-            type="button"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            onClick={toggleMenu}
-            className={cn(
-              "relative z-50 -ml-2 flex h-11 w-11 items-center justify-center lg:hidden",
-              onDark ? "text-cream" : "text-olive",
-            )}
-          >
-            <span className="relative block h-3 w-6">
-              <span
-                className={cn(
-                  "absolute left-0 top-0 h-px w-6 bg-current transition-transform duration-300 ease-bloom",
-                  menuOpen && "top-1/2 rotate-45",
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute bottom-0 left-0 h-px w-6 bg-current transition-transform duration-300 ease-bloom",
-                  menuOpen && "bottom-auto top-1/2 -rotate-45",
-                )}
-              />
-            </span>
-          </button>
+        <div
+          data-nav-row
+          className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:h-[4.5rem] lg:px-8"
+        >
+          {/* Left — hamburger (mobile) / Shop + Build Your Own (desktop) */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={toggleMenu}
+              className={cn(
+                "relative z-50 -ml-2 flex h-11 w-11 items-center justify-center lg:hidden",
+                onDark ? "text-cream" : "text-olive",
+              )}
+            >
+              <span className="relative block h-3 w-6">
+                <span
+                  className={cn(
+                    "absolute left-0 top-0 h-px w-6 bg-current transition-transform duration-300 ease-bloom",
+                    menuOpen && "top-1/2 rotate-45",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute bottom-0 left-0 h-px w-6 bg-current transition-transform duration-300 ease-bloom",
+                    menuOpen && "bottom-auto top-1/2 -rotate-45",
+                  )}
+                />
+              </span>
+            </button>
 
-          <nav aria-label={t.ui.navMain} className="hidden items-center gap-8 lg:flex">
-            {NAV_LEFT.map((group) => (
-              <DesktopNavItem
-                key={group.href}
-                group={group}
-                onDark={onDark}
-                occasions={occasions}
-              />
-            ))}
-          </nav>
-        </div>
+            <nav aria-label={t.ui.navMain} className="hidden items-center gap-8 lg:flex">
+              {NAV_LEFT.map((group) => (
+                <DesktopNavItem
+                  key={group.href}
+                  group={group}
+                  onDark={onDark}
+                  occasions={occasions}
+                />
+              ))}
+            </nav>
+          </div>
 
-        {/*
+          {/*
           THE MARK, ON EVERY ROUTE, INCLUDING HOME.
 
           This used to be suppressed on the homepage and handed to
@@ -454,11 +478,11 @@ export function Header({
           the top of the page becomes one composition. The hero keeps its own
           brand presence on its own axis (see Hero.tsx).
         */}
-        <Link
-          href="/"
-          aria-label={t.ui.home}
-          data-travel-mark
-          /* PENDING, NOT TRAVELLING.
+          <Link
+            href="/"
+            aria-label={t.ui.home}
+            data-travel-mark
+            /* PENDING, NOT TRAVELLING.
              This used to be `data-travelling="true"` from the server, meant
              to stop the mark popping from navbar size to hero size once JS
              ran. It did that — and replaced it with something worse: until
@@ -469,17 +493,17 @@ export function Header({
              showed. Now the hero carries its own copy of the mark, laid out
              by CSS (Hero.tsx), and this one is hidden until the driver is
              ready to put it exactly there. Nothing is ever half-set. */
-          data-pending={overlay ? "" : undefined}
-          /* Centred on the ROW, and the row is centred on the viewport, so
+            data-pending={overlay ? "" : undefined}
+            /* Centred on the ROW, and the row is centred on the viewport, so
              the mark is centred on the viewport at every width — which is
              also why the travelling animation never needs a horizontal
              calculation (see HeroMarkTravel.tsx). */
-          /* `block`, NOT flex: StackedLogo stacks two absolutely-positioned
+            /* `block`, NOT flex: StackedLogo stacks two absolutely-positioned
              images inside this box, so a flex container collapses both to
              0x0 and the wordmark disappears entirely. The 44px tap target
              comes from an invisible overlay instead, which expands the hit
              area without touching the logo's own geometry. */
-          /* `aspect-[1081/719]` IS LOAD-BEARING, not decoration.
+            /* `aspect-[1081/719]` IS LOAD-BEARING, not decoration.
              The artwork inside is `position: absolute` (so a hero-sized box
              cannot push the page sideways), which leaves this link with no
              in-flow child — and it collapsed to ZERO HEIGHT. Everything
@@ -488,102 +512,102 @@ export function Header({
              0, and the lockup centred on that point — putting its top 32px
              above the viewport, behind the header. That is the crop.
              The ratio restores the real navbar footprint. */
-          className="travel-mark absolute left-1/2 top-1/2 block aspect-[1081/719] w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
-        >
-          {/* Both colourways render; the travel animation crossfades them
+            className="travel-mark absolute left-1/2 top-1/2 block aspect-[1081/719] w-[var(--logo-nav-w)] after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-['']"
+          >
+            {/* Both colourways render; the travel animation crossfades them
               so the mark turns olive exactly as it lands on the bar. On
               every other route the tone prop decides outright. */}
-          {/* No `sizes` or `priority` any more: the lockup is vector, so
+            {/* No `sizes` or `priority` any more: the lockup is vector, so
               there is no resolution to pick and nothing to preload — it
               arrives with the markup and is crisp at every size it is
               scaled to between the bar and the hero. */}
-          <StackedLogo tone={onDark ? "cream" : "olive"} />
-        </Link>
+            <StackedLogo tone={onDark ? "cream" : "olive"} />
+          </Link>
 
-        {/* Right — Occasions + Membership (desktop), icons (always) */}
-        <div className="flex items-center gap-1">
-          <nav
-            aria-label={t.ui.membershipAndEvents}
-            className="mr-2 hidden items-center gap-8 lg:flex"
-          >
-            {NAV_RIGHT.map((group) => (
-              <DesktopNavItem
-                key={group.href}
-                group={group}
-                onDark={onDark}
-                occasions={occasions}
-              />
-            ))}
-          </nav>
+          {/* Right — Occasions + Membership (desktop), icons (always) */}
+          <div className="flex items-center gap-1">
+            <nav
+              aria-label={t.ui.membershipAndEvents}
+              className="mr-2 hidden items-center gap-8 lg:flex"
+            >
+              {NAV_RIGHT.map((group) => (
+                <DesktopNavItem
+                  key={group.href}
+                  group={group}
+                  onDark={onDark}
+                  occasions={occasions}
+                />
+              ))}
+            </nav>
 
-          <div
-            className={cn(
-              "flex items-center gap-1",
-              onDark ? "text-cream" : "text-olive",
-            )}
-          >
-            <button
-              type="button"
-              aria-label={t.nav.search}
-              onClick={() => setSearchOpen(true)}
-              className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
-            >
-              <IconSearch className="h-[20px] w-[20px]" />
-            </button>
-            {/* Mobile: heart + bag only, per the mobile composition —
-                search lives inside the full-screen menu instead. */}
-            <Link
-              href="/wishlist"
-              aria-label={t.nav.wishlist}
-              className="flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
-            >
-              <IconHeart className="h-[22px] w-[22px]" />
-            </Link>
-            <Link
-              href="/account"
-              aria-label={t.nav.account}
-              className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
-            >
-              <IconUser className="h-[22px] w-[22px]" />
-            </Link>
-            <LanguageToggle
-              tone={onDark ? "cream" : "olive"}
-              className="ml-1 hidden lg:inline-flex"
-            />
-            <button
-              type="button"
-              id="header-cart"
-              aria-label={
-                count === 0
-                  ? t.ui.cartEmpty
-                  : t.ui.cartWith.replace(
-                      "{items}",
-                      plural(locale, t.checkout.itemCount, count),
-                    )
-              }
-              onClick={openCart}
-              className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
-            >
-              <IconBag className="h-[22px] w-[22px]" />
-              {count > 0 && (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-sm bg-burnt-orange px-0.5 text-[0.625rem] font-medium text-cream">
-                  {count}
-                </span>
+            <div
+              className={cn(
+                "flex items-center gap-1",
+                onDark ? "text-cream" : "text-olive",
               )}
-            </button>
+            >
+              <button
+                type="button"
+                aria-label={t.nav.search}
+                onClick={() => setSearchOpen(true)}
+                className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
+              >
+                <IconSearch className="h-[20px] w-[20px]" />
+              </button>
+              {/* Mobile: heart + bag only, per the mobile composition —
+                search lives inside the full-screen menu instead. */}
+              <Link
+                href="/wishlist"
+                aria-label={t.nav.wishlist}
+                className="flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
+              >
+                <IconHeart className="h-[22px] w-[22px]" />
+              </Link>
+              <Link
+                href="/account"
+                aria-label={t.nav.account}
+                className="hidden h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60 lg:flex"
+              >
+                <IconUser className="h-[22px] w-[22px]" />
+              </Link>
+              <LanguageToggle
+                tone={onDark ? "cream" : "olive"}
+                className="ml-1 hidden lg:inline-flex"
+              />
+              <button
+                type="button"
+                id="header-cart"
+                aria-label={
+                  count === 0
+                    ? t.ui.cartEmpty
+                    : t.ui.cartWith.replace(
+                        "{items}",
+                        plural(locale, t.checkout.itemCount, count),
+                      )
+                }
+                onClick={openCart}
+                className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
+              >
+                <IconBag className="h-[22px] w-[22px]" />
+                {count > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-sm bg-burnt-orange px-0.5 text-[0.625rem] font-medium text-cream">
+                    {count}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Full-screen mobile menu — accordion groups in the olive overlay. */}
-      {menuState !== "closed" && (
-        <div
-          /* The animation's own end retires the overlay: no timer to lose,
+        {/* Full-screen mobile menu — accordion groups in the olive overlay. */}
+        {menuState !== "closed" && (
+          <div
+            /* The animation's own end retires the overlay: no timer to lose,
              and while it plays out it stops taking taps. */
-          onAnimationEnd={() => {
-            if (menuState === "closing") setMenuState("closed");
-          }}
-          /* THE MENU MUST SCROLL WHILE THE PAGE MAY NOT.
+            onAnimationEnd={() => {
+              if (menuState === "closing") setMenuState("closed");
+            }}
+            /* THE MENU MUST SCROLL WHILE THE PAGE MAY NOT.
              `useScrollLock` stops Lenis so the page holds still behind
              this panel — and a stopped Lenis cancels EVERY touch and wheel
              gesture on the document (lenis.mjs, `isStopped` →
@@ -592,32 +616,32 @@ export function Header({
              the rest is swallowed, and the visitor concludes the menu is
              stuck until the X. This attribute is Lenis's own opt-out: a
              gesture whose path crosses it is left to the browser. */
-          data-lenis-prevent
-          className={cn(
-            menuState === "closing" && "pointer-events-none",
-            /* SAFARI PAINTS THE PAGE THROUGH ITS OWN CHROME. On an iPhone the
+            data-lenis-prevent
+            className={cn(
+              menuState === "closing" && "pointer-events-none",
+              /* SAFARI PAINTS THE PAGE THROUGH ITS OWN CHROME. On an iPhone the
                status bar and the toolbar are translucent bands OUTSIDE the
                layout viewport this `inset-0` covers, and what shows through
                them is whatever the page has underneath — product photographs
                above the open menu, a headline below it. A spread shadow in
                the panel's own colour paints out past every edge, so the bands
                show olive. Unblurred, so it costs nothing to composite. */
-            "shadow-[0_0_0_100vmax_var(--color-olive)]",
-            /* z-40 INSIDE the header's own stacking context, deliberately
+              "shadow-[0_0_0_100vmax_var(--color-olive)]",
+              /* z-40 INSIDE the header's own stacking context, deliberately
                left alone: the close button above it is z-50, and raising this
                above that locks a visitor inside the menu. What lifts this
                clear of the rest of the page is the header's z-index (see
                below), because `sticky` + `z-40` on <header> makes this a
                child layer that can never outrank a body-level sibling on its
                own, however large a number is written here. */
-            /* Top padding clears the header's own row, which sits ABOVE this
+              /* Top padding clears the header's own row, which sits ABOVE this
                overlay (the close button is the burger, at z-50). At 4.25rem
                the brand mark started underneath the X and the two collided. */
-            "fixed inset-0 z-40 flex flex-col overflow-y-auto overflow-x-hidden bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-[calc(env(safe-area-inset-top)+6.75rem)] lg:hidden",
-            menuState === "closing" ? "menu-out" : "menu-in",
-          )}
-        >
-          {/*
+              "fixed inset-0 z-40 flex flex-col overflow-y-auto overflow-x-hidden bg-olive px-6 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-[calc(env(safe-area-inset-top)+6.75rem)] lg:hidden",
+              menuState === "closing" ? "menu-out" : "menu-in",
+            )}
+          >
+            {/*
             THE ATELIER WATERMARK.
 
             The previous attempt was 165% wide at 13% opacity under a 34px
@@ -629,44 +653,44 @@ export function Header({
             a monogram without ever competing with the navigation, because
             it is enormous and dim rather than small and smudged.
           */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -end-[72%] top-[2%] -z-10 w-[260%] select-none opacity-[0.12] blur-[2px]"
-          >
-            <Monogram className="w-full text-cream" />
-          </span>
-          {/* A second, much softer pass at a different scale and offset.
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -end-[72%] top-[2%] -z-10 w-[260%] select-none opacity-[0.12] blur-[2px]"
+            >
+              <Monogram className="w-full text-cream" />
+            </span>
+            {/* A second, much softer pass at a different scale and offset.
               One flat silhouette reads as a sticker; two at different blurs
               read as depth — the mark seen through the olive rather than
               printed on it. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -start-[45%] bottom-[-18%] -z-10 w-[150%] select-none opacity-[0.06] blur-[10px]"
-          >
-            <Monogram className="w-full text-cream" />
-          </span>
-          {/* A single soft pool of light behind the head of the menu, so the
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -start-[45%] bottom-[-18%] -z-10 w-[150%] select-none opacity-[0.06] blur-[10px]"
+            >
+              <Monogram className="w-full text-cream" />
+            </span>
+            {/* A single soft pool of light behind the head of the menu, so the
               olive has depth rather than being one flat fill. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10"
-            style={{
-              background:
-                "radial-gradient(90% 55% at 50% 0%, rgba(228,220,197,0.10) 0%, rgba(228,220,197,0) 70%)",
-            }}
-          />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -z-10"
+              style={{
+                background:
+                  "radial-gradient(90% 55% at 50% 0%, rgba(228,220,197,0.10) 0%, rgba(228,220,197,0) 70%)",
+              }}
+            />
 
-          {/* Branding first, and it is the lockup rather than a lone
+            {/* Branding first, and it is the lockup rather than a lone
               monogram — the menu is a place the visitor has arrived at, so
               it says whose house this is. */}
-          <div className="shrink-0">
-            <Monogram className="w-11 text-cream" />
-            <p className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-cream/55">
-              {t.nav.atelier}
-            </p>
-          </div>
+            <div className="shrink-0">
+              <Monogram className="w-11 text-cream" />
+              <p className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-cream/55">
+                {t.nav.atelier}
+              </p>
+            </div>
 
-          {/*
+            {/*
             SEARCH — a function, so it sits in its own zone directly under
             the branding, ABOVE the list of destinations, where a luxury
             retailer puts it. Previously it sat between HOME and ABOUT,
@@ -675,198 +699,199 @@ export function Header({
             case, not Cinzel caps; a bordered field, not a row; the icon
             trailing the way a submit affordance does.
           */}
-          <button
-            type="button"
-            onClick={() => {
-              closeMenu();
-              setSearchOpen(true);
-            }}
-            className="mt-7 flex min-h-12 w-full shrink-0 items-center justify-between gap-3 rounded-sm border border-cream/25 bg-cream/[0.06] px-4 text-start text-base text-cream/70 transition-colors duration-200 ease-bloom active:border-cream/50 active:text-cream"
-          >
-            {t.nav.search}
-            <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/70" />
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                closeMenu();
+                setSearchOpen(true);
+              }}
+              className="mt-7 flex min-h-12 w-full shrink-0 items-center justify-between gap-3 rounded-sm border border-cream/25 bg-cream/[0.06] px-4 text-start text-base text-cream/70 transition-colors duration-200 ease-bloom active:border-cream/50 active:text-cream"
+            >
+              {t.nav.search}
+              <IconSearch className="h-[18px] w-[18px] shrink-0 text-cream/70" />
+            </button>
 
-          <nav aria-label={t.ui.navMobile} className="mt-7">
-            <ul className="menu-links flex flex-col">
-              <li className="border-b border-cream/10">
-                <Link
-                  href="/"
-                  onClick={closeMenu}
-                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                >
-                  {t.nav.home}
-                </Link>
-              </li>
-              {NAV_BEFORE_OCCASIONS.map((group) =>
-                group.children.length ? (
-                  <li key={group.href} className="border-b border-cream/10">
-                    <details className="group/acc">
-                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
-                        {navLabel(t, group.href, group.label)}
-                        <span
-                          aria-hidden
-                          className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
-                        >
-                          +
-                        </span>
-                      </summary>
-                      <ul className="flex flex-col pb-4">
-                        <li>
-                          <Link
-                            href={group.href}
-                            onClick={closeMenu}
-                            className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+            <nav aria-label={t.ui.navMobile} className="mt-7">
+              <ul className="menu-links flex flex-col">
+                <li className="border-b border-cream/10">
+                  <Link
+                    href="/"
+                    onClick={closeMenu}
+                    className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  >
+                    {t.nav.home}
+                  </Link>
+                </li>
+                {NAV_BEFORE_OCCASIONS.map((group) =>
+                  group.children.length ? (
+                    <li key={group.href} className="border-b border-cream/10">
+                      <details className="group/acc">
+                        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
+                          {navLabel(t, group.href, group.label)}
+                          <span
+                            aria-hidden
+                            className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
                           >
-                            {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
-                          </Link>
-                        </li>
-                        {group.children.map((link) => (
-                          <li key={link.href}>
+                            +
+                          </span>
+                        </summary>
+                        <ul className="flex flex-col pb-4">
+                          <li>
                             <Link
-                              href={link.href}
+                              href={group.href}
                               onClick={closeMenu}
                               className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                             >
-                              {navLabel(t, link.href, link.label)}
+                              {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
                             </Link>
                           </li>
-                        ))}
-                      </ul>
-                    </details>
-                  </li>
-                ) : (
-                  <li key={group.href} className="border-b border-cream/10">
-                    <Link
-                      href={group.href}
-                      onClick={closeMenu}
-                      className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                    >
-                      {navLabel(t, group.href, group.label)}
-                    </Link>
-                  </li>
-                ),
-              )}
+                          {group.children.map((link) => (
+                            <li key={link.href}>
+                              <Link
+                                href={link.href}
+                                onClick={closeMenu}
+                                className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                              >
+                                {navLabel(t, link.href, link.label)}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    </li>
+                  ) : (
+                    <li key={group.href} className="border-b border-cream/10">
+                      <Link
+                        href={group.href}
+                        onClick={closeMenu}
+                        className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                      >
+                        {navLabel(t, group.href, group.label)}
+                      </Link>
+                    </li>
+                  ),
+                )}
 
-              {/* OCCASIONS, directly after SHOP where it belongs in the
+                {/* OCCASIONS, directly after SHOP where it belongs in the
                   reading order. In the client's nav tree it is a child of
                   SHOP, which is right for the desktop hover panel — but on a
                   phone that buries one of the two ways people actually shop
                   behind an extra tap. It stays inside the SHOP accordion as
                   well; one destination can have two routes to it. */}
-              <li className="border-b border-cream/10">
-                <Link
-                  href="/occasions"
-                  onClick={closeMenu}
-                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                >
-                  {t.nav.shopByOccasion}
-                </Link>
-              </li>
+                <li className="border-b border-cream/10">
+                  <Link
+                    href="/occasions"
+                    onClick={closeMenu}
+                    className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  >
+                    {t.nav.shopByOccasion}
+                  </Link>
+                </li>
 
-              {NAV_AFTER_OCCASIONS.map((group) =>
-                group.children.length ? (
-                  <li key={group.href} className="border-b border-cream/10">
-                    <details className="group/acc">
-                      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
-                        {navLabel(t, group.href, group.label)}
-                        <span
-                          aria-hidden
-                          className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
-                        >
-                          +
-                        </span>
-                      </summary>
-                      <ul className="flex flex-col pb-4">
-                        <li>
-                          <Link
-                            href={group.href}
-                            onClick={closeMenu}
-                            className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                {NAV_AFTER_OCCASIONS.map((group) =>
+                  group.children.length ? (
+                    <li key={group.href} className="border-b border-cream/10">
+                      <details className="group/acc">
+                        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream [&::-webkit-details-marker]:hidden">
+                          {navLabel(t, group.href, group.label)}
+                          <span
+                            aria-hidden
+                            className="text-cream-muted transition-transform duration-300 ease-bloom group-open/acc:rotate-45"
                           >
-                            {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
-                          </Link>
-                        </li>
-                        {group.children.map((link) => (
-                          <li key={link.href}>
+                            +
+                          </span>
+                        </summary>
+                        <ul className="flex flex-col pb-4">
+                          <li>
                             <Link
-                              href={link.href}
+                              href={group.href}
                               onClick={closeMenu}
                               className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
                             >
-                              {navLabel(t, link.href, link.label)}
+                              {group.href === "/shop" ? t.nav.shopAll : t.nav.viewAll}
                             </Link>
                           </li>
-                        ))}
-                      </ul>
-                    </details>
-                  </li>
-                ) : (
-                  <li key={group.href} className="border-b border-cream/10">
-                    <Link
-                      href={group.href}
-                      onClick={closeMenu}
-                      className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                    >
-                      {navLabel(t, group.href, group.label)}
-                    </Link>
-                  </li>
-                ),
-              )}
-              <li className="border-b border-cream/10">
-                <Link
-                  href="/account"
-                  onClick={closeMenu}
-                  className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-                >
-                  {t.nav.account}
-                </Link>
-              </li>
-            </ul>
-          </nav>
+                          {group.children.map((link) => (
+                            <li key={link.href}>
+                              <Link
+                                href={link.href}
+                                onClick={closeMenu}
+                                className="flex min-h-11 items-center py-2 ps-5 text-base text-cream/80 transition-opacity duration-200 ease-bloom active:opacity-60"
+                              >
+                                {navLabel(t, link.href, link.label)}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    </li>
+                  ) : (
+                    <li key={group.href} className="border-b border-cream/10">
+                      <Link
+                        href={group.href}
+                        onClick={closeMenu}
+                        className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                      >
+                        {navLabel(t, group.href, group.label)}
+                      </Link>
+                    </li>
+                  ),
+                )}
+                <li className="border-b border-cream/10">
+                  <Link
+                    href="/account"
+                    onClick={closeMenu}
+                    className="flex min-h-14 items-center py-2.5 font-brand text-xl font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
+                  >
+                    {t.nav.account}
+                  </Link>
+                </li>
+              </ul>
+            </nav>
 
-          {/* The foot of the menu owns its own WhatsApp link. The floating
+            {/* The foot of the menu owns its own WhatsApp link. The floating
               button is page chrome and is hidden while the menu is open (see
               globals.css `.overlay-open`), which is what used to sit on top
               of the language control here. Both controls are laid out in one
               row, so they cannot collide at any width. */}
-          {/* `mt-auto` rather than a flex-1 nav above it: the nav used to be
+            {/* `mt-auto` rather than a flex-1 nav above it: the nav used to be
               stretched, which pushed this row to the floor and opened ~250px
               of empty olive in the middle of the menu. Now the list keeps its
               natural height and only the leftover space — if any — falls
               here, so the menu is spacious on a tall phone and simply scrolls
               on a short one, with nothing stranded below the fold. */}
-          <div className="menu-footnote mt-auto flex shrink-0 flex-col gap-4 border-t border-cream/10 pb-1 pt-5">
-            <div className="flex items-center justify-between gap-3">
-              <a
-                href={CONTACT.whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                onClick={closeMenu}
-                className="inline-flex min-h-11 items-center gap-2.5 font-brand text-xs font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                  aria-hidden
+            <div className="menu-footnote mt-auto flex shrink-0 flex-col gap-4 border-t border-cream/10 pb-1 pt-5">
+              <div className="flex items-center justify-between gap-3">
+                <a
+                  href={CONTACT.whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={closeMenu}
+                  className="inline-flex min-h-11 items-center gap-2.5 font-brand text-xs font-medium uppercase tracking-brand text-cream transition-opacity duration-200 ease-bloom active:opacity-60"
                 >
-                  <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2.05 22l5.3-1.39a9.87 9.87 0 0 0 4.69 1.19h.01c5.46 0 9.9-4.44 9.9-9.9a9.83 9.83 0 0 0-2.9-7A9.83 9.83 0 0 0 12.04 2Zm0 18.13h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.17-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.22-8.23 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.73-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.16-.48-.29Z" />
-                </svg>
-                WhatsApp
-              </a>
-              <LanguageToggle tone="cream" size="full" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-4 w-4"
+                    aria-hidden
+                  >
+                    <path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.33 4.95L2.05 22l5.3-1.39a9.87 9.87 0 0 0 4.69 1.19h.01c5.46 0 9.9-4.44 9.9-9.9a9.83 9.83 0 0 0-2.9-7A9.83 9.83 0 0 0 12.04 2Zm0 18.13h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.17-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.22-8.23 8.22Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.73-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.16-.48-.29Z" />
+                  </svg>
+                  WhatsApp
+                </a>
+                <LanguageToggle tone="cream" size="full" />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <SearchOverlay
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        products={products}
-        occasions={occasions}
-      />
-    </header>
+        <SearchOverlay
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+          products={products}
+          occasions={occasions}
+        />
+      </header>
+    </div>
   );
 }

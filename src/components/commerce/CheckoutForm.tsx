@@ -200,7 +200,11 @@ export function CheckoutForm() {
 
   const [mode, setMode] = useState<"gift" | "myself">("gift");
   const [surprise, setSurprise] = useState(false);
-  const [zoneId, setZoneId] = useState<string>("");
+  /* One emirate served today (Abu Dhabi), so it is chosen for her; with
+     more than one she picks. */
+  const [zoneId, setZoneId] = useState<string>(
+    deliveryZones.length === 1 ? deliveryZones[0]!.id : "",
+  );
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");

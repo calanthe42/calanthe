@@ -5,6 +5,7 @@ import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
 import { BoothArrangements } from "@/components/events/BoothArrangements";
 import { BoothShowcase } from "@/components/events/BoothShowcase";
 import { ClipReveal } from "@/components/motion/ClipReveal";
+import { OrchidBloom } from "@/components/motion/OrchidBloom";
 import { Reveal } from "@/components/motion/Reveal";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { SplitLines } from "@/components/motion/SplitLines";
@@ -166,6 +167,26 @@ export default async function EventsPage() {
 
       {/* Enquiry close */}
       <section className="relative overflow-hidden bg-burgundy section-pad">
+        {/* The client's wallpaper, in parts: orchids beside the form that
+            open and close as the page scrolls. Wide screens get four in
+            the margins; smaller screens two, at the corners, clear of the
+            fields. */}
+        <OrchidBloom
+          className="hidden xl:block"
+          orchids={[
+            { orchid: "b", className: "left-[13%] top-[11%] w-[17rem]" },
+            { orchid: "a", className: "left-[87%] top-[25%] w-[19rem]" },
+            { orchid: "c", className: "left-[11%] top-[43%] w-[20rem]" },
+            { orchid: "a", className: "left-[88%] top-[58%] w-[16rem]" },
+          ]}
+        />
+        <OrchidBloom
+          className="xl:hidden"
+          orchids={[
+            { orchid: "a", className: "left-[92%] top-[1.5%] w-[12rem]", peak: 0.55 },
+            { orchid: "c", className: "left-[6%] top-[99%] w-[13rem]", peak: 0.55 },
+          ]}
+        />
         <div className="relative mx-auto max-w-7xl gutter text-center">
           <Stagger className="mx-auto max-w-2xl">
             <StaggerItem>

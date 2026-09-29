@@ -539,14 +539,15 @@ export type DeliveryZone = {
   feeAed: number;
 };
 
+/*
+ * WHERE THE ATELIER DELIVERS — Abu Dhabi only, AED 30 (owner, 2026-09-29).
+ * This list is the whole truth for checkout: the form offers only these,
+ * and the server refuses any other emirate whatever the basket's size.
+ * To open another emirate, add its row here (its Arabic name is already in
+ * `zoneNames` in the dictionary) and update the "Abu Dhabi" copy.
+ */
 export const deliveryZones: readonly DeliveryZone[] = [
-  { id: "dubai", name: "Dubai", feeAed: 25 },
-  { id: "abu-dhabi", name: "Abu Dhabi", feeAed: 35 },
-  { id: "sharjah", name: "Sharjah", feeAed: 30 },
-  { id: "ajman", name: "Ajman", feeAed: 35 },
-  { id: "umm-al-quwain", name: "Umm Al Quwain", feeAed: 45 },
-  { id: "ras-al-khaimah", name: "Ras Al Khaimah", feeAed: 45 },
-  { id: "fujairah", name: "Fujairah", feeAed: 45 },
+  { id: "abu-dhabi", name: "Abu Dhabi", feeAed: 30 },
 ] as const;
 
 export const FREE_DELIVERY_THRESHOLD_AED = 350;

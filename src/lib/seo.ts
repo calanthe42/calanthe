@@ -42,12 +42,13 @@ export function floristJsonLd(): JsonLd {
     "@id": `${SITE_ORIGIN}/#florist`,
     name: "Calanthe",
     description:
-      "Abu Dhabi-based floral brand created around the art of thoughtful giving. Hand-composed arrangements, delivered across the UAE.",
+      "Abu Dhabi-based floral brand created around the art of thoughtful giving. Hand-composed arrangements, delivered across Abu Dhabi.",
     url: SITE_ORIGIN,
     image: OG_IMAGE.url,
     email: CONTACT.email,
     telephone: CONTACT.whatsapp,
-    areaServed: { "@type": "Country", name: "United Arab Emirates" },
+    /* Abu Dhabi only, for now (owner, 2026-09-29) — must match deliveryZones. */
+    areaServed: { "@type": "City", name: "Abu Dhabi" },
     sameAs: [CONTACT.instagramHref],
   };
 }

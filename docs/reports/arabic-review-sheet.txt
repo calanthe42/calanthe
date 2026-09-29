@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-850 strings in total. 0 are flagged below as likely problems.
+851 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -650,8 +650,8 @@ nav.skipToContent
 --- strip ---
 
 strip.emirates
-  ENGLISH    Delivering across all seven Emirates
-  ARABIC     نوصّل إلى الإمارات السبع
+  ENGLISH    Delivering across Abu Dhabi
+  ARABIC     نوصّل في أنحاء أبوظبي
   CORRECTION 
 
 strip.video
@@ -855,8 +855,8 @@ touch.deliverTitle
   CORRECTION 
 
 touch.deliverCopy
-  ENGLISH    Kept cool and upright to your door, across all seven emirates.
-  ARABIC     تبقى منتعشة وقائمة حتى بابك، في الإمارات السبع.
+  ENGLISH    Kept cool and upright to your door, across Abu Dhabi.
+  ARABIC     تبقى منتعشة وقائمة حتى بابك، في أنحاء أبوظبي.
   CORRECTION 
 
 
@@ -893,13 +893,13 @@ trust.freshCopy
   CORRECTION 
 
 trust.emiratesTitle
-  ENGLISH    All seven Emirates
-  ARABIC     الإمارات السبع
+  ENGLISH    Across Abu Dhabi
+  ARABIC     في أنحاء أبوظبي
   CORRECTION 
 
 trust.emiratesCopy
-  ENGLISH    One atelier, delivering across the UAE.
-  ARABIC     أتيليه واحد، يوصّل في أنحاء الدولة.
+  ENGLISH    One atelier, delivering across Abu Dhabi.
+  ARABIC     أتيليه واحد، يوصّل في أنحاء أبوظبي.
   CORRECTION 
 
 
@@ -1273,8 +1273,8 @@ enquiryForm.company
   CORRECTION 
 
 enquiryForm.date
-  ENGLISH    Date (optional)
-  ARABIC     التاريخ (اختياري)
+  ENGLISH    Date
+  ARABIC     التاريخ
   CORRECTION 
 
 enquiryForm.guests
@@ -2392,8 +2392,8 @@ faq.membership.2.q
   CORRECTION 
 
 faq.membership.2.a
-  ENGLISH    All seven emirates. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.
-  ARABIC     إلى الإمارات السبع جميعًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.
+  ENGLISH    Abu Dhabi, for now. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.
+  ARABIC     إلى أبوظبي حاليًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.
   CORRECTION 
 
 faq.membership.3.q
@@ -2488,13 +2488,13 @@ help.eyebrow
   CORRECTION 
 
 help.deliveryTitle
-  ENGLISH    Delivery, across all seven Emirates.
-  ARABIC     التوصيل، إلى الإمارات السبع جميعًا.
+  ENGLISH    Delivery, across Abu Dhabi.
+  ARABIC     التوصيل، في أنحاء أبوظبي.
   CORRECTION 
 
 help.deliveryIntro
-  ENGLISH    Choose the day and the window that suit them, across all seven Emirates. Delivery is complimentary on orders over {amount}.
-  ARABIC     اختاري اليوم والفترة المناسبين للمستلِم، في الإمارات السبع جميعًا. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
+  ENGLISH    Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on orders over {amount}.
+  ARABIC     اختاري اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
   CORRECTION 
 
 help.deliveryWindows
@@ -3006,8 +3006,8 @@ product.promiseApproval
   CORRECTION 
 
 product.promiseReach
-  ENGLISH    Delivered across all seven Emirates.
-  ARABIC     نوصّل إلى الإمارات السبع جميعًا.
+  ENGLISH    Delivered across Abu Dhabi.
+  ARABIC     نوصّل في أنحاء أبوظبي.
   CORRECTION 
 
 product.size
@@ -3400,6 +3400,11 @@ server.enquiry.eventTypeRequired
 server.enquiry.dateInvalid
   ENGLISH    Please check the date.
   ARABIC     تحقّقي من التاريخ.
+  CORRECTION 
+
+server.enquiry.dateRequired
+  ENGLISH    Please choose the date of the event.
+  ARABIC     اختاري تاريخ المناسبة.
   CORRECTION 
 
 server.enquiry.guestsRequired

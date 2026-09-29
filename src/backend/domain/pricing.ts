@@ -49,9 +49,12 @@ const aedToFils = (aed: number) => Math.round(aed * 100);
 
 /** Delivery fee for an emirate, waived above the free-delivery threshold. */
 export function deliveryFeeFils(emirate: string, subtotalFils: number): number {
-  if (subtotalFils >= aedToFils(FREE_DELIVERY_THRESHOLD_AED)) return 0;
+  /* The emirate is checked FIRST. It used to be checked after the free-
+     delivery threshold, so a large enough basket skipped the check and an
+     order to an emirate the atelier does not serve went through, free. */
   const zone = deliveryZones.find((z) => z.id === emirate);
   if (!zone) throw new Error(`INVALID_DELIVERY: unsupported emirate "${emirate}"`);
+  if (subtotalFils >= aedToFils(FREE_DELIVERY_THRESHOLD_AED)) return 0;
   return aedToFils(zone.feeAed);
 }
 

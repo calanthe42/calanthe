@@ -195,7 +195,7 @@ export const en = {
     skipToContent: "Skip to content",
   },
   strip: {
-    emirates: "Delivering across all seven Emirates",
+    emirates: "Delivering across Abu Dhabi",
     video: "Video approval on every order",
     /* No same-day claim and no countdown: the atelier does not offer
        same-day delivery, so a ticker promising it was simply untrue. */
@@ -247,7 +247,7 @@ export const en = {
     wrapTitle: "Thoughtful presentation",
     wrapCopy: "Wrapped in embossed paper, tied and sealed with the Calanthe monogram.",
     deliverTitle: "Delivered with care",
-    deliverCopy: "Kept cool and upright to your door, across all seven emirates.",
+    deliverCopy: "Kept cool and upright to your door, across Abu Dhabi.",
   },
   trust: {
     sameDayTitle: "Delivered on your day",
@@ -256,8 +256,8 @@ export const en = {
     videoCopy: "See your arrangement on WhatsApp before it leaves.",
     freshTitle: "Freshness guarantee",
     freshCopy: "Composed the morning of delivery, never before.",
-    emiratesTitle: "All seven Emirates",
-    emiratesCopy: "One atelier, delivering across the UAE.",
+    emiratesTitle: "Across Abu Dhabi",
+    emiratesCopy: "One atelier, delivering across Abu Dhabi.",
   },
   empty: {
     eyebrow: "Made to order",
@@ -378,7 +378,7 @@ export const en = {
       "A florist will be in touch to talk through the venue, the palette and the scale. Nothing is committed and nothing has been charged.",
     whatKind: "What kind of occasion",
     company: "Company (optional)",
-    date: "Date (optional)",
+    date: "Date",
     guests: "Guests",
     venue: "Venue or area",
     venuePlaceholder: "Four Seasons, Jumeirah",
@@ -798,7 +798,7 @@ export const en = {
       },
       {
         q: "Which areas do you deliver to?",
-        a: "All seven emirates. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.",
+        a: "Abu Dhabi, for now. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.",
       },
       {
         q: "Can I gift a membership?",
@@ -842,9 +842,9 @@ export const en = {
   /** The two help pages. */
   help: {
     eyebrow: "Help",
-    deliveryTitle: "Delivery, across all seven Emirates.",
+    deliveryTitle: "Delivery, across Abu Dhabi.",
     deliveryIntro:
-      "Choose the day and the window that suit them, across all seven Emirates. Delivery is complimentary on orders over {amount}.",
+      "Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on orders over {amount}.",
     deliveryWindows: "Delivery windows",
     approvalNote:
       "Before every delivery, your florist sends a photo or video of the finished arrangement on WhatsApp, and waits for your word before it leaves.",
@@ -1022,7 +1022,7 @@ export const en = {
 
     promiseComposed: "Composed to order, and delivered on the day you choose.",
     promiseApproval: "A photo or video on WhatsApp for your approval before it leaves.",
-    promiseReach: "Delivered across all seven Emirates.",
+    promiseReach: "Delivered across Abu Dhabi.",
 
     size: "Size",
     extras: "Something extra",
@@ -1154,6 +1154,7 @@ export const en = {
       budgetRequired: "Please choose a budget.",
       eventTypeRequired: "Please tell us what kind of occasion it is.",
       dateInvalid: "Please check the date.",
+      dateRequired: "Please choose the date of the event.",
       guestsRequired: "Please tell us roughly how many guests.",
       venueRequired: "Please tell us the venue or area.",
       frequencyRequired: "Please choose how often the flowers should arrive.",
@@ -1601,7 +1602,7 @@ export const ar: typeof en = {
     skipToContent: "تخطّي إلى المحتوى",
   },
   strip: {
-    emirates: "نوصّل إلى الإمارات السبع",
+    emirates: "نوصّل في أنحاء أبوظبي",
     video: "موافقتك بالفيديو على كل طلب",
     composed: "كل باقة تُنسَّق يدويًا",
   },
@@ -1650,7 +1651,7 @@ export const ar: typeof en = {
     wrapTitle: "تقديم يليق بها",
     wrapCopy: "تُغلّف بورق مزخرف، وتُربط وتُختم بشعار كالانثي.",
     deliverTitle: "تُوصَّل بعناية",
-    deliverCopy: "تبقى منتعشة وقائمة حتى بابك، في الإمارات السبع.",
+    deliverCopy: "تبقى منتعشة وقائمة حتى بابك، في أنحاء أبوظبي.",
   },
   trust: {
     sameDayTitle: "توصيل في يومك المختار",
@@ -1659,8 +1660,8 @@ export const ar: typeof en = {
     videoCopy: "شاهدي باقتك عبر واتساب قبل أن تغادر.",
     freshTitle: "ضمان النضارة",
     freshCopy: "تُنسّق صباح التوصيل، لا قبل ذلك.",
-    emiratesTitle: "الإمارات السبع",
-    emiratesCopy: "أتيليه واحد، يوصّل في أنحاء الدولة.",
+    emiratesTitle: "في أنحاء أبوظبي",
+    emiratesCopy: "أتيليه واحد، يوصّل في أنحاء أبوظبي.",
   },
   empty: {
     eyebrow: "حسب الطلب",
@@ -1749,7 +1750,7 @@ export const ar: typeof en = {
       "ستتواصل معك منسّقة الزهور للحديث عن المكان ولوحة الألوان والحجم. ولا شيء مُلزِم ولم يُخصم أي مبلغ.",
     whatKind: "ما نوع المناسبة",
     company: "الشركة (اختياري)",
-    date: "التاريخ (اختياري)",
+    date: "التاريخ",
     guests: "عدد الضيوف",
     venue: "المكان أو المنطقة",
     venuePlaceholder: "فور سيزونز، جميرا",
@@ -2100,7 +2101,7 @@ export const ar: typeof en = {
       },
       {
         q: "إلى أي المناطق توصّلون؟",
-        a: "إلى الإمارات السبع جميعًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.",
+        a: "إلى أبوظبي حاليًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.",
       },
       {
         q: "هل يمكنني إهداء عضوية؟",
@@ -2138,9 +2139,9 @@ export const ar: typeof en = {
   },
   help: {
     eyebrow: "مساعدة",
-    deliveryTitle: "التوصيل، إلى الإمارات السبع جميعًا.",
+    deliveryTitle: "التوصيل، في أنحاء أبوظبي.",
     deliveryIntro:
-      "اختاري اليوم والفترة المناسبين للمستلِم، في الإمارات السبع جميعًا. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.",
+      "اختاري اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.",
     deliveryWindows: "فترات التوصيل",
     approvalNote:
       "قبل كل توصيلة، ترسل لك منسّقة الزهور صورة أو مقطعًا للتنسيق النهائي على واتساب، وتنتظر موافقتك قبل أن تخرج.",
@@ -2269,7 +2270,7 @@ export const ar: typeof en = {
 
     promiseComposed: "تُنسّق خصيصًا لك، وتُوصّل في اليوم الذي تختارينه.",
     promiseApproval: "صورة أو مقطع على واتساب لتوافقي عليه قبل أن يخرج.",
-    promiseReach: "نوصّل إلى الإمارات السبع جميعًا.",
+    promiseReach: "نوصّل في أنحاء أبوظبي.",
 
     size: "الحجم",
     extras: "لمسة إضافية",
@@ -2371,6 +2372,7 @@ export const ar: typeof en = {
       budgetRequired: "اختاري الميزانية.",
       eventTypeRequired: "أخبرينا بنوع المناسبة.",
       dateInvalid: "تحقّقي من التاريخ.",
+      dateRequired: "اختاري تاريخ المناسبة.",
       guestsRequired: "أخبرينا بعدد الضيوف تقريبًا.",
       venueRequired: "أخبرينا بالمكان أو المنطقة.",
       frequencyRequired: "اختاري عدد مرات وصول الزهور.",
