@@ -21,7 +21,7 @@ stopping.
 
 | # | Credential | Blocks | Added |
 | --- | --- | --- | --- |
-| 6 | Stripe **test** publishable + secret + webhook secret | A5 — running a real card transaction. The code is written and unit-tested without them | 2026-09-25 |
+| 6 | Stripe **test** webhook secret (publishable + secret test keys are already in `.env.local`, checked 2026-09-29) | A5 — running a real card transaction. **Correction 2026-09-29:** this row said the Stripe code was written and unit-tested; it was not — A5 has not started (see `docs/reports/backend-status-2026-09-29.md`) | 2026-09-25 |
 | 7 | Resend API key + `EMAIL_FROM` | A2 — nothing can send. Registration and password reset are broken until this exists | 2026-09-25 |
 | 8 | `calanthe.ae` DNS: SPF, DKIM, DMARC | A2 — deliverability. Without it, mail that does send lands in spam | 2026-09-25 |
 | 9 | Tabby merchant public + secret | Track C — all of the Tabby work | 2026-09-25 |

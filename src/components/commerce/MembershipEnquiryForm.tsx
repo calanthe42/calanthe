@@ -289,7 +289,7 @@ export function MembershipEnquiryForm({ planName, planLabel, onClose }: Props) {
             rel="noreferrer"
             className="inline-flex min-h-11 items-center font-brand text-xs font-medium uppercase tracking-brand text-olive underline decoration-hairline underline-offset-8 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
           >
-            {t.enquiryForm.preferToTalk}
+            {t.enquiryForm.messageUs}
           </a>
         </div>
       </form>

@@ -379,8 +379,8 @@ export const en = {
     whatKind: "What kind of occasion",
     company: "Company (optional)",
     date: "Date (optional)",
-    guests: "Guests (optional)",
-    venue: "Venue or area (optional)",
+    guests: "Guests",
+    venue: "Venue or area",
     venuePlaceholder: "Four Seasons, Jumeirah",
     alreadyKnow: "Anything you already know (optional)",
     alreadyKnowPlaceholder: "Palette, style, the feeling of the day…",
@@ -392,7 +392,7 @@ export const en = {
     reference: "Reference {number}",
     send: "Send enquiry",
     sending: "Sending…",
-    preferToTalk: "Prefer to talk? Message a florist",
+    messageUs: "Message us",
 
     frequency: {
       WEEKLY: "Weekly",
@@ -671,7 +671,6 @@ export const en = {
     beginTitle: "Tell us about the day.",
     beginBody:
       "Send the date, the venue and roughly how many guests. We will come back with a proposal and a quote.",
-    orEmail: "Or email",
 
     boothLink: "Step inside the booth",
     archAlt: "The Calanthe booth: the Calanthe panel, the arched mirror and the counter",
@@ -1155,6 +1154,8 @@ export const en = {
       budgetRequired: "Please choose a budget.",
       eventTypeRequired: "Please tell us what kind of occasion it is.",
       dateInvalid: "Please check the date.",
+      guestsRequired: "Please tell us roughly how many guests.",
+      venueRequired: "Please tell us the venue or area.",
       frequencyRequired: "Please choose how often the flowers should arrive.",
       deliveryPreferenceRequired: "Please choose where the flowers should go.",
       startDateInvalid: "Please check the start date.",
@@ -1749,8 +1750,8 @@ export const ar: typeof en = {
     whatKind: "ما نوع المناسبة",
     company: "الشركة (اختياري)",
     date: "التاريخ (اختياري)",
-    guests: "عدد الضيوف (اختياري)",
-    venue: "المكان أو المنطقة (اختياري)",
+    guests: "عدد الضيوف",
+    venue: "المكان أو المنطقة",
     venuePlaceholder: "فور سيزونز، جميرا",
     alreadyKnow: "أي تفاصيل تعرفينها من الآن (اختياري)",
     alreadyKnowPlaceholder: "لوحة الألوان، والطابع، وإحساس اليوم…",
@@ -1761,7 +1762,7 @@ export const ar: typeof en = {
     reference: "المرجع {number}",
     send: "إرسال الطلب",
     sending: "جارٍ الإرسال…",
-    preferToTalk: "تفضّلين الحديث؟ راسلي منسّقة الزهور",
+    messageUs: "راسلينا",
 
     frequency: {
       WEEKLY: "أسبوعيًا",
@@ -1998,7 +1999,6 @@ export const ar: typeof en = {
     beginEyebrow: "البداية",
     beginTitle: "أخبرينا عن اليوم.",
     beginBody: "أرسلي التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليك بمقترح وعرض سعر.",
-    orEmail: "أو راسلينا على",
 
     boothLink: "ادخلي إلى الجناح",
     archAlt: "جناح كالانثي: لوحة كالانثي والمرآة المقوّسة والمنضدة",
@@ -2371,6 +2371,8 @@ export const ar: typeof en = {
       budgetRequired: "اختاري الميزانية.",
       eventTypeRequired: "أخبرينا بنوع المناسبة.",
       dateInvalid: "تحقّقي من التاريخ.",
+      guestsRequired: "أخبرينا بعدد الضيوف تقريبًا.",
+      venueRequired: "أخبرينا بالمكان أو المنطقة.",
       frequencyRequired: "اختاري عدد مرات وصول الزهور.",
       deliveryPreferenceRequired: "اختاري إلى أين تُرسل الزهور.",
       startDateInvalid: "تحقّقي من تاريخ البداية.",

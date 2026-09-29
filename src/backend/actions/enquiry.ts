@@ -210,8 +210,10 @@ export type EventEnquiryRequest = Contact & {
   company?: string;
   eventType: string;
   eventDate?: string;
-  guests?: string;
-  venue?: string;
+  /* Required: a florist cannot price or plan an event without the size of
+     it and where it is. Free text, so "80–100" is as welcome as "90". */
+  guests: string;
+  venue: string;
   notes?: string;
 };
 
@@ -234,6 +236,14 @@ export async function submitEventEnquiry(
     return fail("eventType", m.eventTypeRequired);
   }
 
+  /* Any number will do — Latin or Arabic-Indic digits. */
+  if (!/[0-9٠-٩۰-۹]/.test(clean(request.guests, 40))) {
+    return fail("guests", m.guestsRequired);
+  }
+  if (!clean(request.venue, 240)) {
+    return fail("venue", m.venueRequired);
+  }
+
   let when: string | undefined;
   if (request.eventDate) {
     const parsed = new Date(request.eventDate);
@@ -245,8 +255,8 @@ export async function submitEventEnquiry(
 
   const message = [
     `Occasion: ${clean(request.eventType, 80)}`,
-    request.guests ? `Guests: ${clean(request.guests, 40)}` : "",
-    request.venue ? `Venue: ${clean(request.venue, 240)}` : "",
+    `Guests: ${clean(request.guests, 40)}`,
+    `Venue: ${clean(request.venue, 240)}`,
     clean(request.notes, 2000) ? `Notes: ${clean(request.notes, 2000)}` : "",
   ]
     .filter(Boolean)
