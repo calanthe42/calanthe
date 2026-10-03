@@ -79,10 +79,13 @@ function DesktopNavItem({
   group,
   onDark,
   occasions,
+  side,
 }: {
   group: NavGroup;
   onDark: boolean;
   occasions: readonly Occasion[];
+  /** Which edge of the bar the item sits on; its panel opens inward from it. */
+  side: "start" | "end";
 }) {
   const t = useT();
   const triggerRef = useRef<HTMLAnchorElement>(null);
@@ -133,7 +136,13 @@ function DesktopNavItem({
           left inside an RTL document. */}
       <div
         className={cn(
-          "invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 text-start opacity-0 transition-[opacity,visibility] duration-300 ease-bloom",
+          /* ANCHORED TO ITS OWN EDGE, NOT CENTRED. Centred under the
+             heading, a wide panel ran off the screen whenever the heading
+             sat near an edge — in Arabic the shop menu lost its right-hand
+             column ("المناسبة") off the side of the window. Pinned to the
+             edge the item sits on, it always opens inward. */
+          "invisible absolute top-full z-50 pt-3 text-start opacity-0 transition-[opacity,visibility] duration-300 ease-bloom",
+          side === "start" ? "-start-6" : "-end-6",
           !dismissed &&
             "group-focus-within/nav:visible group-focus-within/nav:opacity-100 group-hover/nav:visible group-hover/nav:opacity-100",
         )}
@@ -450,6 +459,7 @@ export function Header({
                   group={group}
                   onDark={onDark}
                   occasions={occasions}
+                  side="start"
                 />
               ))}
             </nav>
@@ -528,7 +538,7 @@ export function Header({
           <div className="flex items-center gap-1">
             <nav
               aria-label={t.ui.membershipAndEvents}
-              className="mr-2 hidden items-center gap-8 lg:flex"
+              className="me-2 hidden items-center gap-8 lg:flex"
             >
               {NAV_RIGHT.map((group) => (
                 <DesktopNavItem
@@ -536,6 +546,7 @@ export function Header({
                   group={group}
                   onDark={onDark}
                   occasions={occasions}
+                  side="end"
                 />
               ))}
             </nav>
@@ -642,30 +653,18 @@ export function Header({
             )}
           >
             {/*
-            THE ATELIER WATERMARK.
+            THE ATELIER WATERMARK — centred, and it stays put.
 
-            The previous attempt was 165% wide at 13% opacity under a 34px
-            blur, and it was invisible — 34px of blur on a fine line mark
-            dissolves every stroke into a flat wash, so the panel read as a
-            plain olive rectangle. Scale does the work instead: the mark is
-            twice the screen's width, cropped hard by two edges, with only
-            enough blur to take the edge off the linework. It is legible as
-            a monogram without ever competing with the navigation, because
-            it is enormous and dim rather than small and smudged.
+            It used to hang off one edge (cropped by design) and scroll with
+            the menu, so on a phone it sat visibly off-centre: the client's
+            report. It is now one mark on the screen's centre line, pinned to
+            the panel (`fixed` inside the fixed panel), so the links scroll
+            over it and it never drifts. Big and dim, never competing with
+            the navigation.
           */}
             <span
               aria-hidden
-              className="pointer-events-none absolute -end-[72%] top-[2%] -z-10 w-[260%] select-none opacity-[0.12] blur-[2px]"
-            >
-              <Monogram className="w-full text-cream" />
-            </span>
-            {/* A second, much softer pass at a different scale and offset.
-              One flat silhouette reads as a sticker; two at different blurs
-              read as depth — the mark seen through the olive rather than
-              printed on it. */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -start-[45%] bottom-[-18%] -z-10 w-[150%] select-none opacity-[0.06] blur-[10px]"
+              className="pointer-events-none fixed left-1/2 top-1/2 -z-10 w-[170%] max-w-[44rem] -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.1] blur-[1.5px] sm:w-[120%]"
             >
               <Monogram className="w-full text-cream" />
             </span>

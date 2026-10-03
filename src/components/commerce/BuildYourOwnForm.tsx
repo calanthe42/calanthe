@@ -66,6 +66,9 @@ const COLOUR_KEYS = [
   "greensFoliage",
 ] as const;
 
+/* The marker the florist's-choice row carries in the colour list. */
+const FLORIST_CHOICE = "Florist's choice";
+
 const STEPS = [
   { id: "budget" },
   { id: "colours" },
@@ -279,7 +282,7 @@ export function BuildYourOwnForm() {
     <Summary
       colourNote={colourNote}
       budgetAed={budgetValue}
-      colours={colourOther ? [...colours, "Florist's choice"] : colours}
+      colours={colourOther ? [...colours, FLORIST_CHOICE] : colours}
       vase={vase}
       message={message}
       leaveBlank={leaveBlank}
@@ -596,7 +599,7 @@ export function BuildYourOwnForm() {
             {isGift !== null && (
               <div className="mt-5">
                 <label htmlFor="byo-location" className={labelClasses}>
-                  {isGift ? "Where should it go?" : "Your delivery address"}
+                  {isGift ? t.byo.place : t.byo.placeSelf}
                 </label>
                 <input
                   id="byo-location"
@@ -1009,7 +1012,18 @@ function Summary({
     { label: t.byo.summaryBudget, value: budgetAed > 0 ? formatAed(budgetAed) : null },
     {
       label: t.byo.summaryColours,
-      value: colours.length > 0 ? colours.join(", ") : null,
+      /* The state keeps the English names (they are what the florist reads
+         in the enquiry); the summary shows them in the reader's language. */
+      value:
+        colours.length > 0
+          ? colours
+              .map((c) => {
+                if (c === FLORIST_CHOICE) return t.byo.floristChoiceAnswer;
+                const i = byoColours.indexOf(c as (typeof byoColours)[number]);
+                return i >= 0 ? t.byo.colourNames[COLOUR_KEYS[i]!] : c;
+              })
+              .join(t.product.listComma)
+          : null,
     },
     /* Straight after the swatches, because it qualifies them. */
     { label: t.byo.summaryColourNote, value: colourNote.trim() || null, optional: true },
@@ -1019,12 +1033,12 @@ function Summary({
         vase === null
           ? null
           : vase
-            ? `In a vase, +${formatAed(BYO_VASE_PRICE_AED)}`
-            : "Flower bag",
+            ? `${t.byo.vaseAnswerYes}${t.product.listComma}+${formatAed(BYO_VASE_PRICE_AED)}`
+            : t.byo.vaseAnswerNo,
     },
     {
       label: t.byo.summaryCard,
-      value: leaveBlank ? "Left blank" : message.trim() ? `“${message.trim()}”` : null,
+      value: leaveBlank ? t.byo.cardAnswerBlank : message.trim() ? `“${message.trim()}”` : null,
     },
     { label: t.byo.summaryNotes, value: notes.trim() || null, optional: true },
   ];
