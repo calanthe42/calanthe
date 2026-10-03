@@ -106,17 +106,12 @@ describe("refusals", () => {
 });
 
 describe("delivery fees", () => {
-  it("charges the emirate's fee below the threshold", () => {
-    /* Abu Dhabi is 30 AED; 100 AED subtotal is under the 350 threshold. */
-    expect(deliveryFeeFils("abu-dhabi", 10000)).toBe(3000);
-  });
-
-  it("waives delivery at exactly the threshold", () => {
+  /* Abu Dhabi delivery is free on every order (client, 2026-10-03). */
+  it("delivers free in Abu Dhabi, whatever the basket", () => {
+    expect(deliveryFeeFils("abu-dhabi", 100)).toBe(0);
+    expect(deliveryFeeFils("abu-dhabi", 10000)).toBe(0);
+    expect(deliveryFeeFils("abu-dhabi", 34999)).toBe(0);
     expect(deliveryFeeFils("abu-dhabi", 35000)).toBe(0);
-  });
-
-  it("still charges one fils under the threshold", () => {
-    expect(deliveryFeeFils("abu-dhabi", 34999)).toBe(3000);
   });
 });
 
@@ -125,7 +120,7 @@ describe("totals reconcile exactly", () => {
     const products = new Map([["1", product({ priceFils: 10000 })]]);
     const order = priceOrder([line()], products, "abu-dhabi");
     expect(order.subtotalFils).toBe(10000);
-    expect(order.deliveryFeeFils).toBe(3000);
+    expect(order.deliveryFeeFils).toBe(0);
     expect(order.totalFils).toBe(order.subtotalFils + order.deliveryFeeFils - order.discountFils);
   });
 

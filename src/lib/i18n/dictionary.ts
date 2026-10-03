@@ -853,7 +853,7 @@ export const en = {
     eyebrow: "Help",
     deliveryTitle: "Delivery, across Abu Dhabi.",
     deliveryIntro:
-      "Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on orders over {amount}.",
+      "Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on every order.",
     deliveryWindows: "Delivery windows",
     approvalNote:
       "Before every delivery, your florist sends a photo or video of the finished arrangement on WhatsApp, and waits for your word before it leaves.",
@@ -1205,6 +1205,7 @@ export const en = {
     emirate: "Delivery emirate",
     emiratePlaceholder: "Choose your emirate",
     emirateOption: "{name} — {fee} delivery",
+    emirateOptionFree: "{name} — complimentary delivery",
     deliveryFree: "Delivery is complimentary on this order.",
     deliveryFreeAway: "{amount} more for complimentary delivery.",
     address: "Delivery address",
@@ -2159,7 +2160,7 @@ export const ar: typeof en = {
     eyebrow: "مساعدة",
     deliveryTitle: "التوصيل، في أنحاء أبوظبي.",
     deliveryIntro:
-      "اختاروا اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.",
+      "اختاروا اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على جميع الطلبات.",
     deliveryWindows: "فترات التوصيل",
     approvalNote:
       "قبل كل توصيلة، يرسل لكم منسّق الزهور صورة أو مقطعًا للتنسيق النهائي على واتساب، وينتظر موافقتكم قبل أن يخرج.",
@@ -2421,6 +2422,7 @@ export const ar: typeof en = {
     emirate: "إمارة التوصيل",
     emiratePlaceholder: "اختاروا الإمارة",
     emirateOption: "{name} — التوصيل {fee}",
+    emirateOptionFree: "{name} — توصيل مجاني",
     deliveryFree: "التوصيل مجاني على هذا الطلب.",
     deliveryFreeAway: "يفصلكم {amount} عن التوصيل المجاني.",
     address: "عنوان التوصيل",

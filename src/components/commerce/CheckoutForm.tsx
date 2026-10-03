@@ -32,6 +32,7 @@ import {
   deliveryZones,
   formatAed,
   FREE_DELIVERY_THRESHOLD_AED,
+  DELIVERY_ALWAYS_FREE,
   type DeliveryZone,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
@@ -223,7 +224,8 @@ export function CheckoutForm() {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const zone = deliveryZones.find((z) => z.id === zoneId);
-  const freeDelivery = subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
+  const freeDelivery =
+    DELIVERY_ALWAYS_FREE || zone?.feeAed === 0 || subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
   const deliveryFee = zone ? (freeDelivery ? 0 : zone.feeAed) : 0;
   const totalAed = subtotalAed + deliveryFee;
 
@@ -537,9 +539,11 @@ export function CheckoutForm() {
                 </option>
                 {deliveryZones.map((z) => (
                   <option key={z.id} value={z.id}>
-                    {t.checkout.emirateOption
-                      .replace("{name}", zoneName(z, t))
-                      .replace("{fee}", formatAed(z.feeAed))}
+                    {z.feeAed === 0
+                      ? t.checkout.emirateOptionFree.replace("{name}", zoneName(z, t))
+                      : t.checkout.emirateOption
+                          .replace("{name}", zoneName(z, t))
+                          .replace("{fee}", formatAed(z.feeAed))}
                   </option>
                 ))}
               </select>

@@ -550,17 +550,23 @@ export type DeliveryZone = {
 };
 
 /*
- * WHERE THE ATELIER DELIVERS — Abu Dhabi only, AED 30 (owner, 2026-09-29).
+ * WHERE THE ATELIER DELIVERS — Abu Dhabi only, and delivery is FREE on every
+ * order (client, 2026-10-03; it was AED 30 from 2026-09-29). A fee of 0 is
+ * shown as "complimentary" everywhere, never as "AED 0".
  * This list is the whole truth for checkout: the form offers only these,
  * and the server refuses any other emirate whatever the basket's size.
  * To open another emirate, add its row here (its Arabic name is already in
  * `zoneNames` in the dictionary) and update the "Abu Dhabi" copy.
  */
 export const deliveryZones: readonly DeliveryZone[] = [
-  { id: "abu-dhabi", name: "Abu Dhabi", feeAed: 30 },
+  { id: "abu-dhabi", name: "Abu Dhabi", feeAed: 0 },
 ] as const;
 
 export const FREE_DELIVERY_THRESHOLD_AED = 350;
+
+/** True while every zone delivers free — the "spend X more" nudges then have
+ *  nothing to say and are hidden. */
+export const DELIVERY_ALWAYS_FREE = deliveryZones.every((zone) => zone.feeAed === 0);
 
 /** Orders placed before this hour (UAE time) can be delivered today. */
 export const SAME_DAY_CUTOFF_HOUR = 17;

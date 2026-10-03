@@ -13,7 +13,13 @@ import {
   useCart,
   type CartItem as CartItemType,
 } from "@/lib/cart";
-import { addons, formatAed, formatAedDelta, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
+import {
+  addons,
+  DELIVERY_ALWAYS_FREE,
+  formatAed,
+  formatAedDelta,
+  FREE_DELIVERY_THRESHOLD_AED,
+} from "@/lib/data";
 import { useLocale, useT } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -146,8 +152,9 @@ export function CartDrawer() {
   const { dir, locale } = useLocale();
   const t = useT();
   const fromEnd = dir === "rtl" ? "-100%" : "100%";
-  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
-  const progress = Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
+  /* Delivery free on every order: no distance to show, the bar sits full. */
+  const remaining = DELIVERY_ALWAYS_FREE ? 0 : Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
+  const progress = DELIVERY_ALWAYS_FREE ? 1 : Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
   useScrollLock(isOpen);
 
   /* Escape closes it, like every other overlay on the site. Without this the

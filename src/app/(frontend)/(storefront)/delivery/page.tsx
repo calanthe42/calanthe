@@ -6,7 +6,6 @@ import { getDictionary } from "@/lib/i18n/server";
 import {
   deliveryZones,
   formatAed,
-  FREE_DELIVERY_THRESHOLD_AED,
   timeSlots,
 } from "@/lib/data";
 
@@ -33,10 +32,7 @@ export default async function DeliveryPage() {
           {/* No same-day promise: the atelier does not offer it. The cutoff
               still governs which days the picker can offer, which is a
               scheduling rule rather than a claim. */}
-          {t.help.deliveryIntro.replace(
-            "{amount}",
-            formatAed(FREE_DELIVERY_THRESHOLD_AED),
-          )}
+          {t.help.deliveryIntro}
         </p>
       </Reveal>
 
@@ -61,7 +57,9 @@ export default async function DeliveryPage() {
           <StaggerItem key={zone.id} className="bg-canvas">
             <div className="flex items-baseline justify-between px-5 py-4">
               <p className="text-base text-olive">{t.zoneNames[zone.id] ?? zone.name}</p>
-              <p className="text-sm text-ink-muted">{formatAed(zone.feeAed)}</p>
+              <p className="text-sm text-ink-muted">
+                {zone.feeAed === 0 ? t.checkout.complimentary : formatAed(zone.feeAed)}
+              </p>
             </div>
           </StaggerItem>
         ))}

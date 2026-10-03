@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-860 strings in total. 0 are flagged below as likely problems.
+861 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -2538,8 +2538,8 @@ help.deliveryTitle
   CORRECTION 
 
 help.deliveryIntro
-  ENGLISH    Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on orders over {amount}.
-  ARABIC     اختاروا اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
+  ENGLISH    Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on every order.
+  ARABIC     اختاروا اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على جميع الطلبات.
   CORRECTION 
 
 help.deliveryWindows
@@ -3568,6 +3568,11 @@ checkout.emiratePlaceholder
 checkout.emirateOption
   ENGLISH    {name} — {fee} delivery
   ARABIC     {name} — التوصيل {fee}
+  CORRECTION 
+
+checkout.emirateOptionFree
+  ENGLISH    {name} — complimentary delivery
+  ARABIC     {name} — توصيل مجاني
   CORRECTION 
 
 checkout.deliveryFree
