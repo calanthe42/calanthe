@@ -192,6 +192,107 @@ html[dir="rtl"] .hero-scrim {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* THE OPENING (components/blocks/BrandIntro). Once per visit:
+   0.15–1.25s  the monogram's petals draw on in cream, one after another
+   1.00–1.60s  the mark fills
+   1.20–1.80s  the name settles (opacity, rise, focus — no letter-spacing
+               animation: transform/opacity/filter only)
+   1.50–2.00s  the hairline draws, the line appears
+   2.15–2.95s  the olive lifts like a curtain (clip-path), revealing the page
+   A tap skips straight to the lift. Hidden unless the script chose to play. */
+/* ------------------------------------------------------------------ */
+.brand-intro {
+  display: none;
+}
+html.intro-playing body {
+  overflow: hidden;
+}
+html.intro-playing .brand-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: var(--color-olive);
+  color: var(--color-cream);
+  cursor: pointer;
+  clip-path: inset(0 0 0 0);
+  animation: intro-lift 0.8s var(--ease-bloom) 2.15s forwards;
+}
+html.intro-playing .brand-intro.is-skipping {
+  animation: intro-lift 0.45s var(--ease-bloom) 0s forwards;
+}
+.brand-intro__mark {
+  width: clamp(7.5rem, 30vw, 11rem);
+  overflow: visible;
+}
+.brand-intro__mark path {
+  fill: currentColor;
+  fill-opacity: 0;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    intro-draw 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    intro-fill 0.6s var(--ease-bloom) 1s forwards;
+}
+.brand-intro__mark path:nth-child(1) { animation-delay: 0.15s, 1s; }
+.brand-intro__mark path:nth-child(2) { animation-delay: 0.2s, 1s; }
+.brand-intro__mark path:nth-child(3) { animation-delay: 0.27s, 1.04s; }
+.brand-intro__mark path:nth-child(4) { animation-delay: 0.34s, 1.08s; }
+.brand-intro__mark path:nth-child(5) { animation-delay: 0.41s, 1.12s; }
+.brand-intro__mark path:nth-child(6) { animation-delay: 0.48s, 1.16s; }
+.brand-intro__mark path:nth-child(n + 7) { animation-delay: 0.55s, 1.2s; }
+.brand-intro__name {
+  margin-top: 1.6rem;
+  font-family: var(--font-brand);
+  font-size: clamp(1.35rem, 5.5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  padding-inline-start: 0.32em; /* optical centring of tracked caps */
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(6px);
+  animation: intro-rise 0.6s var(--ease-bloom) 1.2s forwards;
+}
+.brand-intro__rule {
+  display: block;
+  margin-top: 1.1rem;
+  width: 3.5rem;
+  height: 1px;
+  background: var(--color-burnt-orange);
+  transform: scaleX(0);
+  animation: intro-rule 0.5s var(--ease-bloom) 1.5s forwards;
+}
+.brand-intro__line {
+  margin-top: 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 4.6vw, 1.5rem);
+  font-weight: 300;
+  font-style: italic;
+  opacity: 0;
+  animation: intro-fade 0.5s var(--ease-bloom) 1.55s forwards;
+}
+html[dir="rtl"] .brand-intro__line {
+  font-style: normal;
+}
+@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-fill { to { fill-opacity: 1; stroke-opacity: 0; } }
+@keyframes intro-rise { to { opacity: 1; transform: none; filter: none; } }
+@keyframes intro-rule { to { transform: scaleX(1); } }
+@keyframes intro-fade { to { opacity: 0.8; } }
+@keyframes intro-lift { to { clip-path: inset(0 0 100% 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .brand-intro { display: none !important; }
+  html.intro-playing body { overflow: auto; }
+}
+
 /* Hero CTAs: a pure-CSS entrance. These sit in the bottom fifth of the
    viewport, which is exactly where MotionObserver's -20% rootMargin
    never fires — a scroll reveal here leaves them invisible until the

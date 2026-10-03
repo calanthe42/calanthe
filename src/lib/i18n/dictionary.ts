@@ -793,7 +793,7 @@ export const en = {
       },
       {
         q: "How can I pay?",
-        a: "Cards are accepted at checkout, with Tabby instalments; wallet payments arrive soon. The recipient never sees the price.",
+        a: "Card, Apple Pay and Google Pay are accepted at checkout, and Tabby instalments are coming soon. The recipient never sees the price.",
       },
     ],
     membership: [
@@ -1128,6 +1128,8 @@ export const en = {
         "We could not price that basket. Please review your items and try again.",
       creationFailed:
         "We could not place your order. Nothing has been charged — please try again.",
+      paymentUnavailable:
+        "Online payment is not available right now. Please message us on WhatsApp to place your order.",
     },
     account: {
       credentialsRequired: "Enter your email and password.",
@@ -1219,8 +1221,10 @@ export const en = {
     email: "Email for order updates",
     emailPlaceholder: "you@example.com",
 
-    cod: "Cash on delivery",
-    codBody: "Pay the courier when your flowers arrive. Nothing is charged now.",
+    cardTitle: "Card, Apple Pay or Google Pay",
+    cardBody: "Paid securely through Stripe. Your card details go straight to Stripe and never reach us.",
+    paymentLoading: "Loading secure payment…",
+    paymentFailed: "The payment did not go through. Nothing has been charged — please check your details or try another card.",
 
     yourOrder: "Your order",
     withCard: "With a handwritten card",
@@ -1230,15 +1234,15 @@ export const en = {
     complimentary: "Complimentary",
     chooseEmirate: "Choose an emirate",
     total: "Total",
-    paidInCash: "Paid in cash when your flowers arrive.",
+    paidByCard: "Paid securely by card, Apple Pay or Google Pay.",
 
     showSummary: "Show order summary",
     hideSummary: "Hide order summary",
 
-    place: "Place Order",
-    placeWithTotal: "Place Order — {total}",
-    placing: "Placing your order…",
-    placingShort: "Placing…",
+    place: "Pay Now",
+    placeWithTotal: "Pay Now — {total}",
+    placing: "Processing your payment…",
+    placingShort: "Processing…",
 
     questions: "Questions first?",
     messageFlorist: "Message a florist",
@@ -1266,7 +1270,7 @@ export const en = {
     orderRef: "Order {number}",
     placedTitle: "Your flowers are in our hands.",
     placedBody:
-      "Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval. Payment is taken in cash on delivery.",
+      "Your payment has been received. Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval.",
     viewOrders: "View Your Orders",
     continueShopping: "Continue Shopping",
 
@@ -1379,7 +1383,7 @@ export const en = {
     placedOn: "Placed {date}",
     whatYouOrdered: "What you ordered",
     deliveryFree: "Free",
-    payableOnDelivery: "Payable in cash on delivery.",
+    payableOnDelivery: "Awaiting payment.",
     paymentState: "Payment: {status}",
     deliveryHeading: "Delivery",
     deliveryTo: "To {name}",
@@ -2106,7 +2110,7 @@ export const ar: typeof en = {
       },
       {
         q: "كيف يمكنني الدفع؟",
-        a: "نقبل الدفع بالبطاقة عند إتمام الطلب، مع إمكانية التقسيط عبر تابي، وتتوفّر المحافظ الإلكترونية قريبًا. ولا يرى المستلِم السعر أبدًا.",
+        a: "نقبل الدفع بالبطاقة وApple Pay وGoogle Pay عند إتمام الطلب، ويتوفّر التقسيط عبر تابي قريبًا. ولا يرى المستلِم السعر أبدًا.",
       },
     ],
     membership: [
@@ -2362,6 +2366,7 @@ export const ar: typeof en = {
       productUnavailable: "إحدى الباقات في السلة لم تعد متوفرة. يُرجى مراجعة السلة.",
       pricingRejected: "لم نتمكن من حساب قيمة السلة. راجعوا العناصر وحاولوا مرة أخرى.",
       creationFailed: "لم نتمكن من تأكيد طلبكم، ولم يُخصم أي مبلغ — حاولوا مرة أخرى.",
+      paymentUnavailable: "الدفع الإلكتروني غير متاح حاليًا. يُرجى مراسلتنا على واتساب لإتمام طلبكم.",
     },
     account: {
       credentialsRequired: "اكتبوا البريد الإلكتروني وكلمة المرور.",
@@ -2436,8 +2441,10 @@ export const ar: typeof en = {
     email: "البريد الإلكتروني لتحديثات الطلب",
     emailPlaceholder: "you@example.com",
 
-    cod: "الدفع نقدًا عند التوصيل",
-    codBody: "تدفعون لمندوب التوصيل عند وصول الزهور. لا يُخصم أي مبلغ الآن.",
+    cardTitle: "البطاقة أو Apple Pay أو Google Pay",
+    cardBody: "دفع آمن عبر Stripe. تذهب بيانات بطاقتكم مباشرة إلى Stripe ولا تصل إلينا أبدًا.",
+    paymentLoading: "جارٍ تحميل الدفع الآمن…",
+    paymentFailed: "لم تتم عملية الدفع، ولم يُخصم أي مبلغ. يُرجى التحقق من البيانات أو تجربة بطاقة أخرى.",
 
     yourOrder: "طلبكم",
     withCard: "مع بطاقة مكتوبة بخط اليد",
@@ -2447,15 +2454,15 @@ export const ar: typeof en = {
     complimentary: "مجاني",
     chooseEmirate: "اختاروا الإمارة",
     total: "الإجمالي",
-    paidInCash: "يُدفع نقدًا عند وصول الزهور.",
+    paidByCard: "دفع آمن بالبطاقة أو Apple Pay أو Google Pay.",
 
     showSummary: "إظهار ملخّص الطلب",
     hideSummary: "إخفاء ملخّص الطلب",
 
-    place: "تأكيد الطلب",
-    placeWithTotal: "تأكيد الطلب — {total}",
-    placing: "جارٍ تأكيد طلبكم…",
-    placingShort: "جارٍ التأكيد…",
+    place: "ادفعوا الآن",
+    placeWithTotal: "ادفعوا الآن — {total}",
+    placing: "جارٍ إتمام الدفع…",
+    placingShort: "جارٍ الدفع…",
 
     questions: "لديكم سؤال أولًا؟",
     messageFlorist: "راسلوا منسّق الزهور",
@@ -2476,7 +2483,7 @@ export const ar: typeof en = {
     orderRef: "الطلب {number}",
     placedTitle: "زهوركم بين أيدينا الآن.",
     placedBody:
-      "قبل أن يخرج التنسيق من الأتيليه، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه. ويُدفع المبلغ نقدًا عند التوصيل.",
+      "وصلتنا دفعتكم. وقبل أن يخرج التنسيق من الأتيليه، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه.",
     viewOrders: "عرض طلباتكم",
     continueShopping: "متابعة التسوّق",
 
@@ -2568,7 +2575,7 @@ export const ar: typeof en = {
     placedOn: "طُلب في {date}",
     whatYouOrdered: "ما طلبتموه",
     deliveryFree: "مجانًا",
-    payableOnDelivery: "يُدفع نقدًا عند التوصيل.",
+    payableOnDelivery: "بانتظار الدفع.",
     paymentState: "الدفع: {status}",
     deliveryHeading: "التوصيل",
     deliveryTo: "إلى {name}",

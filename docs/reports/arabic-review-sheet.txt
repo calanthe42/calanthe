@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-861 strings in total. 0 are flagged below as likely problems.
+864 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -2407,8 +2407,8 @@ faq.site.4.q
   CORRECTION 
 
 faq.site.4.a
-  ENGLISH    Cards are accepted at checkout, with Tabby instalments; wallet payments arrive soon. The recipient never sees the price.
-  ARABIC     نقبل الدفع بالبطاقة عند إتمام الطلب، مع إمكانية التقسيط عبر تابي، وتتوفّر المحافظ الإلكترونية قريبًا. ولا يرى المستلِم السعر أبدًا.
+  ENGLISH    Card, Apple Pay and Google Pay are accepted at checkout, and Tabby instalments are coming soon. The recipient never sees the price.
+  ARABIC     نقبل الدفع بالبطاقة وApple Pay وGoogle Pay عند إتمام الطلب، ويتوفّر التقسيط عبر تابي قريبًا. ولا يرى المستلِم السعر أبدًا.
   CORRECTION 
 
 faq.membership.0.q
@@ -3332,6 +3332,11 @@ server.checkout.creationFailed
   ARABIC     لم نتمكن من تأكيد طلبكم، ولم يُخصم أي مبلغ — حاولوا مرة أخرى.
   CORRECTION 
 
+server.checkout.paymentUnavailable
+  ENGLISH    Online payment is not available right now. Please message us on WhatsApp to place your order.
+  ARABIC     الدفع الإلكتروني غير متاح حاليًا. يُرجى مراسلتنا على واتساب لإتمام طلبكم.
+  CORRECTION 
+
 server.account.credentialsRequired
   ENGLISH    Enter your email and password.
   ARABIC     اكتبوا البريد الإلكتروني وكلمة المرور.
@@ -3630,14 +3635,24 @@ checkout.emailPlaceholder
   ARABIC     you@example.com
   CORRECTION 
 
-checkout.cod
-  ENGLISH    Cash on delivery
-  ARABIC     الدفع نقدًا عند التوصيل
+checkout.cardTitle
+  ENGLISH    Card, Apple Pay or Google Pay
+  ARABIC     البطاقة أو Apple Pay أو Google Pay
   CORRECTION 
 
-checkout.codBody
-  ENGLISH    Pay the courier when your flowers arrive. Nothing is charged now.
-  ARABIC     تدفعون لمندوب التوصيل عند وصول الزهور. لا يُخصم أي مبلغ الآن.
+checkout.cardBody
+  ENGLISH    Paid securely through Stripe. Your card details go straight to Stripe and never reach us.
+  ARABIC     دفع آمن عبر Stripe. تذهب بيانات بطاقتكم مباشرة إلى Stripe ولا تصل إلينا أبدًا.
+  CORRECTION 
+
+checkout.paymentLoading
+  ENGLISH    Loading secure payment…
+  ARABIC     جارٍ تحميل الدفع الآمن…
+  CORRECTION 
+
+checkout.paymentFailed
+  ENGLISH    The payment did not go through. Nothing has been charged — please check your details or try another card.
+  ARABIC     لم تتم عملية الدفع، ولم يُخصم أي مبلغ. يُرجى التحقق من البيانات أو تجربة بطاقة أخرى.
   CORRECTION 
 
 checkout.yourOrder
@@ -3680,9 +3695,9 @@ checkout.total
   ARABIC     الإجمالي
   CORRECTION 
 
-checkout.paidInCash
-  ENGLISH    Paid in cash when your flowers arrive.
-  ARABIC     يُدفع نقدًا عند وصول الزهور.
+checkout.paidByCard
+  ENGLISH    Paid securely by card, Apple Pay or Google Pay.
+  ARABIC     دفع آمن بالبطاقة أو Apple Pay أو Google Pay.
   CORRECTION 
 
 checkout.showSummary
@@ -3696,23 +3711,23 @@ checkout.hideSummary
   CORRECTION 
 
 checkout.place
-  ENGLISH    Place Order
-  ARABIC     تأكيد الطلب
+  ENGLISH    Pay Now
+  ARABIC     ادفعوا الآن
   CORRECTION 
 
 checkout.placeWithTotal
-  ENGLISH    Place Order — {total}
-  ARABIC     تأكيد الطلب — {total}
+  ENGLISH    Pay Now — {total}
+  ARABIC     ادفعوا الآن — {total}
   CORRECTION 
 
 checkout.placing
-  ENGLISH    Placing your order…
-  ARABIC     جارٍ تأكيد طلبكم…
+  ENGLISH    Processing your payment…
+  ARABIC     جارٍ إتمام الدفع…
   CORRECTION 
 
 checkout.placingShort
-  ENGLISH    Placing…
-  ARABIC     جارٍ التأكيد…
+  ENGLISH    Processing…
+  ARABIC     جارٍ الدفع…
   CORRECTION 
 
 checkout.questions
@@ -3781,8 +3796,8 @@ checkout.placedTitle
   CORRECTION 
 
 checkout.placedBody
-  ENGLISH    Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval. Payment is taken in cash on delivery.
-  ARABIC     قبل أن يخرج التنسيق من الأتيليه، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه. ويُدفع المبلغ نقدًا عند التوصيل.
+  ENGLISH    Your payment has been received. Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval.
+  ARABIC     وصلتنا دفعتكم. وقبل أن يخرج التنسيق من الأتيليه، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه.
   CORRECTION 
 
 checkout.viewOrders
@@ -4175,8 +4190,8 @@ account.deliveryFree
   CORRECTION 
 
 account.payableOnDelivery
-  ENGLISH    Payable in cash on delivery.
-  ARABIC     يُدفع نقدًا عند التوصيل.
+  ENGLISH    Awaiting payment.
+  ARABIC     بانتظار الدفع.
   CORRECTION 
 
 account.paymentState

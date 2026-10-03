@@ -43,7 +43,7 @@ const TOKEN = /\{(\w+)\}/g;
  * ARE the subject of the sentence. Translating them would delete the point
  * of the paragraph; only the gloss after the dash changes.
  */
-const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos)\b/g;
+const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos|Apple Pay|Google Pay|Stripe)\b/g;
 
 const isPluralForms = (node: unknown): node is PluralForms =>
   typeof node === "object" && node !== null && "other" in node;

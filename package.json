@@ -24,6 +24,8 @@
     "@payloadcms/plugin-cloud-storage": "^3.88.0",
     "@payloadcms/richtext-lexical": "^3.88.0",
     "@sentry/nextjs": "^10.71.0",
+    "@stripe/react-stripe-js": "^7.0.0",
+    "@stripe/stripe-js": "^10.0.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.3",
     "@vercel/blob": "^2.8.0",
@@ -39,6 +41,7 @@
     "react-dom": "19.1.0",
     "server-only": "^0.0.1",
     "sharp": "^0.35.4",
+    "stripe": "^23.0.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

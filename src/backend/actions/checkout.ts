@@ -8,12 +8,11 @@ import { priceOrder, type CheckoutLineRequest } from "@backend/domain/pricing";
 import { LIMITS, clientAddress, throttle, waitHint } from "@backend/security/throttle";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
-import { buildOrderEmails, describeOptions } from "@backend/email/order-emails";
-import { sendAfterCommit } from "@backend/email/send";
-import { env } from "@/lib/env";
+import { cardPaymentsConfigured, getStripe } from "@backend/payments/stripe";
 
 /**
- * Cash on delivery checkout.
+ * Card checkout (Stripe — card, Apple Pay, Google Pay). Cash on delivery was
+ * removed at the owner's instruction on 2026-10-03.
  *
  * THE TRUST BOUNDARY IS THIS FUNCTION. Everything above it is untrusted: the
  * browser sends product ids, quantities and option ids, and nothing else that
@@ -30,10 +29,11 @@ import { env } from "@/lib/env";
  * never supplies an amount. It is one function, it is greppable, and no other
  * action in this codebase does it.
  *
- * COD IS NOT PAID. The order is created with paymentStatus PENDING and stays
- * there. Money state moves only through a payment provider's webhook
- * (guardPaymentStatus), and cash handed over at the door is reconciled by a
- * human afterwards. Nothing here marks an order paid.
+ * NOTHING HERE MARKS AN ORDER PAID. The order is created PENDING with a
+ * Stripe PaymentIntent for exactly its server-computed total; the browser
+ * then confirms the payment with Stripe directly (card data never touches
+ * this server), and only the signed webhook moves the order to PAID and
+ * sends its emails (backend/payments/paid.ts, docs/PAYMENTS.md §2).
  */
 
 export type CheckoutRequest = {
@@ -52,12 +52,13 @@ export type CheckoutRequest = {
 };
 
 export type CheckoutResult =
-  { ok: true; orderNumber: string } | { ok: false; code: string; message: string };
+  | { ok: true; orderNumber: string; clientSecret: string }
+  | { ok: false; code: string; message: string };
 
 const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutResult> {
+export async function startCardCheckout(request: CheckoutRequest): Promise<CheckoutResult> {
   /*
    * The language the order was placed in.
    *
@@ -73,11 +74,16 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
     code,
     message: messages[key],
   });
+  /* Without both Stripe keys there is nothing to pay with: say so before
+     anything is created. */
+  const stripe = getStripe();
+  if (!stripe || !cardPaymentsConfigured()) {
+    return fail("PAYMENT_UNAVAILABLE", "paymentUnavailable");
+  }
+
   /*
-   * Cash on delivery takes no card, so there is no payment step to reject a
-   * fake order. An unlimited create is therefore a script that fills the
-   * florist's morning with bouquets nobody ordered, each of which she has to
-   * ring a stranger about before she can cancel it.
+   * An unpaid order is still a row the florist sees, so an unlimited create
+   * is a script that fills her morning with orders nobody will pay for.
    *
    * Eight an hour from one network is far above any real household and far
    * below what abuse needs to be worth doing. It is checked first, before
@@ -216,70 +222,32 @@ export async function placeCodOrder(request: CheckoutRequest): Promise<CheckoutR
         totalFils: priced.totalFils,
         currency: "AED",
 
-        /* Cash on delivery: nothing has been paid. The order is real, the
-           money is not yet collected, and only a provider webhook may ever
-           move this field. */
+        /* Not paid until Stripe's signed webhook says so. */
         paymentStatus: "PENDING",
         fulfilmentStatus: "NEW",
-        source: "web-checkout-cod",
+        source: "web-checkout-card",
       } as never,
     });
 
-    /* ---------- emails, AFTER the order exists ----------
-     * Never inside the create: an email that says "your order is confirmed"
-     * must not be able to arrive for an order that was rolled back. And
-     * never allowed to fail the order — sendEmail has no throwing path, so
-     * a provider outage costs a receipt, not a sale. Until the owner gives
-     * real addresses, owner and florist mail goes to EMAIL_REPLY_TO, which
-     * is recorded in docs/OWNER_TODO.md. */
-    try {
-      const internal = env.EMAIL_REPLY_TO
-        ? { owner: env.EMAIL_REPLY_TO, florist: env.EMAIL_REPLY_TO }
-        : {};
-      await sendAfterCommit(
-        payload,
-        buildOrderEmails(
-          {
-            orderId: order.id,
-            orderNumber: String(order.orderNumber),
-            customerName: request.customerName.trim(),
-            customerEmail: request.customerEmail.trim().toLowerCase(),
-            customerPhone: request.customerPhone.trim(),
-            deliveryAddress: request.deliveryAddress.trim(),
-            deliveryEmirate: request.deliveryEmirate,
-            deliveryDate: deliveryDate.toLocaleDateString("en-GB", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            }),
-            deliveryTimeSlot: request.deliveryTimeSlot.trim(),
-            deliveryNotes: request.deliveryNotes?.trim() || undefined,
-            recipientName: request.recipientName?.trim() || undefined,
-            recipientPhone: request.recipientPhone?.trim() || undefined,
-            cardMessage: request.cardMessage?.trim() || undefined,
-            lines: priced.lines.map((line) => ({
-              productName: line.productName,
-              quantity: line.quantity,
-              options: describeOptions(line.selectedOptions),
-            })),
-            subtotalFils: priced.subtotalFils,
-            deliveryFeeFils: priced.deliveryFeeFils,
-            totalFils: priced.totalFils,
-          },
-          internal,
-        ),
-      );
-    } catch (emailError) {
-      /* Belt and braces. sendAfterCommit is already non-throwing; this makes
-         it impossible for a future change there to cost a customer's order. */
-      payload.logger.error(
-        `order ${order.orderNumber} placed, but its emails could not be queued: ${
-          emailError instanceof Error ? emailError.message : "unknown"
-        }`,
-      );
-    }
+    /* ---------- the payment, for exactly the server total ----------
+     * AED is a two-decimal currency, so Stripe's amount IS our fils. The
+     * idempotency key is the order: a retried request reuses the intent
+     * instead of creating a second charge. `automatic_payment_methods`
+     * lets Stripe offer card, Apple Pay and Google Pay. */
+    const intent = await stripe.paymentIntents.create(
+      {
+        amount: priced.totalFils,
+        currency: "aed",
+        automatic_payment_methods: { enabled: true },
+        receipt_email: request.customerEmail.trim().toLowerCase(),
+        description: `Calanthe order ${order.orderNumber}`,
+        metadata: { kind: "order", orderId: String(order.id), orderNumber: String(order.orderNumber) },
+      },
+      { idempotencyKey: `order-${order.id}` },
+    );
+    if (!intent.client_secret) throw new Error("PaymentIntent has no client secret");
 
-    return { ok: true, orderNumber: String(order.orderNumber) };
+    return { ok: true, orderNumber: String(order.orderNumber), clientSecret: intent.client_secret };
   } catch (error) {
     payload.logger.error(
       `order creation failed: ${error instanceof Error ? error.message : "unknown"}`,

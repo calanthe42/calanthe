@@ -1,5 +1,5 @@
 /**
- * The three emails a cash-on-delivery order produces.
+ * The three emails an order produces, sent once Stripe confirms the payment.
  *
  *   customer  confirmation, with the money
  *   owner     new order, with the money and the customer's contact details

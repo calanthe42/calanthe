@@ -47,7 +47,7 @@ const TOKEN = /\{[a-zA-Z]+\}/g;
  *     those plural forms legitimately have no {n};
  *   - a phone number or an email example is the same in any language.
  */
-const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos)\b/g;
+const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos|Apple Pay|Google Pay|Stripe)\b/g;
 const NOT_PROSE = new Set(["checkout.emailPlaceholder"]);
 const hasNoWords = (text: string) => !/\p{L}/u.test(text);
 

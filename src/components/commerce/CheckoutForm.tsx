@@ -1,7 +1,9 @@
 "use client";
 
 import { memo, useRef, useState, useTransition } from "react";
-import { placeCodOrder } from "@backend/actions/checkout";
+import { loadStripe, type Appearance } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { startCardCheckout, type CheckoutRequest } from "@backend/actions/checkout";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
@@ -135,7 +137,7 @@ const OrderSummary = memo(function OrderSummary({
         </div>
       </dl>
       <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-        {t.checkout.paidInCash}
+        {t.checkout.paidByCard}
       </p>
     </div>
   );
@@ -187,9 +189,76 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
+/*
+ * STRIPE, LOADED ONLY HERE. Stripe.js is fetched by the checkout page alone,
+ * never on the rest of the site. Without a publishable key the provider still
+ * mounts (with `null`), the payment step says payment is unavailable, and
+ * nothing can be charged.
+ */
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
+
+/* The Payment Element in the house palette: cream ground, olive type, almost
+   square corners, Instrument Sans — so the card fields read as part of the
+   page, not as a third-party box. */
+const APPEARANCE: Appearance = {
+  theme: "flat",
+  variables: {
+    colorPrimary: "#2B2F1B",
+    colorBackground: "#F3EFDF",
+    colorText: "#2B2F1B",
+    colorTextSecondary: "#575946",
+    colorDanger: "#B55B29",
+    fontFamily: "'Instrument Sans', system-ui, sans-serif",
+    borderRadius: "2px",
+    spacingUnit: "4px",
+  },
+  rules: {
+    ".Input": { border: "1px solid #CBC4A9", boxShadow: "none", padding: "12px 14px" },
+    ".Input:focus": { border: "1px solid #2B2F1B", boxShadow: "0 0 0 1px #2B2F1B" },
+    ".Tab": { border: "1px solid #CBC4A9", boxShadow: "none" },
+    ".Tab--selected": { border: "1px solid #2B2F1B", backgroundColor: "#E4DCC5" },
+    ".Label": { color: "#868764", fontSize: "12px" },
+  },
+};
+
+/**
+ * Card checkout: card, Apple Pay and Google Pay in Stripe's Payment Element
+ * (docs/PAYMENTS.md). Deferred-intent flow — the element mounts with the
+ * basket's amount, the order and its PaymentIntent are created on the server
+ * only when the customer presses Pay, and the browser confirms with Stripe
+ * directly. The order becomes PAID only when Stripe's signed webhook says so.
+ */
 export function CheckoutForm() {
+  const { subtotalAed } = useCart();
+  const { locale } = useLocale();
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        mode: "payment",
+        currency: "aed",
+        /* Delivery is free (DELIVERY_ALWAYS_FREE), so the basket is the
+           total; the server recomputes it regardless. Stripe needs > 0. */
+        amount: Math.max(100, Math.round(subtotalAed * 100)),
+        locale: locale === "ar" ? "ar" : "en",
+        appearance: APPEARANCE,
+        fonts: [{ cssSrc: "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&display=swap" }],
+      }}
+    >
+      <CheckoutFormInner />
+    </Elements>
+  );
+}
+
+function CheckoutFormInner() {
   const { items, subtotalAed, clear } = useCart();
   const { locale, t } = useLocale();
+  const stripe = useStripe();
+  const elements = useElements();
+  /* A payment that fails can be retried without creating a second order:
+     the order and its intent are kept while the request is unchanged. */
+  const intentRef = useRef<{ key: string; orderNumber: string; clientSecret: string } | null>(null);
 
   /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
@@ -289,8 +358,12 @@ export function CheckoutForm() {
 
     /* Everything that costs money is recomputed on the server from the
        product records. This sends what was chosen, never what it costs. */
-    startTransition(async () => {
-      const result = await placeCodOrder({
+    if (!stripe || !elements) {
+      setFormError(stripePromise ? t.checkout.paymentLoading : t.server.checkout.paymentUnavailable);
+      return;
+    }
+
+    const request: CheckoutRequest = {
         lines: items.map((item) => ({
           productId: item.productId,
           quantity: item.qty,
@@ -318,17 +391,56 @@ export function CheckoutForm() {
           mode === "gift" && surprise
             ? "Keep it a surprise: contact the sender, not the recipient, before delivery."
             : undefined,
-      });
+    };
 
-      if (!result.ok) {
-        /* The cart is untouched, so she can correct and send again. */
-        setFormError(result.message);
+    startTransition(async () => {
+      /* 1. Card fields first — Stripe requires this before any other await
+         (Apple Pay / Google Pay sheets fail otherwise). */
+      const submitted = await elements.submit();
+      if (submitted.error) {
+        setFormError(submitted.error.message ?? t.checkout.paymentFailed);
         return;
       }
-      /* Only a confirmed order empties the cart. It used to be cleared the
-         moment the button was pressed, so a failed order lost the basket. */
+
+      /* 2. The order and its PaymentIntent, priced on the server. */
+      const key = JSON.stringify(request);
+      let intent = intentRef.current?.key === key ? intentRef.current : null;
+      if (!intent) {
+        const result = await startCardCheckout(request);
+        if (!result.ok) {
+          /* The cart is untouched, so she can correct and send again. */
+          setFormError(result.message);
+          return;
+        }
+        intent = { key, orderNumber: result.orderNumber, clientSecret: result.clientSecret };
+        intentRef.current = intent;
+      }
+
+      /* 3. Confirm with Stripe from the browser. 3-D Secure opens in place;
+         a method that must redirect comes back to /checkout/complete. */
+      const confirmed = await stripe.confirmPayment({
+        elements,
+        clientSecret: intent.clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/complete?order=${encodeURIComponent(intent.orderNumber)}`,
+          /* The element does not ask for these (checkout already has them),
+             so Stripe needs them here. */
+          payment_method_data: {
+            billing_details: { email: request.customerEmail, phone: request.customerPhone },
+          },
+        },
+        redirect: "if_required",
+      });
+      if (confirmed.error) {
+        setFormError(confirmed.error.message ?? t.checkout.paymentFailed);
+        return;
+      }
+
+      /* Only a confirmed payment empties the cart. The order is marked PAID
+         by Stripe's webhook, not by this screen. */
+      intentRef.current = null;
       clear();
-      setPlaced(result.orderNumber);
+      setPlaced(intent.orderNumber);
       window.scrollTo({ top: 0 });
       requestAnimationFrame(() => headingRef.current?.focus());
     });
@@ -698,23 +810,23 @@ export function CheckoutForm() {
           </Step>
 
           <Step index={4} title={t.checkout.payment}>
-            {/* The one method this checkout takes. It used to show a
-                disabled card form, a Tabby instalment offer and "Apple Pay
-                arrives later" — none of which a customer could use. */}
-            <div className="flex items-start gap-4 rounded-sm border border-olive bg-cream/60 p-5">
-              <span
-                aria-hidden
-                className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-olive"
-              >
-                <span className="h-2 w-2 rounded-full bg-olive" />
-              </span>
-              <div>
-                <p className="text-base text-olive">{t.checkout.cod}</p>
-                <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-                  {t.checkout.codBody}
-                </p>
-              </div>
-            </div>
+            <p className="text-base text-olive">{t.checkout.cardTitle}</p>
+            <p className="mb-4 mt-1 text-sm leading-relaxed text-ink-muted">
+              {t.checkout.cardBody}
+            </p>
+            {stripePromise ? (
+              <PaymentElement
+                options={{
+                  layout: { type: "tabs", defaultCollapsed: false },
+                  wallets: { applePay: "auto", googlePay: "auto" },
+                  fields: { billingDetails: { email: "never", phone: "never", name: "auto" } },
+                }}
+              />
+            ) : (
+              <p role="status" className="rounded-sm border border-hairline p-4 text-sm text-olive">
+                {t.server.checkout.paymentUnavailable}
+              </p>
+            )}
           </Step>
         </div>
 

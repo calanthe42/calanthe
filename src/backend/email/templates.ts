@@ -171,10 +171,10 @@ export function orderConfirmation(order: PricedOrder): RenderedEmail {
         lineItems(order) +
         totals +
         para(
-          `<span style="font-size:13px;color:${SAGE};">Payment is taken in cash on delivery. Nothing has been charged.</span>`,
+          `<span style="font-size:13px;color:${SAGE};">Your payment has been received with thanks.</span>`,
         ),
     ),
-    text: `Thank you, ${order.customerName}.\n\nYour florist composes the arrangement by hand and sends a photograph for your approval on WhatsApp before it leaves.\n\n${factsText(order)}\n\nSubtotal: ${formatMoney(order.subtotal.fils)}\nDelivery: ${order.deliveryFee.fils === 0 ? "Complimentary" : formatMoney(order.deliveryFee.fils)}\nTotal: ${formatMoney(order.total.fils)}\n\nPayment is taken in cash on delivery. Nothing has been charged.\n\nCalanthe`,
+    text: `Thank you, ${order.customerName}.\n\nYour florist composes the arrangement by hand and sends a photograph for your approval on WhatsApp before it leaves.\n\n${factsText(order)}\n\nSubtotal: ${formatMoney(order.subtotal.fils)}\nDelivery: ${order.deliveryFee.fils === 0 ? "Complimentary" : formatMoney(order.deliveryFee.fils)}\nTotal: ${formatMoney(order.total.fils)}\n\nYour payment has been received with thanks.\n\nCalanthe`,
   };
 }
 
@@ -188,9 +188,9 @@ export function ownerNewOrder(order: PricedOrder): RenderedEmail {
       ) +
         factsTable(order) +
         lineItems(order) +
-        para(`<strong>Total ${formatMoney(order.total.fils)}</strong> — cash on delivery, not yet collected.`),
+        para(`<strong>Total ${formatMoney(order.total.fils)}</strong> — paid by card (Stripe).`),
     ),
-    text: `New order ${order.orderNumber}\n\n${order.customerName}\n${order.customerEmail}\n${order.customerPhone}\n\n${factsText(order)}\n\nTotal: ${formatMoney(order.total.fils)} — cash on delivery, not yet collected.`,
+    text: `New order ${order.orderNumber}\n\n${order.customerName}\n${order.customerEmail}\n${order.customerPhone}\n\n${factsText(order)}\n\nTotal: ${formatMoney(order.total.fils)} — paid by card (Stripe).`,
   };
 }
 
@@ -265,7 +265,7 @@ const STATUS_COPY: Record<
     subject: "Delivered",
     heading: "Delivered",
     body: "Your flowers have been delivered. We hope they are exactly right.",
-    note: "Payment is taken in cash on delivery.",
+    note: "Paid by card through Stripe.",
   },
   CANCELLED: {
     subject: "Your order has been cancelled",

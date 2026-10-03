@@ -51,6 +51,16 @@ const schema = z.object({
    */
   EMAIL_ALLOWLIST: z.string().optional(),
 
+  /* --- Card payments (Stripe) ---
+     All three are needed for checkout to take a card: the secret key creates
+     PaymentIntents, the publishable key mounts the Payment Element in the
+     browser, and the webhook secret is the only thing allowed to mark an
+     order paid (docs/PAYMENTS.md §2). Test keys (sk_test_/pk_test_) until the
+     owner switches to live. */
+  STRIPE_SECRET_KEY: z.string().startsWith("sk_").optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith("pk_").optional(),
+
   /* --- Observability / infra (optional; a warning is logged in production) --- */
   SENTRY_DSN: z.string().url().optional(),
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),

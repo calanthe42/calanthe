@@ -1,4 +1,5 @@
 import { Footer } from "@/components/blocks/Footer";
+import { BrandIntro } from "@/components/blocks/BrandIntro";
 import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
 import { WhatsAppButton } from "@/components/blocks/WhatsAppButton";
@@ -21,6 +22,8 @@ export default async function StorefrontLayout({
 
   return (
     <Providers catalogue={catalogue} locale={locale}>
+      {/* The opening: once per visit, before anything else is seen. */}
+      <BrandIntro tagline={t.about.closingLine} />
       {/* First thing in the tab order on every page: a way past the
           navigation. Every storefront page renders its content in a
           <main>, which is what this targets. */}

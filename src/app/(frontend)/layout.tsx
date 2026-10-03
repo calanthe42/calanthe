@@ -96,7 +96,9 @@ export default async function RootLayout({
   const { locale, dir } = await getDictionary();
 
   return (
-    <html lang={locale} dir={dir}>
+    /* suppressHydrationWarning: the intro's script (BrandIntro) adds a class
+       to <html> before React hydrates; that one difference is expected. */
+    <html lang={locale} dir={dir} suppressHydrationWarning>
       <body
         className={`${cinzel.variable} ${cormorant.variable} ${instrument.variable} antialiased`}
       >
