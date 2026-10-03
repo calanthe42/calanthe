@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-851 strings in total. 0 are flagged below as likely problems.
+852 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -85,7 +85,7 @@ byo.eyebrow
 
 byo.title
   ENGLISH    Made for them, by you.
-  ARABIC     صُنع لهم، بيديكِ.
+  ARABIC     صُنع لهم، بأيديكم.
   CORRECTION 
 
 byo.titleLine1
@@ -95,22 +95,22 @@ byo.titleLine1
 
 byo.titleLine2
   ENGLISH    by you.
-  ARABIC     بيديكِ.
+  ARABIC     بأيديكم.
   CORRECTION 
 
 byo.createYours
   ENGLISH    Create Yours
-  ARABIC     صمّمي باقتك
+  ARABIC     صمّموا باقتكم
   CORRECTION 
 
 byo.intro
   ENGLISH    Choose your budget, colours and preferences. We'll take care of the flowers.
-  ARABIC     اختاري ميزانيتك وألوانك وتفضيلاتك، ونحن نتولى الزهور.
+  ARABIC     اختاروا الميزانية والألوان وتفضيلاتكم، ونتولّى نحن الزهور.
   CORRECTION 
 
 byo.steps.budget
   ENGLISH    Your budget
-  ARABIC     ميزانيتك
+  ARABIC     الميزانية
   CORRECTION 
 
 byo.steps.colours
@@ -130,7 +130,7 @@ byo.steps.card
 
 byo.steps.notes
   ENGLISH    For the florist
-  ARABIC     ملاحظات لمنسّقة الزهور
+  ARABIC     ملاحظات لمنسّق الزهور
   CORRECTION 
 
 byo.steps.gift
@@ -140,7 +140,7 @@ byo.steps.gift
 
 byo.steps.contact
   ENGLISH    Where to reach you
-  ARABIC     كيف نصل إليك
+  ARABIC     كيف نتواصل معكم
   CORRECTION 
 
 byo.budgetOther
@@ -150,7 +150,7 @@ byo.budgetOther
 
 byo.budgetOtherLabel
   ENGLISH    Your budget in AED
-  ARABIC     ميزانيتك بالدرهم
+  ARABIC     الميزانية بالدرهم
   CORRECTION 
 
 byo.budgetNote
@@ -160,7 +160,7 @@ byo.budgetNote
 
 byo.coloursHint
   ENGLISH    Choose as many as you like.
-  ARABIC     اختاري ما تشائين.
+  ARABIC     اختاروا ما تشاؤون.
   CORRECTION 
 
 byo.colourNames.whitesCreams
@@ -205,7 +205,7 @@ byo.colourNames.greensFoliage
 
 byo.floristChoice
   ENGLISH    Let the florist choose
-  ARABIC     دعي منسّقة الزهور تختار
+  ARABIC     اتركوا الاختيار لمنسّق الزهور
   CORRECTION 
 
 byo.floristChoiceNote
@@ -215,7 +215,7 @@ byo.floristChoiceNote
 
 byo.floristChoiceAnswer
   ENGLISH    Florist's choice
-  ARABIC     اختيار منسّقة الزهور
+  ARABIC     اختيار منسّق الزهور
   CORRECTION 
 
 byo.colourNoteLabel
@@ -225,12 +225,12 @@ byo.colourNoteLabel
 
 byo.colourNotePlaceholder
   ENGLISH    A shade you love, a colour to avoid, something to match…
-  ARABIC     درجة تحبينها، لون تتجنبينه، أو شيء يجب أن يتناسق معه…
+  ARABIC     درجة تحبّونها، لون تتجنّبونه، أو شيء يجب أن يتناسق معه…
   CORRECTION 
 
 byo.colourSeasonNote
   ENGLISH    If a colour is not in season on the day, we will contact you before composing and agree the closest thing to it.
-  ARABIC     إذا لم يكن اللون متوفرًا في موسمه ذلك اليوم، سنتواصل معك قبل التنسيق ونتفق على أقرب بديل له.
+  ARABIC     إذا لم يكن اللون متوفرًا في موسمه ذلك اليوم، سنتواصل معكم قبل التنسيق ونتفق على أقرب بديل له.
   CORRECTION 
 
 byo.vaseYes
@@ -260,12 +260,12 @@ byo.vaseAnswerNo
 
 byo.cardPlaceholder
   ENGLISH    Write the card message here…
-  ARABIC     اكتبي رسالة البطاقة هنا…
+  ARABIC     اكتبوا رسالة البطاقة هنا…
   CORRECTION 
 
 byo.cardLeaveBlank
   ENGLISH    Leave the card blank
-  ARABIC     اتركي البطاقة فارغة
+  ARABIC     اتركوا البطاقة فارغة
   CORRECTION 
 
 byo.cardAnswerBlank
@@ -285,7 +285,7 @@ byo.notesHint
 
 byo.notesPlaceholder
   ENGLISH    Allergies, flowers to avoid, a style you love — anything that helps.
-  ARABIC     حساسية، زهور تُتجنَّب، أسلوب تحبينه — أي شيء يساعدنا.
+  ARABIC     حساسية، زهور تُتجنَّب، أسلوب تحبّونه — أي شيء يساعدنا.
   CORRECTION 
 
 byo.notesAnswer
@@ -320,7 +320,7 @@ byo.giftAnswerYes
 
 byo.giftAnswerNo
   ENGLISH    For yourself
-  ARABIC     لنفسك
+  ARABIC     لنفسي
   CORRECTION 
 
 byo.recipientName
@@ -340,7 +340,12 @@ byo.recipientPhoneNote
 
 byo.place
   ENGLISH    Where is it going?
-  ARABIC     إلى أين تذهب؟
+  ARABIC     إلى أين تُرسل؟
+  CORRECTION 
+
+byo.placeSelf
+  ENGLISH    Your delivery address
+  ARABIC     عنوان التوصيل
   CORRECTION 
 
 byo.placePlaceholder
@@ -350,27 +355,27 @@ byo.placePlaceholder
 
 byo.placeNote
   ENGLISH    An area is enough for now — Delivery confirms the exact address with you.
-  ARABIC     تكفي المنطقة الآن — قسم التوصيل يؤكد العنوان الدقيق معك.
+  ARABIC     تكفي المنطقة الآن — يؤكّد فريق التوصيل العنوان الدقيق معكم.
   CORRECTION 
 
 byo.yourName
   ENGLISH    Your name
-  ARABIC     اسمك
+  ARABIC     الاسم
   CORRECTION 
 
 byo.yourPhone
   ENGLISH    Your phone
-  ARABIC     هاتفك
+  ARABIC     رقم الهاتف
   CORRECTION 
 
 byo.yourEmail
   ENGLISH    Your email
-  ARABIC     بريدك الإلكتروني
+  ARABIC     البريد الإلكتروني
   CORRECTION 
 
 byo.summaryTitle
   ENGLISH    Your arrangement
-  ARABIC     تنسيقك
+  ARABIC     تنسيقكم
   CORRECTION 
 
 byo.summaryBudget
@@ -425,7 +430,7 @@ byo.summaryNone
 
 byo.send
   ENGLISH    Send to a Florist
-  ARABIC     أرسلي إلى الأتيليه
+  ARABIC     أرسلوا إلى الأتيليه
   CORRECTION 
 
 byo.sending
@@ -435,22 +440,22 @@ byo.sending
 
 byo.sendNote
   ENGLISH    Sends your request to the atelier. Nothing is ordered and nothing is charged until a florist confirms it with you.
-  ARABIC     يُرسل طلبك إلى الأتيليه. لا يتم أي طلب ولا أي خصم حتى تؤكّده منسّقة الزهور معك.
+  ARABIC     يُرسل طلبكم إلى الأتيليه. لا يُنفَّذ أي طلب ولا يُخصم أي مبلغ حتى يؤكّده منسّق الزهور معكم.
   CORRECTION 
 
 byo.seasonal
   ENGLISH    Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.
-  ARABIC     تخضع الزهور للتوفر الموسمي. قد تستبدل منسّقة الزهور بعض السيقان بأخرى مساوية أو أعلى قيمة مع الحفاظ على لوحة الألوان وروح التنسيق.
+  ARABIC     تخضع الزهور للتوفّر الموسمي. قد يستبدل منسّق الزهور بعض السيقان بأخرى مساوية أو أعلى قيمة، مع الحفاظ على لوحة الألوان وروح التنسيق.
   CORRECTION 
 
 byo.sentTitle
   ENGLISH    Your request is with the atelier.
-  ARABIC     طلبك وصل إلى الأتيليه.
+  ARABIC     وصل طلبكم إلى الأتيليه.
   CORRECTION 
 
 byo.sentBody
   ENGLISH    A florist will be in touch to confirm the arrangement, the delivery and the total of {total} before composing. Nothing has been charged.
-  ARABIC     ستتواصل معك منسّقة الزهور لتأكيد التنسيق والتوصيل والإجمالي البالغ {total} قبل البدء. لم يتم خصم أي مبلغ.
+  ARABIC     سيتواصل معكم منسّق الزهور لتأكيد التنسيق والتوصيل والإجمالي البالغ {total} قبل البدء. لم يُخصم أي مبلغ.
   CORRECTION 
 
 byo.sentReference
@@ -460,17 +465,17 @@ byo.sentReference
 
 byo.whatsapp
   ENGLISH    Continue on WhatsApp
-  ARABIC     أكملي عبر واتساب
+  ARABIC     أكملوا عبر واتساب
   CORRECTION 
 
 byo.alsoWhatsapp
   ENGLISH    Also message on WhatsApp
-  ARABIC     راسلينا أيضًا على واتساب
+  ARABIC     راسلونا أيضًا على واتساب
   CORRECTION 
 
 byo.editChoices
   ENGLISH    Edit My Choices
-  ARABIC     تعديل اختياراتي
+  ARABIC     تعديل الاختيارات
   CORRECTION 
 
 byo.budgetFrom
@@ -480,7 +485,7 @@ byo.budgetFrom
 
 byo.notesLabel
   ENGLISH    Notes for the florist
-  ARABIC     ملاحظات لمنسّقة الزهور
+  ARABIC     ملاحظات لمنسّق الزهور
   CORRECTION 
 
 byo.audience
@@ -495,7 +500,7 @@ byo.backToShop
 
 byo.errors.budget
   ENGLISH    Choose a budget, or type one of your own.
-  ARABIC     اختاري ميزانية، أو اكتبي مبلغًا خاصًا بك.
+  ARABIC     اختاروا ميزانية، أو اكتبوا مبلغًا خاصًا بكم.
   CORRECTION 
 
 byo.errors.budgetMin
@@ -505,42 +510,42 @@ byo.errors.budgetMin
 
 byo.errors.colours
   ENGLISH    Choose a palette, or let the florist choose.
-  ARABIC     اختاري لوحة ألوان، أو دعي منسّقة الزهور تختار.
+  ARABIC     اختاروا لوحة ألوان، أو اتركوا الاختيار لمنسّق الزهور.
   CORRECTION 
 
 byo.errors.vase
   ENGLISH    Let us know whether it goes in a vase.
-  ARABIC     أخبرينا إن كانت في مزهرية.
+  ARABIC     أخبرونا إن كانت في مزهرية.
   CORRECTION 
 
 byo.errors.card
   ENGLISH    Write the card, or choose to leave it blank.
-  ARABIC     اكتبي البطاقة، أو اختاري تركها فارغة.
+  ARABIC     اكتبوا البطاقة، أو اختاروا تركها فارغة.
   CORRECTION 
 
 byo.errors.gift
   ENGLISH    Tell us who it is for.
-  ARABIC     أخبرينا لمن هي.
+  ARABIC     أخبرونا لمن هي.
   CORRECTION 
 
 byo.errors.name
   ENGLISH    Please tell us your name.
-  ARABIC     من فضلك اكتبي اسمك.
+  ARABIC     يُرجى كتابة الاسم.
   CORRECTION 
 
 byo.errors.phone
   ENGLISH    Please add a phone number we can reach you on.
-  ARABIC     من فضلك أضيفي رقم هاتف نصل إليك عليه.
+  ARABIC     يُرجى إضافة رقم هاتف للتواصل.
   CORRECTION 
 
 byo.errors.email
   ENGLISH    Please add an email address.
-  ARABIC     من فضلك أضيفي بريدًا إلكترونيًا.
+  ARABIC     يُرجى إضافة بريد إلكتروني.
   CORRECTION 
 
 byo.errors.recipientName
   ENGLISH    Please add the recipient's name.
-  ARABIC     من فضلك أضيفي اسم المستلم.
+  ARABIC     يُرجى إضافة اسم المستلم.
   CORRECTION 
 
 
@@ -578,7 +583,7 @@ nav.readyToday
 
 nav.buildYourOwn
   ENGLISH    Build Your Own
-  ARABIC     صمّمي باقتك
+  ARABIC     صمّموا باقتكم
   CORRECTION 
 
 nav.memberships
@@ -613,7 +618,7 @@ nav.account
 
 nav.search
   ENGLISH    Search arrangements
-  ARABIC     ابحثي عن باقة
+  ARABIC     ابحثوا عن باقة
   CORRECTION 
 
 nav.cart
@@ -643,7 +648,7 @@ nav.byOccasion
 
 nav.skipToContent
   ENGLISH    Skip to content
-  ARABIC     تخطّي إلى المحتوى
+  ARABIC     الانتقال إلى المحتوى
   CORRECTION 
 
 
@@ -656,7 +661,7 @@ strip.emirates
 
 strip.video
   ENGLISH    Video approval on every order
-  ARABIC     موافقتك بالفيديو على كل طلب
+  ARABIC     موافقتكم بالفيديو على كل طلب
   CORRECTION 
 
 strip.composed
@@ -669,7 +674,7 @@ strip.composed
 
 search.label
   ENGLISH    Search the atelier
-  ARABIC     ابحثي في الأتيليه
+  ARABIC     ابحثوا في الأتيليه
   CORRECTION 
 
 search.placeholder
@@ -699,7 +704,7 @@ search.viewAll
 
 search.searchWhole
   ENGLISH    Search the whole collection
-  ARABIC     ابحثي في المجموعة كاملة
+  ARABIC     ابحثوا في المجموعة كاملة
   CORRECTION 
 
 search.noResultsTitle
@@ -709,17 +714,17 @@ search.noResultsTitle
 
 search.noResultsBody
   ENGLISH    Try an occasion, a flower, or the name of an arrangement — or tell a florist what you have in mind.
-  ARABIC     جرّبي مناسبة، أو نوع زهرة، أو اسم باقة — أو أخبري منسّقة الزهور بما يدور في بالك.
+  ARABIC     جرّبوا مناسبة، أو نوع زهرة، أو اسم باقة — أو أخبروا منسّق الزهور بما يدور في بالكم.
   CORRECTION 
 
 search.askFlorist
   ENGLISH    Ask a florist on WhatsApp
-  ARABIC     اسألي منسّقة الزهور على واتساب
+  ARABIC     اسألوا منسّق الزهور على واتساب
   CORRECTION 
 
 search.browseAll
   ENGLISH    Browse the collection
-  ARABIC     تصفّحي المجموعة
+  ARABIC     تصفّحوا المجموعة
   CORRECTION 
 
 
@@ -742,12 +747,12 @@ hero.headlineTwo
 
 hero.shopFlowers
   ENGLISH    Shop Flowers
-  ARABIC     تسوّقي الزهور
+  ARABIC     تسوّقوا الزهور
   CORRECTION 
 
 hero.buildYourOwn
   ENGLISH    Build Your Own
-  ARABIC     صمّمي باقتك
+  ARABIC     صمّموا باقتكم
   CORRECTION 
 
 
@@ -755,7 +760,7 @@ hero.buildYourOwn
 
 band.sendFlowersFor
   ENGLISH    Send flowers for
-  ARABIC     أرسلي الزهور لـ
+  ARABIC     أرسلوا الزهور لـ
   CORRECTION 
 
 band.luxury
@@ -773,7 +778,7 @@ sections.newArrivalsEyebrow
 
 sections.newArrivalsTitle
   ENGLISH    Fresh from the atelier.
-  ARABIC     طازجة من الأتيليه.
+  ARABIC     نضِرة من الأتيليه.
   CORRECTION 
 
 sections.occasionsEyebrow
@@ -793,7 +798,7 @@ sections.bestSellersEyebrow
 
 sections.bestSellersQuote
   ENGLISH    The arrangements our couriers know by heart.
-  ARABIC     الباقات التي يعرفها مندوبونا عن ظهر قلب.
+  ARABIC     الباقات التي يحفظها مندوبونا عن ظهر قلب.
   CORRECTION 
 
 sections.bestSellersAttribution
@@ -818,7 +823,7 @@ sections.promiseTitle
 
 sections.promiseAsk
   ENGLISH    Questions before you order? A florist answers on
-  ARABIC     لديك سؤال قبل الطلب؟ تجيبك منسّقة الزهور عبر
+  ARABIC     لديكم سؤال قبل الطلب؟ يجيبكم منسّق الزهور عبر
   CORRECTION 
 
 sections.instagramLine
@@ -856,7 +861,7 @@ touch.deliverTitle
 
 touch.deliverCopy
   ENGLISH    Kept cool and upright to your door, across Abu Dhabi.
-  ARABIC     تبقى منتعشة وقائمة حتى بابك، في أنحاء أبوظبي.
+  ARABIC     تبقى نضِرة وقائمة حتى باب المستلِم، في أنحاء أبوظبي.
   CORRECTION 
 
 
@@ -864,22 +869,22 @@ touch.deliverCopy
 
 trust.sameDayTitle
   ENGLISH    Delivered on your day
-  ARABIC     توصيل في يومك المختار
+  ARABIC     توصيل في اليوم الذي تختارونه
   CORRECTION 
 
 trust.sameDayCopy
   ENGLISH    Choose the day and the window that suit them.
-  ARABIC     اختاري اليوم والوقت المناسبين لهم.
+  ARABIC     اختاروا اليوم والوقت المناسبين لهم.
   CORRECTION 
 
 trust.videoTitle
   ENGLISH    Video approval
-  ARABIC     موافقتك بالفيديو
+  ARABIC     موافقتكم بالفيديو
   CORRECTION 
 
 trust.videoCopy
   ENGLISH    See your arrangement on WhatsApp before it leaves.
-  ARABIC     شاهدي باقتك عبر واتساب قبل أن تغادر.
+  ARABIC     شاهدوا الباقة عبر واتساب قبل أن تغادر.
   CORRECTION 
 
 trust.freshTitle
@@ -912,17 +917,17 @@ empty.eyebrow
 
 empty.title
   ENGLISH    Every arrangement can be made to order.
-  ARABIC     كل باقة يمكن أن تُصنع خصيصًا لك.
+  ARABIC     كل باقة يمكن أن تُصنع خصيصًا لكم.
   CORRECTION 
 
 empty.body
   ENGLISH    The next collection is being composed. Until it arrives, tell us the moment, the colours and your budget, and a florist will compose it for you.
-  ARABIC     المجموعة القادمة قيد التنسيق. وحتى تصل، أخبرينا بالمناسبة والألوان والميزانية، وتنسّقها لك إحدى منسّقات الزهور.
+  ARABIC     المجموعة القادمة قيد التنسيق. وحتى تصل، أخبرونا بالمناسبة والألوان والميزانية، وينسّقها لكم منسّق الزهور.
   CORRECTION 
 
 empty.messageFlorist
   ENGLISH    Message a Florist
-  ARABIC     تواصلي مع منسّقة الزهور
+  ARABIC     تواصلوا مع منسّق الزهور
   CORRECTION 
 
 
@@ -930,7 +935,7 @@ empty.messageFlorist
 
 cart.title
   ENGLISH    Your Cart
-  ARABIC     سلّتك
+  ARABIC     السلة
   CORRECTION 
 
 cart.close
@@ -940,27 +945,27 @@ cart.close
 
 cart.empty
   ENGLISH    Your cart is waiting to bloom.
-  ARABIC     سلّتك تنتظر أن تُزهر.
+  ARABIC     السلة تنتظر أن تُزهر.
   CORRECTION 
 
 cart.emptyBody
   ENGLISH    Choose an arrangement, or have one composed for you.
-  ARABIC     اختاري باقة جاهزة، أو دعينا نُنسّق واحدة خصيصًا لك.
+  ARABIC     اختاروا باقة جاهزة، أو دعونا ننسّق واحدة خصيصًا لكم.
   CORRECTION 
 
 cart.shopFlowers
   ENGLISH    Shop Flowers
-  ARABIC     تسوّقي الزهور
+  ARABIC     تسوّقوا الزهور
   CORRECTION 
 
 cart.buildYourOwn
   ENGLISH    Build Your Own
-  ARABIC     صمّمي باقتك
+  ARABIC     صمّموا باقتكم
   CORRECTION 
 
 cart.loading
   ENGLISH    Loading your cart
-  ARABIC     جارٍ تحميل سلّتك
+  ARABIC     جارٍ تحميل السلة
   CORRECTION 
 
 cart.subtotal
@@ -1020,17 +1025,17 @@ cart.quantity
 
 cart.completeTheGift
   ENGLISH    Complete the gift
-  ARABIC     أتمّي الهدية
+  ARABIC     أكملوا الهدية
   CORRECTION 
 
 cart.freeDeliveryAway
   ENGLISH    {amount} away from complimentary delivery
-  ARABIC     يفصلك {amount} عن التوصيل المجاني
+  ARABIC     يفصلكم {amount} عن التوصيل المجاني
   CORRECTION 
 
 cart.freeDeliveryReached
   ENGLISH    Your delivery is complimentary
-  ARABIC     توصيلك مجاني
+  ARABIC     التوصيل مجاني
   CORRECTION 
 
 cart.giftMessageIncluded
@@ -1108,7 +1113,7 @@ ui.productCategories
 
 ui.whatsappChat
   ENGLISH    Chat with us on WhatsApp
-  ARABIC     تواصلي معنا على واتساب
+  ARABIC     تواصلوا معنا على واتساب
   CORRECTION 
 
 ui.monogram
@@ -1148,7 +1153,7 @@ ui.cartEmpty
 
 ui.addAddon
   ENGLISH    Add {addon} to {product}, {price}
-  ARABIC     أضيفي {addon} إلى {product}، {price}
+  ARABIC     أضيفوا {addon} إلى {product}، {price}
   CORRECTION 
 
 
@@ -1194,22 +1199,22 @@ categoryNames.event-piece
 
 enquiryForm.membershipThanks
   ENGLISH    Thank you — a florist will be in touch.
-  ARABIC     شكرًا لك — ستتواصل معك منسّقة الزهور.
+  ARABIC     شكرًا لكم — سيتواصل معكم منسّق الزهور.
   CORRECTION 
 
 enquiryForm.membershipDone
   ENGLISH    We have your {plan} enquiry. Nothing has been charged and no membership has started — we will agree the details with you first.
-  ARABIC     وصلنا طلبك للعضوية {plan}. ولم يُخصم أي مبلغ ولم تبدأ أي عضوية — سنتفق معك على التفاصيل أولًا.
+  ARABIC     وصلنا طلبكم للعضوية {plan}. لم يُخصم أي مبلغ ولم تبدأ أي عضوية — سنتفق معكم على التفاصيل أولًا.
   CORRECTION 
 
 enquiryForm.membershipTitle
   ENGLISH    Begin your ritual.
-  ARABIC     ابدئي طقسك.
+  ARABIC     ابدؤوا طقسكم.
   CORRECTION 
 
 enquiryForm.membershipIntro
   ENGLISH    Tell us how you would like it to arrive and a florist will call to agree the details. Nothing is charged here.
-  ARABIC     أخبرينا كيف تودّين أن تصلك، وستتصل بك منسّقة الزهور للاتفاق على التفاصيل. ولا يُخصم شيء هنا.
+  ARABIC     أخبرونا كيف تودّون أن تصلكم الزهور، وسيتصل بكم منسّق الزهور للاتفاق على التفاصيل. ولا يُخصم شيء هنا.
   CORRECTION 
 
 enquiryForm.howOften
@@ -1219,7 +1224,7 @@ enquiryForm.howOften
 
 enquiryForm.whichDay
   ENGLISH    Which day suits you
-  ARABIC     أي يوم يناسبك
+  ARABIC     أي يوم يناسبكم
   CORRECTION 
 
 enquiryForm.whereItGoes
@@ -1239,7 +1244,7 @@ enquiryForm.areaOrAddress
 
 enquiryForm.areaPlaceholder
   ENGLISH    Jumeirah, Dubai
-  ARABIC     جميرا، دبي
+  ARABIC     جزيرة الريم، أبوظبي
   CORRECTION 
 
 enquiryForm.anythingToKnow
@@ -1249,17 +1254,17 @@ enquiryForm.anythingToKnow
 
 enquiryForm.anythingPlaceholder
   ENGLISH    Colours you love, anything to avoid, where to leave them…
-  ARABIC     الألوان التي تحبّينها، وما يُفضّل تجنّبه، وأين تُترك…
+  ARABIC     الألوان التي تحبّونها، وما يُفضّل تجنّبه، وأين تُترك…
   CORRECTION 
 
 enquiryForm.eventThanks
   ENGLISH    Thank you — we have your event.
-  ARABIC     شكرًا لك — وصلتنا تفاصيل مناسبتك.
+  ARABIC     شكرًا لكم — وصلتنا تفاصيل مناسبتكم.
   CORRECTION 
 
 enquiryForm.eventDone
   ENGLISH    A florist will be in touch to talk through the venue, the palette and the scale. Nothing is committed and nothing has been charged.
-  ARABIC     ستتواصل معك منسّقة الزهور للحديث عن المكان ولوحة الألوان والحجم. ولا شيء مُلزِم ولم يُخصم أي مبلغ.
+  ARABIC     سيتواصل معكم منسّق الزهور للحديث عن المكان ولوحة الألوان والحجم. لا شيء مُلزِم، ولم يُخصم أي مبلغ.
   CORRECTION 
 
 enquiryForm.whatKind
@@ -1289,12 +1294,12 @@ enquiryForm.venue
 
 enquiryForm.venuePlaceholder
   ENGLISH    Four Seasons, Jumeirah
-  ARABIC     فور سيزونز، جميرا
+  ARABIC     قصر الإمارات، أبوظبي
   CORRECTION 
 
 enquiryForm.alreadyKnow
   ENGLISH    Anything you already know (optional)
-  ARABIC     أي تفاصيل تعرفينها من الآن (اختياري)
+  ARABIC     أي تفاصيل تعرفونها من الآن (اختياري)
   CORRECTION 
 
 enquiryForm.alreadyKnowPlaceholder
@@ -1304,7 +1309,7 @@ enquiryForm.alreadyKnowPlaceholder
 
 enquiryForm.yourName
   ENGLISH    Your name
-  ARABIC     اسمك
+  ARABIC     الاسم
   CORRECTION 
 
 enquiryForm.phone
@@ -1334,7 +1339,7 @@ enquiryForm.sending
 
 enquiryForm.messageUs
   ENGLISH    Message us
-  ARABIC     راسلينا
+  ARABIC     راسلونا
   CORRECTION 
 
 enquiryForm.frequency.WEEKLY
@@ -1615,7 +1620,7 @@ legal.privacy.headings.storage
 
 legal.privacy.headings.rights
   ENGLISH    Your rights
-  ARABIC     حقوقك
+  ARABIC     حقوقكم
   CORRECTION 
 
 legal.privacy.headings.cookies
@@ -1668,7 +1673,7 @@ legal.refunds.headings.contact
 
 membership.nothingCharged
   ENGLISH    Nothing is charged here. A florist confirms the details with you before any membership begins.
-  ARABIC     لا يُخصم شيء هنا. تؤكّد منسّقة الزهور التفاصيل معك قبل أن تبدأ أي عضوية.
+  ARABIC     لا يُخصم شيء هنا. يؤكّد منسّق الزهور التفاصيل معكم قبل أن تبدأ أي عضوية.
   CORRECTION 
 
 membership.andThen
@@ -1678,12 +1683,12 @@ membership.andThen
 
 membership.whichDay
   ENGLISH    Which day suits you?
-  ARABIC     أي يوم يناسبك؟
+  ARABIC     أي يوم يناسبكم؟
   CORRECTION 
 
 membership.whichDayBody
   ENGLISH    One day a week is yours. We reserve your route and your stems, and a florist confirms it with you before anything begins.
-  ARABIC     يوم واحد في الأسبوع يكون لك. نحجز لك مسار التوصيل والسيقان، وتؤكّد منسّقة الزهور ذلك معك قبل أن يبدأ شيء.
+  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان، ويؤكّد منسّق الزهور ذلك معكم قبل أن يبدأ شيء.
   CORRECTION 
 
 membership.howItWorks
@@ -1693,22 +1698,22 @@ membership.howItWorks
 
 membership.steps.0.title
   ENGLISH    Choose your ritual
-  ARABIC     اختاري طقسك
+  ARABIC     اختاروا طقسكم
   CORRECTION 
 
 membership.steps.0.copy
   ENGLISH    Pick the tier that suits your table — change it any time.
-  ARABIC     اختاري الفئة التي تناسب طاولتك — وغيّريها متى شئتِ.
+  ARABIC     اختاروا الفئة التي تناسب طاولتكم — وغيّروها متى شئتم.
   CORRECTION 
 
 membership.steps.1.title
   ENGLISH    Pick your day
-  ARABIC     اختاري يومك
+  ARABIC     اختاروا يومكم
   CORRECTION 
 
 membership.steps.1.copy
   ENGLISH    One day a week is yours. We reserve your route and your stems.
-  ARABIC     يوم واحد في الأسبوع يكون لك. نحجز لك مسار التوصيل والسيقان.
+  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان.
   CORRECTION 
 
 membership.steps.2.title
@@ -1718,7 +1723,7 @@ membership.steps.2.title
 
 membership.steps.2.copy
   ENGLISH    A fresh composition arrives at your door, four times a month.
-  ARABIC     يصل تنسيق طازج إلى بابك، أربع مرات في الشهر.
+  ARABIC     يصل تنسيق نضِر إلى بابكم، أربع مرات في الشهر.
   CORRECTION 
 
 membership.questionsAnswered
@@ -1728,7 +1733,7 @@ membership.questionsAnswered
 
 membership.arrivesEvery
   ENGLISH    Your flowers will arrive every {day}.
-  ARABIC     ستصلك زهورك أيام {day}.
+  ARABIC     تصلكم الزهور أيام {day}.
   CORRECTION 
 
 membership.dayFull.Sun
@@ -1776,7 +1781,7 @@ booth.eyebrow
 
 booth.title
   ENGLISH    Step inside the booth.
-  ARABIC     ادخلي إلى الجناح.
+  ARABIC     ادخلوا إلى الجناح.
   CORRECTION 
 
 booth.body
@@ -1811,7 +1816,7 @@ booth.views.set
 
 booth.captions.pano
   ENGLISH    Drag to look around the booth.
-  ARABIC     اسحبي للتجوّل في أرجاء الجناح.
+  ARABIC     اسحبوا للتجوّل في أرجاء الجناح.
   CORRECTION 
 
 booth.captions.indoor
@@ -1846,7 +1851,7 @@ booth.alts.set
 
 booth.stepInside
   ENGLISH    Step inside
-  ARABIC     ادخلي الجناح
+  ARABIC     ادخلوا الجناح
   CORRECTION 
 
 booth.opening
@@ -1856,12 +1861,12 @@ booth.opening
 
 booth.hint
   ENGLISH    Drag to look around
-  ARABIC     اسحبي للنظر حولك
+  ARABIC     اسحبوا للنظر حولكم
   CORRECTION 
 
 booth.viewLabel
   ENGLISH    360° view of the Calanthe booth. Drag, or use the turn buttons.
-  ARABIC     عرض 360° لجناح كالانثي. اسحبي، أو استخدمي زرَّي الاستدارة.
+  ARABIC     عرض 360° لجناح كالانثي. اسحبوا، أو استخدموا زرَّي الاستدارة.
   CORRECTION 
 
 booth.turnLeft
@@ -1891,7 +1896,7 @@ booth.unsupported
 
 booth.openExternal
   ENGLISH    Open the 360° view
-  ARABIC     افتحي عرض 360°
+  ARABIC     افتحوا عرض 360°
   CORRECTION 
 
 booth.arrangementsEyebrow
@@ -2029,17 +2034,17 @@ events.line2
 
 events.intro
   ENGLISH    Floral styling and arrangements for private celebrations, intimate gatherings and larger occasions — planned with you, composed by the atelier, delivered and set on the day.
-  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات الحميمة والمناسبات الأكبر — نخططها معك، ويُنسّقها الأتيليه، وتُوصّل وتُرتّب يوم المناسبة.
+  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات العائلية والمناسبات الأكبر — نخطّطها معكم، وينسّقها الأتيليه، ونوصلها ونرتّبها يوم المناسبة.
   CORRECTION 
 
 events.enquireWhatsapp
   ENGLISH    Enquire on WhatsApp
-  ARABIC     استفسري على واتساب
+  ARABIC     استفسروا عبر واتساب
   CORRECTION 
 
 events.seeWhatWeDo
   ENGLISH    See what we do
-  ARABIC     اطّلعي على أعمالنا
+  ARABIC     اطّلعوا على أعمالنا
   CORRECTION 
 
 events.arrangementsEyebrow
@@ -2054,7 +2059,7 @@ events.arrangementsTitle
 
 events.arrangementsBody
   ENGLISH    We work from your venue, your palette and the feeling you want the room to have — then build to it.
-  ARABIC     نبدأ من مكانك، ولوحة ألوانك، والإحساس الذي تريدينه للمكان — ونبني عليه.
+  ARABIC     نبدأ من المكان، ولوحة الألوان، والإحساس الذي تريدونه للمكان — ونبني عليه.
   CORRECTION 
 
 events.arrangements.0
@@ -2089,7 +2094,7 @@ events.favorsTitle
 
 events.favorsBody
   ENGLISH    Thoughtfully presented floral gifts finished with Calanthe's signature packaging and personal touches — made in the quantities your day needs.
-  ARABIC     هدايا زهور مُقدّمة بعناية، بتغليف كالانثي المميّز ولمسات شخصية — وبالكميات التي يحتاجها يومك.
+  ARABIC     هدايا زهور مُقدّمة بعناية، بتغليف كالانثي المميّز ولمسات شخصية — وبالكميات التي تحتاجها مناسبتكم.
   CORRECTION 
 
 events.favors.0
@@ -2109,7 +2114,7 @@ events.favors.2
 
 events.favors.3
   ENGLISH    Signature Calanthe packaging in your event's palette
-  ARABIC     تغليف كالانثي المميّز بلوحة ألوان مناسبتك
+  ARABIC     تغليف كالانثي المميّز بلوحة ألوان مناسبتكم
   CORRECTION 
 
 events.beginEyebrow
@@ -2119,17 +2124,17 @@ events.beginEyebrow
 
 events.beginTitle
   ENGLISH    Tell us about the day.
-  ARABIC     أخبرينا عن اليوم.
+  ARABIC     أخبرونا عن المناسبة.
   CORRECTION 
 
 events.beginBody
   ENGLISH    Send the date, the venue and roughly how many guests. We will come back with a proposal and a quote.
-  ARABIC     أرسلي التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليك بمقترح وعرض سعر.
+  ARABIC     أرسلوا التاريخ والمكان وعدد الضيوف تقريبًا، ونعود إليكم بمقترح وعرض سعر.
   CORRECTION 
 
 events.boothLink
   ENGLISH    Step inside the booth
-  ARABIC     ادخلي إلى الجناح
+  ARABIC     ادخلوا إلى الجناح
   CORRECTION 
 
 events.archAlt
@@ -2157,7 +2162,7 @@ eventsInvite.body
 
 eventsInvite.favors
   ENGLISH    See guest favors
-  ARABIC     اكتشفي هدايا الضيوف
+  ARABIC     اكتشفوا هدايا الضيوف
   CORRECTION 
 
 
@@ -2245,7 +2250,7 @@ about.services.memberships.name
 
 about.services.memberships.copy
   ENGLISH    Recurring floral deliveries designed to bring fresh flowers into homes or businesses throughout the month.
-  ARABIC     توصيلات زهور متكررة لتبقى الزهور الطازجة في المنازل والأعمال على مدار الشهر.
+  ARABIC     توصيلات زهور منتظمة لتبقى الزهور النضِرة في المنازل والأعمال على مدار الشهر.
   CORRECTION 
 
 about.services.gifting.name
@@ -2305,7 +2310,7 @@ about.detailsTitle
 
 about.detailsBody
   ENGLISH    Everything that reaches you is part of the gift — the tag, the tissue, the card, the ribbon that ties it.
-  ARABIC     كل ما يصلك جزء من الهدية — البطاقة المعلّقة، وورق التغليف، وبطاقة الإهداء، والشريط الذي يربطها.
+  ARABIC     كل ما يصلكم جزء من الهدية — البطاقة المعلّقة، وورق التغليف، وبطاقة الإهداء، والشريط الذي يربطها.
   CORRECTION 
 
 about.closingLine
@@ -2323,12 +2328,12 @@ faq.site.0.q
 
 faq.site.0.a
   ENGLISH    You choose the delivery day and the time window at checkout, and your arrangement is composed on the morning of that day. The picker offers only the days and windows the atelier can still reach.
-  ARABIC     تختارين يوم التوصيل والفترة الزمنية عند إتمام الطلب، ويُنسّق طلبك صباح ذلك اليوم. ولا تُعرض في القائمة إلا الأيام والفترات التي يمكن للأتيليه الوصول إليها.
+  ARABIC     تختارون يوم التوصيل والفترة الزمنية عند إتمام الطلب، ويُنسّق طلبكم صباح ذلك اليوم. ولا تظهر إلا الأيام والفترات التي يمكن للأتيليه التوصيل فيها.
   CORRECTION 
 
 faq.site.1.q
   ENGLISH    How fresh are the arrangements?
-  ARABIC     ما مدى طزاجة الباقات؟
+  ARABIC     ما مدى نضارة الباقات؟
   CORRECTION 
 
 faq.site.1.a
@@ -2343,7 +2348,7 @@ faq.site.2.q
 
 faq.site.2.a
   ENGLISH    Flowers are subject to seasonal availability. Our florists may substitute stems of equal or greater value while keeping the palette and spirit of your arrangement.
-  ARABIC     تخضع الزهور للتوفر الموسمي، وقد تستبدل منسّقات الزهور سيقانًا بأخرى مساوية أو أعلى قيمة، مع الحفاظ على لوحة الألوان وروح التنسيق.
+  ARABIC     تخضع الزهور للتوفّر الموسمي، وقد يستبدل منسّقو الزهور بعض السيقان بأخرى مساوية أو أعلى قيمة، مع الحفاظ على لوحة الألوان وروح التنسيق.
   CORRECTION 
 
 faq.site.3.q
@@ -2353,7 +2358,7 @@ faq.site.3.q
 
 faq.site.3.a
   ENGLISH    Yes — your florist sends a photo or video on WhatsApp for your approval before every delivery.
-  ARABIC     نعم — ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب لتوافقي عليه قبل كل توصيلة.
+  ARABIC     نعم — يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه قبل كل توصيلة.
   CORRECTION 
 
 faq.site.4.q
@@ -2373,7 +2378,7 @@ faq.membership.0.q
 
 faq.membership.0.a
   ENGLISH    Yes — pause, skip or resume any time from your account, up to 24 hours before your delivery day.
-  ARABIC     نعم — يمكنك الإيقاف أو التخطي أو الاستئناف في أي وقت من حسابك، حتّى 24 ساعة قبل يوم التوصيل.
+  ARABIC     نعم — يمكنكم الإيقاف أو التخطّي أو الاستئناف في أي وقت من حسابكم، حتّى 24 ساعة قبل يوم التوصيل.
   CORRECTION 
 
 faq.membership.1.q
@@ -2383,7 +2388,7 @@ faq.membership.1.q
 
 faq.membership.1.a
   ENGLISH    Each week our florists compose around the best stems of the season, in the palette you prefer. No two weeks are the same.
-  ARABIC     كل أسبوع تُنسّق منسّقاتنا حول أجمل سيقان الموسم، بلوحة الألوان التي تفضّلينها. ولا يتشابه أسبوعان.
+  ARABIC     كل أسبوع ينسّق فريقنا أجمل سيقان الموسم، بلوحة الألوان التي تفضّلونها. ولا يتشابه أسبوعان.
   CORRECTION 
 
 faq.membership.2.q
@@ -2393,7 +2398,7 @@ faq.membership.2.q
 
 faq.membership.2.a
   ENGLISH    Abu Dhabi, for now. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.
-  ARABIC     إلى أبوظبي حاليًا. ويُحجز يوم توصيلك لمسار منطقتك، لتبقى السيقان مبرّدة حتّى بابك.
+  ARABIC     إلى أبوظبي حاليًا. ويُحجز يوم التوصيل لمسار منطقتكم، لتبقى السيقان مبرّدة حتّى الباب.
   CORRECTION 
 
 faq.membership.3.q
@@ -2403,7 +2408,7 @@ faq.membership.3.q
 
 faq.membership.3.a
   ENGLISH    Beautifully. Choose gifting at checkout and we'll include a hand-written first-week card.
-  ARABIC     بكل سرور. اختاري الإهداء عند إتمام الطلب ونُرفق بطاقة مكتوبة بخط اليد مع الأسبوع الأول.
+  ARABIC     بكل سرور. اختاروا الإهداء عند إتمام الطلب، ونُرفق بطاقة مكتوبة بخط اليد مع الأسبوع الأول.
   CORRECTION 
 
 
@@ -2421,7 +2426,7 @@ tierCopy.essential.includes.0
 
 tierCopy.essential.includes.1
   ENGLISH    Seasonal stems, florist's choice
-  ARABIC     سيقان موسمية، باختيار منسّقة الزهور
+  ARABIC     سيقان موسمية، باختيار منسّق الزهور
   CORRECTION 
 
 tierCopy.essential.includes.2
@@ -2471,7 +2476,7 @@ tierCopy.grand.includes.1
 
 tierCopy.grand.includes.2
   ENGLISH    Dedicated florist
-  ARABIC     منسّقة زهور مخصّصة
+  ARABIC     منسّق زهور مخصّص
   CORRECTION 
 
 tierCopy.grand.includes.3
@@ -2494,7 +2499,7 @@ help.deliveryTitle
 
 help.deliveryIntro
   ENGLISH    Choose the day and the window that suit them, anywhere in Abu Dhabi. Delivery is complimentary on orders over {amount}.
-  ARABIC     اختاري اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
+  ARABIC     اختاروا اليوم والفترة المناسبين للمستلِم، في أي مكان في أبوظبي. والتوصيل مجاني على الطلبات التي تزيد عن {amount}.
   CORRECTION 
 
 help.deliveryWindows
@@ -2504,7 +2509,7 @@ help.deliveryWindows
 
 help.approvalNote
   ENGLISH    Before every delivery, your florist sends a photo or video of the finished arrangement on WhatsApp, and waits for your word before it leaves.
-  ARABIC     قبل كل توصيلة، ترسل لك منسّقة الزهور صورة أو مقطعًا للتنسيق النهائي على واتساب، وتنتظر موافقتك قبل أن تخرج.
+  ARABIC     قبل كل توصيلة، يرسل لكم منسّق الزهور صورة أو مقطعًا للتنسيق النهائي على واتساب، وينتظر موافقتكم قبل أن يخرج.
   CORRECTION 
 
 help.faqsTitle
@@ -2527,27 +2532,27 @@ errors.title
 
 errors.segmentBody
   ENGLISH    This part of the page did not load. Everything else still works — try again, or carry on browsing while we put it right.
-  ARABIC     لم يُحمّل هذا الجزء من الصفحة، وكل ما عداه يعمل — حاولي مرة أخرى، أو تابعي التصفّح ريثما نُصلحه.
+  ARABIC     لم يُحمَّل هذا الجزء من الصفحة، وكل ما عداه يعمل — حاولوا مرة أخرى، أو تابعوا التصفّح ريثما نُصلحه.
   CORRECTION 
 
 errors.rootBody
   ENGLISH    Something interrupted this page. It has been noted — please try again.
-  ARABIC     حدث ما قطع تحميل هذه الصفحة. سجّلنا ذلك — حاولي مرة أخرى.
+  ARABIC     حدث ما قطع تحميل هذه الصفحة. سجّلنا ذلك — حاولوا مرة أخرى.
   CORRECTION 
 
 errors.tryAgain
   ENGLISH    Try Again
-  ARABIC     حاولي مرة أخرى
+  ARABIC     حاولوا مرة أخرى
   CORRECTION 
 
 errors.browseCollection
   ENGLISH    Browse the Collection
-  ARABIC     تصفّحي المجموعة
+  ARABIC     تصفّحوا المجموعة
   CORRECTION 
 
 errors.whatsappInstead
   ENGLISH    Order on WhatsApp instead
-  ARABIC     اطلبي عبر واتساب بدلًا من ذلك
+  ARABIC     اطلبوا عبر واتساب بدلًا من ذلك
   CORRECTION 
 
 errors.returnHome
@@ -2562,7 +2567,7 @@ errors.notFoundTitle
 
 errors.notFoundBody
   ENGLISH    The address you followed is no longer in bloom — but the atelier is.
-  ARABIC     العنوان الذي اتّبعتِه لم يعد مُزهرًا — أمّا الأتيليه فما زال.
+  ARABIC     العنوان الذي اتّبعتموه لم يعد مُزهرًا — أمّا الأتيليه فما زال.
   CORRECTION 
 
 errors.legal
@@ -2595,7 +2600,7 @@ seal.body
 
 seal.shop
   ENGLISH    Shop the collection
-  ARABIC     تسوّقي المجموعة
+  ARABIC     تسوّقوا المجموعة
   CORRECTION 
 
 seal.how
@@ -2618,12 +2623,12 @@ ritual.title
 
 ritual.body
   ENGLISH    Fresh flowers, thoughtfully arranged and delivered to your door every week.
-  ARABIC     زهور طازجة، مُنسّقة بعناية، تصل إلى بابك كل أسبوع.
+  ARABIC     زهور نضِرة، مُنسّقة بعناية، تصل إلى بابكم كل أسبوع.
   CORRECTION 
 
 ritual.cta
   ENGLISH    Discover Membership
-  ARABIC     اكتشفي العضوية
+  ARABIC     اكتشفوا العضوية
   CORRECTION 
 
 
@@ -2646,7 +2651,7 @@ tiers.fourAMonth
 
 tiers.begin
   ENGLISH    Begin {name}
-  ARABIC     ابدئي العضوية {name}
+  ARABIC     ابدؤوا العضوية {name}
   CORRECTION 
 
 tiers.dialog
@@ -2669,27 +2674,27 @@ videoApproval.eyebrow
 
 videoApproval.title
   ENGLISH    See it before it's delivered.
-  ARABIC     شاهديها قبل أن تصلك.
+  ARABIC     شاهدوها قبل أن تصلكم.
   CORRECTION 
 
 videoApproval.copy
   ENGLISH    When your arrangement is finished, your florist sends you a photo or video on WhatsApp. Nothing is delivered until you love it.
-  ARABIC     عندما تكتمل باقتك، ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب. ولا نوصّل شيئًا حتّى ينال إعجابك.
+  ARABIC     عندما تكتمل الباقة، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب. ولا نوصّل شيئًا حتّى ينال إعجابكم.
   CORRECTION 
 
 videoApproval.steps.0
   ENGLISH    We compose your arrangement by hand
-  ARABIC     نُنسّق باقتك يدويًا
+  ARABIC     نُنسّق الباقة يدويًا
   CORRECTION 
 
 videoApproval.steps.1
   ENGLISH    You receive a photo or video on WhatsApp
-  ARABIC     تصلك صورة أو مقطع على واتساب
+  ARABIC     تصلكم صورة أو مقطع على واتساب
   CORRECTION 
 
 videoApproval.steps.2
   ENGLISH    Approve it, and it's on its way
-  ARABIC     وافقي عليها، فتنطلق إليك
+  ARABIC     وافقوا عليها، فتنطلق إليكم
   CORRECTION 
 
 
@@ -2720,7 +2725,7 @@ occasionEmpty.title
 
 occasionEmpty.body
   ENGLISH    Until it arrives, a florist can compose one for this moment. Tell us who it is for, the colours and your budget.
-  ARABIC     وحتّى تصل، يمكن لمنسّقة الزهور أن تنسّق واحدة لهذه اللحظة. أخبرينا لمن هي، والألوان، وميزانيتك.
+  ARABIC     وحتّى تصل، يمكن لمنسّق الزهور أن ينسّق واحدة لهذه اللحظة. أخبرونا لمن هي، والألوان، والميزانية.
   CORRECTION 
 
 
@@ -2738,7 +2743,7 @@ meta.about
 
 meta.account
   ENGLISH    Your account
-  ARABIC     حسابك
+  ARABIC     حسابي
   CORRECTION 
 
 meta.order
@@ -2773,7 +2778,7 @@ meta.verify
 
 meta.buildYourOwn
   ENGLISH    Build Your Own
-  ARABIC     صمّمي باقتك
+  ARABIC     صمّموا باقتكم
   CORRECTION 
 
 meta.checkout
@@ -2836,7 +2841,7 @@ meta.refunds
 
 wishlist.eyebrow
   ENGLISH    Kept Close
-  ARABIC     قريبة إلى قلبك
+  ARABIC     قريبة إلى القلب
   CORRECTION 
 
 wishlist.title
@@ -2846,12 +2851,12 @@ wishlist.title
 
 wishlist.emptyTitle
   ENGLISH    Hearts you leave here never wilt.
-  ARABIC     ما تتركينه هنا لا يذبل أبدًا.
+  ARABIC     ما تحفظونه هنا لا يذبل أبدًا.
   CORRECTION 
 
 wishlist.emptyBody
   ENGLISH    Tap the heart on any arrangement to keep it close.
-  ARABIC     انقري على القلب في أي باقة لتبقى قريبة منك.
+  ARABIC     انقروا على القلب في أي باقة لتبقى قريبة منكم.
   CORRECTION 
 
 
@@ -2899,12 +2904,12 @@ shop.nothingYet
 
 shop.noResults
   ENGLISH    Try a different occasion, flower or price — or look through the whole collection.
-  ARABIC     جرّبي مناسبة أو زهرة أو سعرًا مختلفًا — أو تصفّحي المجموعة كاملة.
+  ARABIC     جرّبوا مناسبة أو زهرة أو سعرًا مختلفًا — أو تصفّحوا المجموعة كاملة.
   CORRECTION 
 
 shop.exploreAll
   ENGLISH    Explore all arrangements
-  ARABIC     تصفّحي جميع الباقات
+  ARABIC     تصفّحوا جميع الباقات
   CORRECTION 
 
 shop.alsoFromAtelier
@@ -2997,12 +3002,12 @@ product.withExtras.other
 
 product.promiseComposed
   ENGLISH    Composed to order, and delivered on the day you choose.
-  ARABIC     تُنسّق خصيصًا لك، وتُوصّل في اليوم الذي تختارينه.
+  ARABIC     تُنسّق خصيصًا لكم، وتُوصّل في اليوم الذي تختارونه.
   CORRECTION 
 
 product.promiseApproval
   ENGLISH    A photo or video on WhatsApp for your approval before it leaves.
-  ARABIC     صورة أو مقطع على واتساب لتوافقي عليه قبل أن يخرج.
+  ARABIC     صورة أو مقطع على واتساب لتوافقوا عليه قبل أن يخرج.
   CORRECTION 
 
 product.promiseReach
@@ -3032,12 +3037,12 @@ product.cardSection
 
 product.cardAdded
   ENGLISH    Added. You can change it at checkout too.
-  ARABIC     أُضيفت. ويمكنك تعديلها عند إتمام الطلب أيضًا.
+  ARABIC     أُضيفت. ويمكنكم تعديلها عند إتمام الطلب أيضًا.
   CORRECTION 
 
 product.cardOptional
   ENGLISH    Optional. Add a handwritten card and who is receiving it.
-  ARABIC     اختياري. أضيفي بطاقة مكتوبة بخط اليد، ومن سيستلمها.
+  ARABIC     اختياري. أضيفوا بطاقة مكتوبة بخط اليد، ومن سيستلمها.
   CORRECTION 
 
 product.cardMessage
@@ -3047,7 +3052,7 @@ product.cardMessage
 
 product.cardPlaceholder
   ENGLISH    Write the words they'll keep…
-  ARABIC     اكتبي كلمات يحتفظون بها…
+  ARABIC     اكتبوا كلمات يحتفظون بها…
   CORRECTION 
 
 product.recipientName
@@ -3072,12 +3077,12 @@ product.recipientNote
 
 product.addToCart
   ENGLISH    Add to Cart
-  ARABIC     أضيفي إلى السلة
+  ARABIC     أضيفوا إلى السلة
   CORRECTION 
 
 product.addToCartWithTotal
   ENGLISH    Add to Cart — {total}
-  ARABIC     أضيفي إلى السلة — {total}
+  ARABIC     أضيفوا إلى السلة — {total}
   CORRECTION 
 
 product.gallery
@@ -3164,57 +3169,57 @@ addonNames.polaroid
 
 server.wait.moment
   ENGLISH    Please wait a moment and try again.
-  ARABIC     انتظري لحظة ثم حاولي مرة أخرى.
+  ARABIC     انتظروا لحظة ثم حاولوا مرة أخرى.
   CORRECTION 
 
 server.wait.minutes.one
   ENGLISH    Please try again in {n} minute.
-  ARABIC     حاولي مرة أخرى بعد دقيقة.
+  ARABIC     حاولوا مرة أخرى بعد دقيقة.
   CORRECTION 
 
 server.wait.minutes.two
   ENGLISH    Please try again in {n} minutes.
-  ARABIC     حاولي مرة أخرى بعد دقيقتين.
+  ARABIC     حاولوا مرة أخرى بعد دقيقتين.
   CORRECTION 
 
 server.wait.minutes.few
   ENGLISH    Please try again in {n} minutes.
-  ARABIC     حاولي مرة أخرى بعد {n} دقائق.
+  ARABIC     حاولوا مرة أخرى بعد {n} دقائق.
   CORRECTION 
 
 server.wait.minutes.many
   ENGLISH    Please try again in {n} minutes.
-  ARABIC     حاولي مرة أخرى بعد {n} دقيقة.
+  ARABIC     حاولوا مرة أخرى بعد {n} دقيقة.
   CORRECTION 
 
 server.wait.minutes.other
   ENGLISH    Please try again in {n} minutes.
-  ARABIC     حاولي مرة أخرى بعد {n} دقيقة.
+  ARABIC     حاولوا مرة أخرى بعد {n} دقيقة.
   CORRECTION 
 
 server.wait.hours.one
   ENGLISH    Please try again in about {n} hour.
-  ARABIC     حاولي مرة أخرى بعد ساعة تقريبًا.
+  ARABIC     حاولوا مرة أخرى بعد ساعة تقريبًا.
   CORRECTION 
 
 server.wait.hours.two
   ENGLISH    Please try again in about {n} hours.
-  ARABIC     حاولي مرة أخرى بعد ساعتين تقريبًا.
+  ARABIC     حاولوا مرة أخرى بعد ساعتين تقريبًا.
   CORRECTION 
 
 server.wait.hours.few
   ENGLISH    Please try again in about {n} hours.
-  ARABIC     حاولي مرة أخرى بعد {n} ساعات تقريبًا.
+  ARABIC     حاولوا مرة أخرى بعد {n} ساعات تقريبًا.
   CORRECTION 
 
 server.wait.hours.many
   ENGLISH    Please try again in about {n} hours.
-  ARABIC     حاولي مرة أخرى بعد {n} ساعة تقريبًا.
+  ARABIC     حاولوا مرة أخرى بعد {n} ساعة تقريبًا.
   CORRECTION 
 
 server.wait.hours.other
   ENGLISH    Please try again in about {n} hours.
-  ARABIC     حاولي مرة أخرى بعد {n} ساعة تقريبًا.
+  ARABIC     حاولوا مرة أخرى بعد {n} ساعة تقريبًا.
   CORRECTION 
 
 server.checkout.rateLimited
@@ -3224,12 +3229,12 @@ server.checkout.rateLimited
 
 server.checkout.basketEmpty
   ENGLISH    Your basket is empty.
-  ARABIC     سلّتك فارغة.
+  ARABIC     السلة فارغة.
   CORRECTION 
 
 server.checkout.nameRequired
   ENGLISH    Please tell us your name.
-  ARABIC     أخبرينا باسمك.
+  ARABIC     يُرجى كتابة الاسم.
   CORRECTION 
 
 server.checkout.emailInvalid
@@ -3239,17 +3244,17 @@ server.checkout.emailInvalid
 
 server.checkout.phoneFormat
   ENGLISH    Enter your phone in international format, e.g. +971501234567.
-  ARABIC     اكتبي رقمك بالصيغة الدولية، مثال: +971501234567.
+  ARABIC     اكتبوا الرقم بالصيغة الدولية، مثال: +971501234567.
   CORRECTION 
 
 server.checkout.addressRequired
   ENGLISH    Please give us a delivery address.
-  ARABIC     أضيفي عنوان التوصيل.
+  ARABIC     أضيفوا عنوان التوصيل.
   CORRECTION 
 
 server.checkout.slotRequired
   ENGLISH    Please choose a delivery time.
-  ARABIC     اختاري وقت التوصيل.
+  ARABIC     اختاروا وقت التوصيل.
   CORRECTION 
 
 server.checkout.recipientPhoneInvalid
@@ -3259,7 +3264,7 @@ server.checkout.recipientPhoneInvalid
 
 server.checkout.dateRequired
   ENGLISH    Please choose a delivery date.
-  ARABIC     اختاري تاريخ التوصيل.
+  ARABIC     اختاروا تاريخ التوصيل.
   CORRECTION 
 
 server.checkout.datePassed
@@ -3269,27 +3274,27 @@ server.checkout.datePassed
 
 server.checkout.catalogueUnreachable
   ENGLISH    We could not reach the catalogue. Please try again.
-  ARABIC     لم نتمكن من الوصول إلى المجموعة. حاولي مرة أخرى.
+  ARABIC     لم نتمكن من الوصول إلى المجموعة. حاولوا مرة أخرى.
   CORRECTION 
 
 server.checkout.productUnavailable
   ENGLISH    One of the arrangements in your basket is no longer available. Please review your basket.
-  ARABIC     إحدى الباقات في سلّتك لم تعد متوفرة. راجعي سلّتك من فضلك.
+  ARABIC     إحدى الباقات في السلة لم تعد متوفرة. يُرجى مراجعة السلة.
   CORRECTION 
 
 server.checkout.pricingRejected
   ENGLISH    We could not price that basket. Please review your items and try again.
-  ARABIC     لم نتمكن من حساب قيمة السلّة. راجعي العناصر وحاولي مرة أخرى.
+  ARABIC     لم نتمكن من حساب قيمة السلة. راجعوا العناصر وحاولوا مرة أخرى.
   CORRECTION 
 
 server.checkout.creationFailed
   ENGLISH    We could not place your order. Nothing has been charged — please try again.
-  ARABIC     لم نتمكن من تأكيد طلبك، ولم يُخصم أي مبلغ — حاولي مرة أخرى.
+  ARABIC     لم نتمكن من تأكيد طلبكم، ولم يُخصم أي مبلغ — حاولوا مرة أخرى.
   CORRECTION 
 
 server.account.credentialsRequired
   ENGLISH    Enter your email and password.
-  ARABIC     اكتبي بريدك الإلكتروني وكلمة المرور.
+  ARABIC     اكتبوا البريد الإلكتروني وكلمة المرور.
   CORRECTION 
 
 server.account.signInRateLimited
@@ -3299,12 +3304,12 @@ server.account.signInRateLimited
 
 server.account.signInFailed
   ENGLISH    We could not sign you in. Please try again.
-  ARABIC     لم نتمكن من تسجيل دخولك. حاولي مرة أخرى.
+  ARABIC     لم نتمكن من تسجيل الدخول. حاولوا مرة أخرى.
   CORRECTION 
 
 server.account.staffAccount
   ENGLISH    This is a staff account. Please use the admin sign-in.
-  ARABIC     هذا حساب لفريق العمل. استخدمي صفحة دخول لوحة الإدارة.
+  ARABIC     هذا حساب لفريق العمل. استخدموا صفحة دخول لوحة الإدارة.
   CORRECTION 
 
 server.account.signInRejected
@@ -3314,17 +3319,17 @@ server.account.signInRejected
 
 server.account.nameRequired
   ENGLISH    Please tell us your name.
-  ARABIC     أخبرينا باسمك.
+  ARABIC     يُرجى كتابة الاسم.
   CORRECTION 
 
 server.account.emailInvalid
   ENGLISH    Please check your email address.
-  ARABIC     تحقّقي من بريدك الإلكتروني.
+  ARABIC     تحقّقوا من البريد الإلكتروني.
   CORRECTION 
 
 server.account.passwordTooShort
   ENGLISH    Please use at least {min} characters.
-  ARABIC     استخدمي {min} أحرف على الأقل.
+  ARABIC     استخدموا {min} أحرف على الأقل.
   CORRECTION 
 
 server.account.passwordMismatch
@@ -3339,7 +3344,7 @@ server.account.registerRateLimited
 
 server.account.registerFailed
   ENGLISH    We could not create that account just now. Please try again.
-  ARABIC     لم نتمكن من إنشاء الحساب الآن. حاولي مرة أخرى.
+  ARABIC     لم نتمكن من إنشاء الحساب الآن. حاولوا مرة أخرى.
   CORRECTION 
 
 server.account.verifyLinkInvalid
@@ -3359,7 +3364,7 @@ server.account.resetLinkInvalid
 
 server.account.phoneTaken
   ENGLISH    That phone number is already on an account. Sign in instead, or leave the phone blank and add it later.
-  ARABIC     رقم الهاتف هذا مستخدم في حساب آخر. سجّلي الدخول، أو اتركي حقل الهاتف فارغًا وأضيفيه لاحقًا.
+  ARABIC     رقم الهاتف هذا مستخدم في حساب آخر. سجّلوا الدخول، أو اتركوا حقل الهاتف فارغًا وأضيفوه لاحقًا.
   CORRECTION 
 
 server.enquiry.rateLimited
@@ -3369,72 +3374,72 @@ server.enquiry.rateLimited
 
 server.enquiry.nameRequired
   ENGLISH    Please tell us your name.
-  ARABIC     أخبرينا باسمك.
+  ARABIC     يُرجى كتابة الاسم.
   CORRECTION 
 
 server.enquiry.emailInvalid
   ENGLISH    Please check your email address.
-  ARABIC     تحقّقي من بريدك الإلكتروني.
+  ARABIC     تحقّقوا من البريد الإلكتروني.
   CORRECTION 
 
 server.enquiry.phoneFormat
   ENGLISH    Please include your phone number with its country code, like +9715…
-  ARABIC     اكتبي رقم هاتفك مع رمز الدولة، مثل +9715…
+  ARABIC     اكتبوا رقم الهاتف مع رمز الدولة، مثل +9715…
   CORRECTION 
 
 server.enquiry.recordFailed
   ENGLISH    We could not record that just now. Please try again, or message us on WhatsApp.
-  ARABIC     لم نتمكن من تسجيل ذلك الآن. حاولي مرة أخرى، أو راسلينا على واتساب.
+  ARABIC     لم نتمكن من تسجيل ذلك الآن. حاولوا مرة أخرى، أو راسلونا على واتساب.
   CORRECTION 
 
 server.enquiry.budgetRequired
   ENGLISH    Please choose a budget.
-  ARABIC     اختاري الميزانية.
+  ARABIC     اختاروا الميزانية.
   CORRECTION 
 
 server.enquiry.eventTypeRequired
   ENGLISH    Please tell us what kind of occasion it is.
-  ARABIC     أخبرينا بنوع المناسبة.
+  ARABIC     أخبرونا بنوع المناسبة.
   CORRECTION 
 
 server.enquiry.dateInvalid
   ENGLISH    Please check the date.
-  ARABIC     تحقّقي من التاريخ.
+  ARABIC     تحقّقوا من التاريخ.
   CORRECTION 
 
 server.enquiry.dateRequired
   ENGLISH    Please choose the date of the event.
-  ARABIC     اختاري تاريخ المناسبة.
+  ARABIC     اختاروا تاريخ المناسبة.
   CORRECTION 
 
 server.enquiry.guestsRequired
   ENGLISH    Please tell us roughly how many guests.
-  ARABIC     أخبرينا بعدد الضيوف تقريبًا.
+  ARABIC     أخبرونا بعدد الضيوف تقريبًا.
   CORRECTION 
 
 server.enquiry.venueRequired
   ENGLISH    Please tell us the venue or area.
-  ARABIC     أخبرينا بالمكان أو المنطقة.
+  ARABIC     أخبرونا بالمكان أو المنطقة.
   CORRECTION 
 
 server.enquiry.frequencyRequired
   ENGLISH    Please choose how often the flowers should arrive.
-  ARABIC     اختاري عدد مرات وصول الزهور.
+  ARABIC     اختاروا عدد مرات وصول الزهور.
   CORRECTION 
 
 server.enquiry.deliveryPreferenceRequired
   ENGLISH    Please choose where the flowers should go.
-  ARABIC     اختاري إلى أين تُرسل الزهور.
+  ARABIC     اختاروا إلى أين تُرسل الزهور.
   CORRECTION 
 
 server.enquiry.startDateInvalid
   ENGLISH    Please check the start date.
-  ARABIC     تحقّقي من تاريخ البداية.
+  ARABIC     تحقّقوا من تاريخ البداية.
   CORRECTION 
 
 server.enquiry.startDatePast
   ENGLISH    Please choose a start date from today onward.
-  ARABIC     اختاري تاريخ بداية من اليوم أو بعده.
+  ARABIC     اختاروا تاريخ بداية من اليوم أو بعده.
   CORRECTION 
 
 
@@ -3462,7 +3467,7 @@ checkout.whenWhere
 
 checkout.yourDetails
   ENGLISH    Your details
-  ARABIC     بياناتك
+  ARABIC     بياناتكم
   CORRECTION 
 
 checkout.payment
@@ -3507,7 +3512,7 @@ checkout.phonePlaceholder
 
 checkout.surprise
   ENGLISH    Keep it a surprise. Contact me, not them, about the delivery.
-  ARABIC     أبقيها مفاجأة. تواصلوا معي بشأن التوصيل، لا مع المستلِم.
+  ARABIC     أبقوها مفاجأة. تواصلوا معي بشأن التوصيل، لا مع المستلِم.
   CORRECTION 
 
 checkout.emirate
@@ -3517,7 +3522,7 @@ checkout.emirate
 
 checkout.emiratePlaceholder
   ENGLISH    Choose your emirate
-  ARABIC     اختاري الإمارة
+  ARABIC     اختاروا الإمارة
   CORRECTION 
 
 checkout.emirateOption
@@ -3532,7 +3537,7 @@ checkout.deliveryFree
 
 checkout.deliveryFreeAway
   ENGLISH    {amount} more for complimentary delivery.
-  ARABIC     يفصلك {amount} عن التوصيل المجاني.
+  ARABIC     يفصلكم {amount} عن التوصيل المجاني.
   CORRECTION 
 
 checkout.address
@@ -3557,7 +3562,7 @@ checkout.window
 
 checkout.name
   ENGLISH    Your name
-  ARABIC     اسمك
+  ARABIC     الاسم
   CORRECTION 
 
 checkout.namePlaceholder
@@ -3567,7 +3572,7 @@ checkout.namePlaceholder
 
 checkout.phone
   ENGLISH    Your phone
-  ARABIC     هاتفك
+  ARABIC     رقم الهاتف
   CORRECTION 
 
 checkout.email
@@ -3587,12 +3592,12 @@ checkout.cod
 
 checkout.codBody
   ENGLISH    Pay the courier when your flowers arrive. Nothing is charged now.
-  ARABIC     تدفعين لمندوب التوصيل عند وصول زهورك. لا يُخصم أي مبلغ الآن.
+  ARABIC     تدفعون لمندوب التوصيل عند وصول الزهور. لا يُخصم أي مبلغ الآن.
   CORRECTION 
 
 checkout.yourOrder
   ENGLISH    Your order
-  ARABIC     طلبك
+  ARABIC     طلبكم
   CORRECTION 
 
 checkout.withCard
@@ -3622,7 +3627,7 @@ checkout.complimentary
 
 checkout.chooseEmirate
   ENGLISH    Choose an emirate
-  ARABIC     اختاري الإمارة
+  ARABIC     اختاروا الإمارة
   CORRECTION 
 
 checkout.total
@@ -3632,7 +3637,7 @@ checkout.total
 
 checkout.paidInCash
   ENGLISH    Paid in cash when your flowers arrive.
-  ARABIC     يُدفع نقدًا عند وصول زهورك.
+  ARABIC     يُدفع نقدًا عند وصول الزهور.
   CORRECTION 
 
 checkout.showSummary
@@ -3657,7 +3662,7 @@ checkout.placeWithTotal
 
 checkout.placing
   ENGLISH    Placing your order…
-  ARABIC     جارٍ تأكيد طلبك…
+  ARABIC     جارٍ تأكيد طلبكم…
   CORRECTION 
 
 checkout.placingShort
@@ -3667,12 +3672,12 @@ checkout.placingShort
 
 checkout.questions
   ENGLISH    Questions first?
-  ARABIC     لديك سؤال أولًا؟
+  ARABIC     لديكم سؤال أولًا؟
   CORRECTION 
 
 checkout.messageFlorist
   ENGLISH    Message a florist
-  ARABIC     راسلي منسّقة الزهور
+  ARABIC     راسلوا منسّق الزهور
   CORRECTION 
 
 checkout.itemCount.one
@@ -3702,7 +3707,7 @@ checkout.itemCount.other
 
 checkout.pickEmirate
   ENGLISH    choose an emirate
-  ARABIC     اختاري الإمارة
+  ARABIC     اختاروا الإمارة
   CORRECTION 
 
 checkout.formInvalid
@@ -3712,12 +3717,12 @@ checkout.formInvalid
 
 checkout.dayGone
   ENGLISH    Your delivery day is no longer available. Choose another.
-  ARABIC     يوم التوصيل الذي اخترتِه لم يعد متاحًا. اختاري يومًا آخر.
+  ARABIC     يوم التوصيل الذي اخترتموه لم يعد متاحًا. اختاروا يومًا آخر.
   CORRECTION 
 
 checkout.dayInvalid
   ENGLISH    Choose a day we can still deliver on.
-  ARABIC     اختاري يومًا يمكننا التوصيل فيه.
+  ARABIC     اختاروا يومًا يمكننا التوصيل فيه.
   CORRECTION 
 
 checkout.orderRef
@@ -3727,17 +3732,17 @@ checkout.orderRef
 
 checkout.placedTitle
   ENGLISH    Your flowers are in our hands.
-  ARABIC     زهورك بين أيدينا الآن.
+  ARABIC     زهوركم بين أيدينا الآن.
   CORRECTION 
 
 checkout.placedBody
   ENGLISH    Before your arrangement leaves the atelier, your florist sends a photo or video on WhatsApp for your approval. Payment is taken in cash on delivery.
-  ARABIC     قبل أن يخرج تنسيقك من الأتيليه، ترسل لك منسّقة الزهور صورة أو مقطعًا على واتساب لتوافقي عليه. ويُدفع المبلغ نقدًا عند التوصيل.
+  ARABIC     قبل أن يخرج التنسيق من الأتيليه، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب لتوافقوا عليه. ويُدفع المبلغ نقدًا عند التوصيل.
   CORRECTION 
 
 checkout.viewOrders
   ENGLISH    View Your Orders
-  ARABIC     عرض طلباتك
+  ARABIC     عرض طلباتكم
   CORRECTION 
 
 checkout.continueShopping
@@ -3747,22 +3752,22 @@ checkout.continueShopping
 
 checkout.errors.recipientNameRequired
   ENGLISH    Tell us who is receiving the flowers.
-  ARABIC     أخبرينا من سيستلم الزهور.
+  ARABIC     أخبرونا من سيستلم الزهور.
   CORRECTION 
 
 checkout.errors.phoneInvalid
   ENGLISH    Check the number, for example 050 123 4567.
-  ARABIC     تحقّقي من الرقم، مثال: 050 123 4567.
+  ARABIC     تحقّقوا من الرقم، مثال: 050 123 4567.
   CORRECTION 
 
 checkout.errors.zoneRequired
   ENGLISH    Choose the emirate we are delivering to.
-  ARABIC     اختاري الإمارة التي نوصّل إليها.
+  ARABIC     اختاروا الإمارة التي نوصّل إليها.
   CORRECTION 
 
 checkout.errors.nameRequired
   ENGLISH    Tell us your name.
-  ARABIC     أخبرينا باسمك.
+  ARABIC     يُرجى كتابة الاسم.
   CORRECTION 
 
 checkout.errors.phoneRequired
@@ -3851,57 +3856,57 @@ zoneNames.fujairah
 
 account.eyebrow
   ENGLISH    Your account
-  ARABIC     حسابك
+  ARABIC     حسابي
   CORRECTION 
 
 account.signInTitle
   ENGLISH    Welcome back.
-  ARABIC     أهلًا بعودتك.
+  ARABIC     أهلًا بعودتكم.
   CORRECTION 
 
 account.signInIntro
   ENGLISH    Sign in to see your orders and the details we keep for your deliveries.
-  ARABIC     سجّلي الدخول لمتابعة طلباتك والتفاصيل التي نحفظها لتوصيلاتك.
+  ARABIC     سجّلوا الدخول لمتابعة طلباتكم والتفاصيل التي نحفظها لتوصيلاتكم.
   CORRECTION 
 
 account.registerTitle
   ENGLISH    Keep your details close.
-  ARABIC     احفظي تفاصيلك معنا.
+  ARABIC     احفظوا تفاصيلكم معنا.
   CORRECTION 
 
 account.registerIntro
   ENGLISH    An account remembers your addresses and your past arrangements. You never need one to order — every bouquet can be sent as a guest.
-  ARABIC     الحساب يحفظ عناوينك وباقاتك السابقة. ولستِ بحاجة إليه للطلب — كل باقة يمكن إرسالها كزائرة.
+  ARABIC     الحساب يحفظ العناوين والباقات السابقة. ولا تحتاجونه للطلب — يمكن إرسال أي باقة دون حساب.
   CORRECTION 
 
 account.forgotTitle
   ENGLISH    Let's get you back in.
-  ARABIC     لنُعِدك إلى حسابك.
+  ARABIC     لنُعِدكم إلى حسابكم.
   CORRECTION 
 
 account.forgotIntro
   ENGLISH    Tell us the address you signed up with and we will send a link to choose a new password.
-  ARABIC     أخبرينا بالبريد الذي سجّلتِ به وسنرسل رابطًا لاختيار كلمة مرور جديدة.
+  ARABIC     أخبرونا بالبريد الذي سجّلتم به، وسنرسل رابطًا لاختيار كلمة مرور جديدة.
   CORRECTION 
 
 account.resetTitle
   ENGLISH    Choose a new password.
-  ARABIC     اختاري كلمة مرور جديدة.
+  ARABIC     اختاروا كلمة مرور جديدة.
   CORRECTION 
 
 account.resetIntro
   ENGLISH    Pick something you have not used elsewhere.
-  ARABIC     اختاري كلمة لم تستخدميها في مكان آخر.
+  ARABIC     اختاروا كلمة لم تستخدموها في مكان آخر.
   CORRECTION 
 
 account.verifiedTitle
   ENGLISH    Your email is confirmed.
-  ARABIC     تم تأكيد بريدك.
+  ARABIC     تم تأكيد البريد الإلكتروني.
   CORRECTION 
 
 account.verifiedIntro
   ENGLISH    That is everything. You can sign in with your email and password from now on — we will not ask you to confirm again.
-  ARABIC     هذا كل شيء. يمكنك تسجيل الدخول ببريدك وكلمة المرور من الآن — ولن نطلب التأكيد مرة أخرى.
+  ARABIC     هذا كل شيء. يمكنكم تسجيل الدخول بالبريد وكلمة المرور من الآن — ولن نطلب التأكيد مرة أخرى.
   CORRECTION 
 
 account.expiredTitle
@@ -3916,7 +3921,7 @@ account.incompleteTitle
 
 account.incompleteIntro
   ENGLISH    The reset link is missing its token. Ask for a new one and it will arrive within a minute or two.
-  ARABIC     رابط إعادة التعيين ينقصه الرمز. اطلبي رابطًا جديدًا وسيصلك خلال دقيقة أو دقيقتين.
+  ARABIC     رابط إعادة التعيين ينقصه الرمز. اطلبوا رابطًا جديدًا وسيصلكم خلال دقيقة أو دقيقتين.
   CORRECTION 
 
 account.name
@@ -3971,12 +3976,12 @@ account.createAccount
 
 account.creating
   ENGLISH    Creating your account…
-  ARABIC     جارٍ إنشاء حسابك…
+  ARABIC     جارٍ إنشاء الحساب…
   CORRECTION 
 
 account.signingIn
   ENGLISH    Signing you in…
-  ARABIC     جارٍ تسجيل دخولك…
+  ARABIC     جارٍ تسجيل الدخول…
   CORRECTION 
 
 account.sendLink
@@ -4021,57 +4026,57 @@ account.backToSignIn
 
 account.newHere
   ENGLISH    New here?
-  ARABIC     جديدة هنا؟
+  ARABIC     ليس لديكم حساب؟
   CORRECTION 
 
 account.haveAccount
   ENGLISH    Already have an account?
-  ARABIC     لديك حساب بالفعل؟
+  ARABIC     لديكم حساب بالفعل؟
   CORRECTION 
 
 account.forgotLink
   ENGLISH    Forgotten your password?
-  ARABIC     نسيتِ كلمة المرور؟
+  ARABIC     نسيتم كلمة المرور؟
   CORRECTION 
 
 account.resendLink
   ENGLISH    Didn't get your confirmation email?
-  ARABIC     لم يصلكِ بريد التأكيد؟
+  ARABIC     لم يصلكم بريد التأكيد؟
   CORRECTION 
 
 account.rememberedIt
   ENGLISH    Remembered it?
-  ARABIC     تذكّرتِها؟
+  ARABIC     تذكّرتموها؟
   CORRECTION 
 
 account.checkInbox
   ENGLISH    Check {email} for a link to confirm your address. It expires in a few hours.
-  ARABIC     تفقّدي {email} لرابط تأكيد بريدك. تنتهي صلاحيته خلال ساعات.
+  ARABIC     تفقّدوا {email} لرابط تأكيد البريد. تنتهي صلاحيته خلال ساعات.
   CORRECTION 
 
 account.checkInboxNote
   ENGLISH    Nothing is active until you confirm — you can still order as a guest in the meantime.
-  ARABIC     لا شيء يُفعَّل قبل التأكيد — ويمكنك الطلب كزائرة في هذه الأثناء.
+  ARABIC     لا شيء يُفعَّل قبل التأكيد — ويمكنكم الطلب دون حساب في هذه الأثناء.
   CORRECTION 
 
 account.resetSentIfExists
   ENGLISH    If that address has an account with us, a link to choose a new password is on its way. It expires in about an hour.
-  ARABIC     إذا كان لهذا البريد حساب لدينا، فرابط اختيار كلمة مرور جديدة في طريقه إليك. تنتهي صلاحيته خلال ساعة تقريبًا.
+  ARABIC     إذا كان لهذا البريد حساب لدينا، فرابط اختيار كلمة مرور جديدة في طريقه إليكم. تنتهي صلاحيته خلال ساعة تقريبًا.
   CORRECTION 
 
 account.resendIfWaiting
   ENGLISH    If that address is waiting to be confirmed, a new link is on its way.
-  ARABIC     إذا كان هذا البريد بانتظار التأكيد، فرابط جديد في طريقه إليك.
+  ARABIC     إذا كان هذا البريد بانتظار التأكيد، فرابط جديد في طريقه إليكم.
   CORRECTION 
 
 account.passwordChanged
   ENGLISH    Your password has been changed. You can sign in with it now.
-  ARABIC     تم تغيير كلمة المرور. يمكنك تسجيل الدخول بها الآن.
+  ARABIC     تم تغيير كلمة المرور. يمكنكم تسجيل الدخول بها الآن.
   CORRECTION 
 
 account.orders
   ENGLISH    Your orders
-  ARABIC     طلباتك
+  ARABIC     طلباتكم
   CORRECTION 
 
 account.noOrders
@@ -4081,7 +4086,7 @@ account.noOrders
 
 account.noOrdersBody
   ENGLISH    When you order, it will appear here with its progress.
-  ARABIC     عندما تطلبين، سيظهر الطلب هنا مع مراحل تقدّمه.
+  ARABIC     عندما تطلبون، سيظهر الطلب هنا مع مراحل تقدّمه.
   CORRECTION 
 
 account.visitShop
@@ -4091,12 +4096,12 @@ account.visitShop
 
 account.signInForOrders
   ENGLISH    Sign in to see your orders. You do not need an account to buy — every arrangement can be ordered as a guest.
-  ARABIC     سجّلي الدخول لعرض طلباتك. ولا تحتاجين حسابًا للشراء — فكل باقة يمكن طلبها كزائرة.
+  ARABIC     سجّلوا الدخول لعرض طلباتكم. ولا تحتاجون حسابًا للشراء — يمكن طلب أي باقة دون حساب.
   CORRECTION 
 
 account.orderEyebrow
   ENGLISH    Your order
-  ARABIC     طلبك
+  ARABIC     طلبكم
   CORRECTION 
 
 account.pleaseSignIn
@@ -4106,7 +4111,7 @@ account.pleaseSignIn
 
 account.signInForOrder
   ENGLISH    Sign in to see this order. Orders are only ever shown to the account that placed them.
-  ARABIC     سجّلي الدخول لعرض هذا الطلب. ولا تُعرض الطلبات إلا للحساب الذي أنشأها.
+  ARABIC     سجّلوا الدخول لعرض هذا الطلب. ولا تُعرض الطلبات إلا للحساب الذي أنشأها.
   CORRECTION 
 
 account.placedOn
@@ -4116,7 +4121,7 @@ account.placedOn
 
 account.whatYouOrdered
   ENGLISH    What you ordered
-  ARABIC     ما طلبتِه
+  ARABIC     ما طلبتموه
   CORRECTION 
 
 account.deliveryFree
@@ -4146,7 +4151,7 @@ account.deliveryTo
 
 account.backToOrders
   ENGLISH    Back to your orders
-  ARABIC     العودة إلى طلباتك
+  ARABIC     العودة إلى طلباتكم
   CORRECTION 
 
 account.fulfilment.NEW
@@ -4224,7 +4229,7 @@ pages.shopEyebrow
 
 pages.shopTitle
   ENGLISH    Composed this morning, at your door on the day you choose.
-  ARABIC     تُنسّق صباحًا، وتصل إلى بابك في اليوم الذي تختارينه.
+  ARABIC     تُنسّق صباحًا، وتصل إلى الباب في اليوم الذي تختارونه.
   CORRECTION 
 
 pages.shopIntro
@@ -4279,7 +4284,7 @@ pages.occasionsTitle
 
 pages.occasionsIntro
   ENGLISH    Some things are easier handed over than said. Begin with the moment, and we will compose the rest.
-  ARABIC     بعض الأشياء تُقدَّم أسهل مما تُقال. ابدئي باللحظة، ونتكفّل نحن بالباقي.
+  ARABIC     بعض الأشياء تُقدَّم أسهل مما تُقال. ابدؤوا باللحظة، ونتكفّل نحن بالباقي.
   CORRECTION 
 
 pages.occasionCount.one
@@ -4322,7 +4327,7 @@ footer.help
 
 footer.contact
   ENGLISH    Contact
-  ARABIC     تواصلي معنا
+  ARABIC     تواصلوا معنا
   CORRECTION 
 
 footer.about
