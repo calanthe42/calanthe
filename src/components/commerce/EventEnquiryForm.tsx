@@ -219,6 +219,7 @@ function Field({
   label: string;
   invalid?: boolean;
 }) {
+  const t = useT();
   return (
     <div>
       <label htmlFor={id} className={cn(labelClasses, "text-cream/70")}>
@@ -227,6 +228,13 @@ function Field({
       <input
         id={id}
         aria-invalid={invalid}
+        /* The browser's own "Please fill out this field" bubble is in the
+           browser's language, not the page's; say it in the page's. */
+        onInvalid={(e) => {
+          if (e.currentTarget.validity.valueMissing)
+            e.currentTarget.setCustomValidity(t.ui.requiredField);
+        }}
+        onInput={(e) => e.currentTarget.setCustomValidity("")}
         className={cn(
           fieldClasses,
           "border-cream/25 bg-cream/[0.06] text-cream placeholder:text-cream/40 focus:border-cream focus:shadow-none",

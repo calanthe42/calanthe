@@ -579,7 +579,11 @@ export function CheckoutForm() {
 
             <fieldset className="mt-6">
               <legend className={labelClasses}>{t.checkout.day}</legend>
-              <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {/* `contain: inline-size` keeps this row from widening its parent
+                  (a fieldset / grid column sizes to its content): without it
+                  the row grew past the screen instead of scrolling, and on a
+                  phone the last days could not be reached. */}
+              <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [contain:inline-size]">
                 {days.map((day) => (
                   <button
                     key={day.key}
@@ -621,7 +625,11 @@ export function CheckoutForm() {
                       slot === s.value ? chipOnClasses : chipOffClasses,
                     )}
                   >
-                    <span className="text-base text-olive">{s.value}</span>
+                    {/* dir="ltr": a time range reads 10:00 – 13:00 in either
+                        language; under RTL it rendered "13:00 – 10:00". */}
+                    <span dir="ltr" className="text-base text-olive">
+                      {s.value}
+                    </span>
                     {/* Says why, so a greyed window reads as a fact about
                         today rather than as a broken button. */}
                     {s.disabled && s.reason && (

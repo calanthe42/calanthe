@@ -464,6 +464,16 @@ export function formatAed(price: number): string {
   return `AED ${price.toLocaleString("en-AE")}`;
 }
 
+/**
+ * An add-on price, "+ AED 60". Wrapped in a left-to-right isolate (U+2066 …
+ * U+2069) so the plus stays in front of the amount on an Arabic page — left
+ * bare, the bidi algorithm moved it to the far end and it read "AED 60+".
+ * Invisible in English.
+ */
+export function formatAedDelta(price: number): string {
+  return `⁦+${formatAed(price)}⁩`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Commerce configuration (future CMS globals)                         */
 /* ------------------------------------------------------------------ */

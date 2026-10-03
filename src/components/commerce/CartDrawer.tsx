@@ -13,7 +13,7 @@ import {
   useCart,
   type CartItem as CartItemType,
 } from "@/lib/cart";
-import { addons, formatAed, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
+import { addons, formatAed, formatAedDelta, FREE_DELIVERY_THRESHOLD_AED } from "@/lib/data";
 import { useLocale, useT } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -128,7 +128,7 @@ function CompleteTheGift() {
               <span className="text-sm text-olive">
                 {t.addonNames[addon.id] ?? addon.name}
               </span>
-              <span className="text-sm text-ink-muted">+{formatAed(addon.priceAed)}</span>
+              <span className="text-sm text-ink-muted">{formatAedDelta(addon.priceAed)}</span>
             </button>
           </li>
         ))}

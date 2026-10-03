@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-852 strings in total. 0 are flagged below as likely problems.
+860 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -155,7 +155,7 @@ byo.budgetOtherLabel
 
 byo.budgetNote
   ENGLISH    Every budget is composed with the same care — a smaller arrangement is simply a quieter one.
-  ARABIC     كل ميزانية تُنسَّق بالعناية نفسها — التنسيق الأصغر ببساطة أكثر هدوءًا.
+  ARABIC     كل ميزانية تُنسَّق بالعناية نفسها — والتنسيق الأصغر أهدأ حضورًا فحسب.
   CORRECTION 
 
 byo.coloursHint
@@ -577,8 +577,8 @@ nav.shopByOccasion
   CORRECTION 
 
 nav.readyToday
-  ENGLISH    Ready Made for Today
-  ARABIC     جاهز للتوصيل اليوم
+  ENGLISH    Ready to Order
+  ARABIC     جاهز للطلب
   CORRECTION 
 
 nav.buildYourOwn
@@ -737,12 +737,12 @@ hero.eyebrow
 
 hero.headlineOne
   ENGLISH    Where feelings
-  ARABIC     حيث تتّخذ المشاعر
+  ARABIC     حيث تتجسّد
   CORRECTION 
 
 hero.headlineTwo
   ENGLISH    take form.
-  ARABIC     شكلها.
+  ARABIC     المشاعر.
   CORRECTION 
 
 hero.shopFlowers
@@ -760,12 +760,12 @@ hero.buildYourOwn
 
 band.sendFlowersFor
   ENGLISH    Send flowers for
-  ARABIC     أرسلوا الزهور لـ
+  ARABIC     زهور لكل مناسبة:
   CORRECTION 
 
 band.luxury
   ENGLISH    Luxury
-  ARABIC     الفاخرة
+  ARABIC     الباقات الفاخرة
   CORRECTION 
 
 
@@ -818,7 +818,7 @@ sections.touchTitle
 
 sections.promiseTitle
   ENGLISH    Promised on every order.
-  ARABIC     نعِدُ به في كل طلب.
+  ARABIC     وعودنا في كل طلب.
   CORRECTION 
 
 sections.promiseAsk
@@ -828,7 +828,7 @@ sections.promiseAsk
 
 sections.instagramLine
   ENGLISH    Arrangements as they leave the atelier, most mornings.
-  ARABIC     باقات تغادر الأتيليه، في معظم الصباحات.
+  ARABIC     باقات تخرج من الأتيليه كل صباح تقريبًا.
   CORRECTION 
 
 
@@ -874,7 +874,7 @@ trust.sameDayTitle
 
 trust.sameDayCopy
   ENGLISH    Choose the day and the window that suit them.
-  ARABIC     اختاروا اليوم والوقت المناسبين لهم.
+  ARABIC     اختاروا اليوم والوقت المناسبين لكم.
   CORRECTION 
 
 trust.videoTitle
@@ -1106,6 +1106,46 @@ ui.shopShortcuts
   ARABIC     اختصارات المتجر
   CORRECTION 
 
+ui.openMenu
+  ENGLISH    Open menu
+  ARABIC     فتح القائمة
+  CORRECTION 
+
+ui.closeMenu
+  ENGLISH    Close menu
+  ARABIC     إغلاق القائمة
+  CORRECTION 
+
+ui.wishlistAdd
+  ENGLISH    Add {name} to wishlist
+  ARABIC     أضيفوا {name} إلى المفضّلة
+  CORRECTION 
+
+ui.wishlistRemove
+  ENGLISH    Remove {name} from wishlist
+  ARABIC     إزالة {name} من المفضّلة
+  CORRECTION 
+
+ui.wishlistSaved
+  ENGLISH    {name} saved to your wishlist
+  ARABIC     حُفظت {name} في المفضّلة
+  CORRECTION 
+
+ui.wishlistRemoved
+  ENGLISH    {name} removed from your wishlist
+  ARABIC     أُزيلت {name} من المفضّلة
+  CORRECTION 
+
+ui.occasionAlt
+  ENGLISH    {name} arrangements
+  ARABIC     باقات {name}
+  CORRECTION 
+
+ui.requiredField
+  ENGLISH    Please fill in this field.
+  ARABIC     يُرجى تعبئة هذا الحقل.
+  CORRECTION 
+
 ui.productCategories
   ENGLISH    Product categories
   ARABIC     فئات المنتجات
@@ -1209,7 +1249,7 @@ enquiryForm.membershipDone
 
 enquiryForm.membershipTitle
   ENGLISH    Begin your ritual.
-  ARABIC     ابدؤوا طقسكم.
+  ARABIC     ابدؤوا اشتراككم.
   CORRECTION 
 
 enquiryForm.membershipIntro
@@ -1419,7 +1459,7 @@ enquiryForm.eventKinds.Private celebration
 
 enquiryForm.eventKinds.Corporate
   ENGLISH    Corporate
-  ARABIC     مناسبة للشركات
+  ARABIC     مناسبة مؤسسية
   CORRECTION 
 
 enquiryForm.eventKinds.Launch or opening
@@ -1688,17 +1728,17 @@ membership.whichDay
 
 membership.whichDayBody
   ENGLISH    One day a week is yours. We reserve your route and your stems, and a florist confirms it with you before anything begins.
-  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان، ويؤكّد منسّق الزهور ذلك معكم قبل أن يبدأ شيء.
+  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم موعد التوصيل والزهور، ويؤكّد منسّق الزهور ذلك معكم قبل أن يبدأ شيء.
   CORRECTION 
 
 membership.howItWorks
   ENGLISH    How it works
-  ARABIC     كيف تعمل
+  ARABIC     كيف تعمل العضوية
   CORRECTION 
 
 membership.steps.0.title
   ENGLISH    Choose your ritual
-  ARABIC     اختاروا طقسكم
+  ARABIC     اختاروا باقتكم الأسبوعية
   CORRECTION 
 
 membership.steps.0.copy
@@ -1713,7 +1753,7 @@ membership.steps.1.title
 
 membership.steps.1.copy
   ENGLISH    One day a week is yours. We reserve your route and your stems.
-  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان.
+  ARABIC     يوم واحد في الأسبوع يكون لكم. نحجز لكم موعد التوصيل والزهور.
   CORRECTION 
 
 membership.steps.2.title
@@ -1786,7 +1826,7 @@ booth.title
 
 booth.body
   ENGLISH    Velvet arches, a panelled door, a standing mirror and our sculpted vessels, in the colours of the atelier. Modular by design, it is assembled on site, and its counter is where flowers are arranged on the spot.
-  ARABIC     أقواس مخملية، وباب بحشوات، ومرآة قائمة، وأوانينا المنحوتة، بألوان الأتيليه. صُمّم الجناح من وحدات تُركَّب في الموقع، ومنضدته هي حيث تُنسَّق الزهور في الحال.
+  ARABIC     أقواس مخملية، وباب بحشوات، ومرآة قائمة، وأوانينا المنحوتة، بألوان الأتيليه. صُمّم الجناح من وحدات تُركَّب في الموقع، وعلى منضدته تُنسَّق الزهور أمام الضيوف.
   CORRECTION 
 
 booth.viewsLabel
@@ -2064,7 +2104,7 @@ events.arrangementsBody
 
 events.arrangements.0
   ENGLISH    Table centrepieces, low or statement height
-  ARABIC     قطع وسط الطاولات، منخفضة أو لافتة الارتفاع
+  ARABIC     تنسيقات لوسط الطاولات، منخفضة أو عالية
   CORRECTION 
 
 events.arrangements.1
@@ -2089,7 +2129,7 @@ events.favorsEyebrow
 
 events.favorsTitle
   ENGLISH    Something for everyone to take home.
-  ARABIC     شيء يأخذه الجميع معه.
+  ARABIC     هدية يحملها كل ضيف معه.
   CORRECTION 
 
 events.favorsBody
@@ -2240,7 +2280,7 @@ about.services.events.name
 
 about.services.events.copy
   ENGLISH    Floral styling and arrangements for private celebrations, intimate gatherings and larger occasions.
-  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات الحميمة والمناسبات الأكبر.
+  ARABIC     تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات العائلية والمناسبات الأكبر.
   CORRECTION 
 
 about.services.memberships.name
@@ -2388,7 +2428,7 @@ faq.membership.1.q
 
 faq.membership.1.a
   ENGLISH    Each week our florists compose around the best stems of the season, in the palette you prefer. No two weeks are the same.
-  ARABIC     كل أسبوع ينسّق فريقنا أجمل سيقان الموسم، بلوحة الألوان التي تفضّلونها. ولا يتشابه أسبوعان.
+  ARABIC     كل أسبوع ينسّق فريقنا أجمل زهور الموسم، بلوحة الألوان التي تفضّلونها. ولا يتشابه أسبوعان.
   CORRECTION 
 
 faq.membership.2.q
@@ -2398,7 +2438,7 @@ faq.membership.2.q
 
 faq.membership.2.a
   ENGLISH    Abu Dhabi, for now. Your delivery day is reserved for your area's route, keeping stems in the cold chain until your door.
-  ARABIC     إلى أبوظبي حاليًا. ويُحجز يوم التوصيل لمسار منطقتكم، لتبقى السيقان مبرّدة حتّى الباب.
+  ARABIC     إلى أبوظبي حاليًا. ويُحجز يوم التوصيل لمسار منطقتكم، لتبقى الزهور مبرّدة حتّى الباب.
   CORRECTION 
 
 faq.membership.3.q
@@ -2426,7 +2466,7 @@ tierCopy.essential.includes.0
 
 tierCopy.essential.includes.1
   ENGLISH    Seasonal stems, florist's choice
-  ARABIC     سيقان موسمية، باختيار منسّق الزهور
+  ARABIC     زهور موسمية، باختيار منسّق الزهور
   CORRECTION 
 
 tierCopy.essential.includes.2
@@ -2436,7 +2476,7 @@ tierCopy.essential.includes.2
 
 tierCopy.signature.blurb
   ENGLISH    Our fullest weekly ritual — the atelier's signature scale.
-  ARABIC     أغنى طقوسنا الأسبوعية — الحجم المميّز للأتيليه.
+  ARABIC     أغنى اشتراكاتنا الأسبوعية — الحجم المميّز للأتيليه.
   CORRECTION 
 
 tierCopy.signature.includes.0
@@ -2446,7 +2486,7 @@ tierCopy.signature.includes.0
 
 tierCopy.signature.includes.1
   ENGLISH    Premium seasonal stems
-  ARABIC     سيقان موسمية فاخرة
+  ARABIC     زهور موسمية فاخرة
   CORRECTION 
 
 tierCopy.signature.includes.2
@@ -2590,12 +2630,12 @@ seal.line1
 
 seal.line2
   ENGLISH    this atelier open.
-  ARABIC     من هذا الأتيليه مفتوحًا.
+  ARABIC     من الأتيليه إلا مختومًا.
   CORRECTION 
 
 seal.body
   ENGLISH    Wrapped in embossed paper, tied with our printed ribbon, and closed with the monogram — pressed while the flowers are still cool from the studio.
-  ARABIC     يُغلّف بورق مُحفّر، ويُربط بشريطنا المطبوع، ويُختم بالشعار — يُضغط والزهور ما زالت باردة من الأتيليه.
+  ARABIC     يُغلّف بورق منقوش، ويُربط بشريطنا المطبوع، ويُختم بشعارنا والزهور ما زالت باردة من الأتيليه.
   CORRECTION 
 
 seal.shop
@@ -2613,7 +2653,7 @@ seal.how
 
 ritual.eyebrow
   ENGLISH    A Weekly Ritual
-  ARABIC     طقس أسبوعي
+  ARABIC     موعدكم الأسبوعي مع الزهور
   CORRECTION 
 
 ritual.title
@@ -2636,7 +2676,7 @@ ritual.cta
 
 tiers.mostLoved
   ENGLISH    Most loved
-  ARABIC     المفضّلة
+  ARABIC     الأكثر طلبًا
   CORRECTION 
 
 tiers.perDelivery
@@ -2674,7 +2714,7 @@ videoApproval.eyebrow
 
 videoApproval.title
   ENGLISH    See it before it's delivered.
-  ARABIC     شاهدوها قبل أن تصلكم.
+  ARABIC     شاهدوها قبل أن تصل.
   CORRECTION 
 
 videoApproval.copy
@@ -2694,7 +2734,7 @@ videoApproval.steps.1
 
 videoApproval.steps.2
   ENGLISH    Approve it, and it's on its way
-  ARABIC     وافقوا عليها، فتنطلق إليكم
+  ARABIC     وافقوا عليها، فتنطلق إلى وجهتها
   CORRECTION 
 
 
@@ -2856,7 +2896,7 @@ wishlist.emptyTitle
 
 wishlist.emptyBody
   ENGLISH    Tap the heart on any arrangement to keep it close.
-  ARABIC     انقروا على القلب في أي باقة لتبقى قريبة منكم.
+  ARABIC     اضغطوا على القلب في أي باقة لتبقى قريبة منكم.
   CORRECTION 
 
 
@@ -3042,7 +3082,7 @@ product.cardAdded
 
 product.cardOptional
   ENGLISH    Optional. Add a handwritten card and who is receiving it.
-  ARABIC     اختياري. أضيفوا بطاقة مكتوبة بخط اليد، ومن سيستلمها.
+  ARABIC     اختياري. أضيفوا بطاقة بخط اليد، واسم من سيستلمها.
   CORRECTION 
 
 product.cardMessage
@@ -4238,8 +4278,8 @@ pages.shopIntro
   CORRECTION 
 
 pages.shopReadyEyebrow
-  ENGLISH    Ready made for today
-  ARABIC     جاهز للتوصيل اليوم
+  ENGLISH    Ready to order
+  ARABIC     جاهز للطلب
   CORRECTION 
 
 pages.shopReadyTitle
@@ -4284,7 +4324,7 @@ pages.occasionsTitle
 
 pages.occasionsIntro
   ENGLISH    Some things are easier handed over than said. Begin with the moment, and we will compose the rest.
-  ARABIC     بعض الأشياء تُقدَّم أسهل مما تُقال. ابدؤوا باللحظة، ونتكفّل نحن بالباقي.
+  ARABIC     بعض المشاعر يسهل إهداؤها أكثر من قولها. ابدؤوا باللحظة، ونتكفّل نحن بالباقي.
   CORRECTION 
 
 pages.occasionCount.one
@@ -4367,7 +4407,7 @@ footer.privacy
 
 footer.refunds
   ENGLISH    Refund & Cancellation Policy
-  ARABIC     سياسة الاسترجاع والإلغاء
+  ARABIC     سياسة الاسترداد والإلغاء
   CORRECTION 
 
 footer.whatsapp
@@ -4410,7 +4450,7 @@ language.arabic
 
 language.toEnglish
   ENGLISH    Switch to English
-  ARABIC     Switch to English
+  ARABIC     التبديل إلى الإنجليزية
   CORRECTION 
 
 language.toArabic

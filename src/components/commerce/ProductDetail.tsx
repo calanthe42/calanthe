@@ -22,6 +22,7 @@ import { itemUnitPrice, useCart } from "@/lib/cart";
 import {
   addons,
   formatAed,
+  formatAedDelta,
   occasions as occasionNames,
   sizes,
   type AddonId,
@@ -347,7 +348,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     </span>
                     <span className="text-xs text-ink-muted">
                       {s.priceDeltaAed > 0
-                        ? `+${formatAed(s.priceDeltaAed)}`
+                        ? formatAedDelta(s.priceDeltaAed)
                         : (t.sizeNotes[s.id] ?? s.note)}
                     </span>
                   </button>
@@ -375,7 +376,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                         )
                       }
                       className={cn(
-                        "flex min-h-12 items-center gap-3 rounded-sm border px-4 text-left transition-colors duration-200 ease-bloom",
+                        "flex min-h-12 items-center gap-3 rounded-sm border px-4 text-start transition-colors duration-200 ease-bloom",
                         on
                           ? "border-olive bg-cream"
                           : "border-hairline hover:border-sage",
@@ -405,7 +406,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                         {t.addonNames[addon.id] ?? addon.name}
                       </span>
                       <span className="text-sm text-ink-muted">
-                        +{formatAed(addon.priceAed)}
+                        {formatAedDelta(addon.priceAed)}
                       </span>
                     </button>
                   );
@@ -416,7 +417,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
             {/* Delivery */}
             <section aria-labelledby="delivery-heading">
               <OptionHeading id="delivery-heading">{t.product.deliveryDay}</OptionHeading>
-              <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {/* `contain: inline-size` keeps this row from widening its parent
+                  (a fieldset / grid column sizes to its content): without it
+                  the row grew past the screen instead of scrolling, and on a
+                  phone the last days could not be reached. */}
+              <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [contain:inline-size]">
                 {days.map((day) => (
                   <button
                     key={day.key}
@@ -451,7 +456,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
                       slot === s.value ? chipOnClasses : chipOffClasses,
                     )}
                   >
-                    <span className="text-base text-olive">{s.value}</span>
+                    {/* dir="ltr": a time range reads 10:00 – 13:00 in either
+                        language; under RTL it rendered "13:00 – 10:00". */}
+                    <span dir="ltr" className="text-base text-olive">
+                      {s.value}
+                    </span>
                     {s.disabled && s.reason && (
                       <span className="text-xs text-ink-muted">{s.reason}</span>
                     )}

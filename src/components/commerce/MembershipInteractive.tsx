@@ -57,7 +57,7 @@ export function FaqAccordion({ items }: { items: readonly FaqItem[] }) {
               type="button"
               aria-expanded={isOpen}
               onClick={() => setOpen(isOpen ? null : i)}
-              className="flex min-h-14 w-full items-center justify-between gap-4 py-4 text-left"
+              className="flex min-h-14 w-full items-center justify-between gap-4 py-4 text-start"
             >
               <span className="font-display text-lg font-normal text-olive lg:text-xl">
                 {item.q}
