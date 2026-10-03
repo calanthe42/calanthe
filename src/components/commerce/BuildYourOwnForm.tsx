@@ -28,6 +28,7 @@ import {
   byoColours,
   byoColourSwatches,
   formatAed,
+  formatAedDelta,
 } from "@/lib/data";
 
 /**
@@ -453,7 +454,7 @@ export function BuildYourOwnForm() {
             <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
               <Option
                 label={t.byo.vaseYes}
-                note={`+${formatAed(BYO_VASE_PRICE_AED)}`}
+                note={formatAedDelta(BYO_VASE_PRICE_AED)}
                 selected={vase === true}
                 onSelect={() => setVase(true)}
               />
@@ -1033,7 +1034,7 @@ function Summary({
         vase === null
           ? null
           : vase
-            ? `${t.byo.vaseAnswerYes}${t.product.listComma}+${formatAed(BYO_VASE_PRICE_AED)}`
+            ? `${t.byo.vaseAnswerYes}${t.product.listComma}${formatAedDelta(BYO_VASE_PRICE_AED)}`
             : t.byo.vaseAnswerNo,
     },
     {

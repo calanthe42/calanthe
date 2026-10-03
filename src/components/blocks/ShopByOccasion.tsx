@@ -49,7 +49,15 @@ export async function ShopByOccasion() {
               >
                 <Parallax speed={parallaxSpeeds[i] ?? 1} className="absolute inset-[-8%]">
                   <FloralImage
-                    image={occasion.image}
+                    image={{
+                      ...occasion.image,
+                      /* The stored alt is English ("Birthday arrangements"); a
+                         screen reader on the Arabic page reads it in Arabic. */
+                      alt: t.ui.occasionAlt.replace(
+                        "{name}",
+                        t.occasionNames[occasion.slug] ?? occasion.name,
+                      ),
+                    }}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </Parallax>

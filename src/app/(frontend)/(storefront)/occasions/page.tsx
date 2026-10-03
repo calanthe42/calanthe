@@ -69,6 +69,10 @@ export default async function OccasionsPage() {
             <OccasionTile
               occasion={lead}
               name={t.occasionNames[lead.slug] ?? lead.name}
+              alt={t.ui.occasionAlt.replace(
+                "{name}",
+                t.occasionNames[lead.slug] ?? lead.name,
+              )}
               lead
             />
           </StaggerItem>
@@ -86,6 +90,10 @@ export default async function OccasionsPage() {
                 <OccasionTile
                   occasion={occasion}
                   name={t.occasionNames[occasion.slug] ?? occasion.name}
+                  alt={t.ui.occasionAlt.replace(
+                    "{name}",
+                    t.occasionNames[occasion.slug] ?? occasion.name,
+                  )}
                   span={span}
                 />
               </StaggerItem>
@@ -120,6 +128,8 @@ function finalTileSpan(count: number, index: number): TileSpan {
 type OccasionTileProps = {
   /** The occasion in the reader's language. */
   name: string;
+  /** The photograph's description in the reader's language. */
+  alt: string;
   occasion: Awaited<ReturnType<typeof getActiveOccasions>>[number];
   lead?: boolean;
   span?: TileSpan;
@@ -128,6 +138,7 @@ type OccasionTileProps = {
 function OccasionTile({
   occasion,
   name,
+  alt,
   lead = false,
   span = { mobile: false, desktop: 1 },
 }: OccasionTileProps) {
@@ -147,7 +158,7 @@ function OccasionTile({
     >
       <ClipReveal className="absolute inset-0">
         <FloralImage
-          image={occasion.image}
+          image={{ ...occasion.image, alt }}
           sizes={
             lead ? "(max-width: 1024px) 100vw, 62vw" : "(max-width: 1024px) 48vw, 31vw"
           }

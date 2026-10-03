@@ -428,11 +428,11 @@ export function Header({
           <div className="flex items-center">
             <button
               type="button"
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? t.ui.closeMenu : t.ui.openMenu}
               aria-expanded={menuOpen}
               onClick={toggleMenu}
               className={cn(
-                "relative z-50 -ml-2 flex h-11 w-11 items-center justify-center lg:hidden",
+                "relative z-50 -ms-2 flex h-11 w-11 items-center justify-center lg:hidden",
                 onDark ? "text-cream" : "text-olive",
               )}
             >
@@ -583,7 +583,7 @@ export function Header({
               </Link>
               <LanguageToggle
                 tone={onDark ? "cream" : "olive"}
-                className="ml-1 hidden lg:inline-flex"
+                className="ms-1 hidden lg:inline-flex"
               />
               <button
                 type="button"
@@ -609,6 +609,18 @@ export function Header({
             </div>
           </div>
         </div>
+
+        {/* THE BAR STAYS CLEAR WHILE THE MENU SCROLLS. The close button is
+            the header's own burger, pinned at the top; the menu list scrolled
+            up underneath it, so "الرئيسية" and the search field ran under the
+            ✕. This olive band covers exactly the header's height (the header
+            publishes it as --header-h), above the list and below the ✕. */}
+        {menuState === "open" && (
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 top-0 z-[45] h-[var(--header-h,6.5rem)] bg-olive lg:hidden"
+          />
+        )}
 
         {/* Full-screen mobile menu — accordion groups in the olive overlay. */}
         {menuState !== "closed" && (

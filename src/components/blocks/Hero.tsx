@@ -91,21 +91,11 @@ export async function Hero({ media }: HeroProps) {
         out the middle of the photograph — which is most of what made the
         image look flat and washed.
       */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background: [
-            "linear-gradient(to bottom, rgba(43,47,27,0.46) 0%, rgba(43,47,27,0.12) 18%, rgba(43,47,27,0) 32%)",
-            /* A breath of shade behind the travelling mark while it is
-               out over the bouquet — enough for cream letterforms to
-               hold on the daisies, far short of grey-ing the middle of
-               the photograph the way the old full-frame scrim did. */
-            "radial-gradient(44% 32% at 50% 46%, rgba(28,30,18,0.46) 0%, rgba(28,30,18,0.20) 52%, rgba(28,30,18,0) 78%)",
-            "radial-gradient(115% 95% at 4% 100%, rgba(43,47,27,0.86) 0%, rgba(43,47,27,0.52) 32%, rgba(43,47,27,0.14) 58%, rgba(43,47,27,0) 78%)",
-          ].join(", "),
-        }}
-      />
+      {/* The three shades live in globals.css (`.hero-scrim`) so the corner
+          one can follow the headline: bottom-left in English, bottom-right in
+          Arabic. It stayed bottom-left for Arabic, so the Arabic headline sat
+          on the bare white daisies and could not be read. */}
+      <div aria-hidden className="hero-scrim absolute inset-0" />
       {/* Phones only: the tall crop puts the brightest part of the
           bouquet directly behind the words, so they need a firmer
           floor than the desktop crop does. */}
@@ -179,7 +169,7 @@ export async function Hero({ media }: HeroProps) {
             immediate
             delay={0.25}
             lines={[t.hero.headlineOne, t.hero.headlineTwo]}
-            className="mb-9 font-display text-[clamp(2.9rem,11vw,3.9rem)] font-light leading-[1.02] text-cream lg:mb-11 lg:text-[clamp(3.6rem,5vw,5.25rem)]"
+            className="hero-headline mb-9 font-display text-[clamp(2.9rem,11vw,3.9rem)] font-light leading-[1.02] text-cream lg:mb-11 lg:text-[clamp(3.6rem,5vw,5.25rem)]"
           />
 
           <div className="hero-cta-in">

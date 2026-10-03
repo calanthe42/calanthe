@@ -179,7 +179,7 @@ export const en = {
     shop: "Shop",
     shopAll: "Shop all",
     shopByOccasion: "Shop by Occasion",
-    readyToday: "Ready Made for Today",
+    readyToday: "Ready to Order",
     buildYourOwn: "Build Your Own",
     memberships: "Memberships",
     events: "Events",
@@ -321,6 +321,14 @@ export const en = {
     cart: "Cart",
     close: "Close",
     shopShortcuts: "Shop shortcuts",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    wishlistAdd: "Add {name} to wishlist",
+    wishlistRemove: "Remove {name} from wishlist",
+    wishlistSaved: "{name} saved to your wishlist",
+    wishlistRemoved: "{name} removed from your wishlist",
+    occasionAlt: "{name} arrangements",
+    requiredField: "Please fill in this field.",
     productCategories: "Product categories",
     whatsappChat: "Chat with us on WhatsApp",
     monogram: "Calanthe monogram",
@@ -1404,7 +1412,7 @@ export const en = {
     shopTitle: "Composed this morning, at your door on the day you choose.",
     shopIntro:
       "Every arrangement is built stem by stem in the atelier — no two ever quite the same.",
-    shopReadyEyebrow: "Ready made for today",
+    shopReadyEyebrow: "Ready to order",
     shopReadyTitle: "Made this morning, gone by evening.",
     /* Five forms, because Arabic selects from five — see lib/i18n/plural.ts.
        These were one-and-the-rest, and the Arabic for both was the same word,
@@ -1492,7 +1500,7 @@ export const ar: typeof en = {
     },
     budgetOther: "مبلغ آخر",
     budgetOtherLabel: "الميزانية بالدرهم",
-    budgetNote: "كل ميزانية تُنسَّق بالعناية نفسها — التنسيق الأصغر ببساطة أكثر هدوءًا.",
+    budgetNote: "كل ميزانية تُنسَّق بالعناية نفسها — والتنسيق الأصغر أهدأ حضورًا فحسب.",
     coloursHint: "اختاروا ما تشاؤون.",
     colourNames: {
       whitesCreams: "أبيض وكريمي",
@@ -1587,7 +1595,7 @@ export const ar: typeof en = {
     shop: "المتجر",
     shopAll: "كل المتجر",
     shopByOccasion: "التسوق حسب المناسبة",
-    readyToday: "جاهز للتوصيل اليوم",
+    readyToday: "جاهز للطلب",
     buildYourOwn: "صمّموا باقتكم",
     memberships: "العضويات",
     events: "الفعاليات",
@@ -1624,14 +1632,14 @@ export const ar: typeof en = {
   },
   hero: {
     eyebrow: "أتيليه الزهور — الإمارات",
-    headlineOne: "حيث تتّخذ المشاعر",
-    headlineTwo: "شكلها.",
+    headlineOne: "حيث تتجسّد",
+    headlineTwo: "المشاعر.",
     shopFlowers: "تسوّقوا الزهور",
     buildYourOwn: "صمّموا باقتكم",
   },
   band: {
-    sendFlowersFor: "أرسلوا الزهور لـ",
-    luxury: "الفاخرة",
+    sendFlowersFor: "زهور لكل مناسبة:",
+    luxury: "الباقات الفاخرة",
   },
   sections: {
     newArrivalsEyebrow: "وصل حديثًا",
@@ -1643,9 +1651,9 @@ export const ar: typeof en = {
     bestSellersAttribution: "الأتيليه",
     bestSellersTitle: "محبوبة، أسبوعًا بعد أسبوع.",
     touchTitle: "لمسة كالانثي",
-    promiseTitle: "نعِدُ به في كل طلب.",
+    promiseTitle: "وعودنا في كل طلب.",
     promiseAsk: "لديكم سؤال قبل الطلب؟ يجيبكم منسّق الزهور عبر",
-    instagramLine: "باقات تغادر الأتيليه، في معظم الصباحات.",
+    instagramLine: "باقات تخرج من الأتيليه كل صباح تقريبًا.",
   },
   touch: {
     handTitle: "تُنسّق يدويًا كل يوم",
@@ -1657,7 +1665,7 @@ export const ar: typeof en = {
   },
   trust: {
     sameDayTitle: "توصيل في اليوم الذي تختارونه",
-    sameDayCopy: "اختاروا اليوم والوقت المناسبين لهم.",
+    sameDayCopy: "اختاروا اليوم والوقت المناسبين لكم.",
     videoTitle: "موافقتكم بالفيديو",
     videoCopy: "شاهدوا الباقة عبر واتساب قبل أن تغادر.",
     freshTitle: "ضمان النضارة",
@@ -1710,6 +1718,14 @@ export const ar: typeof en = {
     cart: "السلة",
     close: "إغلاق",
     shopShortcuts: "اختصارات المتجر",
+    openMenu: "فتح القائمة",
+    closeMenu: "إغلاق القائمة",
+    wishlistAdd: "أضيفوا {name} إلى المفضّلة",
+    wishlistRemove: "إزالة {name} من المفضّلة",
+    wishlistSaved: "حُفظت {name} في المفضّلة",
+    wishlistRemoved: "أُزيلت {name} من المفضّلة",
+    occasionAlt: "باقات {name}",
+    requiredField: "يُرجى تعبئة هذا الحقل.",
     productCategories: "فئات المنتجات",
     whatsappChat: "تواصلوا معنا على واتساب",
     monogram: "شعار كالانثي",
@@ -1735,7 +1751,7 @@ export const ar: typeof en = {
     membershipThanks: "شكرًا لكم — سيتواصل معكم منسّق الزهور.",
     membershipDone:
       "وصلنا طلبكم للعضوية {plan}. لم يُخصم أي مبلغ ولم تبدأ أي عضوية — سنتفق معكم على التفاصيل أولًا.",
-    membershipTitle: "ابدؤوا طقسكم.",
+    membershipTitle: "ابدؤوا اشتراككم.",
     membershipIntro:
       "أخبرونا كيف تودّون أن تصلكم الزهور، وسيتصل بكم منسّق الزهور للاتفاق على التفاصيل. ولا يُخصم شيء هنا.",
     howOften: "كم مرة",
@@ -1789,7 +1805,7 @@ export const ar: typeof en = {
     eventKinds: {
       Wedding: "حفل زفاف",
       "Private celebration": "احتفال خاص",
-      Corporate: "مناسبة للشركات",
+      Corporate: "مناسبة مؤسسية",
       "Launch or opening": "إطلاق أو افتتاح",
       "Something else": "شيء آخر",
     },
@@ -1867,16 +1883,16 @@ export const ar: typeof en = {
     andThen: "وبعد ذلك",
     whichDay: "أي يوم يناسبكم؟",
     whichDayBody:
-      "يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان، ويؤكّد منسّق الزهور ذلك معكم قبل أن يبدأ شيء.",
-    howItWorks: "كيف تعمل",
+      "يوم واحد في الأسبوع يكون لكم. نحجز لكم موعد التوصيل والزهور، ويؤكّد منسّق الزهور ذلك معكم قبل أن يبدأ شيء.",
+    howItWorks: "كيف تعمل العضوية",
     steps: [
       {
-        title: "اختاروا طقسكم",
+        title: "اختاروا باقتكم الأسبوعية",
         copy: "اختاروا الفئة التي تناسب طاولتكم — وغيّروها متى شئتم.",
       },
       {
         title: "اختاروا يومكم",
-        copy: "يوم واحد في الأسبوع يكون لكم. نحجز لكم مسار التوصيل والسيقان.",
+        copy: "يوم واحد في الأسبوع يكون لكم. نحجز لكم موعد التوصيل والزهور.",
       },
       {
         title: "نوصّل أسبوعيًا",
@@ -1899,7 +1915,7 @@ export const ar: typeof en = {
   booth: {
     eyebrow: "جناح كالانثي",
     title: "ادخلوا إلى الجناح.",
-    body: "أقواس مخملية، وباب بحشوات، ومرآة قائمة، وأوانينا المنحوتة، بألوان الأتيليه. صُمّم الجناح من وحدات تُركَّب في الموقع، ومنضدته هي حيث تُنسَّق الزهور في الحال.",
+    body: "أقواس مخملية، وباب بحشوات، ومرآة قائمة، وأوانينا المنحوتة، بألوان الأتيليه. صُمّم الجناح من وحدات تُركَّب في الموقع، وعلى منضدته تُنسَّق الزهور أمام الضيوف.",
     viewsLabel: "مشاهد الجناح",
     views: {
       pano: "360°",
@@ -1982,14 +1998,14 @@ export const ar: typeof en = {
     arrangementsBody:
       "نبدأ من المكان، ولوحة الألوان، والإحساس الذي تريدونه للمكان — ونبني عليه.",
     arrangements: [
-      "قطع وسط الطاولات، منخفضة أو لافتة الارتفاع",
+      "تنسيقات لوسط الطاولات، منخفضة أو عالية",
       "تنسيقات المداخل والترحيب",
       "زهور المراسم والخلفيات",
       "تركيبات للقاعات الكبيرة",
     ],
 
     favorsEyebrow: "هدايا الضيوف",
-    favorsTitle: "شيء يأخذه الجميع معه.",
+    favorsTitle: "هدية يحملها كل ضيف معه.",
     favorsBody:
       "هدايا زهور مُقدّمة بعناية، بتغليف كالانثي المميّز ولمسات شخصية — وبالكميات التي تحتاجها مناسبتكم.",
     favors: [
@@ -2038,7 +2054,7 @@ export const ar: typeof en = {
       },
       events: {
         name: "الفعاليات",
-        copy: "تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات الحميمة والمناسبات الأكبر.",
+        copy: "تصميم وتنسيقات زهور للاحتفالات الخاصة والجلسات العائلية والمناسبات الأكبر.",
       },
       memberships: {
         name: "العضويات",
@@ -2099,11 +2115,11 @@ export const ar: typeof en = {
       },
       {
         q: "أي زهور سأستلم؟",
-        a: "كل أسبوع ينسّق فريقنا أجمل سيقان الموسم، بلوحة الألوان التي تفضّلونها. ولا يتشابه أسبوعان.",
+        a: "كل أسبوع ينسّق فريقنا أجمل زهور الموسم، بلوحة الألوان التي تفضّلونها. ولا يتشابه أسبوعان.",
       },
       {
         q: "إلى أي المناطق توصّلون؟",
-        a: "إلى أبوظبي حاليًا. ويُحجز يوم التوصيل لمسار منطقتكم، لتبقى السيقان مبرّدة حتّى الباب.",
+        a: "إلى أبوظبي حاليًا. ويُحجز يوم التوصيل لمسار منطقتكم، لتبقى الزهور مبرّدة حتّى الباب.",
       },
       {
         q: "هل يمكنني إهداء عضوية؟",
@@ -2116,15 +2132,15 @@ export const ar: typeof en = {
       blurb: "تنسيق موسمي واحد، يُنسّق أسبوعيًا.",
       includes: [
         "4 توصيلات شهريًا",
-        "سيقان موسمية، باختيار منسّق الزهور",
+        "زهور موسمية، باختيار منسّق الزهور",
         "مُغلّفة بورق الكرافت، مربوطة يدويًا",
       ],
     },
     signature: {
-      blurb: "أغنى طقوسنا الأسبوعية — الحجم المميّز للأتيليه.",
+      blurb: "أغنى اشتراكاتنا الأسبوعية — الحجم المميّز للأتيليه.",
       includes: [
         "4 توصيلات شهريًا",
-        "سيقان موسمية فاخرة",
+        "زهور موسمية فاخرة",
         "مزهرية مع التوصيلة الأولى",
         "أولوية في فترة التوصيل",
       ],
@@ -2166,19 +2182,19 @@ export const ar: typeof en = {
   seal: {
     eyebrow: "مختوم باليد",
     line1: "لا شيء يخرج",
-    line2: "من هذا الأتيليه مفتوحًا.",
-    body: "يُغلّف بورق مُحفّر، ويُربط بشريطنا المطبوع، ويُختم بالشعار — يُضغط والزهور ما زالت باردة من الأتيليه.",
+    line2: "من الأتيليه إلا مختومًا.",
+    body: "يُغلّف بورق منقوش، ويُربط بشريطنا المطبوع، ويُختم بشعارنا والزهور ما زالت باردة من الأتيليه.",
     shop: "تسوّقوا المجموعة",
     how: "كيف نُغلّف",
   },
   ritual: {
-    eyebrow: "طقس أسبوعي",
+    eyebrow: "موعدكم الأسبوعي مع الزهور",
     title: "عضوية كالانثي",
     body: "زهور نضِرة، مُنسّقة بعناية، تصل إلى بابكم كل أسبوع.",
     cta: "اكتشفوا العضوية",
   },
   tiers: {
-    mostLoved: "المفضّلة",
+    mostLoved: "الأكثر طلبًا",
     perDelivery: "/ لكل توصيلة",
     fourAMonth: "4 توصيلات شهريًا",
     begin: "ابدؤوا العضوية {name}",
@@ -2187,12 +2203,12 @@ export const ar: typeof en = {
   },
   videoApproval: {
     eyebrow: "قبل أن تغادر الأتيليه",
-    title: "شاهدوها قبل أن تصلكم.",
+    title: "شاهدوها قبل أن تصل.",
     copy: "عندما تكتمل الباقة، يرسل لكم منسّق الزهور صورة أو مقطعًا على واتساب. ولا نوصّل شيئًا حتّى ينال إعجابكم.",
     steps: [
       "نُنسّق الباقة يدويًا",
       "تصلكم صورة أو مقطع على واتساب",
-      "وافقوا عليها، فتنطلق إليكم",
+      "وافقوا عليها، فتنطلق إلى وجهتها",
     ],
   },
   tierNames: {
@@ -2231,7 +2247,7 @@ export const ar: typeof en = {
     eyebrow: "قريبة إلى القلب",
     title: "قائمة الأمنيات",
     emptyTitle: "ما تحفظونه هنا لا يذبل أبدًا.",
-    emptyBody: "انقروا على القلب في أي باقة لتبقى قريبة منكم.",
+    emptyBody: "اضغطوا على القلب في أي باقة لتبقى قريبة منكم.",
   },
   shop: {
     all: "الكل",
@@ -2280,7 +2296,7 @@ export const ar: typeof en = {
 
     cardSection: "البطاقة والمستلِم",
     cardAdded: "أُضيفت. ويمكنكم تعديلها عند إتمام الطلب أيضًا.",
-    cardOptional: "اختياري. أضيفوا بطاقة مكتوبة بخط اليد، ومن سيستلمها.",
+    cardOptional: "اختياري. أضيفوا بطاقة بخط اليد، واسم من سيستلمها.",
     cardMessage: "نص البطاقة",
     cardPlaceholder: "اكتبوا كلمات يحتفظون بها…",
     recipientName: "اسم المستلِم",
@@ -2577,7 +2593,7 @@ export const ar: typeof en = {
     shopEyebrow: "المجموعة",
     shopTitle: "تُنسّق صباحًا، وتصل إلى الباب في اليوم الذي تختارونه.",
     shopIntro: "كل باقة تُبنى ساقًا بساق في الأتيليه — ولا تتشابه اثنتان.",
-    shopReadyEyebrow: "جاهز للتوصيل اليوم",
+    shopReadyEyebrow: "جاهز للطلب",
     shopReadyTitle: "تُنسّق صباحًا، وتنفد مساءً.",
     arrangementCount: {
       one: "باقة واحدة",
@@ -2589,7 +2605,7 @@ export const ar: typeof en = {
     occasionsEyebrow: "المناسبات",
     occasionsTitle: "لكل ما لا يُقال.",
     occasionsIntro:
-      "بعض الأشياء تُقدَّم أسهل مما تُقال. ابدؤوا باللحظة، ونتكفّل نحن بالباقي.",
+      "بعض المشاعر يسهل إهداؤها أكثر من قولها. ابدؤوا باللحظة، ونتكفّل نحن بالباقي.",
     occasionCount: {
       one: "مناسبة واحدة",
       two: "مناسبتان",
@@ -2609,7 +2625,7 @@ export const ar: typeof en = {
     faqs: "الأسئلة الشائعة",
     terms: "الشروط والأحكام",
     privacy: "سياسة الخصوصية",
-    refunds: "سياسة الاسترجاع والإلغاء",
+    refunds: "سياسة الاسترداد والإلغاء",
     whatsapp: "واتساب",
     instagram: "إنستغرام",
     email: "البريد الإلكتروني",
@@ -2619,7 +2635,7 @@ export const ar: typeof en = {
     label: "اللغة",
     english: "English",
     arabic: "العربية",
-    toEnglish: "Switch to English",
+    toEnglish: "التبديل إلى الإنجليزية",
     toArabic: "التبديل إلى العربية",
   },
 };

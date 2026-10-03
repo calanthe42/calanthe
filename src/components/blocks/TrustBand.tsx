@@ -42,7 +42,7 @@ export async function TrustBand() {
               rel="noreferrer"
               className="text-olive underline decoration-hairline underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
             >
-              WhatsApp
+              {t.footer.whatsapp}
             </a>
             .
           </p>
