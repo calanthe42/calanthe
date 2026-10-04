@@ -2,7 +2,13 @@
 
 import { memo, useRef, useState, useTransition } from "react";
 import { loadStripe, type Appearance } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import {
+  Elements,
+  ExpressCheckoutElement,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
 import { startCardCheckout, type CheckoutRequest } from "@backend/actions/checkout";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
@@ -243,7 +249,12 @@ export function CheckoutForm() {
         amount: Math.max(100, Math.round(subtotalAed * 100)),
         locale: locale === "ar" ? "ar" : "en",
         appearance: APPEARANCE,
-        fonts: [{ cssSrc: "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&display=swap" }],
+        fonts: [
+          {
+            cssSrc:
+              "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&display=swap",
+          },
+        ],
       }}
     >
       <CheckoutFormInner />
@@ -258,7 +269,11 @@ function CheckoutFormInner() {
   const elements = useElements();
   /* A payment that fails can be retried without creating a second order:
      the order and its intent are kept while the request is unchanged. */
-  const intentRef = useRef<{ key: string; orderNumber: string; clientSecret: string } | null>(null);
+  const intentRef = useRef<{
+    key: string;
+    orderNumber: string;
+    clientSecret: string;
+  } | null>(null);
 
   /* Pre-fill from the day/slot and recipient chosen on the product page. */
   const preferred = items.find((i) => i.preferredDay);
@@ -294,7 +309,9 @@ function CheckoutFormInner() {
 
   const zone = deliveryZones.find((z) => z.id === zoneId);
   const freeDelivery =
-    DELIVERY_ALWAYS_FREE || zone?.feeAed === 0 || subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
+    DELIVERY_ALWAYS_FREE ||
+    zone?.feeAed === 0 ||
+    subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
   const deliveryFee = zone ? (freeDelivery ? 0 : zone.feeAed) : 0;
   const totalAed = subtotalAed + deliveryFee;
 
@@ -328,8 +345,10 @@ function CheckoutFormInner() {
       : {};
   }
 
-  function placeOrder() {
-    if (items.length === 0 || pending) return;
+  /** Checks the form and builds the request. Synchronous, so the Apple Pay /
+   *  Google Pay click handler can call it inside Stripe's one-second window. */
+  function buildRequest(): CheckoutRequest | null {
+    if (items.length === 0 || pending) return null;
     setAttempted(true);
     setFormError(null);
 
@@ -347,53 +366,80 @@ function CheckoutFormInner() {
     if (firstInvalid) {
       document.getElementById(FIELD_IDS[firstInvalid])?.focus();
       setFormError(t.checkout.formInvalid);
-      return;
+      return null;
     }
     /* The schedule refreshes every minute, so a day that slipped past the
        cutoff while the form was open is caught here. */
     if (!selectedDay || !days.some((d) => d.key === selectedDay && !d.disabled)) {
       setFormError(t.checkout.dayGone);
-      return;
+      return null;
     }
 
     /* Everything that costs money is recomputed on the server from the
        product records. This sends what was chosen, never what it costs. */
     if (!stripe || !elements) {
-      setFormError(stripePromise ? t.checkout.paymentLoading : t.server.checkout.paymentUnavailable);
-      return;
+      setFormError(
+        stripePromise ? t.checkout.paymentLoading : t.server.checkout.paymentUnavailable,
+      );
+      return null;
     }
 
-    const request: CheckoutRequest = {
-        lines: items.map((item) => ({
-          productId: item.productId,
-          quantity: item.qty,
-          sizeId: item.sizeId,
-          addonIds: [...item.addonIds],
-          giftMessage: item.giftMessage,
-        })),
-        customerName: name.trim(),
-        customerEmail: email.trim(),
-        customerPhone: normalisePhone(phone),
-        deliveryEmirate: zoneId,
-        deliveryAddress: address.trim(),
-        deliveryDate: selectedDay,
-        deliveryTimeSlot: slot,
-        recipientName: mode === "gift" ? recipientName.trim() : undefined,
-        recipientPhone:
-          mode === "gift" ? normalisePhone(recipientPhone) || undefined : undefined,
-        cardMessage: items.find((i) => i.giftMessage)?.giftMessage,
-        /* The surprise choice used to be collected and dropped. The order has
+    return {
+      lines: items.map((item) => ({
+        productId: item.productId,
+        quantity: item.qty,
+        sizeId: item.sizeId,
+        addonIds: [...item.addonIds],
+        giftMessage: item.giftMessage,
+      })),
+      customerName: name.trim(),
+      customerEmail: email.trim(),
+      customerPhone: normalisePhone(phone),
+      deliveryEmirate: zoneId,
+      deliveryAddress: address.trim(),
+      deliveryDate: selectedDay,
+      deliveryTimeSlot: slot,
+      recipientName: mode === "gift" ? recipientName.trim() : undefined,
+      recipientPhone:
+        mode === "gift" ? normalisePhone(recipientPhone) || undefined : undefined,
+      cardMessage: items.find((i) => i.giftMessage)?.giftMessage,
+      /* The surprise choice used to be collected and dropped. The order has
            a delivery-notes field the atelier reads; this is where it goes. */
-        /* Staff-facing, and deliberately not translated: this is read in
+      /* Staff-facing, and deliberately not translated: this is read in
            the admin by whoever schedules the delivery, and the atelier
            works in English. */
-        deliveryNotes:
-          mode === "gift" && surprise
-            ? "Keep it a surprise: contact the sender, not the recipient, before delivery."
-            : undefined,
+      deliveryNotes:
+        mode === "gift" && surprise
+          ? "Keep it a surprise: contact the sender, not the recipient, before delivery."
+          : undefined,
     };
+  }
 
-    startTransition(async () => {
+  /** The pay button: check, then pay. */
+  function placeOrder() {
+    const request = buildRequest();
+    if (request) startTransition(() => pay(request));
+  }
+
+  /** Express checkout (Apple Pay / Google Pay): the form is checked on click
+   *  and the wallet sheet opens only when it is complete. Stripe requires
+   *  resolve() within a second with nothing awaited before it. */
+  const expressRequest = useRef<CheckoutRequest | null>(null);
+  function onExpressClick(event: { resolve: () => void }) {
+    const request = buildRequest();
+    if (!request) return;
+    expressRequest.current = request;
+    event.resolve();
+  }
+  function onExpressConfirm() {
+    const request = expressRequest.current;
+    if (request) startTransition(() => pay(request));
+  }
+
+  /** Card fields, then the order and PaymentIntent on the server, then confirm with Stripe. */
+  async function pay(request: CheckoutRequest) {
+    if (!stripe || !elements) return;
+    {
       /* 1. Card fields first — Stripe requires this before any other await
          (Apple Pay / Google Pay sheets fail otherwise). */
       const submitted = await elements.submit();
@@ -412,7 +458,11 @@ function CheckoutFormInner() {
           setFormError(result.message);
           return;
         }
-        intent = { key, orderNumber: result.orderNumber, clientSecret: result.clientSecret };
+        intent = {
+          key,
+          orderNumber: result.orderNumber,
+          clientSecret: result.clientSecret,
+        };
         intentRef.current = intent;
       }
 
@@ -426,7 +476,10 @@ function CheckoutFormInner() {
           /* The element does not ask for these (checkout already has them),
              so Stripe needs them here. */
           payment_method_data: {
-            billing_details: { email: request.customerEmail, phone: request.customerPhone },
+            billing_details: {
+              email: request.customerEmail,
+              phone: request.customerPhone,
+            },
           },
         },
         redirect: "if_required",
@@ -443,7 +496,7 @@ function CheckoutFormInner() {
       setPlaced(intent.orderNumber);
       window.scrollTo({ top: 0 });
       requestAnimationFrame(() => headingRef.current?.focus());
-    });
+    }
   }
 
   if (placed) {
@@ -810,20 +863,60 @@ function CheckoutFormInner() {
           </Step>
 
           <Step index={4} title={t.checkout.payment}>
-            <p className="text-base text-olive">{t.checkout.cardTitle}</p>
-            <p className="mb-4 mt-1 text-sm leading-relaxed text-ink-muted">
-              {t.checkout.cardBody}
-            </p>
             {stripePromise ? (
-              <PaymentElement
-                options={{
-                  layout: { type: "tabs", defaultCollapsed: false },
-                  wallets: { applePay: "auto", googlePay: "auto" },
-                  fields: { billingDetails: { email: "never", phone: "never", name: "auto" } },
-                }}
-              />
+              <>
+                {/* Express: Apple Pay and Google Pay as their own buttons,
+                    shown only on devices and browsers that support them. */}
+                <p className="mb-3 text-sm text-ink-muted">{t.checkout.expressTitle}</p>
+                <ExpressCheckoutElement
+                  onClick={onExpressClick}
+                  onConfirm={onExpressConfirm}
+                  options={{
+                    buttonType: { applePay: "buy", googlePay: "buy" },
+                    buttonTheme: { applePay: "black", googlePay: "black" },
+                    buttonHeight: 48,
+                    paymentMethods: {
+                      applePay: "always",
+                      googlePay: "always",
+                      link: "never",
+                      amazonPay: "never",
+                      paypal: "never",
+                      klarna: "never",
+                    },
+                  }}
+                />
+
+                <div
+                  className="my-6 flex items-center gap-4 text-xs text-ink-muted"
+                  role="separator"
+                >
+                  <span className="h-px flex-1 bg-hairline" />
+                  {t.checkout.orPayByCard}
+                  <span className="h-px flex-1 bg-hairline" />
+                </div>
+
+                <p className="text-base text-olive">{t.checkout.cardTitle}</p>
+                <p className="mb-4 mt-1 text-sm leading-relaxed text-ink-muted">
+                  {t.checkout.cardBody}
+                </p>
+                <PaymentElement
+                  options={{
+                    layout: { type: "tabs", defaultCollapsed: false },
+                    /* The wallets have their own buttons above. */
+                    wallets: { applePay: "never", googlePay: "never" },
+                    fields: {
+                      billingDetails: { email: "never", phone: "never", name: "auto" },
+                    },
+                  }}
+                />
+
+                <TabbyOption t={t} />
+              </>
             ) : (
-              <p role="status" className="rounded-sm border border-hairline p-4 text-sm text-olive">
+              <p
+                role="status"
+                className="rounded-sm border border-hairline p-4 text-sm text-olive"
+              >
                 {t.server.checkout.paymentUnavailable}
               </p>
             )}
@@ -929,5 +1022,43 @@ function CheckoutFormInner() {
         </div>
       </div>
     </form>
+  );
+}
+
+/**
+ * Tabby, shown as a payment option ahead of the integration: choosing it says
+ * plainly that it is not available yet. Nothing is sent to Tabby.
+ */
+function TabbyOption({ t }: { t: Dictionary }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-5">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex min-h-14 w-full items-center gap-4 rounded-sm border border-hairline bg-canvas px-4 text-start transition-colors duration-200 ease-bloom hover:border-sage"
+      >
+        <span
+          lang="en"
+          className="rounded-[3px] bg-[#3BFFC1] px-2 py-0.5 text-sm font-semibold lowercase tracking-tight text-[#292929]"
+        >
+          tabby
+        </span>
+        <span className="flex-1">
+          <span className="block text-base text-olive">{t.checkout.tabbyTitle}</span>
+          <span className="block text-xs text-ink-muted">{t.checkout.tabbyBody}</span>
+        </span>
+        <span className="text-xs text-ink-muted">{t.checkout.comingSoon}</span>
+      </button>
+      {open && (
+        <p
+          role="status"
+          className="mt-2 border-s border-burnt-orange ps-4 text-sm leading-relaxed text-olive"
+        >
+          {t.checkout.tabbyUnavailable}
+        </p>
+      )}
+    </div>
   );
 }

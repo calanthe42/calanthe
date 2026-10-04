@@ -8,7 +8,7 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-864 strings in total. 0 are flagged below as likely problems.
+870 strings in total. 0 are flagged below as likely problems.
 
 ========================================================================
 EVERYTHING ELSE
@@ -3636,8 +3636,38 @@ checkout.emailPlaceholder
   CORRECTION 
 
 checkout.cardTitle
-  ENGLISH    Card, Apple Pay or Google Pay
-  ARABIC     البطاقة أو Apple Pay أو Google Pay
+  ENGLISH    Card
+  ARABIC     البطاقة
+  CORRECTION 
+
+checkout.expressTitle
+  ENGLISH    Express checkout
+  ARABIC     الدفع السريع
+  CORRECTION 
+
+checkout.orPayByCard
+  ENGLISH    Or pay by card
+  ARABIC     أو ادفعوا بالبطاقة
+  CORRECTION 
+
+checkout.tabbyTitle
+  ENGLISH    Pay in 4 with Tabby
+  ARABIC     قسّموها على 4 دفعات مع تابي
+  CORRECTION 
+
+checkout.tabbyBody
+  ENGLISH    Interest-free instalments
+  ARABIC     أقساط بدون فوائد
+  CORRECTION 
+
+checkout.comingSoon
+  ENGLISH    Coming soon
+  ARABIC     قريبًا
+  CORRECTION 
+
+checkout.tabbyUnavailable
+  ENGLISH    Tabby is not available yet. It is coming soon; for now, please pay by card, Apple Pay or Google Pay.
+  ARABIC     خدمة تابي غير متاحة حاليًا وستتوفّر قريبًا. يُرجى الدفع حاليًا بالبطاقة أو Apple Pay أو Google Pay.
   CORRECTION 
 
 checkout.cardBody

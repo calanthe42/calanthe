@@ -10,7 +10,7 @@ export const fieldClasses =
 export const fieldErrorClasses = "mt-2 flex gap-2 text-sm leading-snug text-olive";
 
 export const labelClasses =
-  "mb-2 block font-brand text-[0.625rem] font-medium uppercase tracking-brand text-sage";
+  "mb-2 block font-brand text-xs font-medium uppercase tracking-brand text-sage";
 
 export const chipClasses =
   "flex min-h-11 items-center justify-center rounded-sm border px-4 text-center text-sm transition-colors duration-200 ease-bloom";
