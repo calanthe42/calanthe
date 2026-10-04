@@ -62,7 +62,7 @@ export async function Hero({ media }: HeroProps) {
        * expanded), so the composition is correct at its tightest and only
        * gains room as the chrome retracts, never loses it.
        */
-      style={{ marginTop: "calc(-1 * var(--header-h, 6.25rem))" }}
+      style={{ marginTop: "calc(-1 * var(--header-h))" }}
       className="relative flex h-svh min-h-[600px] flex-col justify-end overflow-hidden bg-olive"
     >
       {/* Full-bleed photography — the visual centerpiece. Parallax is
@@ -135,7 +135,7 @@ export async function Hero({ media }: HeroProps) {
         data-hero-mark-slot
         aria-hidden
         className="hero-mark-slot relative z-10 flex min-h-0 flex-1 items-center justify-center"
-        style={{ marginTop: "var(--header-h, 6.25rem)" }}
+        style={{ marginTop: "var(--header-h)" }}
       >
         <div data-hero-mark-art className="hero-mark-art">
           <StackedLogo tone="cream" defineSymbol={false} className="h-full w-full" />

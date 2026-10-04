@@ -111,6 +111,9 @@ export default async function RootLayout({
           <HeroMarkTravel />
           {children}
         </SmoothScroll>
+        {/* Film grain. A real element on purpose — see .film-grain in
+            globals.css for why it must not be a body pseudo-element. */}
+        <div aria-hidden className="film-grain" />
       </body>
     </html>
   );

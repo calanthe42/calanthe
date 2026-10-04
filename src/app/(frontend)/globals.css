@@ -20,17 +20,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Film grain — fixed overlay, 3.5%, above everything, never interactive */
-body::after {
-  content: "";
+/* Film grain — fixed overlay, 3.5%, above everything, never interactive.
+ *
+ * A REAL ELEMENT, NOT body::after — this was the iPhone "content above the
+ * navbar" bug. Safari 26 decides what to paint behind the clock and battery
+ * by hit-testing a point 4px inside the top edge and looking for a pinned
+ * box there. A pseudo-element resolves to its host (<body>), which is not
+ * pinned, so Safari found nothing and never used the navbar's colour: the
+ * page scrolled visibly through the status-bar strip. As a real, nearly
+ * transparent, non-interactive element WebKit skips it and reaches the
+ * navbar. It also stops 8px short of the top and bottom edges, so it is not
+ * even under the sample points. (WebKit: LocalFrameView::fixedContainerEdges.)
+ */
+.film-grain {
   position: fixed;
-  inset: 0;
+  inset: 8px 0;
   z-index: 2147483647;
   pointer-events: none;
   opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 240px 240px;
+}
+
+/* The header's height, right from the first paint. Header.tsx measures the
+   real value after hydration and overrides this; until then the hero used a
+   100px guess against a 102px bar, which left a 2px pale line across the top
+   of the homepage. Strip 2.25rem + nav row 4rem (4.5rem from lg) + two 1px
+   lines. */
+:root {
+  --header-h: calc(6.25rem + 2px);
+}
+@media (min-width: 1024px) {
+  :root {
+    --header-h: calc(6.75rem + 2px);
+  }
 }
 
 ::selection {
@@ -223,7 +247,9 @@ html.intro-playing .brand-intro {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 50.5%;
+  /* Half a pixel of overlap, so no hairline of the page shows at the seam on
+     odd-width phones; the prints below are cut at the true centre line. */
+  width: calc(50% + 0.5px);
   overflow: hidden;
   background: var(--color-olive);
   animation: intro-door-start 0.8s cubic-bezier(0.76, 0, 0.24, 1) 2.8s forwards;
@@ -249,8 +275,18 @@ html.intro-playing .brand-intro {
     intro-print-in 1.2s var(--ease-bloom) 0s forwards,
     intro-print-drift 3.6s linear 0s forwards;
 }
-.brand-intro__door--start::before { background-position: right top; }
-.brand-intro__door--end::before { background-position: left top; }
+/* Both prints end, and scale from, the centre line, so the orchid pattern
+   runs across the seam instead of being sliced by it. */
+.brand-intro__door--start::before {
+  inset: -6% 0.5px -6% -6%;
+  transform-origin: right center;
+  background-position: right top;
+}
+.brand-intro__door--end::before {
+  inset: -6% -6% -6% 0.5px;
+  transform-origin: left center;
+  background-position: left top;
+}
 /* A vignette, so the light gathers in the centre. */
 .brand-intro__door::after {
   content: "";
@@ -618,6 +654,14 @@ html[dir="rtl"] .brand-intro__line { font-style: normal; }
 .menu-out {
   animation: menu-fade 0.3s cubic-bezier(0.22, 1, 0.36, 1) reverse both;
 }
+/* The band behind the close button fades with the panel (its own classes:
+   .menu-in/.menu-out also set padding, which would grow the band). */
+.menu-band-in {
+  animation: menu-fade 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.menu-band-out {
+  animation: menu-fade 0.3s cubic-bezier(0.22, 1, 0.36, 1) reverse both;
+}
 .menu-in .menu-links > li {
   animation: menu-link 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -640,6 +684,16 @@ html[dir="rtl"] .brand-intro__line { font-style: normal; }
    Tightening the head and the rows recovers ~45px, which is enough to land
    the whole menu on screen. Rows stay at 52px — still above the 44px
    minimum tap target. */
+/* Large iPhones with Safari's toolbars showing (e.g. 428x746): the menu was
+   25px too tall, clipping the WhatsApp / language row. Slightly shorter rows
+   (52px, still above the 44px tap target) make it fit. */
+@media (min-height: 701px) and (max-height: 780px) {
+  .menu-in .menu-links a,
+  .menu-in .menu-links summary {
+    min-height: 3.25rem;
+  }
+}
+
 @media (max-height: 700px) {
   .menu-in,
   .menu-out {
@@ -1098,6 +1152,13 @@ body.overlay-open .floating-whatsapp {
   outline: 2px solid var(--color-burnt-orange);
   outline-offset: 3px;
   border-radius: 2px;
+}
+/* The search field's focus indicator is its own underline; the global ring
+   above (unlayered, so it beat the outline-none utility) drew an orange box
+   around it. */
+#site-search:focus-visible {
+  outline: none;
+  border-radius: 0;
 }
 
 /* Over the dark sections, the accent is still legible but the offset

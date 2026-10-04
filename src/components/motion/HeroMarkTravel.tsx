@@ -48,7 +48,7 @@ import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
  */
 
 /** How much scrolling completes the journey, as a fraction of the hero. */
-const TRAVEL = 0.42;
+export const TRAVEL = 0.42;
 
 /**
  * Under this artwork width the mark does not travel at all.

@@ -254,14 +254,17 @@ export default async function AboutPage() {
       {/* Close — the line the whole brand rests on. */}
       <section className="relative overflow-hidden bg-olive section-pad">
         <div className="relative mx-auto max-w-7xl gutter text-center">
-          <ClipReveal className="mx-auto mb-12 aspect-[16/7] w-full max-w-3xl overflow-hidden rounded-media">
+          {/* The key visual is a portrait photograph. It was cropped to a
+              16:7 strip, which showed a band of petals and no flower; it is
+              now shown whole. */}
+          <ClipReveal className="mx-auto mb-12 aspect-[4/5] w-full max-w-sm overflow-hidden rounded-media">
             <FloralImage
               image={{
                 alt: t.alt.aboutBloom,
                 src: "/brand/keyvisual-bloom.webp",
                 placeholder: { seed: "about-close", palette: "burgundy" },
               }}
-              sizes="(max-width: 1024px) 92vw, 60vw"
+              sizes="(max-width: 640px) 92vw, 24rem"
             />
           </ClipReveal>
           <SplitLines

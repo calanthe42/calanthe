@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnnouncementBar } from "@/components/blocks/AnnouncementBar";
+import { TRAVEL } from "@/components/motion/HeroMarkTravel";
 import { SearchOverlay } from "@/components/blocks/SearchOverlay";
 import type { Occasion, Product } from "@/lib/data";
 import { Monogram } from "@/components/ui/Monogram";
@@ -274,7 +275,14 @@ export function Header({
            middle and a logo floating below it. Matching the threshold to
            the travel distance (HeroMarkTravel's 42% of the hero) makes the
            two land as one movement. */
-        const threshold = overlay ? window.innerHeight * 0.34 : 40;
+        /* Same base as the mark's journey (the hero's height, not the
+           window's, which grows when Safari's toolbar collapses), and just
+           before it lands — at 34% of the window the bar turned cream while
+           the logo was still cream, so the logo vanished for ~60px. */
+        const hero = document.querySelector<HTMLElement>("[data-hero-root]");
+        const threshold = overlay
+          ? (hero?.getBoundingClientRect().height ?? window.innerHeight) * (TRAVEL - 0.02)
+          : 40;
         setScrolled(window.scrollY > threshold);
         ticking = false;
       });
@@ -391,12 +399,23 @@ export function Header({
            Phones get a near-solid bar instead — same look, no cost. */
         solid
           ? "border-b border-hairline/60 bg-canvas lg:bg-canvas/85 lg:backdrop-blur-md"
-          : "invisible border-b border-transparent bg-transparent",
+          : "border-b border-transparent bg-transparent",
       )}
     >
-      {/* `visible` undoes the wrapper's `invisible` for everything inside,
-          so only the wrapper box itself is hidden from Safari. */}
-      <header className="visible">
+      <header>
+        {/* WHAT SAFARI READS WHILE THE BAR IS CLEAR. Over the hero (or under
+            the open menu) the bar has no colour of its own, and a hidden
+            wrapper is not skipped by Safari — it reused the last colour it
+            saw (cream) above a dark photograph. This strip gives it a plain
+            olive to read at the top edge. 15% olive, fading out over 16px: on
+            the photograph it is invisible. It must stay hit-testable and a
+            plain background-color (no gradient) for WebKit to use it. */}
+        {!solid && (
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-4 bg-olive opacity-[0.15] [mask-image:linear-gradient(to_bottom,black,transparent)]"
+          />
+        )}
         {/* Over the hero the whole header is one soft fade into the
           photograph, so the service strip and the navigation row read as a
           single pane of air rather than two stacked bands with an edge
@@ -619,10 +638,24 @@ export function Header({
             up underneath it, so "الرئيسية" and the search field ran under the
             ✕. This olive band covers exactly the header's height (the header
             publishes it as --header-h), above the list and below the ✕. */}
-        {menuState === "open" && (
+        {/* It lives and fades with the panel (it used to snap in at full
+            strength while the panel was still fading), paints the same pool
+            of light as the panel so there is no edge at its lower border, and
+            is hit-testable with a plain olive background-color so iPhone
+            Safari colours the status bar olive while the menu is open. */}
+        {menuState !== "closed" && (
           <div
             aria-hidden
-            className="pointer-events-none fixed inset-x-0 top-0 z-[45] h-[var(--header-h,6.5rem)] bg-olive lg:hidden"
+            className={cn(
+              "fixed inset-x-0 top-0 z-[45] h-[var(--header-h,6.5rem)] bg-olive lg:hidden",
+              menuState === "closing" ? "menu-band-out" : "menu-band-in",
+            )}
+            style={{
+              backgroundImage:
+                "radial-gradient(90% 55% at 50% 0%, rgba(228,220,197,0.10) 0%, rgba(228,220,197,0) 70%)",
+              backgroundSize: "100% 100dvh",
+              backgroundRepeat: "no-repeat",
+            }}
           />
         )}
 
@@ -688,7 +721,7 @@ export function Header({
               olive has depth rather than being one flat fill. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 -z-10"
+              className="pointer-events-none fixed inset-0 -z-10"
               style={{
                 background:
                   "radial-gradient(90% 55% at 50% 0%, rgba(228,220,197,0.10) 0%, rgba(228,220,197,0) 70%)",

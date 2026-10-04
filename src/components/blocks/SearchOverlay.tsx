@@ -129,6 +129,11 @@ export function SearchOverlay({
       data-lenis-prevent
       className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-canvas pb-16 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-[0_0_0_100vmax_var(--color-canvas)]"
     >
+      {/* What iPhone Safari reads for the status bar while search is open:
+          a plain cream strip at the very top (the overlay's top padding is
+          empty there). Without it the strip above stayed olive after the
+          menu. */}
+      <div aria-hidden className="fixed inset-x-0 top-0 h-4 bg-canvas" />
       <div className="mx-auto w-full max-w-2xl gutter">
         <div className="flex items-center justify-between">
           <p className="font-brand text-[0.625rem] font-medium uppercase tracking-brand text-ink-muted">
@@ -199,7 +204,7 @@ export function SearchOverlay({
                     onClick={onClose}
                     className="inline-flex min-h-11 items-center rounded-sm border border-hairline px-4 text-sm text-olive transition-colors duration-200 ease-bloom hover:border-olive"
                   >
-                    {occasion.name}
+                    {t.occasionNames[occasion.slug] ?? occasion.name}
                   </Link>
                 </li>
               ))}

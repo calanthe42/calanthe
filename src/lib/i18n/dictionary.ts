@@ -458,7 +458,7 @@ export const en = {
     aboutTag: "A die-cut lily hang tag resting among white lilies",
     aboutTissue: "Monogrammed tissue paper closed with a Calanthe sticker",
     aboutCard:
-      "A burgundy Calanthe greeting card, debossed with lilies, its gold tab pressed with the monogram",
+      "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
     eventArrangement: "A Calanthe event arrangement",
     eventFavors: "Calanthe guest favors, wrapped by hand",
@@ -1839,7 +1839,7 @@ export const ar: typeof en = {
     aboutTag: "بطاقة مقصوصة بشكل زنبقة بين زنابق بيضاء",
     aboutTissue: "ورق تغليف مطبوع بالشعار مُغلق بملصق كالانثي",
     aboutCard:
-      "بطاقة تهانٍ عنّابية من كالانثي، منقوشة بالزنابق، ولسانها الذهبي مضغوط بالشعار",
+      "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
     eventArrangement: "تنسيق فعاليات من كالانثي",
     eventFavors: "هدايا الضيوف من كالانثي، مُغلّفة يدويًا",
