@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useRef, useState, useTransition } from "react";
+import { memo, useEffect, useRef, useState, useTransition } from "react";
 import { loadStripe, type Appearance } from "@stripe/stripe-js";
 import {
   Elements,
@@ -202,7 +202,13 @@ function FieldError({ id, message }: { id: string; message?: string }) {
  * nothing can be charged.
  */
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
+/** Whether card payment is possible on this deployment at all. */
+const HAS_STRIPE = Boolean(PUBLISHABLE_KEY);
+/* Stripe.js (265 KB) is fetched lazily: on the first interaction with the
+   form, or after a short idle — always well before the payment step is
+   reached, never as part of the page's first paint (Lighthouse, 2026-10-04). */
+let stripeLoading: ReturnType<typeof loadStripe> | null = null;
+const getStripePromise = () => (stripeLoading ??= loadStripe(PUBLISHABLE_KEY!));
 
 /* The Payment Element in the house palette: cream ground, olive type, almost
    square corners, Instrument Sans — so the card fields read as part of the
@@ -238,6 +244,23 @@ const APPEARANCE: Appearance = {
 export function CheckoutForm() {
   const { subtotalAed } = useCart();
   const { locale } = useLocale();
+  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
+  useEffect(() => {
+    if (!HAS_STRIPE) return;
+    const arm = () => setStripePromise((current) => current ?? getStripePromise());
+    const idle =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(arm, { timeout: 2500 })
+        : globalThis.setTimeout(arm, 2500);
+    window.addEventListener("pointerdown", arm, { once: true, capture: true });
+    window.addEventListener("keydown", arm, { once: true, capture: true });
+    return () => {
+      if ("cancelIdleCallback" in window) window.cancelIdleCallback(idle as number);
+      else globalThis.clearTimeout(idle as number);
+      window.removeEventListener("pointerdown", arm, { capture: true });
+      window.removeEventListener("keydown", arm, { capture: true });
+    };
+  }, []);
   return (
     <Elements
       stripe={stripePromise}
@@ -379,7 +402,7 @@ function CheckoutFormInner() {
        product records. This sends what was chosen, never what it costs. */
     if (!stripe || !elements) {
       setFormError(
-        stripePromise ? t.checkout.paymentLoading : t.server.checkout.paymentUnavailable,
+        HAS_STRIPE ? t.checkout.paymentLoading : t.server.checkout.paymentUnavailable,
       );
       return null;
     }
@@ -863,7 +886,7 @@ function CheckoutFormInner() {
           </Step>
 
           <Step index={4} title={t.checkout.payment}>
-            {stripePromise ? (
+            {HAS_STRIPE ? (
               <>
                 {/* Express: Apple Pay and Google Pay as their own buttons,
                     shown only on devices and browsers that support them. */}

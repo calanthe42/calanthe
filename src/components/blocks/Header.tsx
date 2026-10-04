@@ -8,6 +8,7 @@ import { SearchOverlay } from "@/components/blocks/SearchOverlay";
 import type { Occasion, Product } from "@/lib/data";
 import { Monogram } from "@/components/ui/Monogram";
 import { IconBag, IconHeart, IconUser } from "@/components/ui/icons";
+import { prefetchCartDrawer } from "@/components/commerce/LazyCartDrawer";
 import { StackedLogo } from "@/components/ui/StackedLogo";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
@@ -597,6 +598,9 @@ export function Header({
                       )
                 }
                 onClick={openCart}
+                onPointerEnter={prefetchCartDrawer}
+                onTouchStart={prefetchCartDrawer}
+                onFocus={prefetchCartDrawer}
                 className="relative flex h-11 w-11 items-center justify-center transition-opacity duration-200 ease-bloom hover:opacity-60"
               >
                 <IconBag className="h-[22px] w-[22px]" />

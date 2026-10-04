@@ -2,10 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useReducedMotionPref } from "@/lib/useReducedMotionPref";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { loadGsap } from "./loadGsap";
 
 type ParallaxProps = {
   children: React.ReactNode;
@@ -39,7 +36,12 @@ export function Parallax({
     if (desktopOnly && !window.matchMedia("(min-width: 1024px)").matches) return;
 
     const drift = (1 - speed) * 120;
-    const tween = gsap.fromTo(
+    /* GSAP arrives on demand (loadGsap), so it is not in the first bundle. */
+    let cancelled = false;
+    let tween: { kill: () => void; scrollTrigger?: { kill: () => void } } | null = null;
+    void loadGsap().then(({ gsap }) => {
+      if (cancelled) return;
+      tween = gsap.fromTo(
       el,
       { y: -drift },
       {
@@ -53,10 +55,12 @@ export function Parallax({
         },
       },
     );
+    });
 
     return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
+      cancelled = true;
+      tween?.scrollTrigger?.kill();
+      tween?.kill();
     };
   }, [speed, reduced, desktopOnly]);
 

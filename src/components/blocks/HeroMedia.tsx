@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getImageProps } from "next/image";
 import { useT } from "@/lib/locale";
 import { HERO_POSTER, HERO_VIDEO_SRC, HERO_VIDEO_SRC_MOBILE } from "@/lib/hero-media";
 
@@ -120,19 +121,32 @@ export function HeroMedia() {
     };
   }, []);
 
+  /* THROUGH THE IMAGE OPTIMISER. These were raw JPGs (the phone crop alone
+     ~300 KB), so every phone downloaded the full 1600px file. getImageProps
+     keeps the art-directed <picture> — portrait crop on phones, landscape on
+     wide screens — while serving WebP/AVIF at the width each screen needs.
+     Each crop carries its own real dimensions. */
+  const common = { alt: t.alt.hero, sizes: "100vw", quality: 72, priority: true } as const;
+  const { props: desktopProps } = getImageProps({
+    ...common,
+    src: HERO_POSTER.desktop,
+    width: 2400,
+    height: 1350,
+  });
+  const {
+    props: { srcSet: mobileSrcSet, ...mobileProps },
+  } = getImageProps({ ...common, src: HERO_POSTER.mobile, width: 1600, height: 2000 });
+
   return (
     <div className="relative h-full w-full">
       {/* The photograph. Always present, always underneath, never
           conditional — this is the hero whether or not a film exists. */}
       <picture className="block h-full w-full">
-        <source media="(min-aspect-ratio: 1/1)" srcSet={HERO_POSTER.desktop} />
+        <source media="(min-aspect-ratio: 1/1)" srcSet={desktopProps.srcSet} sizes="100vw" />
         <img
-          src={HERO_POSTER.mobile}
+          {...mobileProps}
+          srcSet={mobileSrcSet}
           alt={t.alt.hero}
-          width={HERO_POSTER.width}
-          height={HERO_POSTER.height}
-          fetchPriority="high"
-          decoding="async"
           /* The phone crop is 9:16 against a photograph composed for a
              wider frame, so a centred crop spends the top 40% of the
              screen on out-of-focus background and pushes the bouquet

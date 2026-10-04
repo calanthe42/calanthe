@@ -30,6 +30,7 @@ import {
   type ProductImage,
   type SizeId,
 } from "@/lib/data";
+import { prefetchCartDrawer } from "@/components/commerce/LazyCartDrawer";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
 import { useLocale } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
@@ -560,7 +561,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
             {/* Desktop add-to-cart */}
             <div className="hidden lg:block">
-              <Button variant="primary" className="w-full" onClick={handleAdd}>
+              <Button variant="primary" className="w-full" onClick={handleAdd}
+                onPointerEnter={prefetchCartDrawer}
+                onTouchStart={prefetchCartDrawer}>
                 {t.product.addToCartWithTotal.replace("{total}", formatAed(totalAed))}
               </Button>
             </div>
@@ -578,7 +581,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
             </p>
             <p className="text-sm text-ink-muted">{formatAed(totalAed)}</p>
           </div>
-          <Button variant="primary" className="shrink-0 px-6" onClick={handleAdd}>
+          <Button variant="primary" className="shrink-0 px-6" onClick={handleAdd}
+                onPointerEnter={prefetchCartDrawer}
+                onTouchStart={prefetchCartDrawer}>
             {t.product.addToCart}
           </Button>
         </div>

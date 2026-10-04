@@ -19,7 +19,7 @@ import { MONOGRAM_PATHS, MONOGRAM_VIEWBOX } from "@/components/motion/monogram-p
  * motion means no intro. The page loads underneath the whole time, so the
  * intro delays nothing. Decorative, aria-hidden.
  */
-const DECIDE = `(function(){var d=document.documentElement;try{if(sessionStorage.getItem("calanthe-intro")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;sessionStorage.setItem("calanthe-intro","1");d.classList.add("intro-playing");}catch(e){}})();`;
+const DECIDE = `(function(){var d=document.documentElement;try{if(sessionStorage.getItem("calanthe-intro")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;sessionStorage.setItem("calanthe-intro","1");d.classList.add("intro-playing");var l=document.createElement("link");l.rel="preload";l.as="image";l.href="/brand/print/orchid-olive.webp";l.fetchPriority="high";document.head.appendChild(l);}catch(e){}})();`;
 
 const FINISH = `(function(){var d=document.documentElement;if(!d.classList.contains("intro-playing"))return;var el=document.getElementById("brand-intro");function done(){d.classList.remove("intro-playing");}var t=setTimeout(done,3700);if(el)el.addEventListener("click",function(){if(el.classList.contains("is-skipping"))return;clearTimeout(t);el.classList.add("is-skipping");setTimeout(done,950);});})();`;
 

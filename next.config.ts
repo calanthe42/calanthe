@@ -58,4 +58,25 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withPayload(nextConfig);
+/*
+ * EVERY PAGE WAS LOADED TWICE.
+ *
+ * withPayload appends one header rule for the WHOLE site ('/:path*'):
+ * Accept-CH + Critical-CH: Sec-CH-Prefers-Color-Scheme, for Payload's own
+ * admin theme at /cms. Critical-CH tells Chrome that the first response is
+ * unusable without that hint, so Chrome throws the page away and requests it
+ * again — Lighthouse measured ~0.8s lost on every storefront page. Nothing on
+ * the storefront reads the hint, so the rule is narrowed to /cms, the only
+ * place that uses it. (Overriding with our own headers() would not work:
+ * Payload's rule is appended after ours.)
+ */
+const payloadConfig = withPayload({ ...nextConfig, poweredByHeader: false });
+const payloadHeaders = payloadConfig.headers;
+
+export default {
+  ...payloadConfig,
+  async headers() {
+    const rules = (await payloadHeaders?.()) ?? [];
+    return rules.map((rule) => (rule.source === "/:path*" ? { ...rule, source: "/cms/:path*" } : rule));
+  },
+} satisfies NextConfig;

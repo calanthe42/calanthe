@@ -240,7 +240,10 @@ html.intro-playing .brand-intro {
   inset: -6%;
   background: var(--color-olive) url(/brand/print/orchid-olive.webp) repeat;
   background-size: 34rem auto;
-  opacity: 0;
+  /* 0.02, not 0: olive lines on an olive panel are invisible at 2%, but the
+     first frame is then a real paint. This print is the page's LCP while the
+     intro plays, and an LCP that fades in from 0 counts as late. */
+  opacity: 0.02;
   transform: scale(1.08);
   animation:
     intro-print-in 1.2s var(--ease-bloom) 0s forwards,
@@ -356,7 +359,7 @@ html[dir="rtl"] .brand-intro__line { font-style: normal; }
   animation-delay: 0.15s !important;
 }
 
-@keyframes intro-print-in { to { opacity: 1; } }
+@keyframes intro-print-in { from { opacity: 0.02; } to { opacity: 1; } }
 @keyframes intro-print-drift { to { transform: scale(1); } }
 @keyframes intro-petal { to { opacity: 1; transform: none; filter: none; } }
 @keyframes intro-glint { to { transform: translateX(1880px); } }
