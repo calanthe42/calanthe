@@ -49,7 +49,7 @@ export function isPayLinkSource(source: string | null | undefined): boolean {
 export const OUTSIDE_PAYMENT_METHODS = ["cash", "bank-transfer", "card-machine"] as const;
 export type OutsidePaymentMethod = (typeof OUTSIDE_PAYMENT_METHODS)[number];
 export type PaymentMethod = "card" | OutsidePaymentMethod;
-export const SALES_CHANNELS = ["whatsapp", "phone", "instagram", "in-person", "other"] as const;
+export const SALES_CHANNELS = ["whatsapp", "phone", "instagram", "website", "in-person", "other"] as const;
 export type SalesChannel = (typeof SALES_CHANNELS)[number];
 
 /** The method to print on an invoice: what was recorded, else the card. */

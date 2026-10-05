@@ -736,7 +736,9 @@ export const ar: Messages = {
     openLabel: "فتح الطلب {number}",
     detail: {
       title: "الطلب {number}",
-      awaitingManual: "بانتظار الدفع. شارك رابط الدفع، أو سجّل الدفعة عند استلامها.",
+      awaitingManual: "بانتظار الدفع. نزّل الفاتورة أو شارك رابط الدفع، وسجّل الدفعة عند استلامها.",
+      invoicePdf: "الفاتورة PDF",
+      invoiceUnpaidLine: "الفاتورة {number} · لم تُدفع بعد",
       recordPayment: "تسجيل دفعة",
       recordTitle: "تسجيل دفعة تمت خارج الموقع",
       recordBody: "استخدم هذا عندما يدفع العميل نقدًا أو بتحويل بنكي أو عبر جهاز البطاقات. يصبح الطلب مدفوعًا وتصدر فاتورته. لا يمكن التراجع.",
@@ -816,7 +818,7 @@ export const ar: Messages = {
 
   invoices: {
     title: "الفواتير",
-    description: "كل عملية بيع مدفوعة، مرقّمة بالتسلسل.",
+    description: "كل الفواتير، مرقّمة بالتسلسل.",
     count: {
       zero: "لا توجد فواتير",
       one: "فاتورة واحدة",
@@ -831,13 +833,14 @@ export const ar: Messages = {
     date: "التاريخ",
     customer: "العميل",
     method: "طريقة الدفع",
+    status: "الحالة",
     total: "الإجمالي",
     order: "الطلب",
     view: "عرض / PDF",
     viewLabel: "عرض الفاتورة {number} أو حفظها PDF",
     noLink: "لا يوجد رابط",
     empty: "لا توجد فواتير بعد",
-    emptyBody: "تصدر الفاتورة لحظة دفع الطلب: بالبطاقة عبر الموقع، أو عندما يسجّل المالك الدفعة.",
+    emptyBody: "أنشئ فاتورة لبيع عبر واتساب أو الهاتف ونزّلها PDF. طلبات الموقع تصدر فاتورتها عند الدفع.",
     emptyFiltered: "لا توجد فاتورة مطابقة لهذا البحث.",
     awaiting: {
       zero: "لا توجد طلبات بانتظار الدفع",
@@ -1649,8 +1652,8 @@ export const ar: Messages = {
       recorded: "سُجّل كمدفوع. الفاتورة {invoice}.",
       savedPaymentNotRecorded: "حُفظ الطلب {number}، لكن الدفعة لم تُسجَّل. افتح الطلب وسجّلها هناك.",
       createdPaid: "حُفظ الطلب {number} وسُجّل كمدفوع.",
-      createdSent: "حُفظ الطلب {number}. أُرسلت الفاتورة وزر الدفع إلى {email}.",
-      created: "حُفظ الطلب {number}. شارك رابط الدفع أو سجّل الدفعة.",
+      createdSent: "حُفظت الفاتورة {invoice} وأُرسلت إلى {email} مع زر الدفع.",
+      created: "حُفظت الفاتورة {invoice}. افتحها لتنزيل PDF، أو شارك رابط الدفع، أو سجّل الدفعة.",
       failed: "تعذّر حفظ الطلب.",
       recordFailed: "تعذّر تسجيل الدفعة.",
     },
@@ -1976,8 +1979,14 @@ export const ar: Messages = {
       whatsapp: "واتساب",
       phone: "الهاتف",
       instagram: "إنستغرام",
+      website: "الموقع (رسالة أو استفسار)",
       "in-person": "حضوريًا",
       other: "أخرى",
+    },
+    invoiceStatus: {
+      paid: "مدفوعة",
+      unpaid: "غير مدفوعة",
+      void: "ملغاة",
     },
     paymentMethod: {
       card: "بطاقة (الموقع)",

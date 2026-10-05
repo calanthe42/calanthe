@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DateField } from "@/components/ui/DateField";
 import { Monogram } from "@/components/ui/Monogram";
 import {
   chipClasses,
@@ -220,6 +221,28 @@ function Field({
   invalid?: boolean;
 }) {
   const t = useT();
+  if (rest.type === "date") {
+    return (
+      <div>
+        <label htmlFor={id} className={cn(labelClasses, "text-cream/70")}>
+          {label}
+        </label>
+        {/* The browser writes "mm/dd/yyyy" in ITS language; this field reads in the page's. */}
+        <DateField
+          id={id}
+          tone="dark"
+          invalid={invalid}
+          onInvalid={(e) => {
+            if (e.currentTarget.validity.valueMissing)
+              e.currentTarget.setCustomValidity(t.ui.requiredField);
+          }}
+          onInput={(e) => e.currentTarget.setCustomValidity("")}
+          name={rest.name}
+          required={rest.required}
+        />
+      </div>
+    );
+  }
   return (
     <div>
       <label htmlFor={id} className={cn(labelClasses, "text-cream/70")}>

@@ -128,6 +128,11 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
             {isManual && isOwner ? (
               <RecordPayment orderId={order.id} totalFils={Number(order.totalFils)} />
             ) : null}
+            {invoiceHref ? (
+              <ButtonLink href={invoiceHref} external icon="receipt" className="max-sm:flex-1">
+                {t("orders.detail.invoicePdf")}
+              </ButtonLink>
+            ) : null}
             <QuotePayment variant="notice" quote={quoteCardData(unpaidQuote)} form={null} />
           </div>
           {typeof enquiryId === "number" ? (
@@ -252,13 +257,15 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
                   ? t("orders.detail.quoteNote")
                   : t("orders.detail.providerNote")}
             </p>
-            {order.invoiceNumber && order.paidAt ? (
+            {order.invoiceNumber ? (
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
                 <span>
-                  {t("orders.detail.invoiceLine", {
-                    number: order.invoiceNumber,
-                    date: date(order.paidAt, "datetime"),
-                  })}
+                  {order.paidAt
+                    ? t("orders.detail.invoiceLine", {
+                        number: order.invoiceNumber,
+                        date: date(order.paidAt, "datetime"),
+                      })
+                    : t("orders.detail.invoiceUnpaidLine", { number: order.invoiceNumber })}
                 </span>
                 {invoiceHref ? (
                   <a

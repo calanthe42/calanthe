@@ -112,3 +112,105 @@ export const claimInvoice: ClaimInvoice = async (payload, input) => {
   const current = firstRow(existing)?.invoice_number;
   return { invoiceNumber: typeof current === "string" ? current : "", claimedNow: false };
 };
+
+/* ------------------------------------------------------------------ */
+/* Invoices written by hand: numbered when ISSUED, stamped when PAID   */
+/* ------------------------------------------------------------------ */
+
+export type IssueInvoiceInput = {
+  orderId: number;
+  /** The year in Dubai at the moment the invoice is issued. */
+  year: number;
+  vatRateBps: number;
+  vatIncludedFils: number;
+};
+
+export type IssueInvoice = (payload: Payload, input: IssueInvoiceInput) => Promise<string>;
+
+/**
+ * Gives an order written by hand in the admin its invoice number AT ONCE.
+ *
+ * The shop sends such an invoice to the customer before it is paid, so it
+ * needs its number the moment it exists. Same counter, same single
+ * statement, same guarantees as claimInvoice — gap-free, once per order —
+ * with one difference: the order need not be paid, and no payment time is
+ * written. Only `source = 'admin-manual'` qualifies: a website order and a
+ * payment request still get their number at payment, and nowhere else.
+ *
+ * Returns the number on the order afterwards ("" if it has none, which only
+ * a missing order or another source can cause).
+ */
+export const issueInvoice: IssueInvoice = async (payload, input) => {
+  for (const [name, value] of Object.entries(input)) {
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new Error(`issueInvoice: ${name} must be a non-negative integer, got ${value}`);
+    }
+  }
+
+  const { sql } = await import("@payloadcms/db-postgres");
+  const drizzle = (payload.db as unknown as { drizzle: DrizzleLike }).drizzle;
+
+  const issued = await drizzle.execute(sql`
+    WITH target AS (
+      SELECT id FROM orders
+      WHERE id = ${input.orderId}::int
+        AND invoice_number IS NULL
+        AND source = 'admin-manual'
+      FOR UPDATE
+    ),
+    next AS (
+      INSERT INTO invoice_counters (year, last_value)
+      SELECT ${input.year}::int, 1 FROM target
+      ON CONFLICT (year) DO UPDATE SET last_value = invoice_counters.last_value + 1
+      RETURNING last_value
+    )
+    UPDATE orders o
+    SET invoice_number = 'CAL-INV-' || ${String(input.year)}::text || '-' ||
+          lpad(next.last_value::text, greatest(5, length(next.last_value::text)), '0'),
+        vat_rate_bps = ${input.vatRateBps}::numeric,
+        vat_included_fils = ${input.vatIncludedFils}::numeric
+    FROM next, target
+    WHERE o.id = target.id
+    RETURNING o.invoice_number AS invoice_number
+  `);
+  const fresh = firstRow(issued)?.invoice_number;
+  if (typeof fresh === "string" && fresh !== "") return fresh;
+
+  const existing = await drizzle.execute(
+    sql`SELECT invoice_number FROM orders WHERE id = ${input.orderId}::int`,
+  );
+  const current = firstRow(existing)?.invoice_number;
+  return typeof current === "string" ? current : "";
+};
+
+export type StampPaid = (payload: Payload, input: { orderId: number; paidAtIso: string }) => Promise<boolean>;
+
+/**
+ * The single-winner gate for PAYING an invoice that already has its number.
+ *
+ * claimInvoice cannot be that gate here — there is nothing left to claim —
+ * so the payment time is: one conditional statement writes `paid_at` only if
+ * it is still empty. "A row came back" means "this caller recorded the
+ * payment", and only that caller sends the thank-you. A second webhook
+ * delivery, or a second click, matches nothing.
+ */
+export const stampPaid: StampPaid = async (payload, input) => {
+  if (!Number.isSafeInteger(input.orderId) || input.orderId < 0) {
+    throw new Error(`stampPaid: orderId must be a non-negative integer, got ${input.orderId}`);
+  }
+  if (Number.isNaN(new Date(input.paidAtIso).getTime())) {
+    throw new Error(`stampPaid: paidAtIso is not a date: ${input.paidAtIso}`);
+  }
+  const { sql } = await import("@payloadcms/db-postgres");
+  const drizzle = (payload.db as unknown as { drizzle: DrizzleLike }).drizzle;
+  const stamped = await drizzle.execute(sql`
+    UPDATE orders
+    SET paid_at = ${input.paidAtIso}::timestamptz
+    WHERE id = ${input.orderId}::int
+      AND payment_status = 'PAID'
+      AND invoice_number IS NOT NULL
+      AND paid_at IS NULL
+    RETURNING id
+  `);
+  return firstRow(stamped) !== undefined;
+};

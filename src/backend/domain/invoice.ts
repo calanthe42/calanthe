@@ -230,10 +230,12 @@ export type SheetStatus = "paid" | "unpaid" | "void";
 /**
  * What the branded sheet prints (components/commerce/InvoiceSheet.tsx).
  *
- * An invoice NUMBER exists only once an order is paid — that is what keeps
- * the series gap-free. Before payment the same sheet is the bill the
- * customer is asked to pay: it carries the order number, says "Unpaid" and
- * shows the amount due. A cancelled, unpaid bill is "Void".
+ * A website order and a payment request get their invoice NUMBER when they
+ * are paid. An invoice written by hand in the admin has its number from the
+ * moment it is created, so the shop can send it first: the sheet then says
+ * "Unpaid" and shows the amount due, and "Paid" once the money arrives. A
+ * cancelled, unpaid invoice is "Void" — it keeps its number, which is never
+ * used again.
  */
 export type InvoiceSheetView = Omit<InvoiceView, "number" | "paidAt"> & {
   status: SheetStatus;
@@ -258,13 +260,17 @@ export function buildInvoiceSheet(
     createdAt?: string | null;
     paymentStatus?: string | null;
     fulfilmentStatus?: string | null;
+    source?: string | null;
   },
   business: BusinessDetails,
 ): InvoiceSheetView {
   const settled = ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(order.paymentStatus ?? "");
   if (settled && order.invoiceNumber && order.paidAt) {
     const invoice = buildInvoice(order, business);
-    return { ...invoice, status: "paid", fit: fitsOnePage(invoice.lines) };
+    /* Written by hand, it was issued the day it was created — not the day
+       it was paid, which the closing line states separately. */
+    const issuedAt = order.source === "admin-manual" && order.createdAt ? order.createdAt : invoice.issuedAt;
+    return { ...invoice, issuedAt, status: "paid", fit: fitsOnePage(invoice.lines) };
   }
 
   const body = bodyOf(order, business, `Order ${order.orderNumber ?? "?"}`);
@@ -273,7 +279,9 @@ export function buildInvoiceSheet(
   return {
     ...body,
     status: order.fulfilmentStatus === "CANCELLED" ? "void" : "unpaid",
-    number: null,
+    /* An invoice written by hand has its number from the start; any other
+       unpaid order has none yet. */
+    number: order.invoiceNumber || null,
     issuedAt,
     paidAt: null,
     fit: fitsOnePage(body.lines),

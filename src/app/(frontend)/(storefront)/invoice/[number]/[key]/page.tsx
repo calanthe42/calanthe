@@ -9,10 +9,11 @@ import { CONTACT } from "@/lib/data";
 import { dictionaryFor } from "@/lib/i18n/dictionary";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
+import { formatFils } from "@/lib/money";
 
 /**
- * A paid invoice, on the atelier's paper, at an address that cannot be
- * guessed: `/invoice/<number>/<key>`.
+ * An invoice — paid, or still to be paid — on the atelier's paper, at an
+ * address that cannot be guessed: `/invoice/<number>/<key>`.
  *
  * This is what "View / PDF" opens in the admin and what the shop sends a
  * customer who asks for their invoice. "Download PDF" is the browser's own
@@ -81,8 +82,13 @@ export default async function InvoicePage({
       <h1 className="sr-only">
         {sheetCopy.pay.invoice.title} {invoice.sheet.number}
       </h1>
-      <div className="mx-auto mb-6 flex max-w-[210mm] justify-end print:hidden">
+      <div className="mx-auto mb-6 flex max-w-[210mm] flex-col gap-3 sm:flex-row sm:justify-end print:hidden">
         <PayPrintButton label={sheetCopy.pay.invoice.download} />
+        {invoice.payUrl ? (
+          <a href={invoice.payUrl} className={buttonClasses("primary", "w-full whitespace-nowrap sm:w-auto")}>
+            {sheetCopy.pay.payNow.replace("{amount}", formatFils(invoice.sheet.totalFils))}
+          </a>
+        ) : null}
       </div>
       <InvoiceSheet sheet={invoice.sheet} locale={sheetLocale} t={sheetCopy} />
     </main>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAdminI18n } from "@admin/i18n/server";
+import { Badge, type Tone } from "@admin/ui/Badge";
 import { ButtonLink } from "@admin/ui/Button";
 import { FilterBar } from "@admin/ui/FilterBar";
 import { PageHeader } from "@admin/ui/PageHeader";
@@ -9,13 +10,13 @@ import { Table, Td, Tr } from "@admin/ui/Table";
 import { listInvoices } from "@backend/data/invoices";
 
 /**
- * Invoices: every paid sale, in the order its number was issued.
+ * Invoices: every invoice, in the order its number was issued.
  *
- * A number is issued the moment an order is paid — by card on the website,
- * through a payment link, or when the owner records a payment taken outside
- * the website — so this list is, by construction, the complete series with
- * no gaps. "Create invoice" opens the same form as "Create order": an order
- * written by hand IS its invoice.
+ * A website order gets its number the moment it is paid. An invoice written
+ * by hand ("Create invoice" opens the same form as "Create order") gets its
+ * number when it is created, so it can be downloaded and sent first; it
+ * shows as Unpaid until the money arrives, and as Void if it is cancelled.
+ * Either way the number comes from one counter, so the series has no gaps.
  */
 
 export async function generateMetadata() {
@@ -24,6 +25,7 @@ export async function generateMetadata() {
 }
 
 const PAGE_SIZE = 25;
+const STATUS_TONE: Record<string, Tone> = { paid: "success", unpaid: "warning", void: "neutral" };
 
 export default async function AdminInvoicesPage({
   searchParams,
@@ -96,6 +98,7 @@ export default async function AdminInvoicesPage({
               { key: "number", label: t("invoices.number") },
               { key: "date", label: t("invoices.date") },
               { key: "customer", label: t("invoices.customer") },
+              { key: "status", label: t("invoices.status") },
               { key: "method", label: t("invoices.method") },
               { key: "total", label: t("invoices.total"), align: "end" },
               { key: "view", label: t("invoices.view"), align: "end", hidden: true },
@@ -114,14 +117,21 @@ export default async function AdminInvoicesPage({
                     {t("invoices.order")} <span dir="ltr">{row.orderNumber}</span>
                   </Link>
                 </Td>
-                <Td label={t("invoices.date")}>{row.paidAt ? date(row.paidAt, "short") : "—"}</Td>
+                <Td label={t("invoices.date")}>{row.date ? date(row.date, "short") : "—"}</Td>
                 <Td label={t("invoices.customer")}>
                   <span className="block">{row.customerName}</span>
                   <span dir="ltr" className="block text-sm text-ink-2">
                     {row.customerPhone}
                   </span>
                 </Td>
-                <Td label={t("invoices.method")}>{label("paymentMethod", row.method)}</Td>
+                <Td label={t("invoices.status")}>
+                  <Badge tone={STATUS_TONE[row.status] ?? "neutral"} dot>
+                    {label("invoiceStatus", row.status)}
+                  </Badge>
+                </Td>
+                <Td label={t("invoices.method")}>
+                  {row.status === "paid" ? label("paymentMethod", row.method) : "—"}
+                </Td>
                 <Td label={t("invoices.total")} align="end">
                   <span className="font-semibold tabular" dir="ltr">
                     {money(row.totalFils)}

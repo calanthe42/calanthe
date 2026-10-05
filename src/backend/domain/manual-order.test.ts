@@ -243,6 +243,29 @@ describe("the invoice of an order written by hand", () => {
     expect(buildInvoiceSheet({ ...order, fulfilmentStatus: "CANCELLED" }, BUSINESS).status).toBe("void");
   });
 
+  it("carries its number from the day it is issued, unpaid, and keeps it when voided or paid", () => {
+    const issued = { ...order, invoiceNumber: "CAL-INV-2026-00007" };
+    expect(buildInvoiceSheet(issued, BUSINESS)).toMatchObject({
+      status: "unpaid",
+      number: "CAL-INV-2026-00007",
+      paidAt: null,
+      issuedAt: "2026-10-05T08:00:00.000Z",
+    });
+    expect(buildInvoiceSheet({ ...issued, fulfilmentStatus: "CANCELLED" }, BUSINESS)).toMatchObject({
+      status: "void",
+      number: "CAL-INV-2026-00007",
+    });
+    /* Paid three days later: still issued on the 5th, paid on the 8th. */
+    expect(
+      buildInvoiceSheet({ ...issued, paymentStatus: "PAID", paidAt: "2026-10-08T09:00:00.000Z" }, BUSINESS),
+    ).toMatchObject({
+      status: "paid",
+      number: "CAL-INV-2026-00007",
+      issuedAt: "2026-10-05T08:00:00.000Z",
+      paidAt: "2026-10-08T09:00:00.000Z",
+    });
+  });
+
   it("says how it was paid once the owner records the payment", () => {
     const paid = {
       ...order,

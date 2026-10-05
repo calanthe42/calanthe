@@ -11,8 +11,8 @@ import { BUSINESS, currentVatRateBps } from "@/lib/business";
 import { DISCOUNT_HOLD_MINUTES } from "@/lib/discounts";
 import { env } from "@/lib/env";
 import { SITE_ORIGIN } from "@/lib/site";
-import { claimInvoice, type ClaimInvoice } from "./invoice-number";
-import { isPayLinkSource, payLinkOrigin, payToken, payUrl } from "./pay-link";
+import { claimInvoice, stampPaid, type ClaimInvoice, type StampPaid } from "./invoice-number";
+import { MANUAL_SOURCE, isPayLinkSource, payLinkOrigin, payToken, payUrl } from "./pay-link";
 import { redeemCoupon, type RedeemCoupon } from "./redeem";
 import { paymentVerdict } from "./verdict";
 
@@ -67,6 +67,8 @@ type OrderDoc = {
 /** Injected in tests; the real ones in production. */
 export type PaidDeps = {
   claimInvoice: ClaimInvoice;
+  /** The gate for an invoice that already has its number (written by hand). */
+  stampPaid?: StampPaid;
   now: () => Date;
   /** Optional so callers written before discounts keep working. */
   redeemCoupon?: RedeemCoupon;
@@ -193,9 +195,14 @@ export async function applySucceededIntent(
   const paidAfterCancel = o.fulfilmentStatus === "CANCELLED";
   const recovering = verdict.action === "already-paid";
 
+  /* An invoice written by hand already HAS its number — issued when it was
+     created, so it could be sent before payment. Paying it keeps that number,
+     and the single-winner gate becomes the payment stamp instead of the
+     claim (see stampPaid). */
+  const preNumbered = o.source === MANUAL_SOURCE && Boolean(o.invoiceNumber) && !o.paidAt;
   if (recovering) {
     /* The ordinary replay: paid, invoiced, nothing to do. */
-    if (o.invoiceNumber) return "already-paid";
+    if (o.invoiceNumber && !preNumbered) return "already-paid";
   } else {
     /* mark-paid */
     await payload.update({
@@ -206,7 +213,8 @@ export async function applySucceededIntent(
       data: {
         paymentStatus: "PAID",
         stripePaymentIntentId: intent.id,
-        paidAt: now.toISOString(),
+        /* Left empty for a pre-numbered invoice: stampPaid writes it, once. */
+        ...(preNumbered ? {} : { paidAt: now.toISOString() }),
         /* The florist confirmed this arrangement when she asked for the
            money, so a paid request is already CONFIRMED. No "your order is
            confirmed" email is sent for this move: the thank-you says it. */
@@ -232,13 +240,18 @@ export async function applySucceededIntent(
   const paidAtIso = o.paidAt ?? now.toISOString();
   const vatRateBps = currentVatRateBps();
   const vatFils = vatIncludedFils(o.totalFils, vatRateBps);
-  const claim = await deps.claimInvoice(payload, {
-    orderId: o.id,
-    year: invoiceYear(new Date(paidAtIso)),
-    vatRateBps,
-    vatIncludedFils: vatFils,
-    paidAtIso,
-  });
+  const claim = preNumbered
+    ? {
+        invoiceNumber: String(o.invoiceNumber),
+        claimedNow: await (deps.stampPaid ?? stampPaid)(payload, { orderId: o.id, paidAtIso }),
+      }
+    : await deps.claimInvoice(payload, {
+        orderId: o.id,
+        year: invoiceYear(new Date(paidAtIso)),
+        vatRateBps,
+        vatIncludedFils: vatFils,
+        paidAtIso,
+      });
   /* Another delivery of this event issued the invoice and sent the emails. */
   if (!claim.claimedNow) return "already-paid";
 

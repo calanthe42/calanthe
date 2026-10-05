@@ -39,7 +39,7 @@ type Line = {
 };
 
 type Payment = "unpaid" | "cash" | "bank-transfer" | "card-machine";
-const CHANNELS = ["whatsapp", "phone", "instagram", "in-person", "other"] as const;
+const CHANNELS = ["whatsapp", "phone", "instagram", "website", "in-person", "other"] as const;
 
 /** A typed amount as fils, for the PREVIEW only. The server parses for real. */
 function previewFils(raw: string): number {

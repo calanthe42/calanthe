@@ -18,7 +18,7 @@ vi.mock("@/lib/env", () => ({
 import { setEmailProvider } from "@backend/email/send";
 import type { SendRequest } from "@backend/email/types";
 import { PAYMENT_PROVIDER_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
-import type { ClaimInvoice } from "./invoice-number";
+import type { ClaimInvoice, StampPaid } from "./invoice-number";
 import { LATE_DISCOUNT_NOTE, PAID_AFTER_CANCEL_NOTE, applySucceededIntent, overLimitNote } from "./paid";
 import type { RedeemCoupon } from "./redeem";
 
@@ -483,5 +483,80 @@ describe("a payment request never redeems a code", () => {
     const redeemCoupon = vi.fn<RedeemCoupon>(async () => ({ redeemed: true, overLimit: false }));
     await applySucceededIntent(h.payload, intent(), { ...h.deps, redeemCoupon });
     expect(redeemCoupon).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * AN INVOICE WRITTEN BY HAND HAS ITS NUMBER BEFORE IT IS PAID. Paying it by
+ * card must keep that number, must not touch the counter, and must still
+ * thank the customer exactly once — the gate is the payment stamp.
+ */
+describe("an invoice written by hand is paid by card", () => {
+  const manualOrder = (overrides: Doc = {}): Doc =>
+    quoteOrder({
+      source: "admin-manual",
+      enquiry: null,
+      invoiceNumber: "CAL-INV-2026-00009",
+      paidAt: null,
+      items: [
+        { productName: "Amber Hour", quantity: 1, unitPriceFils: 48000, lineTotalFils: 48000 },
+        { productName: "Seasonal candle", quantity: 2, unitPriceFils: 8500, lineTotalFils: 17000 },
+      ],
+      ...overrides,
+    });
+
+  it("keeps its number, leaves the counter alone, stamps the payment and sends the emails once", async () => {
+    const h = harness(manualOrder());
+    const stampPaid = vi.fn<StampPaid>(async () => true);
+    const outcome = await applySucceededIntent(h.payload, intent(), { ...h.deps, stampPaid });
+
+    expect(outcome).toBe("marked-paid");
+    expect(h.claimInvoice).not.toHaveBeenCalled();
+    expect(stampPaid).toHaveBeenCalledTimes(1);
+    expect(stampPaid.mock.calls[0]![1]).toEqual({ orderId: 12, paidAtIso: NOW.toISOString() });
+
+    const paid = h.updates.find((u) => u.collection === "orders")!;
+    expect(paid.data).toMatchObject({ paymentStatus: "PAID", fulfilmentStatus: "CONFIRMED" });
+    /* The stamp writes the payment time, once — never the whole-row update. */
+    expect(paid.data).not.toHaveProperty("paidAt");
+
+    expect(types()).toEqual(["florist-job-sheet", "owner-quote-paid", "payment-received"]);
+    const thanks = sent.find((request) => request.type === "payment-received")!;
+    expect(thanks.rendered.subject).toContain("CAL-INV-2026-00009");
+    expect(thanks.rendered.html).toContain("Amber Hour");
+    expect(thanks.rendered.html).toContain("Seasonal candle");
+  });
+
+  it("sends NOTHING when another delivery already stamped the payment", async () => {
+    const h = harness(manualOrder());
+    const outcome = await applySucceededIntent(h.payload, intent(), { ...h.deps, stampPaid: async () => false });
+    expect(outcome).toBe("already-paid");
+    expect(sent).toHaveLength(0);
+  });
+
+  it("does nothing at all for a replay once it is paid and stamped", async () => {
+    const h = harness(manualOrder({ paymentStatus: "PAID", paidAt: NOW.toISOString() }));
+    const stampPaid = vi.fn<StampPaid>(async () => true);
+    const outcome = await applySucceededIntent(h.payload, intent(), { ...h.deps, stampPaid });
+    expect(outcome).toBe("already-paid");
+    expect(stampPaid).not.toHaveBeenCalled();
+    expect(h.updates).toHaveLength(0);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("recovers a crash between PAID and the stamp: the retry stamps and sends", async () => {
+    const h = harness(manualOrder({ paymentStatus: "PAID", paidAt: null }));
+    const stampPaid = vi.fn<StampPaid>(async () => true);
+    const outcome = await applySucceededIntent(h.payload, intent(), { ...h.deps, stampPaid });
+    expect(outcome).toBe("marked-paid");
+    expect(stampPaid).toHaveBeenCalledTimes(1);
+    expect(h.claimInvoice).not.toHaveBeenCalled();
+    expect(types()).toContain("payment-received");
+  });
+
+  it("sends the customer nothing when they gave no email, and still tells the shop", async () => {
+    const h = harness(manualOrder({ customerEmail: "" }));
+    await applySucceededIntent(h.payload, intent(), { ...h.deps, stampPaid: async () => true });
+    expect(types()).toEqual(["florist-job-sheet", "owner-quote-paid"]);
   });
 });

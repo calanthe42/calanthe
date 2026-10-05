@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import { DateField } from "@/components/ui/DateField";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { fieldClasses } from "@/components/ui/form-classes";
 import { Monogram } from "@/components/ui/Monogram";
@@ -190,12 +191,7 @@ function Reminders() {
           placeholder="Occasion"
           className={field}
         />
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={field}
-        />
+        <DateField value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
       <Button
         variant="secondary"

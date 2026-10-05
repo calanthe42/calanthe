@@ -3,26 +3,33 @@ import { timingSafeEqual } from "node:crypto";
 import { getPayload, type Where } from "payload";
 import config from "@payload-config";
 import { getAdminSession } from "@backend/data/admin-session";
-import { buildInvoiceSheet, type InvoiceSheetView } from "@backend/domain/invoice";
+import { buildInvoiceSheet, type InvoiceSheetView, type SheetStatus } from "@backend/domain/invoice";
 import {
   PAY_LINK_SOURCES,
   invoiceKey,
   invoiceUrl,
   isInvoiceNumberShape,
+  isSettled,
   payLinkOrigin,
+  payRequestState,
+  payToken,
+  payUrl,
   paymentMethodOf,
   type PaymentMethod,
 } from "@backend/payments/pay-link";
+import { cardPaymentsConfigured, getStripe } from "@backend/payments/stripe";
 import { BUSINESS } from "@/lib/business";
 import { env } from "@/lib/env";
 import { SITE_ORIGIN } from "@/lib/site";
 
 /**
- * Invoices: every paid order, in the order its number was issued.
+ * Invoices: every order that has an invoice number, in the order the
+ * numbers were issued.
  *
- * There is no invoices table. An invoice IS a paid order's own snapshot plus
- * the number claimInvoice gave it, so a list of invoices is a list of orders
- * that have a number — and it can never disagree with the orders it lists.
+ * There is no invoices table. An invoice IS an order's own snapshot plus its
+ * number — given at payment to a website order or a payment request, and at
+ * creation to an invoice written by hand — so a list of invoices is a list
+ * of orders that have a number, and it can never disagree with them.
  */
 
 function origin(): string {
@@ -32,10 +39,15 @@ function origin(): string {
   });
 }
 
-export type PublicInvoice = { sheet: InvoiceSheetView; locale: "en" | "ar" };
+export type PublicInvoice = {
+  sheet: InvoiceSheetView;
+  locale: "en" | "ar";
+  /** Where an unpaid invoice can be paid by card, when that is possible right now. */
+  payUrl: string | null;
+};
 
 /**
- * The invoice behind `/invoice/<number>/<key>`, or null.
+ * The invoice behind `/invoice/<number>/<key>` — paid, unpaid or void — or null.
  *
  * One answer for a wrong number, a wrong key and an invoice that cannot be
  * built: nothing. The key is compared in constant time before any query.
@@ -59,8 +71,21 @@ export async function loadInvoiceByKey(number: unknown, key: unknown): Promise<P
 
   try {
     const sheet = buildInvoiceSheet(order, BUSINESS);
-    if (sheet.status !== "paid") return null;
-    return { sheet, locale: order.locale === "ar" ? "ar" : "en" };
+    const locale = order.locale === "ar" ? "ar" : "en";
+    const payable =
+      sheet.status === "unpaid" &&
+      Boolean(order.payTokenSalt) &&
+      payRequestState(order, new Date()) === "awaiting" &&
+      Boolean(getStripe()) &&
+      cardPaymentsConfigured();
+    return {
+      sheet,
+      locale,
+      payUrl:
+        payable && order.payTokenSalt
+          ? payUrl(origin(), payToken(env.PAYLOAD_SECRET, order.payTokenSalt), locale)
+          : null,
+    };
   } catch (error) {
     payload.logger.error(
       `invoice page: ${number} could not be built: ${error instanceof Error ? error.message : "unknown"}`,
@@ -73,7 +98,9 @@ export type InvoiceRow = {
   orderId: number;
   orderNumber: string;
   invoiceNumber: string;
-  paidAt: string | null;
+  status: SheetStatus;
+  /** The day it was paid, or — while unpaid — the day it was issued. */
+  date: string | null;
   customerName: string;
   customerPhone: string;
   totalFils: number;
@@ -144,7 +171,12 @@ export async function listInvoices(options: { q?: string; page?: number; pageSiz
         orderId: order.id,
         orderNumber: String(order.orderNumber ?? order.id),
         invoiceNumber,
-        paidAt: order.paidAt ?? null,
+        status: isSettled(order.paymentStatus)
+          ? ("paid" as const)
+          : order.fulfilmentStatus === "CANCELLED"
+            ? ("void" as const)
+            : ("unpaid" as const),
+        date: order.paidAt ?? order.createdAt ?? null,
         customerName: order.customerName,
         customerPhone: order.customerPhone,
         totalFils: order.totalFils,

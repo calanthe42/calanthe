@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { DateField } from "@/components/ui/DateField";
 import { Monogram } from "@/components/ui/Monogram";
 import {
   chipClasses,
@@ -234,13 +235,7 @@ export function MembershipEnquiryForm({ planName, planLabel, onClose }: Props) {
             <label htmlFor="m-start" className={labelClasses}>
               {t.enquiryForm.startFrom}
             </label>
-            <input
-              id="m-start"
-              name="startDate"
-              type="date"
-              className={fieldClasses}
-              aria-invalid={error?.code === "startDate"}
-            />
+            <DateField id="m-start" name="startDate" invalid={error?.code === "startDate"} />
           </div>
         </div>
 

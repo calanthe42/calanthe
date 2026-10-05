@@ -312,15 +312,22 @@ for money that arrived outside the website. Staff can create orders and
 share links; they cannot record a payment. Every recorded payment is named
 in the activity log.
 
-**Invoices.** An invoice number (`CAL-INV-2026-00001`, one series, no gaps)
-is issued the moment an order becomes paid — website checkout, payment link
-or recorded payment alike. The Invoices list shows every one, newest first,
-searchable by number, name, phone or email. **View / PDF** opens the invoice
-on the atelier's paper; *Download PDF* there saves it (the browser's "Save
-as PDF"). That address can be sent to the customer: it cannot be guessed and
-shows that one invoice only.
+**Invoices.** Every invoice has a number from one series with no gaps
+(`CAL-INV-2026-00001`). An invoice written by hand gets its number the
+moment it is created, so it can be downloaded and sent to the customer
+BEFORE it is paid: it says *Unpaid* and shows the amount due, then *Paid*
+once the money arrives (by link, or recorded by the owner). A website order
+or an enquiry's payment request gets its number when it is paid.
 
-Nothing on an invoice can be edited. A wrong unpaid order is cancelled and
+The Invoices list shows every one, newest first, with its status, searchable
+by number, name, phone or email. **View / PDF** opens the invoice on the
+atelier's paper; *Download PDF* there saves it (the browser's "Save as
+PDF"). That address can be sent to the customer: it cannot be guessed and
+shows that one invoice only. While card payments are set up, an unpaid
+invoice also carries a *Pay now* button.
+
+Nothing on an invoice can be edited. A wrong unpaid one is cancelled — it
+stays in the list as *Void*, and its number is never used again — and
 written again; a paid one keeps its number.
 
 How it is built: `backend/domain/manual-order.ts` (the rules, tested),

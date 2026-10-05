@@ -20,7 +20,7 @@ import {
 } from "@backend/email/quote-emails";
 import { sendAfterCommit, sendEmail } from "@backend/email/send";
 import { MANUAL_PAYMENT_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
-import { claimInvoice } from "@backend/payments/invoice-number";
+import { claimInvoice, issueInvoice, stampPaid } from "@backend/payments/invoice-number";
 import {
   MANUAL_SOURCE,
   OUTSIDE_PAYMENT_METHODS,
@@ -152,6 +152,10 @@ async function settleOutside(
     if (!cancelled) return CARD_IN_PROGRESS;
   }
 
+  /* Written through this form, the invoice already has its number (issued
+     when it was created). An older order written before that may not: it
+     then gets one here, the way a website order does. */
+  const preNumbered = Boolean(order.invoiceNumber);
   const paidAtIso = now.toISOString();
   await payload.update({
     collection: "orders",
@@ -162,7 +166,8 @@ async function settleOutside(
       paymentStatus: "PAID",
       paymentMethod: method,
       ...(reference ? { paymentReference: reference } : {}),
-      paidAt: paidAtIso,
+      /* Left empty for a numbered invoice: stampPaid writes it, once. */
+      ...(preNumbered ? {} : { paidAt: paidAtIso }),
       /* Paid means agreed: it goes straight to the florist's queue. */
       ...(order.fulfilmentStatus === "NEW" ? { fulfilmentStatus: "CONFIRMED" as const } : {}),
     },
@@ -170,13 +175,18 @@ async function settleOutside(
 
   const vatRateBps = currentVatRateBps();
   const vatFils = vatIncludedFils(order.totalFils, vatRateBps);
-  const claim = await claimInvoice(payload, {
-    orderId: order.id,
-    year: invoiceYear(now),
-    vatRateBps,
-    vatIncludedFils: vatFils,
-    paidAtIso,
-  });
+  const claim = preNumbered
+    ? {
+        invoiceNumber: String(order.invoiceNumber),
+        claimedNow: await stampPaid(payload, { orderId: order.id, paidAtIso }),
+      }
+    : await claimInvoice(payload, {
+        orderId: order.id,
+        year: invoiceYear(now),
+        vatRateBps,
+        vatIncludedFils: vatFils,
+        paidAtIso,
+      });
 
   await recordActivity(payload, {
     actor: actorOf(user),
@@ -292,6 +302,27 @@ export async function createManualOrder(form: FormData): Promise<ActionResult> {
     const orderNumber = String(order.orderNumber ?? order.id);
     const amount = formatFils(order.totalFils);
 
+    /* The invoice gets its number NOW — the shop sends it to the customer
+       before it is paid. If this one statement fails the order still exists
+       and is numbered when it is paid instead, so nothing is lost. */
+    let invoiceNumber = "";
+    try {
+      const vatRateBps = currentVatRateBps();
+      invoiceNumber = await issueInvoice(payload, {
+        orderId: order.id,
+        year: invoiceYear(now),
+        vatRateBps,
+        vatIncludedFils: vatIncludedFils(order.totalFils, vatRateBps),
+      });
+    } catch (error) {
+      payload.logger.error(
+        `order ${orderNumber} saved, but its invoice number could not be issued: ${
+          error instanceof Error ? error.message : "unknown"
+        }`,
+      );
+    }
+    const numbered: Order = { ...order, invoiceNumber: invoiceNumber || null };
+
     await recordActivity(payload, {
       actor: actorOf(user),
       action: "create",
@@ -299,12 +330,14 @@ export async function createManualOrder(form: FormData): Promise<ActionResult> {
       collection: "orders",
       itemId: order.id,
       itemLabel: orderNumber,
-      summary: `Order ${orderNumber} written by hand (${parsed.salesChannel}) — ${amount} for ${order.customerName}`,
+      summary: `Order ${orderNumber} written by hand (${parsed.salesChannel}) — ${amount} for ${order.customerName}${
+        invoiceNumber ? `, invoice ${invoiceNumber}` : ""
+      }`,
       changes: [{ field: "totalFils", label: "amount", after: amount }],
     });
 
     if (parsed.payment !== "unpaid") {
-      const settled = await settleOutside(payload, user, order, parsed.payment, parsed.paymentReference, now);
+      const settled = await settleOutside(payload, user, numbered, parsed.payment, parsed.paymentReference, now);
       if (!settled.ok) {
         /* The order exists; only the payment could not be recorded. Say so
            rather than pretend nothing was saved. */
@@ -345,16 +378,16 @@ export async function createManualOrder(form: FormData): Promise<ActionResult> {
     return emailed
       ? {
           ok: true,
-          message: `Order ${orderNumber} saved. Invoice and pay button sent to ${order.customerEmail}.`,
+          message: `Invoice ${invoiceNumber} saved and sent to ${order.customerEmail} with a pay button.`,
           code: "actions.manual.createdSent",
-          vars: { number: orderNumber, email: order.customerEmail },
+          vars: { number: orderNumber, invoice: invoiceNumber, email: order.customerEmail },
           id: order.id,
         }
       : {
           ok: true,
-          message: `Order ${orderNumber} saved. Share its payment link, or record the payment.`,
+          message: `Invoice ${invoiceNumber} saved. Open it to download the PDF, share the payment link, or record the payment.`,
           code: "actions.manual.created",
-          vars: { number: orderNumber },
+          vars: { number: orderNumber, invoice: invoiceNumber },
           id: order.id,
         };
   } catch (error) {
