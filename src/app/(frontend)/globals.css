@@ -145,6 +145,11 @@ body {
   animation-play-state: paused;
 }
 
+/* The discount-code message: a 200ms fade, opacity only. */
+@keyframes quiet-fade-in {
+  from { opacity: 0; }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -1210,4 +1215,34 @@ html[dir="rtl"] .font-brand:not([lang="en"]) {
   transform: translateY(0);
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Printing an invoice (/pay/[token], once paid)                       */
+/* ------------------------------------------------------------------ */
+
+/* "Print or save as PDF" must put the INVOICE on paper and nothing else: no
+   navigation, no footer, no floating buttons, no film grain. Scoped to pages
+   that carry a `data-print-sheet`, so printing any other page is untouched.
+   The chrome is removed outright (it would otherwise print as blank pages);
+   everything left is hidden except the sheet itself. */
+@media print {
+  body:has([data-print-sheet])::after {
+    display: none;
+  }
+  body:has([data-print-sheet]) :is(.site-header, footer, .skip-link, .brand-intro, .floating-whatsapp) {
+    display: none !important;
+  }
+  body:has([data-print-sheet]) * {
+    visibility: hidden;
+  }
+  body:has([data-print-sheet]) [data-print-sheet],
+  body:has([data-print-sheet]) [data-print-sheet] * {
+    visibility: visible;
+  }
+  body:has([data-print-sheet]) [data-print-sheet] {
+    border: 0;
+    background: none;
+    padding: 0;
+  }
 }

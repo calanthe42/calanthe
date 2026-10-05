@@ -120,6 +120,11 @@ export default async function AdminEmailsPage({
                   </Td>
                   <Td label={t("emailLog.email")} primary>
                     {String(row.subject)}
+                    {row.type ? (
+                      <span className="block text-xs font-normal text-ink-3">
+                        {label("emailType", String(row.type))}
+                      </span>
+                    ) : null}
                   </Td>
                   <Td label={t("emailLog.status")}>
                     <Badge tone={TONE[status] ?? "neutral"}>

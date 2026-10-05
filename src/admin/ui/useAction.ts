@@ -18,7 +18,19 @@ import { useToast } from "./Toast";
  * up in the dictionary, with its English `message` as the fallback.
  */
 
-export type ActionOutcome = { ok: boolean; message: string; code?: string; vars?: Vars; id?: number };
+export type ActionOutcome = {
+  ok: boolean;
+  message: string;
+  code?: string;
+  vars?: Vars;
+  id?: number;
+  /**
+   * The person changed their mind in a confirmation the action itself
+   * showed (activating a discount). Nothing was saved and nothing failed:
+   * the screen goes back to idle, with no toast and no error.
+   */
+  cancelled?: boolean;
+};
 export type ActionState = "idle" | "saving" | "saved" | "failed";
 
 type RunOptions<R> = {
@@ -85,6 +97,8 @@ export function useAction() {
         if (!options.quiet) toast.success(resolve(result.code, result.vars, result.message));
         options.onSuccess?.(result);
         settle.current = setTimeout(() => setState((s) => (s === "saved" ? "idle" : s)), 2500);
+      } else if (result?.cancelled) {
+        setState("idle");
       } else {
         const message = result
           ? resolve(result.code, result.vars, result.message || t("common.couldNotSave"))

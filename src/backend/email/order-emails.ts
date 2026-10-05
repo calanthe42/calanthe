@@ -32,6 +32,12 @@ export type OrderEmailInput = {
   subtotalFils: number;
   deliveryFeeFils: number;
   totalFils: number;
+  /* The discount, read from the ORDER'S SNAPSHOT by the caller — never from
+     the live discount, which may have changed since the order was placed. */
+  couponCode?: string;
+  couponDiscountFils?: number;
+  /** Sum over the lines of (regular − paid) × quantity. */
+  saleSavingsFils?: number;
 };
 
 /** Where owner and florist mail goes until the owner supplies real addresses. */
@@ -62,6 +68,9 @@ export function buildOrderEmails(
 ): SendRequest[] {
   const base = facts(input);
 
+  const couponFils = input.couponCode ? Math.max(0, input.couponDiscountFils ?? 0) : 0;
+  const saleFils = Math.max(0, input.saleSavingsFils ?? 0);
+
   const priced: PricedOrder = {
     ...base,
     audience: "customer",
@@ -70,6 +79,11 @@ export function buildOrderEmails(
     subtotal: { fils: input.subtotalFils, currency: "AED" },
     deliveryFee: { fils: input.deliveryFeeFils, currency: "AED" },
     total: { fils: input.totalFils, currency: "AED" },
+    ...(couponFils > 0 && input.couponCode
+      ? { discount: { fils: couponFils, code: input.couponCode } }
+      : {}),
+    ...(couponFils + saleFils > 0 ? { savings: { fils: couponFils + saleFils } } : {}),
+    ...(saleFils > 0 ? { saleSavings: { fils: saleFils } } : {}),
   };
 
   const requests: SendRequest[] = [

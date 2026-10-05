@@ -4,7 +4,7 @@ import { getPayload } from "payload";
 import type { Where } from "payload";
 import config from "@payload-config";
 import { getAdminI18n } from "@admin/i18n/server";
-import { OPEN_FULFILMENT, toneFor } from "@admin/lib/status";
+import { OPEN_FULFILMENT, orderSourceKey, toneFor } from "@admin/lib/status";
 import { Badge } from "@admin/ui/Badge";
 import { ButtonLink } from "@admin/ui/Button";
 import { DateRangeFields } from "@admin/ui/DateRange";
@@ -13,8 +13,15 @@ import { PageHeader } from "@admin/ui/PageHeader";
 import { Pagination, listHref, parsePage } from "@admin/ui/Pagination";
 import { EmptyState } from "@admin/ui/States";
 import { Table, Td, Tr } from "@admin/ui/Table";
-import { uaeDayStart } from "@backend/domain/dashboard";
+import {
+  QUOTE_ORDER_SOURCE,
+  SETTLED_PAYMENT_STATUSES,
+  isAwaitingQuote,
+  uaeDayStart,
+} from "@backend/domain/dashboard";
+import { REAL_ORDER_WHERE } from "@backend/data/dashboard";
 import { uaeMidnight } from "@backend/domain/dates";
+import { payRequestState } from "@backend/payments/pay-link";
 
 /**
  * Orders, newest first, with the filters an operator actually reaches for.
@@ -58,6 +65,32 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   if (attention === "overdue") {
     and.push({ fulfilmentStatus: { in: [...OPEN_FULFILMENT] } });
     and.push({ deliveryDate: { less_than: uaeDayStart(new Date()).toISOString() } });
+    /* An unpaid payment request is never overdue: nothing is owed to the
+       customer until they pay. Same rule as the dashboard's count. */
+    and.push(REAL_ORDER_WHERE);
+  }
+  /*
+   * PAYMENT REQUESTS, apart from everything else. "Payment: awaiting" alone
+   * mixes them with abandoned website checkouts, which need nothing from
+   * anyone. These three are the queues the dashboard counts (quoteQueue in
+   * backend/domain/dashboard.ts), written as the same rules in the database:
+   * waiting on the customer, link run out, and paid but not yet started.
+   */
+  if (attention === "awaiting-payment" || attention === "link-expired") {
+    const nowIso = new Date().toISOString();
+    and.push({ source: { equals: QUOTE_ORDER_SOURCE } });
+    and.push({ paymentStatus: { not_in: [...SETTLED_PAYMENT_STATUSES] } });
+    and.push({ fulfilmentStatus: { not_equals: "CANCELLED" } });
+    and.push(
+      attention === "awaiting-payment"
+        ? { payLinkExpiresAt: { greater_than: nowIso } }
+        : { or: [{ payLinkExpiresAt: { less_than_equal: nowIso } }, { payLinkExpiresAt: { exists: false } }] },
+    );
+  }
+  if (attention === "paid-to-start") {
+    and.push({ source: { equals: QUOTE_ORDER_SOURCE } });
+    and.push({ paymentStatus: { in: ["PAID", "PARTIALLY_REFUNDED"] } });
+    and.push({ fulfilmentStatus: { equals: "CONFIRMED" } });
   }
   const query = q.trim();
   if (query) {
@@ -68,6 +101,9 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         { customerEmail: { like: query } },
         { customerPhone: { like: query } },
         { recipientName: { like: query } },
+        /* The discount code an order used: "View orders" on a code in
+           Discounts lands here, and a florist can look a code up by hand. */
+        { couponCode: { like: query } },
       ],
     });
   }
@@ -84,6 +120,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   });
 
   const filtered = Boolean(query || status || payment || from || to || attention);
+  const renderedAt = new Date();
   const href = (p: number) => listHref("/admin/orders", { q, status, payment, from, to, attention, page: p });
 
   return (
@@ -118,7 +155,12 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
           label={t("orders.filters.attention")}
           value={attention}
           placeholder={t("common.all")}
-          options={[{ value: "overdue", label: t("orders.filters.overdue") }]}
+          options={[
+            { value: "overdue", label: t("orders.filters.overdue") },
+            { value: "awaiting-payment", label: t("orders.filters.awaitingPayment") },
+            { value: "link-expired", label: t("orders.filters.linkExpired") },
+            { value: "paid-to-start", label: t("orders.filters.paidToStart") },
+          ]}
         />
         <DateRangeFields
           legend={t("orders.filters.deliveryDates")}
@@ -156,6 +198,14 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
               const number = order.orderNumber ?? "";
               const orderHref = `/admin/orders/${encodeURIComponent(number)}`;
               const items = (order.items ?? []).reduce((n, item) => n + Number(item.quantity ?? 0), 0);
+              const isQuote = orderSourceKey(order.source) === "quote";
+              /* An unpaid payment request says where its LINK stands — "link
+                 expired" is the useful fact, and plain "awaiting payment"
+                 would hide it. */
+              const payState =
+                isAwaitingQuote(order) && order.fulfilmentStatus !== "CANCELLED"
+                  ? payRequestState(order, renderedAt)
+                  : null;
               return (
                 <Tr key={order.id}>
                   <Td primary>
@@ -163,7 +213,8 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                       {number || t("orders.columns.order")}
                     </Link>
                     <span className="block text-xs text-ink-3">
-                      {t("orders.placed", { date: date(order.createdAt, "short") })} · {plural("orders.items", items)}
+                      {t("orders.placed", { date: date(order.createdAt, "short") })} ·{" "}
+                      {isQuote ? label("source", "quote") : plural("orders.items", items)}
                     </span>
                   </Td>
                   <Td label={t("orders.columns.customer")}>
@@ -176,7 +227,11 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     {money(Number(order.totalFils))}
                   </Td>
                   <Td label={t("orders.columns.payment")}>
-                    <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+                    {payState ? (
+                      <Badge tone={toneFor("payRequest", payState)}>{label("payRequest", payState)}</Badge>
+                    ) : (
+                      <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+                    )}
                   </Td>
                   <Td label={t("orders.columns.status")}>
                     <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)} dot>

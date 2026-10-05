@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Monogram } from "@/components/ui/Monogram";
-import { CONTACT, formatAed } from "@/lib/data";
+import { Price } from "@/components/commerce/Price";
+import { effectivePriceAed } from "@/lib/catalogue";
+import { CONTACT } from "@/lib/data";
 import type { Occasion, Product } from "@/lib/data";
 import { useT } from "@/lib/locale";
 import { useScrollLock } from "@/lib/useScrollLock";
@@ -235,9 +237,14 @@ export function SearchOverlay({
                     <span className="flex-1 font-display text-lg text-olive">
                       {product.name}
                     </span>
-                    <span className="text-sm text-ink-muted">
-                      {formatAed(product.priceAed)}
-                    </span>
+                    <Price
+                      t={t}
+                      layout="stack"
+                      className="shrink-0 text-sm text-ink-muted"
+                      nowFils={Math.round(effectivePriceAed(product) * 100)}
+                      wasFils={product.sale ? Math.round(product.priceAed * 100) : null}
+                      wasClassName="text-xs"
+                    />
                   </Link>
                 </li>
               ))}

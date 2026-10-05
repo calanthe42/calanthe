@@ -33,7 +33,13 @@ export type EmailType =
   | "order-status"
   | "owner-new-order"
   | "florist-job-sheet"
-  | "enquiry-received";
+  | "enquiry-received"
+  /** "Your arrangement is confirmed — pay by this link." */
+  | "payment-request"
+  /** Thank you, with the invoice. */
+  | "payment-received"
+  /** The owner's notice that a payment request was paid. */
+  | "owner-quote-paid";
 
 export type Money = {
   /** Always integer fils. Never a float, never a formatted string. */
@@ -75,6 +81,12 @@ export type PricedOrder = OrderFacts & {
   subtotal: Money;
   deliveryFee: Money;
   total: Money;
+  /** The discount code and what it took off. Absent when no code was used. */
+  discount?: { fils: number; code: string };
+  /** Everything saved on the order: sale prices plus the code. */
+  savings?: { fils: number };
+  /** The sale-price part of `savings` alone, for the owner. */
+  saleSavings?: { fils: number };
   customerEmail: string;
   customerPhone: string;
 };
@@ -91,6 +103,9 @@ export type RecipientFacing = OrderFacts & {
   subtotal?: never;
   deliveryFee?: never;
   total?: never;
+  discount?: never;
+  savings?: never;
+  saleSavings?: never;
 };
 
 export type RenderedEmail = {

@@ -232,3 +232,177 @@ Stripe's test mode plus `stripe listen --forward-to localhost:3000/api/webhooks/
 To be added to `src/lib/env.ts` as **required in production, optional in
 development**, following the existing pattern. No placeholder or fake
 values are committed anywhere. See [DEPLOYMENT §3](./DEPLOYMENT.md).
+
+## Payment requests (pay by link) — added 2026-10-04
+
+A florist confirms a bespoke or event enquiry in the admin; the customer is
+emailed a link and pays there. Spec: `docs/specs/quote-pay.md`. Code:
+`src/backend/actions/quotes.ts` (confirm / resend / cancel),
+`src/backend/actions/pay.ts` (the customer's side),
+`src/backend/payments/{pay-link,intent,invoice-number,paid,verdict}.ts`.
+
+**What is unchanged.** Only the signed webhook marks an order PAID. No amount
+is ever read from a browser: the florist's amount is parsed on the server and
+frozen on the order, and the PaymentIntent is created from `order.totalFils`.
+
+**What is new, and applies to website orders too.**
+
+- *One order, one intent.* The PaymentIntent id is written onto the order
+  (`stripePaymentIntentId`) before the client secret is released. The webhook
+  refuses any other intent for that order and writes `⚠ PAYMENT CHECK` on it —
+  a second charge is flagged, never swallowed as "already paid".
+- *Invoice numbers.* Every order that becomes PAID gets `CAL-INV-YYYY-NNNNN`,
+  gap-free, from the `invoice_counters` table in one SQL statement. That same
+  statement is the single-winner gate: of two concurrent webhook deliveries,
+  only the one that issued the number sends emails.
+- *Paid path order:* verdict → PAID → (coupon redeem slot) → invoice claim →
+  emails. A crash between PAID and the invoice is healed by Stripe's retry.
+
+**The link.** `/pay/<token>`, token = HMAC-SHA256(`PAYLOAD_SECRET`, salt). Only
+the salt and the SHA-256 of the token are stored. Valid 7 days; "resend"
+extends it and sends the same link. Rotating `PAYLOAD_SECRET` kills
+outstanding links until each is resent. The token appears in the request URL,
+so it is in Vercel's access logs and is handed to Stripe as the 3-D Secure
+return URL — accepted, and the reason the page must send no Referer and must be
+scrubbed from Sentry (done with the page itself).
+
+**Cancelling.** The order is marked CANCELLED first, then the intent is
+cancelled at Stripe; if Stripe refuses because the customer is paying, the
+order is put back and nothing is cancelled. If money ever arrives on a
+cancelled request the order is marked PAID with
+`⚠ PAID AFTER CANCELLATION`, and the owner's email says the same.
+**Procedure: refund that payment in Stripe. Never reinstate the order** — the
+enquiry may already have a new live request, and the database allows only one.
+
+**Unpaid requests are not orders yet.** They are excluded from revenue, "new
+orders", today's deliveries and "overdue" (`isAwaitingQuote` in
+`src/backend/domain/dashboard.ts`), and they do not ring the admin bell. The
+bell rings when the customer pays.
+
+**Staff may send a payment request for any amount**; every one is named in the
+activity log. A discount code can never apply to one (the collection refuses).
+
+**DEPLOY ORDER — NOT OPTIONAL.** This code selects columns that only exist
+after migration `20261004_193027_quote_pay_link`. Run `pnpm migrate` against
+production, verify, and only then deploy the code. The reverse order breaks
+every orders read: checkout, the Stripe webhook and the admin. The migration
+is additive, so the old code keeps working against the new schema.
+
+**Screens (added 2026-10-05).**
+
+- *Admin.* The **Payment** card (`src/admin/components/QuotePayment.tsx`) is
+  the first thing on an enquiry — above the two columns, so it is at the top
+  on a phone — and on the event that enquiry created. "Confirm & request
+  payment" opens one sheet: final amount (prefilled from the indicative
+  total), **Send to** (the customer's email, editable so a typo is corrected
+  before money is asked for at it), phone, delivery day / window / address,
+  gift details, a note to the customer and the email language. Afterwards the
+  card shows awaiting / link expired / cancelled / paid, with Resend, Copy
+  link, Send on WhatsApp and Cancel. The order page carries the same actions
+  in a notice at the top and offers no fulfilment step until it is paid.
+- *Finding them.* `/admin/orders` → Needs attention → "Payment requests
+  awaiting payment", "Payment link expired", "Paid requests to start". The
+  dashboard's Needs-attention panel links to the same three. The enquiries
+  list shows a payment badge beside each status.
+- *Customer.* `/pay/<token>`
+  (`src/app/(frontend)/(storefront)/pay/[token]/page.tsx`,
+  `src/components/commerce/PayRequestForm.tsx`). Opening it changes nothing;
+  the PaymentIntent is made when pay is pressed. Apple Pay / Google Pay first,
+  then card. After paying, the page says "confirming" and polls for up to 30
+  seconds; it shows the invoice only once the webhook has marked the order
+  paid. "Print or save as PDF" prints the invoice alone.
+- *Token hygiene.* The page sends `referrer: no-referrer`, is `noindex`, and
+  `/pay/` is disallowed in `robots.ts`. Sentry events, transactions and
+  breadcrumbs pass through `src/lib/scrub-pay-token.ts`, on the server and in
+  the browser. The paid page shows the invoice (name, email, items, total) to
+  whoever holds the link, with no time limit.
+- *Rate limits.* 60 page views and 10 payment starts per 10 minutes per
+  network address; 5 resends per hour per order. A visitor over the limit
+  sees "please wait" in their language.
+
+**Not verified automatically.** The pay page, the admin card and Apple Pay /
+Google Pay have not been run in a browser against Stripe test mode; the
+manual checklist in `docs/specs/quote-pay.md` (tests section) still applies,
+including a look at 390px in English and Arabic. `claimInvoice` runs real SQL and is covered
+only through an injected fake. Before launch, on a scratch database: pay two
+orders back to back (00001, 00002, no gap), resend a Stripe event (no second
+number, no second email), and call `claimInvoice` twice in parallel for one
+order (exactly one `claimedNow: true`).
+
+## Discounts (automatic sales and discount codes) — added 2026-10-05
+
+Server side only so far; the owner's screens and the storefront display are the next step.
+
+### What a discount is
+
+One collection, `discounts`, two kinds. Owner-only for read, create, update and delete — staff cannot see it.
+
+| Kind | What it does | Where it lands on the order |
+| --- | --- | --- |
+| Automatic sale | Lowers the **arrangement** (base price + size uplift) of matching products. Never an add-on. One sale per product; sales never stack. | Inside `items[].unitPriceFils`, with the regular price beside it in `items[].compareAtUnitPriceFils` and the labels in `saleLabelEn` / `saleLabelAr`. |
+| Discount code | An order-level amount off the already-reduced subtotal, add-ons included. One code per order. Never discounts delivery. | `discountFils` = `couponDiscountFils`, with `couponCode`. |
+
+The order total equation is unchanged: `total = subtotal + delivery − discount`. So the payment verdict (§4) needed no change — the PaymentIntent is created for `order.totalFils`, which already is the discounted total.
+
+Rounding is always in the customer's favour and always to whole dirhams: a sale price is rounded **down**, a percentage code is rounded **up**. The deepest discount of either kind is 90%. There is no free-order path: a total under AED 2 (`MIN_CHARGE_FILS` in `src/lib/money.ts`, the one definition) is refused.
+
+All of the arithmetic is in `src/lib/discounts.ts` (pure, shared with the browser) and applied by `src/backend/domain/pricing.ts`.
+
+### The browser never sets a price
+
+The browser sends product ids, quantities, option ids, and the **text** of a code. It also sends `shownTotalFils` — the total it showed the customer. That value is an assertion: it is compared with the server's total and never used, stored or sent to Stripe. If they differ (a sale ended while the page was open, a price was edited, the request was tampered with) the answer is `PRICE_CHANGED` and nothing is created.
+
+A code is validated on the server twice: when the basket is quoted (`quoteCheckout`) and again when the order is placed (`startCardCheckout`). A code that no longer applies refuses the order and says why; it is never silently dropped.
+
+### A code's limits are enforced, not merely checked
+
+A code is checked when the order is created and counted when it is paid, and a PaymentIntent never expires. Without more, a "first 20 customers" code could be attached to any number of unpaid orders and paid later. So:
+
+1. **An order that can still be paid holds a claim** on its code. Claims = orders with that code that are redeemed, or not cancelled.
+2. **A new order is admitted in two looks** — before it is created, and again after, counting everybody else's claims. An order that finds the limit already met without it is cancelled before any PaymentIntent exists. Two customers racing for the last use can both be refused; they can never both be admitted.
+3. **A claim cannot be held open.** An unpaid discounted order (sale price or code) older than 60 minutes (`DISCOUNT_HOLD_MINUTES`) is cancelled together with its PaymentIntent, so a form somebody kept open stops working. This runs lazily after each checkout, and for a limited code before its claims are counted.
+4. **The same customer starting again** (changing the basket creates a new order) releases her own earlier unpaid order with that code, so her own abandoned attempt never reads as "already used".
+
+Code: `src/backend/payments/coupon-claims.ts`.
+
+Known and accepted: someone who knows a customer's email and a once-per-customer code could cancel that customer's unpaid order by starting a checkout with the same email — the customer sees a payment error and tries again. Checkout is limited to 8 orders an hour per network.
+
+### Counting a use — step 3 of the paid path
+
+`redeemCoupon` (`src/backend/payments/redeem.ts`) is one SQL statement: it stamps `orders.coupon_redeemed_at` only if it is empty and the order is settled, and adds one to `discounts.times_used` only from that stamp. That makes the count exactly-once per order, however often Stripe delivers the event.
+
+It runs **after PAID and before the invoice claim**, for the winning delivery and for a recovering retry alike, inside its own try/catch:
+
+```
+verdict → PAID → redeemCoupon → claimInvoice (single winner) → emails
+```
+
+- A failed count never undoes PAID, never stops the invoice and never stops the emails. It is logged; such orders are found by `couponDiscount` set and `couponRedeemedAt` empty.
+- A crash between PAID and the count is healed by Stripe's retry, which reaches the same step again.
+- **A use is never given back.** A refund or a cancellation does not decrement `timesUsed`.
+
+Two notes can be written on the order for the owner, each once, and neither changes the order — the money is already captured, so it is honoured:
+
+- `⚠ DISCOUNT CHECK: code X was redeemed past its limit.`
+- `⚠ DISCOUNT CHECK: this discounted order was paid after its price hold ended…`
+
+A web order paid after it was cancelled (released as stale a moment before the payment landed) is marked PAID and gets the same `⚠ PAID AFTER CANCELLATION` note a payment request gets.
+
+### Code guessing
+
+- One sentence for a code that does not exist, is switched off, has not started or has ended.
+- The quote takes **no email address**, so it cannot be used to test whether an address belongs to a customer. Once-per-customer is applied only when an order is placed.
+- `LIMITS.discountCode` (12 per 10 minutes per network) counts **wrong codes only**. A basket holding a good code re-quotes for free. A caller out of attempts is told to wait and gets the basket priced without the code.
+- Paying is never blocked by that limit; the checkout limit (8 an hour) bounds guessing there.
+
+### Payment requests are never discounted
+
+The florist types that amount. The order collection refuses any discount, code, sale field or discount snapshot on an `admin-quote` order.
+
+### Release order
+
+Run migration `20261004_202611_discounts` against production **before** this code is deployed, after `20261004_193027_quote_pay_link`. The reverse breaks every read and write of `orders`.
+
+### Not verified
+
+`redeemCoupon`'s SQL and the claim queries are tested against fakes only, never against a real Postgres. Before launch, with `stripe listen`: pay a coded order and check `coupon_redeemed_at` is set and `times_used` goes up by exactly one; resend the same event and check it does not change.

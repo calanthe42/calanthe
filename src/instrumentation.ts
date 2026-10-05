@@ -9,12 +9,18 @@ export async function register() {
 
   if (env.SENTRY_DSN) {
     const Sentry = await import("@sentry/nextjs");
+    const { scrubPayTokens } = await import("@/lib/scrub-pay-token");
     Sentry.init({
       dsn: env.SENTRY_DSN,
       environment: env.NODE_ENV,
       tracesSampleRate: env.NODE_ENV === "production" ? 0.1 : 0,
       /* Never send PII payloads by default. */
       sendDefaultPii: false,
+      /* A payment link's address is its credential (/pay/<token>). It must
+         not leave in a request URL, a transaction name or a breadcrumb. */
+      beforeSend: (event) => scrubPayTokens(event),
+      beforeSendTransaction: (event) => scrubPayTokens(event),
+      beforeBreadcrumb: (breadcrumb) => scrubPayTokens(breadcrumb),
     });
   }
 }

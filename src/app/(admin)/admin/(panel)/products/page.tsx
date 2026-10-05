@@ -16,7 +16,10 @@ import { EmptyState, Notice } from "@admin/ui/States";
 import { Table, Td, Tr } from "@admin/ui/Table";
 import { deleteProduct } from "@backend/actions/admin";
 import { getAdminSession } from "@backend/data/admin-session";
+import { getLiveSaleRulesForDisplay } from "@backend/data/discounts";
+import { saleTargetOf } from "@backend/domain/pricing";
 import { PRODUCT_CATEGORIES } from "@backend/domain/product-form";
+import { bestSaleFor, saleUnitFils } from "@/lib/discounts";
 
 /**
  * The catalogue as the owner sees it — hidden products included, which is the
@@ -89,6 +92,22 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     overrideAccess: false,
   });
   const all = result.docs;
+
+  /*
+   * ON OFFER. While one of the owner's automatic sales applies to a product,
+   * the row says what customers pay — the same rule, the same arithmetic and
+   * the same Standard-size price the storefront card shows (lib/discounts.ts).
+   * Without it this list shows only the regular price, and she has to open
+   * the store to see what her own sale did. It is the public sale price, so
+   * a florist sees it too; the sale itself is managed in Discounts.
+   */
+  const sales = await getLiveSaleRulesForDisplay();
+  const pricedAt = new Date();
+  const salePriceOf = (product: Product): number | null => {
+    if (!product.available || sales.length === 0) return null;
+    const sale = bestSaleFor(saleTargetOf(product), sales, pricedAt);
+    return sale ? saleUnitFils(Number(product.priceFils), sale) : null;
+  };
 
   const query = q.trim().toLowerCase();
   const highlightKey = (HIGHLIGHTS as readonly string[]).includes(highlight) ? (highlight as Highlight) : undefined;
@@ -242,6 +261,11 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
                       </Td>
                       <Td label={t("products.columns.price")} align="end">
                         <span className="font-medium tabular">{money(Number(product.priceFils))}</span>
+                        {salePriceOf(product) !== null ? (
+                          <span className="block text-xs text-ink-2 tabular">
+                            {t("products.onOffer", { price: money(salePriceOf(product) ?? 0) })}
+                          </span>
+                        ) : null}
                         {product.compareAtPriceFils ? (
                           <span className="block text-xs text-ink-3 line-through tabular">{money(Number(product.compareAtPriceFils))}</span>
                         ) : null}

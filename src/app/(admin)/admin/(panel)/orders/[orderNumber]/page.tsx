@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrderOps } from "@admin/components/OrderOps";
+import { QuotePayment } from "@admin/components/QuotePayment";
 import { getAdminI18n } from "@admin/i18n/server";
+import { quoteCardData } from "@admin/lib/quote-card";
 import { orderSourceKey, toneFor } from "@admin/lib/status";
 import { Badge } from "@admin/ui/Badge";
 import { ButtonLink } from "@admin/ui/Button";
@@ -12,6 +14,8 @@ import { PageHeader } from "@admin/ui/PageHeader";
 import { Notice } from "@admin/ui/States";
 import { getAdminOrderByNumber, getTeamOptions } from "@backend/data/admin-metrics";
 import { getAdminSession } from "@backend/data/admin-session";
+import { getQuoteForOrder } from "@backend/data/quote";
+import { saleSavingsOfItems } from "@backend/domain/checkout-order";
 
 /**
  * One order, read from its immutable snapshot.
@@ -20,6 +24,18 @@ import { getAdminSession } from "@backend/data/admin-session";
  * record — that is the point of the snapshot. Amounts are read-only for every
  * role including the owner, so this screen deliberately offers no way to edit
  * them; docs/ADMIN.md §3 is explicit that no button marks an order paid.
+ *
+ * A PAYMENT REQUEST (an order a florist confirmed from an enquiry) that has
+ * not been paid says so at the very top, with the only things that can be
+ * done about it: resend the link, copy it, cancel. It cannot be prepared —
+ * OrderOps is told the same — and the notice sits above the columns so it is
+ * the first thing on a phone.
+ *
+ * DISCOUNTS ARE READ FROM THE ORDER, NOT FROM THE DISCOUNT. A line sold on
+ * offer keeps its regular price and the sale's label beside what was paid;
+ * a code is the "Discount (CODE)" row. All of it is the order's own snapshot,
+ * so it reads the same after the owner edits or ends the discount — and a
+ * florist, who cannot open Discounts, can still answer "did my code work?".
  */
 
 export async function generateMetadata() {
@@ -36,9 +52,16 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
   ]);
   if (!order) notFound();
 
-  const { t, label, money, date } = i18n;
+  const { t, label, money, date, locale } = i18n;
   const isOwner = Boolean(session?.isAdmin);
-  const staff = await getTeamOptions();
+  const isQuote = orderSourceKey(order.source) === "quote";
+  const [staff, quote] = await Promise.all([
+    getTeamOptions(),
+    isQuote ? getQuoteForOrder(order.id) : Promise.resolve(null),
+  ]);
+  /* Unpaid and not cancelled: waiting on the customer, or the link ran out. */
+  const unpaidQuote = quote && (quote.state === "awaiting" || quote.state === "expired") ? quote : null;
+  const enquiryId = typeof order.enquiry === "object" && order.enquiry ? order.enquiry.id : order.enquiry;
 
   const items = order.items ?? [];
   const isGift = Boolean(order.recipientName || order.cardMessage);
@@ -46,6 +69,8 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
   const customerId = typeof order.customer === "object" && order.customer ? order.customer.id : order.customer;
   const deliveryFee = Number(order.deliveryFeeFils);
   const discount = Number(order.discountFils ?? 0);
+  /* What sale prices took off — already inside the line prices and subtotal. */
+  const saleSavings = saleSavingsOfItems(items);
   const number = order.orderNumber ?? "";
 
   return (
@@ -63,13 +88,46 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
         })}
         badge={
           <>
-            <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+            {unpaidQuote ? (
+              <Badge tone={toneFor("payRequest", unpaidQuote.state)}>{label("payRequest", unpaidQuote.state)}</Badge>
+            ) : (
+              <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
+            )}
             <Badge tone={toneFor("fulfilment", order.fulfilmentStatus)} dot>
               {label("fulfilment", order.fulfilmentStatus)}
             </Badge>
           </>
         }
       />
+
+      {unpaidQuote ? (
+        <Notice tone={unpaidQuote.state === "expired" ? "warning" : "info"}>
+          <p className="font-medium text-ink">
+            {unpaidQuote.state === "expired"
+              ? t("orders.detail.expiredQuote")
+              : unpaidQuote.lastEmail
+                ? t("orders.detail.awaitingQuote", { date: date(unpaidQuote.lastEmail.createdAt, "datetime") })
+                : t("orders.detail.awaitingQuoteNoEmail")}
+          </p>
+          {unpaidQuote.lastEmail && unpaidQuote.lastEmail.status !== "sent" ? (
+            <p className="mt-1 text-ink-2">
+              {t("enquiries.quote.emailNotSent", { status: label("emailStatus", unpaidQuote.lastEmail.status) })}
+            </p>
+          ) : null}
+          <div className="mt-3">
+            <QuotePayment variant="notice" quote={quoteCardData(unpaidQuote)} form={null} />
+          </div>
+          {typeof enquiryId === "number" ? (
+            <Link
+              href={`/admin/enquiries/${enquiryId}`}
+              className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink underline-offset-4 hover:underline"
+            >
+              {t("orders.detail.openEnquiry")}
+              <Icon name="chevronRight" className="h-4 w-4" />
+            </Link>
+          ) : null}
+        </Notice>
+      ) : null}
 
       {isGift ? (
         <Notice tone="warning">
@@ -88,13 +146,26 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
               {items.map((item, index) => {
                 const productId = typeof item.product === "object" && item.product ? item.product.id : item.product;
                 const options = (item.selectedOptions ?? []).map((o) => `${o.label}: ${o.value}`).join(" · ");
+                /* Sold on offer: the regular unit price, kept on the line. */
+                const wasUnit = Number(item.compareAtUnitPriceFils ?? 0);
+                const onOffer = wasUnit > Number(item.unitPriceFils);
+                const saleLabel = (locale === "ar" ? item.saleLabelAr : item.saleLabelEn) || item.saleLabelEn || item.saleLabelAr;
                 return (
                   <li key={item.id ?? index} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5 sm:px-5">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-ink">{item.productName}</p>
                       {options ? <p className="mt-0.5 text-xs text-ink-3">{options}</p> : null}
-                      <p className="mt-0.5 text-xs text-ink-3 tabular">
-                        {item.quantity} × {money(Number(item.unitPriceFils))}
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3 tabular">
+                        <span>
+                          {item.quantity} × {money(Number(item.unitPriceFils))}
+                        </span>
+                        {onOffer ? (
+                          <>
+                            <span className="sr-only">{t("orders.detail.was", { price: money(wasUnit) })}</span>
+                            <s aria-hidden>{money(wasUnit)}</s>
+                            {saleLabel ? <Badge>{saleLabel}</Badge> : null}
+                          </>
+                        ) : null}
                       </p>
                     </div>
                     <p className="font-medium text-ink tabular">{money(Number(item.lineTotalFils))}</p>
@@ -118,6 +189,15 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
                 <dt className="text-ink-3">{t("orders.detail.subtotal")}</dt>
                 <dd className="tabular">{money(Number(order.subtotalFils))}</dd>
               </div>
+              {saleSavings > 0 ? (
+                /* Muted, and not part of the sum: the lines above are
+                   already the sale prices. It is here so the total can be
+                   explained on the phone without opening Discounts. */
+                <div className="flex justify-between gap-4 text-ink-3">
+                  <dt>{t("orders.detail.saleSavings")}</dt>
+                  <dd className="tabular">{money(saleSavings)}</dd>
+                </div>
+              ) : null}
               <div className="flex justify-between gap-4">
                 <dt className="text-ink-3">{t("orders.detail.deliveryFee")}</dt>
                 <dd className="tabular">{deliveryFee > 0 ? money(deliveryFee) : t("orders.detail.free")}</dd>
@@ -144,8 +224,42 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
               <span className="text-sm text-ink-2">{label("source", orderSourceKey(order.source))}</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-ink-2">
-              {isCashOnDelivery && order.paymentStatus === "PENDING" ? t("orders.detail.codPending") : t("orders.detail.providerNote")}
+              {isCashOnDelivery && order.paymentStatus === "PENDING"
+                ? t("orders.detail.codPending")
+                : unpaidQuote
+                  ? t("orders.detail.quoteNote")
+                  : t("orders.detail.providerNote")}
             </p>
+            {order.invoiceNumber && order.paidAt ? (
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
+                <span>
+                  {t("orders.detail.invoiceLine", {
+                    number: order.invoiceNumber,
+                    date: date(order.paidAt, "datetime"),
+                  })}
+                </span>
+                {quote?.state === "paid" && quote.payUrl ? (
+                  <a
+                    href={quote.payUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="-my-3 inline-flex items-center gap-1 py-3 font-medium underline underline-offset-4"
+                  >
+                    {t("enquiries.quote.viewInvoice")}
+                    <Icon name="external" className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
+              </p>
+            ) : null}
+            {!unpaidQuote && typeof enquiryId === "number" ? (
+              <Link
+                href={`/admin/enquiries/${enquiryId}`}
+                className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-ink underline-offset-4 hover:underline"
+              >
+                {t("orders.detail.openEnquiry")}
+                <Icon name="chevronRight" className="h-4 w-4" />
+              </Link>
+            ) : null}
             <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-ink-3">
               <Icon name="info" className="mt-px h-3.5 w-3.5" />
               {t("orders.detail.noManualPayment")}
@@ -162,6 +276,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
                 : (order.assignedStaff ?? undefined)
             }
             staff={staff}
+            awaitingPayment={Boolean(unpaidQuote)}
           />
         </div>
 
@@ -206,6 +321,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
                   [t("orders.detail.date"), date(order.deliveryDate, "weekday")],
                   [t("orders.detail.timeSlot"), <span key="slot" dir="ltr">{order.deliveryTimeSlot}</span>],
                   [t("orders.detail.notes"), order.deliveryNotes],
+                  [t("orders.detail.customerNote"), order.customerNote],
                 ]}
               />
             </div>

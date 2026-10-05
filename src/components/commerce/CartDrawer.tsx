@@ -7,12 +7,16 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Monogram } from "@/components/ui/Monogram";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Button, ButtonLink } from "@/components/ui/Button";
+import { DiscountCodeField } from "@/components/commerce/DiscountCodeField";
+import { Price } from "@/components/commerce/Price";
 import {
   describeCartItem,
-  itemUnitPrice,
+  itemRegularUnitFils,
+  itemUnitFils,
   useCart,
   type CartItem as CartItemType,
 } from "@/lib/cart";
+import { formatFils, formatFilsInline } from "@/lib/money";
 import {
   addons,
   DELIVERY_ALWAYS_FREE,
@@ -64,7 +68,7 @@ function QtyStepper({ item }: { item: CartItemType }) {
 
 function CartLine({ item }: { item: CartItemType }) {
   const { removeItem } = useCart();
-  const t = useT();
+  const { locale, t } = useLocale();
 
   return (
     <li className="flex gap-4 py-5">
@@ -79,11 +83,21 @@ function CartLine({ item }: { item: CartItemType }) {
           >
             {item.name}
           </Link>
-          <p className="shrink-0 text-sm text-olive">
-            {formatAed(itemUnitPrice(item) * item.qty)}
-          </p>
+          {/* On offer: the regular line total struck through above what
+              she pays. Both from the same arithmetic the server uses. */}
+          <Price
+            t={t}
+            layout="stack"
+            className="shrink-0 text-sm text-olive"
+            nowFils={itemUnitFils(item) * item.qty}
+            wasFils={item.sale ? itemRegularUnitFils(item) * item.qty : null}
+            wasClassName="text-xs"
+          />
         </div>
         <p className="text-sm text-ink-muted">{describeCartItem(item, t)}</p>
+        {item.sale && itemUnitFils(item) < itemRegularUnitFils(item) && (
+          <p className="text-sm text-ink-muted">{item.sale.label[locale]}</p>
+        )}
         {item.giftMessage && (
           <p className="text-sm italic text-ink-muted">{t.cart.giftMessageIncluded}</p>
         )}
@@ -144,7 +158,20 @@ function CompleteTheGift() {
 }
 
 export function CartDrawer() {
-  const { items, subtotalAed, isOpen, closeCart, hydrated, droppedCount } = useCart();
+  const {
+    items,
+    subtotalAed,
+    subtotalFils,
+    saleSavingsFils,
+    discount,
+    isOpen,
+    closeCart,
+    hydrated,
+    droppedCount,
+  } = useCart();
+  /* Free delivery is measured after the code, as the server measures it. */
+  const afterCodeAed = subtotalAed - (discount?.discountFils ?? 0) / 100;
+  const savedFils = saleSavingsFils + (discount?.discountFils ?? 0);
   /* THE DRAWER ENTERS FROM THE READING EDGE. It was pinned to `right-0` and
      slid in from +100%, which is correct in English and backwards in Arabic:
      the cart button sits top-start in RTL, so the panel was flying out from
@@ -153,8 +180,8 @@ export function CartDrawer() {
   const t = useT();
   const fromEnd = dir === "rtl" ? "-100%" : "100%";
   /* Delivery free on every order: no distance to show, the bar sits full. */
-  const remaining = DELIVERY_ALWAYS_FREE ? 0 : Math.max(0, FREE_DELIVERY_THRESHOLD_AED - subtotalAed);
-  const progress = DELIVERY_ALWAYS_FREE ? 1 : Math.min(1, subtotalAed / FREE_DELIVERY_THRESHOLD_AED);
+  const remaining = DELIVERY_ALWAYS_FREE ? 0 : Math.max(0, FREE_DELIVERY_THRESHOLD_AED - afterCodeAed);
+  const progress = DELIVERY_ALWAYS_FREE ? 1 : Math.min(1, afterCodeAed / FREE_DELIVERY_THRESHOLD_AED);
   useScrollLock(isOpen);
 
   /* Escape closes it, like every other overlay on the site. Without this the
@@ -291,17 +318,22 @@ export function CartDrawer() {
                   </div>
                 </div>
 
-                {/* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx. */}
-                <ul
-                  data-lenis-prevent
-                  className="flex-1 divide-y divide-hairline overflow-y-auto px-6"
-                >
-                  {items.map((item) => (
-                    <CartLine key={item.key} item={item} />
-                  ))}
-                </ul>
+                {/* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx.
+                    ONE scrolling region for the lines and the suggestions.
+                    The suggestions used to be pinned between the list and
+                    the footer; with a discount code open and its message
+                    showing, the pinned parts alone were taller than a small
+                    phone, and the lines had no room left at all. Now the
+                    footer may grow and what is above it scrolls. */}
+                <div data-lenis-prevent className="min-h-0 flex-1 overflow-y-auto">
+                  <ul className="divide-y divide-hairline px-6">
+                    {items.map((item) => (
+                      <CartLine key={item.key} item={item} />
+                    ))}
+                  </ul>
 
-                <CompleteTheGift />
+                  <CompleteTheGift />
+                </div>
 
                 {/*
                   THE FOOTER SAYS WHAT IS AND IS NOT SETTLED.
@@ -318,8 +350,8 @@ export function CartDrawer() {
                     <p className="font-brand text-xs font-medium uppercase tracking-brand text-ink-muted">
                       {t.cart.subtotal}
                     </p>
-                    <p className="font-display text-2xl text-olive">
-                      {formatAed(subtotalAed)}
+                    <p dir="ltr" className="font-display text-2xl text-olive">
+                      {formatFils(subtotalFils)}
                     </p>
                   </div>
                   <div className="mt-1.5 flex items-baseline justify-between gap-3 border-t border-hairline/60 pt-2.5">
@@ -332,6 +364,16 @@ export function CartDrawer() {
                       )}
                     </p>
                   </div>
+
+                  {/* The code: one quiet line until she wants it, so Checkout
+                      stays under the thumb. Applied, it is the row that says
+                      what it took off. */}
+                  <DiscountCodeField className="mt-1" />
+                  {savedFils > 0 && (
+                    <p className="mt-1 text-base text-ink-muted">
+                      {t.discount.totalSavings.replace("{amount}", formatFilsInline(savedFils))}
+                    </p>
+                  )}
 
                   <ButtonLink
                     href="/checkout"

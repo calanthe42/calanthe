@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  effectivePriceAed,
   hasSecondView,
   leadWithOccasion,
   productBadge,
@@ -26,6 +27,19 @@ describe("productBadge — badges are database state, never decoration", () => {
 
   it("shows at most one badge, and new outranks featured", () => {
     expect(productBadge({ newArrival: true, featured: true })).toBe("new");
+  });
+
+  it("says sale first of all, while a sale applies — still one badge", () => {
+    const sale = {
+      id: "1",
+      label: { en: "Eid offer", ar: "عرض العيد" },
+      valueType: "percentage" as const,
+      percentOff: 20,
+      amountOffFils: 0,
+      priceAed: 384,
+    };
+    expect(productBadge({ newArrival: true, featured: true, sale })).toBe("sale");
+    expect(productBadge({ newArrival: false, featured: false, sale })).toBe("sale");
   });
 
   it("shows nothing when the document claims nothing", () => {
@@ -108,5 +122,24 @@ describe("leadWithOccasion — the gallery's featured tile", () => {
     const original = [...list];
     leadWithOccasion(list);
     expect(list).toEqual(original);
+  });
+});
+
+describe("effectivePriceAed — one number for what a product costs now", () => {
+  const sale = {
+    id: "3",
+    label: { en: "Eid offer", ar: "عرض العيد" },
+    valueType: "percentage" as const,
+    percentOff: 20,
+    amountOffFils: 0,
+    priceAed: 384,
+  };
+
+  it("is the regular price when there is no sale", () => {
+    expect(effectivePriceAed({ priceAed: 480 })).toBe(480);
+  });
+
+  it("is the sale price while a sale applies", () => {
+    expect(effectivePriceAed({ priceAed: 480, sale })).toBe(384);
   });
 });

@@ -4,9 +4,11 @@ import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type { ReactNode } from "react";
+import { QuotePayment } from "@admin/components/QuotePayment";
 import { EnquiryWorkflow } from "@admin/components/WorkflowForm";
 import { getAdminI18n } from "@admin/i18n/server";
 import { humanize } from "@admin/i18n/translate";
+import { quoteCardData, quoteFormSetup } from "@admin/lib/quote-card";
 import { toneFor } from "@admin/lib/status";
 import { Badge } from "@admin/ui/Badge";
 import { Card, CardHeader } from "@admin/ui/Card";
@@ -14,6 +16,8 @@ import { DescriptionList } from "@admin/ui/Content";
 import { Icon } from "@admin/ui/icons";
 import { PageHeader } from "@admin/ui/PageHeader";
 import { getTeamOptions } from "@backend/data/admin-metrics";
+import { getQuoteForEnquiry } from "@backend/data/quote";
+import { QUOTABLE_ENQUIRY_TYPES, type QuoteEnquiry } from "@backend/domain/quote";
 
 /**
  * One enquiry: what was asked, by whom, and the working record beside it.
@@ -24,6 +28,12 @@ import { getTeamOptions } from "@backend/data/admin-metrics";
  *
  * The enquirer's own words are the record of what someone sent, and are not
  * editable here.
+ *
+ * THE PAYMENT CARD SITS ABOVE THE TWO COLUMNS, full width. Below `lg` the
+ * columns stack, and anything in the second one lands under the message, the
+ * request, the customer and the conversation — a long scroll on the phone a
+ * florist actually works on. "Confirm & request payment" is the one thing
+ * this screen exists to do for a bespoke enquiry, so it comes first.
  */
 
 export async function generateMetadata() {
@@ -45,7 +55,18 @@ export default async function EnquiryDetailPage({ params }: { params: Promise<{ 
     .catch(() => null);
   if (!enquiry) notFound();
 
-  const staff = await getTeamOptions();
+  /* Only the kinds of enquiry that end in a made-to-order arrangement. The
+     request itself is read from the ORDER (see backend/data/quote.ts). */
+  const quotableType = (QUOTABLE_ENQUIRY_TYPES as readonly string[]).includes(enquiry.type);
+  const [staff, quote] = await Promise.all([
+    getTeamOptions(),
+    quotableType ? getQuoteForEnquiry(enquiry.id) : Promise.resolve(null),
+  ]);
+  const quoteForm = quotableType ? quoteFormSetup(enquiry as unknown as QuoteEnquiry, quote) : null;
+  /* While a request is live or paid, ITS state is the truth about this
+     enquiry — the hand-set status would only say the same thing less
+     precisely, or disagree. One badge, not two. */
+  const paymentBadge = quote && quote.state !== "cancelled" ? quote.state : null;
 
   const pretty = (value?: string | null) => (value ? humanize(value) : null);
   const prettyList = (values?: readonly string[] | null) => (values && values.length > 0 ? values.map(humanize).join(", ") : null);
@@ -115,13 +136,23 @@ export default async function EnquiryDetailPage({ params }: { params: Promise<{ 
         })}
         badge={
           <>
-            <Badge tone={toneFor("enquiryStatus", enquiry.status)} dot>
-              {label("enquiryStatus", enquiry.status)}
-            </Badge>
+            {paymentBadge ? (
+              <Badge tone={toneFor("payRequest", paymentBadge)} dot>
+                {label("payRequest", paymentBadge)}
+              </Badge>
+            ) : (
+              <Badge tone={toneFor("enquiryStatus", enquiry.status)} dot>
+                {label("enquiryStatus", enquiry.status)}
+              </Badge>
+            )}
             <Badge tone={toneFor("priority", enquiry.priority)}>{label("priority", enquiry.priority)}</Badge>
           </>
         }
       />
+
+      {quote || quoteForm ? (
+        <QuotePayment quote={quote ? quoteCardData(quote) : null} form={quoteForm} />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 space-y-6 lg:col-span-2">

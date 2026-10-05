@@ -62,3 +62,37 @@ export function followUpIsoFromDateInput(value: string, now: Date): string {
     ? at.toISOString()
     : new Date(now.getTime() + 60_000).toISOString();
 }
+
+/**
+ * A date and a time typed in the UAE, as the instant they mean.
+ *
+ * The discount form has a date input and a time input, both read as Abu
+ * Dhabi wall time: "10 October, 18:00" is 14:00 UTC, whichever timezone the
+ * server happens to run in. An empty time means the start of that day.
+ */
+export function dubaiDateTimeToIso(day: string, time: string): string {
+  const clock = time === "" ? "00:00" : time;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(clock)) {
+    throw new FormInputError("Choose the date and time from the pickers.", "dateTimeFormat");
+  }
+  const at = new Date(`${day}T${clock}:00${UAE_OFFSET}`);
+  /* 31 February parses to early March; refuse it rather than move the date. */
+  if (Number.isNaN(at.getTime()) || dubaiDateInputValue(at.toISOString()) !== day) {
+    throw new FormInputError("That is not a real date.", "dateTimeFormat");
+  }
+  return at.toISOString();
+}
+
+/** An ISO timestamp as the HH:MM a time input shows, in UAE time. */
+export function dubaiTimeInputValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  /* en-GB with hourCycle h23 formats as 00:00–23:59. */
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: UAE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
+}

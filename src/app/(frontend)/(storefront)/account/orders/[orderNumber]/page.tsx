@@ -6,7 +6,8 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { formatFils } from "@/lib/money";
+import { Price } from "@/components/commerce/Price";
+import { formatFils, formatFilsInline } from "@/lib/money";
 import { getCustomerSession } from "@backend/actions/account";
 import { getDictionary } from "@/lib/i18n/server";
 import { formatDate, formatDeliveryDate } from "@/lib/i18n/date";
@@ -28,6 +29,12 @@ export const dynamic = "force-dynamic";
  * order number guessed from a receipt gets a 404 rather than someone else's
  * address and card message. Internal notes never leave the server — the
  * field is staff-only at field level, so it is not in this document at all.
+ *
+ * DISCOUNTS ARE READ FROM THE ORDER'S OWN SNAPSHOT: the regular price and the
+ * sale label stored on each line, the code and what it took off stored on the
+ * order. Never from the live discount — which the owner may since have
+ * edited, ended or deleted — so this page says today what the receipt said
+ * on the day.
  */
 export default async function CustomerOrderPage({
   params,
@@ -93,6 +100,15 @@ export default async function CustomerOrderPage({
   const order = result.docs[0];
   if (!order) notFound();
 
+  const couponFils = Number(order.couponDiscountFils ?? 0);
+  /* What the sale prices took off, from the stored lines. */
+  const saleSavingsFils = (order.items ?? []).reduce((sum, item) => {
+    const was = Number(item.compareAtUnitPriceFils ?? 0);
+    const unit = Number(item.unitPriceFils);
+    return was > unit ? sum + (was - unit) * item.quantity : sum;
+  }, 0);
+  const savedFils = saleSavingsFils + couponFils;
+
   return (
     <main className="mx-auto max-w-3xl gutter section-pad">
       <Reveal className="mb-8">
@@ -112,29 +128,57 @@ export default async function CustomerOrderPage({
           {t.account.whatYouOrdered}
         </h2>
         <ul className="mt-4 space-y-3">
-          {(order.items ?? []).map((item, i) => (
-            <li key={i} className="flex justify-between gap-4 text-base">
-              <span className="text-olive">
-                {item.productName}
-                {item.quantity > 1 ? ` × ${item.quantity}` : ""}
-                {(item.selectedOptions ?? []).length > 0 ? (
-                  <span className="block text-sm text-ink-muted">
-                    {(item.selectedOptions ?? []).map((o) => o.value).join(" · ")}
-                  </span>
-                ) : null}
-              </span>
-              <span className="tabular-nums text-olive">
-                {formatFils(Number(item.lineTotalFils))}
-              </span>
-            </li>
-          ))}
+          {(order.items ?? []).map((item, i) => {
+            const was = Number(item.compareAtUnitPriceFils ?? 0);
+            const onOffer = was > Number(item.unitPriceFils);
+            const saleLabel = locale === "ar" ? item.saleLabelAr : item.saleLabelEn;
+            return (
+              <li key={i} className="flex justify-between gap-4 text-base">
+                <span className="text-olive">
+                  {item.productName}
+                  {item.quantity > 1 ? ` × ${item.quantity}` : ""}
+                  {(item.selectedOptions ?? []).length > 0 ? (
+                    <span className="block text-sm text-ink-muted">
+                      {(item.selectedOptions ?? []).map((o) => o.value).join(" · ")}
+                    </span>
+                  ) : null}
+                  {onOffer && saleLabel ? (
+                    <span className="block text-sm text-ink-muted">{saleLabel}</span>
+                  ) : null}
+                </span>
+                <Price
+                  t={t}
+                  layout="stack"
+                  className="shrink-0 tabular-nums text-olive"
+                  nowFils={Number(item.lineTotalFils)}
+                  wasFils={onOffer ? was * item.quantity : null}
+                  wasClassName="text-sm"
+                />
+              </li>
+            );
+          })}
         </ul>
 
         <dl className="mt-5 space-y-1.5 border-t border-hairline pt-4 text-base">
           <div className="flex justify-between">
             <dt className="text-ink-muted">{t.checkout.subtotal}</dt>
-            <dd className="tabular-nums">{formatFils(Number(order.subtotalFils))}</dd>
+            <dd dir="ltr" className="tabular-nums">
+              {formatFils(Number(order.subtotalFils))}
+            </dd>
           </div>
+          {couponFils > 0 ? (
+            <div className="flex justify-between">
+              <dt className="text-ink-muted">
+                {t.account.discountRow.replace(
+                  "{code}",
+                  `\u2066${order.couponCode ?? ""}\u2069`,
+                )}
+              </dt>
+              <dd dir="ltr" className="tabular-nums">
+                −{formatFils(couponFils)}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex justify-between">
             <dt className="text-ink-muted">{t.checkout.delivery}</dt>
             <dd className="tabular-nums">
@@ -145,9 +189,16 @@ export default async function CustomerOrderPage({
           </div>
           <div className="flex justify-between border-t border-hairline pt-2 text-lg font-medium text-olive">
             <dt>{t.checkout.total}</dt>
-            <dd className="tabular-nums">{formatFils(Number(order.totalFils))}</dd>
+            <dd dir="ltr" className="tabular-nums">
+              {formatFils(Number(order.totalFils))}
+            </dd>
           </div>
         </dl>
+        {savedFils > 0 ? (
+          <p className="mt-3 text-base text-ink-muted">
+            {t.discount.totalSavings.replace("{amount}", formatFilsInline(savedFils))}
+          </p>
+        ) : null}
 
         <p className="mt-4 text-sm leading-relaxed text-ink-muted">
           {order.paymentStatus === "PENDING"

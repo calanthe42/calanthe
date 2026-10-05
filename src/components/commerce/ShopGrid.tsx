@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Monogram } from "@/components/ui/Monogram";
+import { effectivePriceAed } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/locale";
 import {
@@ -170,16 +171,21 @@ export function ShopGrid({
     if (price !== "all") {
       const bucket = priceBuckets.find((b) => b.id === price);
       if (bucket) {
-        list = list.filter((p) => p.priceAed >= bucket.min && p.priceAed <= bucket.max);
+        /* What it costs today: an arrangement on offer belongs in the
+           bracket of the price the customer would actually pay. */
+        list = list.filter((p) => {
+          const price = effectivePriceAed(p);
+          return price >= bucket.min && price <= bucket.max;
+        });
       }
     }
 
     switch (sort) {
       case "price-asc":
-        list.sort((a, b) => a.priceAed - b.priceAed);
+        list.sort((a, b) => effectivePriceAed(a) - effectivePriceAed(b));
         break;
       case "price-desc":
-        list.sort((a, b) => b.priceAed - a.priceAed);
+        list.sort((a, b) => effectivePriceAed(b) - effectivePriceAed(a));
         break;
       case "new":
         list.sort((a, b) => Number(b.newArrival) - Number(a.newArrival));

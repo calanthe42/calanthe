@@ -11,6 +11,13 @@
  * <style> blocks, ignore most modern CSS, and Outlook renders with Word.
  * Brand tokens are written as literal hex here because an email cannot read
  * a CSS custom property.
+ *
+ * TWO LANGUAGES. `shell`, `para` and `button` take the reader's locale and
+ * default to English, so every template written before Arabic existed is
+ * untouched. Arabic turns the document right-to-left, swaps to a font stack
+ * that actually contains Arabic glyphs, and drops the letter-spacing and
+ * uppercase that suit Latin capitals and break joined Arabic letters. The
+ * bilingual copy itself lives beside its builders (quote-emails.ts).
  */
 import type {
   OrderFacts,
@@ -20,13 +27,34 @@ import type {
 } from "./types";
 
 /* Brand tokens, literal because email clients cannot resolve variables. */
-const OLIVE = "#2B2F1B";
-const CREAM = "#E4DCC5";
-const CANVAS = "#F3EFDF";
-const SAGE = "#868764";
-const HAIRLINE = "#CBC4A9";
+export const EMAIL_COLORS = {
+  olive: "#2B2F1B",
+  cream: "#E4DCC5",
+  canvas: "#F3EFDF",
+  sage: "#868764",
+  hairline: "#CBC4A9",
+} as const;
+const OLIVE = EMAIL_COLORS.olive;
+const CREAM = EMAIL_COLORS.cream;
+const CANVAS = EMAIL_COLORS.canvas;
+const SAGE = EMAIL_COLORS.sage;
+const HAIRLINE = EMAIL_COLORS.hairline;
 
-function escape(value: string): string {
+export type EmailLocale = "en" | "ar";
+
+/** Body and heading fonts. Georgia and Arial have no Arabic glyphs. */
+export function emailFonts(locale: EmailLocale): { body: string; display: string } {
+  return locale === "ar"
+    ? { body: "Tahoma,Arial,sans-serif", display: "Tahoma,Arial,sans-serif" }
+    : { body: "Arial,Helvetica,sans-serif", display: "Georgia,'Times New Roman',serif" };
+}
+
+const FOOTER: Record<EmailLocale, string> = {
+  en: "Calanthe &middot; Flower atelier, United Arab Emirates",
+  ar: "كالانثي &middot; أتيليه الزهور، الإمارات العربية المتحدة",
+};
+
+export function escape(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -40,30 +68,40 @@ export function formatMoney(fils: number): string {
   return `AED ${whole.toLocaleString("en-AE", { minimumFractionDigits: whole % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 })}`;
 }
 
-function shell(title: string, body: string): string {
-  return `<!doctype html><html><body style="margin:0;padding:0;background:${CANVAS};">
+export function shell(title: string, body: string, locale: EmailLocale = "en"): string {
+  const rtl = locale === "ar";
+  const dir = rtl ? "rtl" : "ltr";
+  const align = rtl ? "right" : "left";
+  const fonts = emailFonts(locale);
+  return `<!doctype html><html lang="${locale}" dir="${dir}"><body style="margin:0;padding:0;background:${CANVAS};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${CANVAS};padding:32px 16px;">
 <tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${CREAM};border:1px solid ${HAIRLINE};">
+<table role="presentation" dir="${dir}" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${CREAM};border:1px solid ${HAIRLINE};">
 <tr><td style="padding:32px 28px 8px;text-align:center;">
-<div style="font-family:Georgia,'Times New Roman',serif;letter-spacing:0.18em;text-transform:uppercase;font-size:15px;color:${OLIVE};">Calanthe</div>
+<div dir="ltr" style="font-family:Georgia,'Times New Roman',serif;letter-spacing:0.18em;text-transform:uppercase;font-size:15px;color:${OLIVE};">Calanthe</div>
 </td></tr>
-<tr><td style="padding:16px 28px 8px;">
-<h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:24px;line-height:1.25;color:${OLIVE};">${escape(title)}</h1>
+<tr><td style="padding:16px 28px 8px;text-align:${align};">
+<h1 style="margin:0 0 16px;font-family:${fonts.display};font-weight:400;font-size:24px;line-height:1.25;color:${OLIVE};">${escape(title)}</h1>
 ${body}
 </td></tr>
-<tr><td style="padding:24px 28px 32px;border-top:1px solid ${HAIRLINE};">
-<p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:${SAGE};">Calanthe &middot; Flower atelier, United Arab Emirates</p>
+<tr><td style="padding:24px 28px 32px;border-top:1px solid ${HAIRLINE};text-align:${align};">
+<p style="margin:0;font-family:${fonts.body};font-size:13px;line-height:1.6;color:${SAGE};">${FOOTER[locale]}</p>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
 
-function para(text: string): string {
-  return `<p style="margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65;color:${OLIVE};">${text}</p>`;
+/** `text` is trusted markup: escape anything a person typed before passing it. */
+export function para(text: string, locale: EmailLocale = "en"): string {
+  return `<p style="margin:0 0 14px;font-family:${emailFonts(locale).body};font-size:16px;line-height:1.65;color:${OLIVE};">${text}</p>`;
 }
 
-function button(href: string, label: string): string {
-  return `<p style="margin:24px 0;"><a href="${escape(href)}" style="display:inline-block;background:${OLIVE};color:${CREAM};text-decoration:none;padding:14px 28px;font-family:Georgia,'Times New Roman',serif;letter-spacing:0.18em;text-transform:uppercase;font-size:13px;">${escape(label)}</a></p>`;
+export function button(href: string, label: string, locale: EmailLocale = "en"): string {
+  /* Tracking and capitals are for Latin; spaced-out Arabic letters stop joining. */
+  const lettering =
+    locale === "ar"
+      ? `font-family:${emailFonts(locale).display};font-size:16px;`
+      : "font-family:Georgia,'Times New Roman',serif;letter-spacing:0.18em;text-transform:uppercase;font-size:13px;";
+  return `<p style="margin:24px 0;"><a href="${escape(href)}" style="display:inline-block;background:${OLIVE};color:${CREAM};text-decoration:none;padding:14px 28px;${lettering}">${escape(label)}</a></p>`;
 }
 
 function factsTable(order: OrderFacts): string {
@@ -153,11 +191,64 @@ export function passwordReset(input: { name?: string; url: string }): RenderedEm
 /* Orders — priced                                                     */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The discount lines of an order email, in both languages.
+ *
+ * The order emails themselves are still English-only (the bilingual shell is
+ * used by the payment-request emails so far), so `en` is what is sent today.
+ * The Arabic is kept beside it so that making these emails bilingual needs no
+ * new translation — it addresses the customer in the plural, like the rest
+ * of the storefront.
+ */
+export const ORDER_DISCOUNT_COPY = {
+  en: {
+    discountRow: (code: string) => `Discount (${code})`,
+    saved: (amount: string) => `You saved ${amount} on this order.`,
+    ownerCode: (code: string, amount: string) => `Discount code ${code}: ${amount}.`,
+    ownerSale: (amount: string) => `Sale savings included: ${amount}.`,
+  },
+  ar: {
+    discountRow: (code: string) => `خصم (${code})`,
+    saved: (amount: string) => `وفّرتم ${amount} في هذا الطلب.`,
+    ownerCode: (code: string, amount: string) => `رمز الخصم ${code}: ${amount}.`,
+    ownerSale: (amount: string) => `توفير العروض ضمن الإجمالي: ${amount}.`,
+  },
+} as const;
+
+/** "−AED 56", held left-to-right so the minus stays in front of the number. */
+const minusMoney = (fils: number): string => `\u2212${formatMoney(fils)}`;
+const minusMoneyHtml = (fils: number): string => `<span dir="ltr">&minus;${formatMoney(fils)}</span>`;
+
 export function orderConfirmation(order: PricedOrder): RenderedEmail {
+  const copy = ORDER_DISCOUNT_COPY.en;
+  const label = `padding:4px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${SAGE};`;
+  const amount = `padding:4px 0;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${OLIVE};`;
+  const delivery = order.deliveryFee.fils === 0 ? "Complimentary" : formatMoney(order.deliveryFee.fils);
+
+  /* Subtotal (after sale prices) → code → delivery → total. The code row and
+     the "you saved" line appear only when there is something to say. */
+  const discountRow = order.discount
+    ? `\n<tr><td style="${label}">${escape(copy.discountRow(order.discount.code))}</td><td style="${amount}">${minusMoneyHtml(order.discount.fils)}</td></tr>`
+    : "";
+  const savedLine =
+    order.savings && order.savings.fils > 0
+      ? `<p style="margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:${SAGE};">${escape(copy.saved(formatMoney(order.savings.fils)))}</p>`
+      : "";
+
   const totals = `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 8px;">
-<tr><td style="padding:4px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${SAGE};">Subtotal</td><td style="padding:4px 0;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${OLIVE};">${formatMoney(order.subtotal.fils)}</td></tr>
-<tr><td style="padding:4px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${SAGE};">Delivery</td><td style="padding:4px 0;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${OLIVE};">${order.deliveryFee.fils === 0 ? "Complimentary" : formatMoney(order.deliveryFee.fils)}</td></tr>
+<tr><td style="${label}">Subtotal</td><td style="${amount}">${formatMoney(order.subtotal.fils)}</td></tr>${discountRow}
+<tr><td style="${label}">Delivery</td><td style="${amount}">${delivery}</td></tr>
 <tr><td style="padding:10px 0 0;border-top:1px solid ${HAIRLINE};font-family:Georgia,serif;font-size:15px;color:${OLIVE};">Total</td><td style="padding:10px 0 0;border-top:1px solid ${HAIRLINE};text-align:right;font-family:Georgia,serif;font-size:19px;color:${OLIVE};">${formatMoney(order.total.fils)}</td></tr></table>`;
+
+  const totalsText = [
+    `Subtotal: ${formatMoney(order.subtotal.fils)}`,
+    order.discount ? `${copy.discountRow(order.discount.code)}: ${minusMoney(order.discount.fils)}` : null,
+    `Delivery: ${delivery}`,
+    `Total: ${formatMoney(order.total.fils)}`,
+    order.savings && order.savings.fils > 0 ? copy.saved(formatMoney(order.savings.fils)) : null,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 
   return {
     subject: `Order ${order.orderNumber} — Calanthe`,
@@ -170,15 +261,25 @@ export function orderConfirmation(order: PricedOrder): RenderedEmail {
         factsTable(order) +
         lineItems(order) +
         totals +
+        savedLine +
         para(
           `<span style="font-size:13px;color:${SAGE};">Your payment has been received with thanks.</span>`,
         ),
     ),
-    text: `Thank you, ${order.customerName}.\n\nYour florist composes the arrangement by hand and sends a photograph for your approval on WhatsApp before it leaves.\n\n${factsText(order)}\n\nSubtotal: ${formatMoney(order.subtotal.fils)}\nDelivery: ${order.deliveryFee.fils === 0 ? "Complimentary" : formatMoney(order.deliveryFee.fils)}\nTotal: ${formatMoney(order.total.fils)}\n\nYour payment has been received with thanks.\n\nCalanthe`,
+    text: `Thank you, ${order.customerName}.\n\nYour florist composes the arrangement by hand and sends a photograph for your approval on WhatsApp before it leaves.\n\n${factsText(order)}\n\n${totalsText}\n\nYour payment has been received with thanks.\n\nCalanthe`,
   };
 }
 
 export function ownerNewOrder(order: PricedOrder): RenderedEmail {
+  const copy = ORDER_DISCOUNT_COPY.en;
+  /* Why the total is lower than list price, at a glance. */
+  const why = [
+    order.discount ? copy.ownerCode(order.discount.code, minusMoney(order.discount.fils)) : null,
+    order.saleSavings && order.saleSavings.fils > 0
+      ? copy.ownerSale(formatMoney(order.saleSavings.fils))
+      : null,
+  ].filter((line): line is string => line !== null);
+
   return {
     subject: `New order ${order.orderNumber} — ${formatMoney(order.total.fils)}`,
     html: shell(
@@ -188,9 +289,12 @@ export function ownerNewOrder(order: PricedOrder): RenderedEmail {
       ) +
         factsTable(order) +
         lineItems(order) +
-        para(`<strong>Total ${formatMoney(order.total.fils)}</strong> — paid by card (Stripe).`),
+        para(`<strong>Total ${formatMoney(order.total.fils)}</strong> — paid by card (Stripe).`) +
+        (why.length > 0 ? para(why.map(escape).join("<br>")) : ""),
     ),
-    text: `New order ${order.orderNumber}\n\n${order.customerName}\n${order.customerEmail}\n${order.customerPhone}\n\n${factsText(order)}\n\nTotal: ${formatMoney(order.total.fils)} — paid by card (Stripe).`,
+    text: `New order ${order.orderNumber}\n\n${order.customerName}\n${order.customerEmail}\n${order.customerPhone}\n\n${factsText(order)}\n\nTotal: ${formatMoney(order.total.fils)} — paid by card (Stripe).${
+      why.length > 0 ? `\n${why.join("\n")}` : ""
+    }`,
   };
 }
 

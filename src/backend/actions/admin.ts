@@ -8,7 +8,7 @@ import { getMediaUsage } from "@backend/data/media-usage";
 import { MAX_UPLOAD_BYTES, UPLOAD_MIME_TYPES } from "@/lib/uploads";
 import { followUpIsoFromDateInput } from "@backend/domain/dates";
 import { FormInputError } from "@backend/domain/form-error";
-import { listNames, toMediaOption, type MediaOption } from "@backend/domain/media-option";
+import { listNames, toMediaOption } from "@backend/domain/media-option";
 import {
   parseAedToFils,
   parseIdList,
@@ -26,7 +26,15 @@ import {
   sameDescription,
 } from "@backend/domain/richtext";
 import { sendStatusEmailAfterCommit } from "@backend/email/status-email";
-import { diffFields, recordActivity, type Actor } from "@backend/activity/record";
+import { diffFields, recordActivity } from "@backend/activity/record";
+import { isUnpaidQuote } from "@backend/payments/pay-link";
+import {
+  actorOf,
+  failure,
+  type ActionResult as SharedActionResult,
+  type ActionVars as SharedActionVars,
+} from "./admin-shared";
+import { cancelPaymentRequest } from "./quotes";
 
 /**
  * Every write the business admin performs.
@@ -38,8 +46,8 @@ import { diffFields, recordActivity, type Actor } from "@backend/activity/record
  * payment state. The admin UI is a client of the permission model, not an
  * exception to it — if an action is refused here, that is the model working.
  *
- * The only file in the codebase that does use overrideAccess is
- * actions/checkout.ts, for the documented reason stated there.
+ * The files that do use overrideAccess are actions/checkout.ts and
+ * actions/quotes.ts, each for the documented reason stated at its top.
  *
  * Parsing lives in backend/domain (pure, unit-tested). These functions do only
  * what needs a server: who is asking, saving, and refreshing the pages that
@@ -51,11 +59,12 @@ import { diffFields, recordActivity, type Actor } from "@backend/activity/record
  * itself stays free of any knowledge of languages.
  */
 
-export type ActionVars = Record<string, string | number>;
-
-export type ActionResult =
-  | { ok: true; message: string; code?: string; vars?: ActionVars; id?: number; media?: MediaOption }
-  | { ok: false; message: string; code?: string; vars?: ActionVars };
+/* The result shape and the two helpers every admin action file shares live in
+   admin-shared.ts — a "use server" file may export only async functions, so
+   they could not be imported from here by actions/quotes.ts. The type is
+   re-declared (not re-exported) so existing imports keep working. */
+export type ActionVars = SharedActionVars;
+export type ActionResult = SharedActionResult;
 
 type Failure = Extract<ActionResult, { ok: false }>;
 
@@ -63,66 +72,6 @@ async function authed() {
   const payload = await getPayload({ config });
   const { user } = await payload.auth({ headers: await nextHeaders() });
   return { payload, user };
-}
-
-/** The signed-in person, in the shape the activity log stores. */
-function actorOf(user: unknown): Actor {
-  const u = (user ?? {}) as { id?: number; email?: string; name?: string; role?: string };
-  return { id: u.id, email: u.email, name: u.name, role: u.role };
-}
-
-type ValidationDetail = { message?: unknown; path?: unknown };
-
-/** Turns anything thrown into a sentence a florist can act on. */
-function failure(error: unknown, fallback: string, fallbackCode: string, uniqueField?: "slug"): Failure {
-  if (error instanceof FormInputError) {
-    return {
-      ok: false,
-      message: error.message,
-      code: error.code ? `actions.validation.${error.code}` : undefined,
-      vars: error.vars,
-    };
-  }
-
-  const raw = error instanceof Error ? error.message : "";
-  if (/not allowed|forbidden|unauthori[sz]ed/i.test(raw)) {
-    return { ok: false, message: "You do not have permission to do that.", code: "actions.permission" };
-  }
-
-  const details = (error as { data?: { errors?: ValidationDetail[] } } | null)?.data?.errors;
-  const first = Array.isArray(details) ? details[0] : undefined;
-  const detail = typeof first?.message === "string" ? first.message : "";
-  const combined = `${raw} ${detail} ${typeof first?.path === "string" ? first.path : ""}`;
-
-  if (/unique|duplicate|already/i.test(combined)) {
-    /* When the driver does not name the column, the caller says which
-       field is the only unique one it could have tripped. */
-    const field = (typeof first?.path === "string" && first.path) || uniqueField || "";
-    if (/slug/i.test(field) || /slug/i.test(combined) || /duplicate key/i.test(raw)) {
-      return {
-        ok: false,
-        message: "That web address is already in use. Choose a different one.",
-        code: "actions.slugTaken",
-      };
-    }
-    /* A photo whose file name is already in the library. Payload does not
-       rename on collision with remote storage; the owner has to. */
-    if (/filename/i.test(field)) {
-      return {
-        ok: false,
-        message: "A photo with that file name is already in the library. Rename the file and upload it again.",
-        code: "actions.fileNameTaken",
-      };
-    }
-    /* Any other unique field: still a sentence, never "Value must be unique". */
-    return { ok: false, message: "That value is already in use. Choose a different one.", code: "actions.valueTaken" };
-  }
-  /* Validation errors thrown by the collections' hooks are already written
-     for people, in English. Anything long or multi-line is a stack, never
-     shown. */
-  if (detail && detail.length < 200) return { ok: false, message: detail };
-  if (raw && raw.length < 300 && !raw.includes("\n")) return { ok: false, message: raw };
-  return { ok: false, message: fallback, code: fallbackCode };
 }
 
 /**
@@ -491,6 +440,22 @@ export async function updateOrderFulfilment(
       .findByID({ collection: "orders", id, depth: 0, overrideAccess: true })
       .catch(() => null)) as Record<string, unknown> | null;
     const previousStatus = String(before?.fulfilmentStatus ?? "");
+
+    /* A PAYMENT REQUEST NOBODY HAS PAID FOR IS NOT AN ORDER YET.
+       Advancing one would email "your order is confirmed" for flowers that
+       have not been paid for, so the only move allowed is to cancel it — and
+       cancelling means cancelling the request properly (the Stripe intent
+       and the enquiry too), not just flipping a status. The collection
+       enforces the same rule for anything that bypasses this action
+       (guardUnpaidQuoteFulfilment). */
+    if (before && isUnpaidQuote(before as { source?: string | null; paymentStatus?: string | null })) {
+      if (fulfilmentStatus === "CANCELLED") return cancelPaymentRequest(id);
+      return {
+        ok: false,
+        message: "This order is waiting for payment and cannot be moved yet.",
+        code: "actions.order.awaitingPayment",
+      };
+    }
 
     const updated = await payload.update({
       collection: "orders",

@@ -4,6 +4,7 @@ import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
+import { Discounts } from "@/collections/Discounts";
 import { Enquiries } from "@/collections/Enquiries";
 import { Events } from "@/collections/Events";
 import { Media } from "@/collections/Media";
@@ -52,7 +53,7 @@ export default buildConfig({
       titleSuffix: " · Calanthe Admin",
     },
   },
-  collections: [Users, Media, Occasions, Products, Orders, Events, Enquiries, Memberships, EmailLog, ActivityLog],
+  collections: [Users, Media, Occasions, Products, Discounts, Orders, Events, Enquiries, Memberships, EmailLog, ActivityLog],
   /* Payload's own verification and reset mail goes through the same path
      as everything else: allowlisted outside production, never thrown on
      failure, and always logged with the provider's id. */

@@ -16,6 +16,13 @@ import {
   isEmailableStatus,
 } from "@backend/email/templates";
 import { describeOptions } from "@backend/email/order-emails";
+import { buildQuotePaidEmails, quoteFactsFromOrder } from "@backend/email/quote-emails";
+import { buildInvoice } from "@backend/domain/invoice";
+import { QUOTE_SOURCE, payLinkOrigin, payToken, payUrl } from "@backend/payments/pay-link";
+import type { Order } from "@/payload-types";
+import { BUSINESS } from "@/lib/business";
+import { SITE_ORIGIN } from "@/lib/site";
+import { resendPaymentRequest } from "./quotes";
 import type { EmailType, RecipientFacing, RenderedEmail } from "@backend/email/types";
 import { env } from "@/lib/env";
 
@@ -59,6 +66,21 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
 
   let rendered: RenderedEmail | null = null;
   let orderId: number | undefined;
+
+  /* A PAYMENT REQUEST IS NOT REPLAYED, IT IS RE-ISSUED. Sending the old
+     email again would send a link that may have expired. The quotes action
+     extends the link, replaces a cancelled intent, throttles, and writes its
+     own log row and activity entry — so this hands over to it entirely. */
+  if (type === "payment-request") {
+    const i18n = await getAdminI18n();
+    if (!original.order) return { ok: false, message: i18n.t("emailLog.errors.orderGone") };
+    const result = await resendPaymentRequest(Number(original.order));
+    revalidatePath("/admin/emails");
+    const said = i18n.resolve(result.code, result.vars, result.message);
+    return result.ok && result.code === "actions.quote.resent"
+      ? { ok: true, status: "sent" }
+      : { ok: false, message: said };
+  }
 
   if (original.order) {
     const order = (await payload
@@ -124,6 +146,32 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
       else if (type === "order-status") {
         const status = String(order.fulfilmentStatus ?? "");
         if (isEmailableStatus(status)) rendered = orderStatus(facts, status);
+      } else if (type === "payment-received" || type === "owner-quote-paid") {
+        /* Both carry the invoice, so both need one to exist: an order that
+           has not been paid has nothing to thank anybody for. */
+        const quote = order as unknown as Order;
+        if (quote.source !== QUOTE_SOURCE || !quote.invoiceNumber) {
+          return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.notPaidYet") };
+        }
+        const locale = quote.locale === "ar" ? "ar" : "en";
+        const origin = payLinkOrigin(SITE_ORIGIN, {
+          env: process.env.VERCEL_ENV,
+          branchUrl: process.env.VERCEL_BRANCH_URL,
+        });
+        rendered =
+          buildQuotePaidEmails(
+            {
+              order: quoteFactsFromOrder(quote),
+              invoice: buildInvoice(quote, BUSINESS),
+              payUrl: quote.payTokenSalt
+                ? payUrl(origin, payToken(env.PAYLOAD_SECRET, quote.payTokenSalt), locale)
+                : origin,
+              adminOrderUrl: `${origin}/admin/orders/${encodeURIComponent(String(quote.orderNumber))}`,
+              locale,
+            },
+            /* Rebuilt for whoever the original went to. */
+            { owner: to },
+          ).find((request) => request.type === type)?.rendered ?? null;
       }
     }
   }
