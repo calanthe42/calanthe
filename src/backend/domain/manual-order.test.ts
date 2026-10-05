@@ -103,7 +103,7 @@ describe("parseManualOrderForm", () => {
     );
     expect(
       parseManualOrderForm(form({ pickup: "on", deliveryAddress: "", locale: "ar" }), CTX).deliveryAddress,
-    ).toBe("استلام من كالانث");
+    ).toBe("استلام من كالانثي");
   });
 
   it("allows a sale written up afterwards, but not from another year", () => {

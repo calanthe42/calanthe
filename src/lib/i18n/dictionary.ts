@@ -2640,7 +2640,7 @@ export const ar: typeof en = {
       amountDue: "المبلغ المستحق",
       unpaidLine: "بانتظار الدفع.",
       voidLine: "أُلغيت هذه الفاتورة وهي غير مستحقة الدفع.",
-      thanks: "شكراً لاختياركم كالانث.",
+      thanks: "شكراً لاختياركم كالانثي.",
       licence: "الرخصة التجارية {number}",
       download: "تنزيل PDF",
       missingTitle: "لم نعثر على هذه الفاتورة.",

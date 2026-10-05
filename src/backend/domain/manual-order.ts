@@ -42,7 +42,7 @@ const UAE_NOON = "T12:00:00+04:00";
 
 export const PICKUP_ADDRESS: Record<ManualLocale, string> = {
   en: "Collected from Calanthe",
-  ar: "استلام من كالانث",
+  ar: "استلام من كالانثي",
 };
 
 const oneLine = (value: string): string => value.replace(/\s+/g, " ").trim();
