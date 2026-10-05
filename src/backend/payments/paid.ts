@@ -5,6 +5,7 @@ import { saleSavingsOfItems } from "@backend/domain/checkout-order";
 import { buildInvoice, invoiceYear, vatIncludedFils } from "@backend/domain/invoice";
 import { buildOrderEmails, describeOptions } from "@backend/email/order-emails";
 import { buildQuotePaidEmails, quoteFactsFromOrder } from "@backend/email/quote-emails";
+import { internalAddresses } from "@backend/email/internal";
 import { sendAfterCommit } from "@backend/email/send";
 import { PAYMENT_PROVIDER_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
 import { BUSINESS, currentVatRateBps } from "@/lib/business";
@@ -272,7 +273,7 @@ export async function applySucceededIntent(
   }
 
   /* ---- 5. winner only ---- */
-  const internal = env.EMAIL_REPLY_TO ? { owner: env.EMAIL_REPLY_TO, florist: env.EMAIL_REPLY_TO } : {};
+  const internal = internalAddresses();
 
   if (isQuote) {
     await afterQuotePaid(payload, o, {

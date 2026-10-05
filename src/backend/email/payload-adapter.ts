@@ -13,6 +13,7 @@
  * with the provider's id in it.
  */
 import type { EmailAdapter, SendEmailOptions } from "payload";
+import { COMPANY_EMAIL } from "@/lib/data";
 import { env } from "@/lib/env";
 import { sendEmail } from "./send";
 import type { EmailType } from "./types";
@@ -51,7 +52,7 @@ function stripHtml(html: string): string {
 
 export const calantheEmailAdapter: EmailAdapter = ({ payload }) => ({
   name: "calanthe",
-  defaultFromAddress: env.EMAIL_FROM ?? "orders@calanthe.ae",
+  defaultFromAddress: env.EMAIL_FROM ?? COMPANY_EMAIL.orders,
   defaultFromName: "Calanthe",
   async sendEmail(message: SendEmailOptions) {
     const to = firstAddress(message.to);

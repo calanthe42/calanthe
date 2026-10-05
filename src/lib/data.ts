@@ -872,11 +872,34 @@ export const VIDEO_APPROVAL = {
   ],
 } as const;
 
+/**
+ * The company's own mailboxes at calanthe.ae — real inboxes, each with one
+ * job. Written out once, here, so no screen, email or invoice ever carries a
+ * personal address again.
+ *
+ *   orders     the sender of every order, payment and account email
+ *   support    what customers see and write to; where their replies land
+ *   manager    the owner: "an order arrived", "a payment was received"
+ *   staff      the florist's job sheets
+ *   dev        the developer: technical alerts
+ *   marketing  reserved for newsletters (nothing sends from it yet)
+ *   careers    reserved for job applications (no page uses it yet)
+ */
+export const COMPANY_EMAIL = {
+  orders: "orders@calanthe.ae",
+  support: "support@calanthe.ae",
+  manager: "manager@calanthe.ae",
+  staff: "staff@calanthe.ae",
+  dev: "dev@calanthe.ae",
+  marketing: "marketing@calanthe.ae",
+  careers: "careers@calanthe.ae",
+} as const;
+
 export const CONTACT = {
   whatsapp: "+971 56 211 2733",
   whatsappHref: "https://wa.me/971562112733",
   instagramHandle: "@calanthe.ae",
   instagramHref: "https://instagram.com/calanthe.ae",
-  email: "calanthe.ae@gmail.com",
+  email: COMPANY_EMAIL.support,
   site: "www.calanthe.ae",
 } as const;

@@ -224,3 +224,35 @@ production. No fake values committed.
 | Provider throws | Row `failed` after 3 attempts, order unaffected |
 | Duplicate Resend webhook | Idempotent |
 | Order email renders from snapshot | Unchanged after the product is edited |
+
+## Company mailboxes (calanthe.ae, added 2026-10-05)
+
+Seven real mailboxes exist at calanthe.ae (NevTan Mail; MX, SPF, DKIM, DMARC
+and Autodiscover are set up — the app changes none of that). The app SENDS
+through Resend, whose own records (`resend._domainkey`, `send.calanthe.ae`)
+sit beside them; replies and everything customers write arrive in the
+mailboxes.
+
+| Mailbox | What the app uses it for | Setting (optional override) |
+| --- | --- | --- |
+| `orders@calanthe.ae` | The sender of every order, payment, invoice and account email | `EMAIL_FROM` = `Calanthe <orders@calanthe.ae>` |
+| `support@calanthe.ae` | The address customers see (footer, invoice, search engines) and where their replies land | `EMAIL_REPLY_TO` |
+| `manager@calanthe.ae` | The owner's notices: an order arrived, a payment was received | `EMAIL_OWNER` |
+| `staff@calanthe.ae` | The florist's job sheets | `EMAIL_STAFF` |
+| `dev@calanthe.ae` | The developer's admin account and technical alerts | — |
+| `marketing@calanthe.ae` | Reserved for newsletters. Nothing sends from it yet | — |
+| `careers@calanthe.ae` | Reserved for job applications. No page uses it yet | — |
+
+The addresses are written once, in `src/lib/data.ts` (`COMPANY_EMAIL`), and
+chosen in `src/backend/email/internal.ts`. With nothing configured the app
+already uses them; the three settings above only override.
+
+**Someone must read `manager@`, `staff@` and `support@`.** Order notices and
+customers' replies now arrive there and nowhere else.
+
+**Admin sign-in.** Accounts are people, not mailboxes, and live in the
+database — the app does not create them. In Admin → Staff the owner's account
+should use `manager@calanthe.ae`, the florist's `staff@calanthe.ae` and the
+developer's `dev@calanthe.ae`, so that "forgot password" emails reach a
+mailbox the business owns.
+

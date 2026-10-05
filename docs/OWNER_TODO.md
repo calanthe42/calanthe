@@ -35,7 +35,7 @@ marked placeholder and the storefront shows nothing that depends on them.
 | # | Fact | Blocks | Added |
 | --- | --- | --- | --- |
 | 11 | Legal business name, address, VAT/TRN number, invoice logo | A6 — invoices are not legal documents without them | 2026-09-25 |
-| 12 | Owner + florist notification email addresses | A2 — who gets told an order arrived | 2026-09-25 |
+| 12 | ~~Owner + florist notification email addresses~~ **Done 2026-10-05:** owner → `manager@calanthe.ae`, florist → `staff@calanthe.ae` (see docs/EMAILS.md, "Company mailboxes") | A2 — who gets told an order arrived | 2026-09-25 |
 | 13 | Delivery zones, fees, free-delivery threshold, same-day cut-off, time windows | A7 — today these are constants in `lib/data.ts`; A1 moves them to Settings seeded with today's values, which are **assumptions, not confirmed rules** | 2026-09-25 |
 | 14 | Refund policy — window, and who approves | A5/A6 — the code and the policy page must agree | 2026-09-25 |
 | 15 | Tabby basket minimum and maximum | Track C — the eligibility rule is server-side | 2026-09-25 |
@@ -240,7 +240,7 @@ number. All four live in `src/lib/business.ts`.
 | 34 | **Registered address**, in English and Arabic | Seller block of every invoice | 2026-10-04 |
 | 35 | **Trade licence number** | Seller block of every invoice | 2026-10-04 |
 | 36 | **TRN (15 digits)** — only if and when the business registers for VAT. VAT is OFF today by your decision: invoices are titled "Invoice", with no VAT line. Switching it on is a three-line change in `src/lib/business.ts` and the build refuses it without a TRN and a legal name. Confirm with your accountant first. | Tax invoices | 2026-10-04 |
-| 37 | **One address for the owner and one for the florist.** Today both the "paid" notice and the florist's job sheet go to the single reply-to address. | Internal emails | 2026-10-04 |
+| 37 | ~~**One address for the owner and one for the florist.**~~ **Done 2026-10-05:** the "paid" notice goes to `manager@calanthe.ae`, the florist's job sheet to `staff@calanthe.ae`. | Internal emails | 2026-10-04 |
 | 38 | **Subscribe the Stripe webhook endpoint to `charge.refunded` and `charge.dispute.created`** (Stripe dashboard → Developers → Webhooks). The site now writes a note on the order when either happens, but only if Stripe sends them. | Order internal notes | 2026-10-04 |
 | 39 | **Register `www.calanthe.ae` for Apple Pay** in Stripe (Settings → Payment method domains), on the live account, before the payment-link page goes live. | /pay page | 2026-10-04 |
 

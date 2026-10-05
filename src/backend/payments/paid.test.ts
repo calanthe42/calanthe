@@ -10,6 +10,8 @@ vi.mock("@/lib/env", () => ({
     PAYLOAD_SECRET: "s".repeat(40),
     EMAIL_FROM: "Calanthe <orders@calanthe.ae>",
     EMAIL_REPLY_TO: "owner@example.com",
+    EMAIL_OWNER: "owner@example.com",
+    EMAIL_STAFF: "owner@example.com",
     /* Outside production only allowlisted addresses are emailed. */
     EMAIL_ALLOWLIST: "@example.com",
   },

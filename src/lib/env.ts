@@ -38,11 +38,12 @@ const schema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   /** e.g. `Calanthe <orders@calanthe.ae>` — must be on the verified domain. */
   EMAIL_FROM: z.string().min(3).optional(),
-  /**
-   * Where a customer's reply goes, and — until the owner supplies real
-   * addresses — where owner and florist notifications are sent.
-   */
+  /** Where a customer's reply goes. Defaults to support@calanthe.ae. */
   EMAIL_REPLY_TO: z.string().email().optional(),
+  /** The owner's notices ("an order arrived"). Defaults to manager@calanthe.ae. */
+  EMAIL_OWNER: z.string().email().optional(),
+  /** The florist's job sheets. Defaults to staff@calanthe.ae. */
+  EMAIL_STAFF: z.string().email().optional(),
   /**
    * Comma-separated addresses a NON-PRODUCTION deployment may email.
    * Preview runs against a copy of real customer data; without this, testing

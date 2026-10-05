@@ -5,6 +5,7 @@ import { getAdminI18n } from "@admin/i18n/server";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { internalAddresses } from "@backend/email/internal";
 import { sendEmail } from "@backend/email/send";
 import {
   floristJobSheet,
@@ -219,5 +220,6 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
 
 /** Where owner and florist mail is going today, for the admin to display. */
 export async function internalEmailDestination(): Promise<string | null> {
-  return env.EMAIL_REPLY_TO ?? null;
+  const { owner, florist } = internalAddresses();
+  return owner === florist ? owner : `${owner}, ${florist}`;
 }

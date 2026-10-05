@@ -18,6 +18,7 @@ import {
   buildQuotePaidEmails,
   quoteFactsFromOrder,
 } from "@backend/email/quote-emails";
+import { internalAddresses } from "@backend/email/internal";
 import { sendAfterCommit, sendEmail } from "@backend/email/send";
 import { MANUAL_PAYMENT_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
 import { claimInvoice, issueInvoice, stampPaid } from "@backend/payments/invoice-number";
@@ -213,7 +214,7 @@ async function settleOutside(
         vatRateBps,
         vatIncludedFils: vatFils,
       };
-      const internal = env.EMAIL_REPLY_TO ? { owner: env.EMAIL_REPLY_TO, florist: env.EMAIL_REPLY_TO } : {};
+      const internal = internalAddresses();
       const requests = buildQuotePaidEmails(
         {
           order: quoteFactsFromOrder(paid),

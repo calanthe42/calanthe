@@ -28,7 +28,7 @@ describe("structured data claims nothing the business cannot back", () => {
   it("describes the florist with real contact details only", () => {
     const data = floristJsonLd();
     expect(data["@type"]).toBe("Florist");
-    expect(data.email).toBe("calanthe.ae@gmail.com");
+    expect(data.email).toBe("support@calanthe.ae");
     expect(data.telephone).toBe("+971 56 211 2733");
     /* No guessed street address: a wrong one in structured data is the
        single SEO error that costs a real delivery. */

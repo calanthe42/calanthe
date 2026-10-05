@@ -18,6 +18,7 @@
 import type { Payload } from "payload";
 import { env } from "@/lib/env";
 import { decideRecipient } from "./allowlist";
+import { replyToAddress } from "./internal";
 import { resendProvider } from "./resend";
 import type { EmailProvider, SendOutcome, SendRequest } from "./types";
 
@@ -71,7 +72,7 @@ export async function sendEmail(
         allowlist: env.EMAIL_ALLOWLIST,
       });
       outcome = decision.allowed
-        ? await provider.send(request, from, env.EMAIL_REPLY_TO)
+        ? await provider.send(request, from, replyToAddress())
         : { status: "suppressed", error: decision.reason };
     }
   } catch (error) {
