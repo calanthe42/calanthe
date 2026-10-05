@@ -6,10 +6,14 @@ import {
   isStaffField,
   isStaffOrOwnerOf,
   nobody,
+  serverOnlyField,
 } from "@backend/payload/access";
 import { filsField } from "@backend/payload/fields/money";
 import {
+  guardInvoiceNumber,
   guardPaymentStatus,
+  guardUnpaidQuoteFulfilment,
+  validateBespokeLines,
   validateCustomerType,
   validateOrderTotals,
 } from "@backend/payload/hooks/orderIntegrity";
@@ -52,7 +56,13 @@ export const Orders: CollectionConfig = {
       "deliveryDate",
     ],
     description: "Placed orders. The snapshot is permanent; only fulfilment moves.",
-    listSearchableFields: ["orderNumber", "customerName", "customerEmail", "customerPhone"],
+    listSearchableFields: [
+      "orderNumber",
+      "customerName",
+      "customerEmail",
+      "customerPhone",
+      "couponCode",
+    ],
   },
   access: {
     /* Staff see everything; a signed-in customer sees only their own, as a
@@ -71,8 +81,13 @@ export const Orders: CollectionConfig = {
     delete: nobody,
   },
   hooks: {
-    beforeValidate: [validateOrderTotals, validateCustomerType],
-    beforeChange: [assignOrderNumber, guardPaymentStatus],
+    beforeValidate: [validateOrderTotals, validateBespokeLines, validateCustomerType],
+    beforeChange: [
+      assignOrderNumber,
+      guardPaymentStatus,
+      guardInvoiceNumber,
+      guardUnpaidQuoteFulfilment,
+    ],
     /* NO EMAIL HOOK HERE, DELIBERATELY. A hook that sends the status email
        runs inside Payload's transaction and writes an email_log row through
        a second connection — the outer transaction holds one while the inner
@@ -95,6 +110,37 @@ export const Orders: CollectionConfig = {
         position: "sidebar",
         readOnly: true,
         description: "Assigned automatically from a Postgres sequence. Never reused.",
+      },
+    },
+    {
+      name: "enquiry",
+      type: "relationship",
+      relationTo: "enquiries",
+      index: true,
+      /* Set once, when a florist confirms an enquiry and asks for payment
+         (backend/actions/quotes.ts). Staff-read only: a customer reading
+         their own order through REST has no business following it back into
+         the lead queue. */
+      access: { ...immutableAfterCreate, read: isStaffField },
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        description: "The enquiry this payment request was confirmed from. Empty for shop orders.",
+      },
+    },
+    {
+      name: "locale",
+      type: "select",
+      defaultValue: "en",
+      options: [
+        { label: "English", value: "en" },
+        { label: "العربية", value: "ar" },
+      ],
+      access: immutableAfterCreate,
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        description: "The language the customer is written to.",
       },
     },
 
@@ -212,6 +258,13 @@ export const Orders: CollectionConfig = {
           access: immutableAfterCreate,
           admin: { description: "Directions the customer gave. Not internal notes." },
         },
+        {
+          name: "customerNote",
+          type: "textarea",
+          maxLength: 600,
+          access: immutableAfterCreate,
+          admin: { description: "Shown to the customer in the payment email and page." },
+        },
       ],
     },
 
@@ -279,6 +332,31 @@ export const Orders: CollectionConfig = {
         { name: "quantity", type: "number", required: true, min: 1 },
         filsField({ name: "unitPriceFils", required: true, label: "Unit price (fils)" }),
         filsField({ name: "lineTotalFils", required: true, label: "Line total (fils)" }),
+        /* ---- Sale snapshot ----
+           `unitPriceFils` above is what was PAID per unit, the sale already
+           applied. These record what it would have cost and what the sale
+           was called, copied at checkout so the receipt reads the same after
+           the sale has ended, been edited or been deleted. */
+        filsField({
+          name: "compareAtUnitPriceFils",
+          label: "Regular unit price (fils)",
+          admin: {
+            description:
+              "The full unit price before the sale (arrangement + add-ons). Empty when the line was not on sale.",
+          },
+        }),
+        { name: "saleLabelEn", type: "text", maxLength: 28 },
+        { name: "saleLabelAr", type: "text", maxLength: 28 },
+        {
+          name: "sale",
+          type: "relationship",
+          relationTo: "discounts",
+          /* Reporting only, like `product` above — and staff-read only: a
+             customer reading their own order through REST must not be handed
+             a pointer into the owner's discount list. */
+          access: { read: isStaffField },
+          admin: { description: "Reporting link only. Never read for display or price." },
+        },
         {
           name: "selectedOptions",
           type: "array",
@@ -347,6 +425,39 @@ export const Orders: CollectionConfig = {
           label: "Coupon discount (fils)",
           access: immutableAfterCreate,
         }),
+        {
+          name: "couponDiscount",
+          type: "relationship",
+          relationTo: "discounts",
+          index: true,
+          /* Reporting link, and the row the webhook counts a use against
+             (backend/payments/redeem.ts). Staff-read only. */
+          access: { ...immutableAfterCreate, read: isStaffField },
+          admin: { readOnly: true, description: "The discount code this order used." },
+        },
+        {
+          name: "discountSnapshot",
+          type: "json",
+          /* WHY the discount was that amount: the rule's terms as they stood
+             at checkout — { coupon: {...} | null, sales: [...] }. It carries
+             the owner's INTERNAL titles, so it is staff-read only; what a
+             customer may see is in couponCode and the line labels. Present
+             only on an order that had a sale or a code. */
+          access: { ...immutableAfterCreate, read: isStaffField },
+          admin: { readOnly: true, description: "The discount rules as they stood at checkout." },
+        },
+        {
+          name: "couponRedeemedAt",
+          type: "date",
+          /* Set by one SQL statement when the order is PAID, and that
+             statement is also what makes counting a use exactly-once. */
+          access: { create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: "dayAndTime" },
+            description: "When this order was counted as a use of its code.",
+          },
+        },
       ],
     },
 
@@ -395,12 +506,105 @@ export const Orders: CollectionConfig = {
       },
     },
 
-    /* ---------------- Internal management ---------------- */
+    /* ---------------- Payment link & invoice ----------------
+     *
+     * Written by the server only (overrideAccess inside a trusted path):
+     * backend/actions/quotes.ts mints the link, backend/payments/intent.ts
+     * stores the PaymentIntent, backend/payments/invoice-number.ts allocates
+     * the invoice. Nothing here can be authored through REST, GraphQL or
+     * /cms by any role.
+     *
+     * The salt and the hash are unreadable too: the link itself is
+     * HMAC(PAYLOAD_SECRET, salt), so neither the database alone nor an API
+     * read can ever yield a working link. */
+    {
+      name: "payTokenSalt",
+      type: "text",
+      access: { create: serverOnlyField, read: serverOnlyField, update: serverOnlyField },
+      admin: { hidden: true },
+    },
+    {
+      name: "payTokenHash",
+      type: "text",
+      unique: true,
+      index: true,
+      access: { create: serverOnlyField, read: serverOnlyField, update: serverOnlyField },
+      admin: { hidden: true },
+    },
+    {
+      name: "payLinkExpiresAt",
+      type: "date",
+      access: { create: isStaffField, read: isStaffField, update: serverOnlyField },
+      admin: {
+        readOnly: true,
+        date: { pickerAppearance: "dayAndTime" },
+        description: "When the emailed payment link stops accepting payment.",
+      },
+    },
+    {
+      name: "stripePaymentIntentId",
+      type: "text",
+      index: true,
+      /* Staff-read only. Stored the moment the intent is created, because
+         Stripe forgets an idempotency key after about a day: this id is what
+         stops a second intent — and a second charge — on a link that lives
+         for a week. The webhook refuses any other intent for this order. */
+      access: { create: serverOnlyField, read: isStaffField, update: serverOnlyField },
+      admin: { readOnly: true, description: "The one Stripe PaymentIntent for this order." },
+    },
+    {
+      name: "paidAt",
+      type: "date",
+      index: true,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: {
+        readOnly: true,
+        date: { pickerAppearance: "dayAndTime" },
+        description: "When Stripe's signed webhook confirmed the money.",
+      },
+    },
+    {
+      name: "invoiceNumber",
+      type: "text",
+      unique: true,
+      index: true,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: {
+        readOnly: true,
+        description: "CAL-INV-YYYY-NNNNN. Gap-free, allocated once when the order is paid.",
+      },
+    },
+    {
+      name: "vatRateBps",
+      type: "number",
+      defaultValue: 0,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: {
+        readOnly: true,
+        description: "VAT rate in basis points, frozen at payment. 500 = 5%. 0 = not VAT-registered.",
+      },
+    },
+    filsField({
+      name: "vatIncludedFils",
+      label: "VAT included (fils)",
+      defaultValue: 0,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: { readOnly: true },
+    }),
+
+    /* ---------------- Internal management ----------------
+     *
+     * READ-RESTRICTED, NOT ONLY WRITE-RESTRICTED. `read` on this collection
+     * lets a signed-in customer fetch their own order through Payload's REST
+     * and GraphQL endpoints. Without a field-level rule that response would
+     * carry the florist's private notes ("PAYMENT CHECK", "refund in
+     * Stripe") and who is making the order. */
     {
       name: "assignedStaff",
       type: "relationship",
       relationTo: "users",
       index: true,
+      access: { read: isStaffField },
       /* Only internal users can own an order. Enforced as a query so a
          customer can never be assigned, whatever the UI sends. */
       filterOptions: () => ({ role: { in: ["admin", "staff"] } }),
@@ -412,6 +616,7 @@ export const Orders: CollectionConfig = {
       maxLength: 8000,
       /* Staff write these constantly — it is most of the job. Never shown to
          a customer and never included in any email. */
+      access: { read: isStaffField },
       admin: { description: "Internal only. Never sent to the customer." },
     },
     {
@@ -422,7 +627,8 @@ export const Orders: CollectionConfig = {
       admin: {
         position: "sidebar",
         readOnly: true,
-        description: 'Where the order came from, e.g. "web-checkout", "phone".',
+        description:
+          'Where the order came from, e.g. "web-checkout-card", "phone", or "admin-quote" for a confirmed enquiry paid by link.',
       },
     },
   ],

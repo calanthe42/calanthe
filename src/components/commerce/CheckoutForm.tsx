@@ -1,7 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState, useTransition } from "react";
-import { loadStripe, type Appearance } from "@stripe/stripe-js";
+import { memo, useRef, useState, useTransition } from "react";
 import {
   Elements,
   ExpressCheckoutElement,
@@ -10,8 +9,18 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { startCardCheckout, type CheckoutRequest } from "@backend/actions/checkout";
+import {
+  APPEARANCE,
+  EXPRESS_CHECKOUT_OPTIONS,
+  HAS_STRIPE,
+  STRIPE_FONTS,
+  useLazyStripe,
+} from "@/components/commerce/stripe-shared";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { DiscountCodeField } from "@/components/commerce/DiscountCodeField";
+import { Price } from "@/components/commerce/Price";
 import { EASE_BLOOM } from "@/components/motion/constants";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { Button, ButtonLink, buttonClasses } from "@/components/ui/Button";
@@ -28,7 +37,14 @@ import { Monogram } from "@/components/ui/Monogram";
 import { useLocale } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
 import { cn } from "@/lib/cn";
-import { describeCartItem, itemUnitPrice, useCart, type CartItem } from "@/lib/cart";
+import {
+  describeCartItem,
+  itemRegularUnitFils,
+  itemUnitFils,
+  useCart,
+  type CartItem,
+} from "@/lib/cart";
+import { MIN_CHARGE_FILS, formatFils, formatFilsInline } from "@/lib/money";
 import {
   checkoutFieldErrors,
   normalisePhone,
@@ -68,18 +84,27 @@ const FIELD_IDS: Record<CheckoutField, string> = {
 
 const OrderSummary = memo(function OrderSummary({
   items,
-  subtotalAed,
+  subtotalFils,
+  discount,
+  savedFils,
   zoneName,
-  deliveryFee,
-  totalAed,
+  deliveryFeeFils,
+  totalFils,
+  locale,
   t,
 }: {
   items: readonly CartItem[];
-  subtotalAed: number;
+  /** Sum of the lines, sale prices already applied. */
+  subtotalFils: number;
+  /** The code the server accepted for this basket, and what it takes off. */
+  discount: { code: string; discountFils: number } | null;
+  /** Everything saved on this order: sale prices plus the code. */
+  savedFils: number;
   /** The chosen emirate, already in the reader's language. */
   zoneName: string | undefined;
-  deliveryFee: number;
-  totalAed: number;
+  deliveryFeeFils: number;
+  totalFils: number;
+  locale: "en" | "ar";
   t: Dictionary;
 }) {
   return (
@@ -98,14 +123,22 @@ const OrderSummary = memo(function OrderSummary({
                 <p className="truncate font-display text-lg leading-tight text-olive">
                   {item.name}
                 </p>
-                <p className="shrink-0 text-sm text-olive">
-                  {formatAed(itemUnitPrice(item) * item.qty)}
-                </p>
+                <Price
+                  t={t}
+                  layout="stack"
+                  className="shrink-0 text-sm text-olive"
+                  nowFils={itemUnitFils(item) * item.qty}
+                  wasFils={item.sale ? itemRegularUnitFils(item) * item.qty : null}
+                  wasClassName="text-xs"
+                />
               </div>
               <p className="mt-1 text-sm text-ink-muted">
                 {item.qty > 1 && <>{item.qty} × </>}
                 {describeCartItem(item, t)}
               </p>
+              {item.sale && itemUnitFils(item) < itemRegularUnitFils(item) && (
+                <p className="mt-1 text-sm text-ink-muted">{item.sale.label[locale]}</p>
+              )}
               {item.giftMessage && (
                 <p className="mt-1 text-sm italic text-ink-muted">
                   {t.checkout.withCard}
@@ -119,8 +152,16 @@ const OrderSummary = memo(function OrderSummary({
       <dl className="flex flex-col gap-2 text-sm">
         <div className="flex justify-between text-ink-muted">
           <dt>{t.checkout.subtotal}</dt>
-          <dd>{formatAed(subtotalAed)}</dd>
+          <dd dir="ltr">{formatFils(subtotalFils)}</dd>
         </div>
+        {discount && (
+          <div className="flex justify-between text-olive">
+            <dt>
+              {t.discount.rowCode.replace("{code}", `\u2066${discount.code}\u2069`)}
+            </dt>
+            <dd dir="ltr">−{formatFils(discount.discountFils)}</dd>
+          </div>
+        )}
         <div className="flex justify-between text-ink-muted">
           <dt>
             {zoneName
@@ -129,9 +170,9 @@ const OrderSummary = memo(function OrderSummary({
           </dt>
           <dd>
             {zoneName
-              ? deliveryFee === 0
+              ? deliveryFeeFils === 0
                 ? t.checkout.complimentary
-                : formatAed(deliveryFee)
+                : formatFils(deliveryFeeFils)
               : t.checkout.chooseEmirate}
           </dd>
         </div>
@@ -139,9 +180,16 @@ const OrderSummary = memo(function OrderSummary({
           <dt className="font-brand text-xs font-medium uppercase tracking-brand">
             {t.checkout.total}
           </dt>
-          <dd className="font-display text-2xl">{formatAed(totalAed)}</dd>
+          <dd dir="ltr" className="font-display text-2xl">
+            {formatFils(totalFils)}
+          </dd>
         </div>
       </dl>
+      {savedFils > 0 && (
+        <p className="mt-3 text-base text-ink-muted">
+          {t.discount.totalSavings.replace("{amount}", formatFilsInline(savedFils))}
+        </p>
+      )}
       <p className="mt-4 text-sm leading-relaxed text-ink-muted">
         {t.checkout.paidByCard}
       </p>
@@ -195,45 +243,6 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-/*
- * STRIPE, LOADED ONLY HERE. Stripe.js is fetched by the checkout page alone,
- * never on the rest of the site. Without a publishable key the provider still
- * mounts (with `null`), the payment step says payment is unavailable, and
- * nothing can be charged.
- */
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-/** Whether card payment is possible on this deployment at all. */
-const HAS_STRIPE = Boolean(PUBLISHABLE_KEY);
-/* Stripe.js (265 KB) is fetched lazily: on the first interaction with the
-   form, or after a short idle — always well before the payment step is
-   reached, never as part of the page's first paint (Lighthouse, 2026-10-04). */
-let stripeLoading: ReturnType<typeof loadStripe> | null = null;
-const getStripePromise = () => (stripeLoading ??= loadStripe(PUBLISHABLE_KEY!));
-
-/* The Payment Element in the house palette: cream ground, olive type, almost
-   square corners, Instrument Sans — so the card fields read as part of the
-   page, not as a third-party box. */
-const APPEARANCE: Appearance = {
-  theme: "flat",
-  variables: {
-    colorPrimary: "#2B2F1B",
-    colorBackground: "#F3EFDF",
-    colorText: "#2B2F1B",
-    colorTextSecondary: "#575946",
-    colorDanger: "#B55B29",
-    fontFamily: "'Instrument Sans', system-ui, sans-serif",
-    borderRadius: "2px",
-    spacingUnit: "4px",
-  },
-  rules: {
-    ".Input": { border: "1px solid #CBC4A9", boxShadow: "none", padding: "12px 14px" },
-    ".Input:focus": { border: "1px solid #2B2F1B", boxShadow: "0 0 0 1px #2B2F1B" },
-    ".Tab": { border: "1px solid #CBC4A9", boxShadow: "none" },
-    ".Tab--selected": { border: "1px solid #2B2F1B", backgroundColor: "#E4DCC5" },
-    ".Label": { color: "#868764", fontSize: "12px" },
-  },
-};
-
 /**
  * Card checkout: card, Apple Pay and Google Pay in Stripe's Payment Element
  * (docs/PAYMENTS.md). Deferred-intent flow — the element mounts with the
@@ -242,42 +251,25 @@ const APPEARANCE: Appearance = {
  * directly. The order becomes PAID only when Stripe's signed webhook says so.
  */
 export function CheckoutForm() {
-  const { subtotalAed } = useCart();
+  const { totalFils } = useCart();
   const { locale } = useLocale();
-  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
-  useEffect(() => {
-    if (!HAS_STRIPE) return;
-    const arm = () => setStripePromise((current) => current ?? getStripePromise());
-    const idle =
-      "requestIdleCallback" in window
-        ? window.requestIdleCallback(arm, { timeout: 2500 })
-        : globalThis.setTimeout(arm, 2500);
-    window.addEventListener("pointerdown", arm, { once: true, capture: true });
-    window.addEventListener("keydown", arm, { once: true, capture: true });
-    return () => {
-      if ("cancelIdleCallback" in window) window.cancelIdleCallback(idle as number);
-      else globalThis.clearTimeout(idle as number);
-      window.removeEventListener("pointerdown", arm, { capture: true });
-      window.removeEventListener("keydown", arm, { capture: true });
-    };
-  }, []);
+  /* Stripe.js arrives lazily — see stripe-shared.ts. */
+  const stripePromise = useLazyStripe();
   return (
     <Elements
       stripe={stripePromise}
       options={{
         mode: "payment",
         currency: "aed",
-        /* Delivery is free (DELIVERY_ALWAYS_FREE), so the basket is the
-           total; the server recomputes it regardless. Stripe needs > 0. */
-        amount: Math.max(100, Math.round(subtotalAed * 100)),
+        /* The basket AFTER sale prices and the discount code, so the card
+           form and the Apple Pay / Google Pay sheet show the total the
+           server will charge. Delivery is free (DELIVERY_ALWAYS_FREE), so
+           that is the whole total; the server recomputes it regardless.
+           Never below the smallest amount that can be charged. */
+        amount: Math.max(MIN_CHARGE_FILS, totalFils),
         locale: locale === "ar" ? "ar" : "en",
         appearance: APPEARANCE,
-        fonts: [
-          {
-            cssSrc:
-              "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500&display=swap",
-          },
-        ],
+        fonts: STRIPE_FONTS,
       }}
     >
       <CheckoutFormInner />
@@ -286,8 +278,17 @@ export function CheckoutForm() {
 }
 
 function CheckoutFormInner() {
-  const { items, subtotalAed, clear } = useCart();
+  const {
+    items,
+    subtotalFils,
+    saleSavingsFils,
+    discount,
+    discountState,
+    refuseDiscountCode,
+    clear,
+  } = useCart();
   const { locale, t } = useLocale();
+  const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
   /* A payment that fails can be retried without creating a second order:
@@ -331,12 +332,23 @@ function CheckoutFormInner() {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const zone = deliveryZones.find((z) => z.id === zoneId);
+  /* Every figure below is fils, and follows the server's arithmetic
+     (backend/domain/pricing.ts): the code comes off the subtotal, the
+     free-delivery threshold is measured after the code, and delivery is
+     never discounted. It is a DISPLAY — the server prices the order itself
+     and refuses it (PRICE_CHANGED) if this total is not the one it gets. */
+  const codeFils = discount?.discountFils ?? 0;
+  const afterCodeFils = subtotalFils - codeFils;
   const freeDelivery =
     DELIVERY_ALWAYS_FREE ||
     zone?.feeAed === 0 ||
-    subtotalAed >= FREE_DELIVERY_THRESHOLD_AED;
-  const deliveryFee = zone ? (freeDelivery ? 0 : zone.feeAed) : 0;
-  const totalAed = subtotalAed + deliveryFee;
+    afterCodeFils >= FREE_DELIVERY_THRESHOLD_AED * 100;
+  const deliveryFeeFils = zone ? (freeDelivery ? 0 : Math.round(zone.feeAed * 100)) : 0;
+  const totalFils = afterCodeFils + deliveryFeeFils;
+  const savedFils = saleSavingsFils + codeFils;
+  /* A code whose quote is still on its way: the total is not settled, so
+     nothing may be paid — or a wallet sheet opened — against it. */
+  const quoting = discountState === "checking";
 
   const fieldErrors = attempted
     ? checkoutFieldErrors({
@@ -371,7 +383,7 @@ function CheckoutFormInner() {
   /** Checks the form and builds the request. Synchronous, so the Apple Pay /
    *  Google Pay click handler can call it inside Stripe's one-second window. */
   function buildRequest(): CheckoutRequest | null {
-    if (items.length === 0 || pending) return null;
+    if (items.length === 0 || pending || quoting) return null;
     setAttempted(true);
     setFormError(null);
 
@@ -426,6 +438,14 @@ function CheckoutFormInner() {
       recipientPhone:
         mode === "gift" ? normalisePhone(recipientPhone) || undefined : undefined,
       cardMessage: items.find((i) => i.giftMessage)?.giftMessage,
+      /* The TEXT of the code, and only when the server's quote accepted it
+         for this basket. A code that was refused is not sent again: the
+         total on this page no longer includes it. */
+      ...(discount ? { discountCode: discount.code } : {}),
+      /* The total shown on this page, in fils. The server compares it with
+         its own total and refuses the order if they differ; it never uses
+         it to decide what to charge (backend/actions/checkout.ts). */
+      shownTotalFils: totalFils,
       /* The surprise choice used to be collected and dropped. The order has
            a delivery-notes field the atelier reads; this is where it goes. */
       /* Staff-facing, and deliberately not translated: this is read in
@@ -479,6 +499,27 @@ function CheckoutFormInner() {
         if (!result.ok) {
           /* The cart is untouched, so she can correct and send again. */
           setFormError(result.message);
+          intentRef.current = null;
+          if (result.code === "PRICE_CHANGED") {
+            /* A sale started or ended, or a price was edited, while this
+               page was open. Nothing was created and nothing was charged.
+               The refresh brings the new catalogue; the basket re-syncs to
+               it and re-quotes the code, and she pays the total she can
+               now see. */
+            router.refresh();
+          } else if (result.code.startsWith("CODE_")) {
+            /* The code no longer applies (used already, run out, ended).
+               It is shown as refused beside the code itself, the total
+               drops back to the price without it, and she can pay that or
+               try another. */
+            refuseDiscountCode(result.message);
+            setSummaryOpen(true);
+            requestAnimationFrame(() =>
+              document
+                .getElementById("checkout-code")
+                ?.scrollIntoView({ block: "center", behavior: "smooth" }),
+            );
+          }
           return;
         }
         intent = {
@@ -746,7 +787,9 @@ function CheckoutFormInner() {
                 <p className="mt-2 text-base text-ink-muted">
                   {t.checkout.deliveryFreeAway.replace(
                     "{amount}",
-                    formatAed(FREE_DELIVERY_THRESHOLD_AED - subtotalAed),
+                    formatFilsInline(
+                      Math.max(0, FREE_DELIVERY_THRESHOLD_AED * 100 - afterCodeFils),
+                    ),
                   )}
                 </p>
               )}
@@ -894,19 +937,7 @@ function CheckoutFormInner() {
                 <ExpressCheckoutElement
                   onClick={onExpressClick}
                   onConfirm={onExpressConfirm}
-                  options={{
-                    buttonType: { applePay: "buy", googlePay: "buy" },
-                    buttonTheme: { applePay: "black", googlePay: "black" },
-                    buttonHeight: 48,
-                    paymentMethods: {
-                      applePay: "always",
-                      googlePay: "always",
-                      link: "never",
-                      amazonPay: "never",
-                      paypal: "never",
-                      klarna: "never",
-                    },
-                  }}
+                  options={EXPRESS_CHECKOUT_OPTIONS}
                 />
 
                 <div
@@ -958,7 +989,9 @@ function CheckoutFormInner() {
             <span className="font-brand text-xs font-medium uppercase tracking-brand text-olive">
               {summaryOpen ? t.checkout.hideSummary : t.checkout.showSummary}
             </span>
-            <span className="font-display text-xl text-olive">{formatAed(totalAed)}</span>
+            <span dir="ltr" className="font-display text-xl text-olive">
+              {formatFils(totalFils)}
+            </span>
           </button>
           <div
             id="order-summary"
@@ -966,12 +999,22 @@ function CheckoutFormInner() {
           >
             <OrderSummary
               items={items}
-              subtotalAed={subtotalAed}
+              subtotalFils={subtotalFils}
+              discount={discount}
+              savedFils={savedFils}
               zoneName={zone ? zoneName(zone, t) : undefined}
-              deliveryFee={deliveryFee}
-              totalAed={totalAed}
+              deliveryFeeFils={deliveryFeeFils}
+              totalFils={totalFils}
+              locale={locale}
               t={t}
             />
+          </div>
+
+          {/* The discount code sits OUTSIDE the folded summary: on a phone
+              the summary is closed by default, and a code field nobody can
+              find is a code nobody can use. */}
+          <div id="checkout-code" className="mt-3 border-b border-hairline pb-3 lg:mt-5">
+            <DiscountCodeField />
           </div>
 
           <div className="mt-6">
@@ -992,8 +1035,9 @@ function CheckoutFormInner() {
               className="hidden w-full lg:flex"
               loading={pending}
               loadingText={t.checkout.placing}
+              disabled={quoting}
             >
-              {t.checkout.placeWithTotal.replace("{total}", formatAed(totalAed))}
+              {t.checkout.placeWithTotal.replace("{total}", formatFils(totalFils))}
             </Button>
             <p className="mt-4 text-sm leading-relaxed text-ink-muted">
               {t.checkout.questions}{" "}
@@ -1024,8 +1068,8 @@ function CheckoutFormInner() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
         <div className="mx-auto flex max-w-xl items-center gap-4">
           <div className="min-w-0 flex-1">
-            <p className="font-display text-xl leading-tight text-olive">
-              {formatAed(totalAed)}
+            <p dir="ltr" className="font-display text-xl leading-tight text-olive rtl:text-end">
+              {formatFils(totalFils)}
             </p>
             <p className="truncate text-sm text-ink-muted">
               {plural(locale, t.checkout.itemCount, items.length)}
@@ -1039,6 +1083,7 @@ function CheckoutFormInner() {
             className="shrink-0 px-6"
             loading={pending}
             loadingText={t.checkout.placingShort}
+            disabled={quoting}
           >
             {t.checkout.place}
           </Button>

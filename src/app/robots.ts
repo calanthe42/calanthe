@@ -35,6 +35,9 @@ export default function robots(): MetadataRoute.Robots {
         "/account",
         "/cart",
         "/checkout",
+        /* Payment links: private to one customer, and the address IS the
+           credential. The page is noindex as well. */
+        "/pay/",
         "/login",
         "/wishlist",
 

@@ -57,6 +57,9 @@ export const EmailLog: CollectionConfig = {
         { label: "Owner — new order", value: "owner-new-order" },
         { label: "Florist — job sheet", value: "florist-job-sheet" },
         { label: "Enquiry received", value: "enquiry-received" },
+        { label: "Payment request", value: "payment-request" },
+        { label: "Payment received (invoice)", value: "payment-received" },
+        { label: "Owner — bespoke paid", value: "owner-quote-paid" },
       ],
     },
     {

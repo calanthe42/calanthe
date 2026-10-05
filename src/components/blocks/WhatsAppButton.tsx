@@ -13,7 +13,8 @@ export function WhatsAppButton() {
   const hasStickyBar =
     pathname.startsWith("/product/") ||
     pathname.startsWith("/build-your-own") ||
-    pathname.startsWith("/checkout");
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/pay/");
 
   /**
    * THE HERO KEEPS ITS OWN SCREEN.

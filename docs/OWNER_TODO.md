@@ -226,3 +226,29 @@ it was guessed or built. Full workings in `docs/reports/ui-and-delivery.md`.
 | --- | --- | --- |
 | 20 | `vercel deploy --prod` refused by the local permission classifier — see #4 | 2026-09-25 |
 | 21 | `gh` is not installed on the dev machine, so repo visibility cannot be checked from here — see #1 | 2026-09-25 |
+
+## Payment requests and invoices (added 2026-10-04)
+
+Invoices print only what is filled in below — an empty value is left off the
+document rather than shown as a placeholder. Until then every invoice reads
+"Calanthe, Abu Dhabi, United Arab Emirates" with the shop's email and WhatsApp
+number. All four live in `src/lib/business.ts`.
+
+| # | Needed from you | Where it appears | Added |
+| --- | --- | --- | --- |
+| 33 | **Legal company name**, in English and Arabic | Seller block of every invoice | 2026-10-04 |
+| 34 | **Registered address**, in English and Arabic | Seller block of every invoice | 2026-10-04 |
+| 35 | **Trade licence number** | Seller block of every invoice | 2026-10-04 |
+| 36 | **TRN (15 digits)** — only if and when the business registers for VAT. VAT is OFF today by your decision: invoices are titled "Invoice", with no VAT line. Switching it on is a three-line change in `src/lib/business.ts` and the build refuses it without a TRN and a legal name. Confirm with your accountant first. | Tax invoices | 2026-10-04 |
+| 37 | **One address for the owner and one for the florist.** Today both the "paid" notice and the florist's job sheet go to the single reply-to address. | Internal emails | 2026-10-04 |
+| 38 | **Subscribe the Stripe webhook endpoint to `charge.refunded` and `charge.dispute.created`** (Stripe dashboard → Developers → Webhooks). The site now writes a note on the order when either happens, but only if Stripe sends them. | Order internal notes | 2026-10-04 |
+| 39 | **Register `www.calanthe.ae` for Apple Pay** in Stripe (Settings → Payment method domains), on the live account, before the payment-link page goes live. | /pay page | 2026-10-04 |
+
+## Discounts (added 2026-10-05)
+
+| # | Needed from you | Why | Added |
+| --- | --- | --- | --- |
+| 40 | **Run migration `20261004_202611_discounts` on production BEFORE the new code is deployed** (after `20261004_193027_quote_pay_link`). | The new code reads columns the old database does not have; deployed first, every order read and write fails, including the Stripe webhook. | 2026-10-05 |
+| 41 | **Order confirmation emails are still English-only.** The discount lines ("Discount (CODE)", "You saved …") are written in English and Arabic, but only the English is sent until the whole confirmation email is made bilingual. Say if you want that done now. | Customer emails | 2026-10-05 |
+| 42 | **An unpaid discounted order is cancelled after 60 minutes.** This is what stops a sale price being paid after the sale ended, and a limited code being held by people who never pay. Say if you want a different time. | `DISCOUNT_HOLD_MINUTES` in `src/lib/discounts.ts` | 2026-10-05 |
+| 43 | **A florist can send a payment request for any amount but cannot give a discount** — discounts are yours alone, and a code cannot be applied to a payment request. | For your information | 2026-10-05 |

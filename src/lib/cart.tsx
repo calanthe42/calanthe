@@ -10,10 +10,27 @@ import {
   useRef,
   useState,
 } from "react";
+import { quoteCheckout } from "@backend/actions/checkout";
 import type { AddonId, ProductImage, SizeId } from "@/lib/data";
-import { addons, sizes, timeSlots } from "@/lib/data";
+import { addons, deliveryZones, sizes, timeSlots } from "@/lib/data";
+import {
+  cartSaleOf,
+  itemRegularUnitFils,
+  itemUnitFils,
+  type CartSale,
+} from "@/lib/cart-pricing";
+import { CODE_MAX_LENGTH, normaliseCode } from "@/lib/discounts";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { Product } from "@/lib/data";
+
+/* The arithmetic lives in lib/cart-pricing.ts (pure, and tested against the
+   server's). Re-exported so every cart view keeps importing from one place. */
+export {
+  itemRegularUnitFils,
+  itemRegularUnitPrice,
+  itemUnitFils,
+  itemUnitPrice,
+} from "@/lib/cart-pricing";
 
 export type CartItem = {
   /** productId + size + sorted addons — one line per configuration. */
@@ -22,7 +39,14 @@ export type CartItem = {
   slug: string;
   name: string;
   image: ProductImage;
+  /** The product's REGULAR base price. A sale never changes this. */
   basePriceAed: number;
+  /**
+   * The sale this product is on, when it is on one. ALWAYS taken from the
+   * live catalogue — on hydration and on every re-sync — never from storage,
+   * so a basket left overnight cannot keep yesterday's offer.
+   */
+  sale?: CartSale;
   sizeId: SizeId;
   addonIds: readonly AddonId[];
   qty: number;
@@ -33,17 +57,6 @@ export type CartItem = {
   recipientName?: string;
   recipientPhone?: string;
 };
-
-export function itemUnitPrice(
-  item: Pick<CartItem, "basePriceAed" | "sizeId" | "addonIds">,
-): number {
-  const size = sizes.find((s) => s.id === item.sizeId);
-  const addonTotal = item.addonIds.reduce(
-    (sum, id) => sum + (addons.find((a) => a.id === id)?.priceAed ?? 0),
-    0,
-  );
-  return item.basePriceAed + (size?.priceDeltaAed ?? 0) + addonTotal;
-}
 
 /**
  * "Deluxe · Vase · Chocolates" — one description used by every cart view.
@@ -75,7 +88,8 @@ type CartAction =
   | { type: "setQty"; key: string; qty: number }
   | { type: "addAddon"; key: string; addonId: AddonId }
   | { type: "clear" }
-  | { type: "hydrate"; items: CartItem[] };
+  | { type: "hydrate"; items: CartItem[] }
+  | { type: "sync"; catalogue: readonly Product[] };
 
 function keyOf(item: Omit<CartItem, "key">): string {
   return `${item.productId}|${item.sizeId}|${[...item.addonIds].sort().join(",")}|${item.giftMessage ?? ""}`;
@@ -83,7 +97,7 @@ function keyOf(item: Omit<CartItem, "key">): string {
 
 /**
  * Rebuild stored lines against the live catalog: unknown products are
- * dropped; name, slug, image and price always come from the catalog so
+ * dropped; name, slug, image, price and sale always come from the catalog so
  * stale or tampered storage can never change what is charged.
  */
 function sanitizeStoredItems(parsed: unknown, products: readonly Product[]): CartItem[] {
@@ -112,6 +126,8 @@ function sanitizeStoredItems(parsed: unknown, products: readonly Product[]): Car
       name: product.name,
       image: product.images[0],
       basePriceAed: product.priceAed,
+      /* From the catalogue, never from storage. */
+      sale: cartSaleOf(product.sale),
       sizeId,
       addonIds,
       qty,
@@ -176,8 +192,64 @@ function reducer(state: CartState, action: CartAction): CartState {
       return { items: [] };
     case "hydrate":
       return { items: action.items };
+    case "sync": {
+      /* Name, photograph, price and sale are re-read from the catalogue the
+         server just sent; a line whose product has left is dropped. The same
+         state object is returned when nothing changed, so a refresh that
+         brought no news re-renders nothing and re-quotes nothing. */
+      let changed = false;
+      const items: CartItem[] = [];
+      for (const item of state.items) {
+        const product = action.catalogue.find((p) => p.id === item.productId);
+        if (!product) {
+          changed = true;
+          continue;
+        }
+        const sale = cartSaleOf(product.sale);
+        const same =
+          item.name === product.name &&
+          item.slug === product.slug &&
+          item.basePriceAed === product.priceAed &&
+          JSON.stringify(item.sale ?? null) === JSON.stringify(sale ?? null);
+        if (same) {
+          items.push(item);
+          continue;
+        }
+        changed = true;
+        items.push({
+          ...item,
+          name: product.name,
+          slug: product.slug,
+          image: product.images[0],
+          basePriceAed: product.priceAed,
+          sale,
+        });
+      }
+      return changed ? { items } : state;
+    }
   }
 }
+
+/** What the basket holds, as far as its price is concerned. */
+function linesKeyOf(items: readonly CartItem[]): string {
+  return items
+    .map(
+      (i) =>
+        `${i.productId}|${i.sizeId}|${[...i.addonIds].sort().join(",")}|${i.qty}|${itemUnitFils(i)}`,
+    )
+    .join(";");
+}
+
+/**
+ * Refusals that say a code does not exist, is spent, or that this caller has
+ * guessed too often. Each automatic re-quote of such a code would spend one
+ * of the caller's few wrong-code attempts (backend/security/throttle.ts), so
+ * after one of these the basket stops asking on its own: the code is checked
+ * again only when the customer presses Apply.
+ */
+const FINAL_REFUSALS: readonly string[] = ["CODE_INVALID", "CODE_EXHAUSTED", "RATE_LIMITED"];
+
+export type DiscountState = "idle" | "checking" | "error";
 
 type CartContextValue = {
   items: readonly CartItem[];
@@ -196,6 +268,26 @@ type CartContextValue = {
    */
   droppedCount: number;
   subtotalAed: number;
+  /** The same subtotal in fils — sale prices applied, no code, no delivery. */
+  subtotalFils: number;
+  /** What the automatic sales took off. Already reflected in the subtotal. */
+  saleSavingsFils: number;
+  /**
+   * The discount code the customer typed, whether or not it applied. Text
+   * only: the amount it takes off always comes from the server's quote.
+   */
+  discountCode: string | null;
+  /** The code that IS applied to this basket, with what the server says it takes off. */
+  discount: { code: string; discountFils: number } | null;
+  discountState: DiscountState;
+  /** Why the code did not apply, in the reader's language. Null beside "error": it could not be checked. */
+  discountMessage: string | null;
+  /** Subtotal minus the code. Delivery is added by checkout, where the emirate is known. */
+  totalFils: number;
+  applyDiscountCode: (code: string) => void;
+  removeDiscountCode: () => void;
+  /** Checkout reports a code the server refused when the order was placed. */
+  refuseDiscountCode: (message: string) => void;
   count: number;
   isOpen: boolean;
   openCart: () => void;
@@ -210,13 +302,23 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "calanthe-cart-v1";
+/** The code as typed — text only, never an amount. */
+const CODE_STORAGE_KEY = "calanthe-code-v1";
+
+/* A stable empty catalogue: a fresh `[]` default on every render would look
+   like a new catalogue to the re-sync effect each time. */
+const NO_CATALOGUE: readonly Product[] = [];
+
+/** The server's answer for one basket: applied, or refused and why. */
+type Quoted = { code: string; key: string; discountFils: number };
+type Refused = { code: string; key: string; message: string | null; final: boolean };
 
 export function CartProvider({
   children,
   /* The catalogue is fetched on the server and passed in — a client provider
      must never reach for the database itself. Defaults to empty so the
      provider still mounts in isolation (tests, storybook-style rendering). */
-  catalogue = [],
+  catalogue = NO_CATALOGUE,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
@@ -229,6 +331,26 @@ export function CartProvider({
   const hydrated = useRef(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [droppedCount, setDroppedCount] = useState(0);
+
+  /*
+   * THE DISCOUNT CODE.
+   *
+   * The browser holds the TEXT of the code and nothing else. What it takes
+   * off is whatever the server's quote says (backend/actions/checkout.ts
+   * `quoteCheckout`), asked again whenever the basket changes, because a
+   * percentage of a different subtotal is a different amount. The server
+   * checks the code a second time when the order is placed.
+   *
+   * `quoted` and `refused` remember which basket the answer was for. A
+   * basket that has changed since is "checking", not "applied" — so the pay
+   * buttons wait rather than show a discount worked out for another basket.
+   */
+  const [code, setCode] = useState<string | null>(null);
+  const [quoted, setQuoted] = useState<Quoted | null>(null);
+  const [refused, setRefused] = useState<Refused | null>(null);
+  /* Bumped by Apply, so pressing it again re-asks even for the same text. */
+  const [attempt, setAttempt] = useState(0);
+  const immediate = useRef(false);
 
   useEffect(() => {
     /* Once only. The catalogue is a dependency because sanitising needs it,
@@ -244,6 +366,8 @@ export function CartProvider({
         }
         dispatch({ type: "hydrate", items });
       }
+      const storedCode = normaliseCode(localStorage.getItem(CODE_STORAGE_KEY) ?? "");
+      if (storedCode) setCode(storedCode.slice(0, CODE_MAX_LENGTH));
     } catch {
       /* corrupt storage — start empty */
     }
@@ -260,13 +384,161 @@ export function CartProvider({
     }
   }, [state.items]);
 
-  const subtotalAed = useMemo(
-    () => state.items.reduce((sum, i) => sum + itemUnitPrice(i) * i.qty, 0),
+  /*
+   * THE BASKET FOLLOWS THE CATALOGUE.
+   *
+   * It used to read prices from the catalogue once, on hydration, and never
+   * again — fine while a price could only change by an edit in /admin, not
+   * fine now that a sale starts and ends on a clock. When checkout answers
+   * PRICE_CHANGED it calls router.refresh(); the layout sends a new
+   * catalogue, and this is what makes the basket actually take it.
+   *
+   * An empty catalogue is "not known" (the read failed), never "everything
+   * was removed": it must not empty a basket.
+   */
+  useEffect(() => {
+    if (!hydrated.current || catalogue.length === 0) return;
+    dispatch({ type: "sync", catalogue });
+  }, [catalogue]);
+
+  const subtotalFils = useMemo(
+    () => state.items.reduce((sum, i) => sum + itemUnitFils(i) * i.qty, 0),
     [state.items],
   );
+  const saleSavingsFils = useMemo(
+    () =>
+      state.items.reduce(
+        (sum, i) => sum + Math.max(0, itemRegularUnitFils(i) - itemUnitFils(i)) * i.qty,
+        0,
+      ),
+    [state.items],
+  );
+  const subtotalAed = subtotalFils / 100;
   const count = useMemo(
     () => state.items.reduce((sum, i) => sum + i.qty, 0),
     [state.items],
+  );
+  const linesKey = useMemo(() => linesKeyOf(state.items), [state.items]);
+  const hasLines = state.items.length > 0;
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      /* A code that was finally refused is not kept: reloading the page
+         would ask about it again, and each ask costs an attempt. */
+      if (code && !(refused?.code === code && refused.final)) {
+        localStorage.setItem(CODE_STORAGE_KEY, code);
+      } else {
+        localStorage.removeItem(CODE_STORAGE_KEY);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }, [code, refused, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated || !code || !hasLines) return;
+    /* Already answered for this code and this basket. */
+    if (refused?.code === code && (refused.final || refused.key === linesKey)) return;
+    if (quoted?.code === code && quoted.key === linesKey) return;
+
+    let cancelled = false;
+    const key = linesKey;
+    const lines = state.items.map((item) => ({
+      productId: item.productId,
+      quantity: item.qty,
+      sizeId: item.sizeId,
+      addonIds: [...item.addonIds],
+    }));
+    /* A quantity stepper pressed five times asks once. */
+    const delay = immediate.current ? 0 : 400;
+    immediate.current = false;
+
+    const timer = setTimeout(() => {
+      quoteCheckout({
+        lines,
+        /* The code's value does not depend on the emirate; the server only
+           needs one it serves. Checkout adds delivery where it is chosen. */
+        deliveryEmirate: deliveryZones[0]?.id ?? "",
+        discountCode: code,
+      })
+        .then((result) => {
+          if (cancelled) return;
+          if (result.ok && result.quote.couponDiscountFils > 0) {
+            setRefused(null);
+            setQuoted({ code, key, discountFils: result.quote.couponDiscountFils });
+            return;
+          }
+          setQuoted(null);
+          setRefused(
+            result.ok
+              ? { code, key, message: null, final: false }
+              : {
+                  code,
+                  key,
+                  message: result.message,
+                  final: FINAL_REFUSALS.includes(result.code),
+                },
+          );
+        })
+        .catch(() => {
+          /* The network dropped: say so, and ask again when the basket changes. */
+          if (cancelled) return;
+          setQuoted(null);
+          setRefused({ code, key, message: null, final: false });
+        });
+    }, delay);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    /* `quoted`, `refused` and the items are read, not watched: the first two
+       are what this effect writes, and `linesKey` already says everything
+       about the items that a quote depends on. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, code, linesKey, attempt]);
+
+  const discount = useMemo(
+    () =>
+      code && hasLines && quoted?.code === code && quoted.key === linesKey
+        ? { code, discountFils: Math.min(quoted.discountFils, subtotalFils) }
+        : null,
+    [code, hasLines, quoted, linesKey, subtotalFils],
+  );
+  const isRefused =
+    code !== null &&
+    refused?.code === code &&
+    (refused.final || refused.key === linesKey);
+  const discountState: DiscountState =
+    !code || !hasLines || discount ? "idle" : isRefused ? "error" : "checking";
+  const discountMessage = discountState === "error" ? (refused?.message ?? null) : null;
+  const totalFils = subtotalFils - (discount?.discountFils ?? 0);
+
+  const applyDiscountCode = useCallback((raw: string) => {
+    const next = normaliseCode(raw).slice(0, CODE_MAX_LENGTH);
+    if (!next) return;
+    immediate.current = true;
+    setQuoted(null);
+    setRefused(null);
+    setCode(next);
+    setAttempt((n) => n + 1);
+  }, []);
+  const removeDiscountCode = useCallback(() => {
+    setCode(null);
+    setQuoted(null);
+    setRefused(null);
+  }, []);
+  const refuseDiscountCode = useCallback(
+    (message: string) => {
+      setQuoted(null);
+      /* Final: the server has just said no to this code for this customer;
+         it is not asked again, or sent again, until she presses Apply. */
+      setRefused((current) =>
+        code ? { code, key: linesKey, message, final: true } : current,
+      );
+    },
+    [code, linesKey],
   );
 
   const openCart = useCallback(() => setIsOpen(true), []);
@@ -284,7 +556,13 @@ export function CartProvider({
     (key: string, addonId: AddonId) => dispatch({ type: "addAddon", key, addonId }),
     [],
   );
-  const clear = useCallback(() => dispatch({ type: "clear" }), []);
+  const clear = useCallback(() => {
+    dispatch({ type: "clear" });
+    /* A paid order has used its code; the next basket starts without one. */
+    setCode(null);
+    setQuoted(null);
+    setRefused(null);
+  }, []);
 
   const value = useMemo<CartContextValue>(
     () => ({
@@ -292,6 +570,16 @@ export function CartProvider({
       hydrated: isHydrated,
       droppedCount,
       subtotalAed,
+      subtotalFils,
+      saleSavingsFils,
+      discountCode: code,
+      discount,
+      discountState,
+      discountMessage,
+      totalFils,
+      applyDiscountCode,
+      removeDiscountCode,
+      refuseDiscountCode,
       count,
       isOpen,
       openCart,
@@ -307,6 +595,16 @@ export function CartProvider({
       isHydrated,
       droppedCount,
       subtotalAed,
+      subtotalFils,
+      saleSavingsFils,
+      code,
+      discount,
+      discountState,
+      discountMessage,
+      totalFils,
+      applyDiscountCode,
+      removeDiscountCode,
+      refuseDiscountCode,
       count,
       isOpen,
       openCart,

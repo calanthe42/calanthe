@@ -113,12 +113,17 @@ export function PulseProvider({ children }: { children: React.ReactNode }) {
 
   const describe = useCallback(
     (item: PulseItem) =>
-      item.kind === "order"
-        ? t("pulse.newOrder", {
+      item.kind === "payment"
+        ? t("pulse.paid", {
             number: item.title,
             amount: item.amountFils != null ? money(item.amountFils) : "",
           }).trim()
-        : t("pulse.newEnquiry", { name: item.detail || item.title }),
+        : item.kind === "order"
+          ? t("pulse.newOrder", {
+              number: item.title,
+              amount: item.amountFils != null ? money(item.amountFils) : "",
+            }).trim()
+          : t("pulse.newEnquiry", { name: item.detail || item.title }),
     [t, money],
   );
 
@@ -309,15 +314,23 @@ export function PulseBell({ compact = false }: { compact?: boolean }) {
                       className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sunken text-ink-2"
                     >
                       <Icon
-                        name={item.kind === "order" ? "bag" : "message"}
+                        name={
+                          item.kind === "payment"
+                            ? "checkCircle"
+                            : item.kind === "order"
+                              ? "bag"
+                              : "message"
+                        }
                         className="h-4 w-4"
                       />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-ink">
-                        {item.kind === "order"
-                          ? t("pulse.order", { number: item.title })
-                          : item.title}
+                        {item.kind === "payment"
+                          ? t("pulse.paidTitle", { number: item.title })
+                          : item.kind === "order"
+                            ? t("pulse.order", { number: item.title })
+                            : item.title}
                       </span>
                       <span className="block truncate text-xs text-ink-2">
                         {[

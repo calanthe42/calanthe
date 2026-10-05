@@ -6,8 +6,8 @@ import type { IconName } from "@admin/ui/icons";
  * database collection, which is the whole difference between this and a CMS.
  *
  * EVERY ITEM HERE IS A WORKING SCREEN. Sections that exist in the business's
- * vocabulary but have no screen yet (discounts, delivery settings,
- * memberships, campaigns, settings) are deliberately absent rather than
+ * vocabulary but have no screen yet (delivery settings, memberships,
+ * campaigns, settings) are deliberately absent rather than
  * listed behind a "Soon" badge: a navigation item that leads to an apology is
  * worse than one the owner never sees. They return here, each in one line,
  * when the screen behind them is real.
@@ -56,6 +56,12 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     heading: "nav.sections.operations",
     items: [{ href: "/admin/events", label: "nav.events", icon: "sparkles" }],
+  },
+  {
+    /* Prices are the owner's decision: staff neither see nor change a
+       discount (the collection refuses them; this only hides the door). */
+    heading: "nav.sections.marketing",
+    items: [{ href: "/admin/discounts", label: "nav.discounts", icon: "tag", ownerOnly: true }],
   },
   {
     heading: "nav.sections.system",

@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     occasions: Occasion;
     products: Product;
+    discounts: Discount;
     orders: Order;
     events: Event;
     enquiries: Enquiry;
@@ -88,6 +89,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     occasions: OccasionsSelect<false> | OccasionsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    discounts: DiscountsSelect<false> | DiscountsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
@@ -485,6 +487,76 @@ export interface Media {
   };
 }
 /**
+ * Automatic sales and discount codes. Managed in /admin → Discounts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discounts".
+ */
+export interface Discount {
+  id: number;
+  /**
+   * For your own reference. Customers never see this.
+   */
+  title: string;
+  kind: 'automatic' | 'code';
+  /**
+   * Stored in capitals. Empty for an automatic sale.
+   */
+  code?: string | null;
+  valueType: 'percentage' | 'fixed';
+  /**
+   * Whole number, 1 to 90.
+   */
+  percentOff?: number | null;
+  /**
+   * Fils (AED × 100). A sale takes this off each arrangement; a code takes it off the order once.
+   */
+  amountOffFils?: number | null;
+  /**
+   * A code always applies to the whole order.
+   */
+  appliesTo: 'all' | 'products' | 'occasions' | 'categories';
+  products?: (number | Product)[] | null;
+  occasions?: (number | Occasion)[] | null;
+  categories?:
+    ('bouquet' | 'vase-arrangement' | 'box-arrangement' | 'basket' | 'single-stem' | 'plant' | 'event-piece')[] | null;
+  /**
+   * Shown on the product, e.g. “Eid offer”. Sales only.
+   */
+  labelEn?: string | null;
+  /**
+   * The same label in Arabic. Sales only.
+   */
+  labelAr?: string | null;
+  /**
+   * Inclusive. Empty means now.
+   */
+  startsAt?: string | null;
+  /**
+   * Exclusive. Empty means no end.
+   */
+  endsAt?: string | null;
+  active?: boolean | null;
+  /**
+   * Measured after sale prices. Codes only.
+   */
+  minSubtotalFils?: number | null;
+  /**
+   * Total number of paid orders that may use the code. Codes only.
+   */
+  usageLimit?: number | null;
+  /**
+   * Checked by email address. Codes only.
+   */
+  oncePerCustomer?: boolean | null;
+  /**
+   * Paid orders that used this code.
+   */
+  timesUsed: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Placed orders. The snapshot is permanent; only fulfilment moves.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -496,6 +568,14 @@ export interface Order {
    * Assigned automatically from a Postgres sequence. Never reused.
    */
   orderNumber?: string | null;
+  /**
+   * The enquiry this payment request was confirmed from. Empty for shop orders.
+   */
+  enquiry?: (number | null) | Enquiry;
+  /**
+   * The language the customer is written to.
+   */
+  locale?: ('en' | 'ar') | null;
   customerType: 'guest' | 'registered';
   /**
    * Empty for guest orders.
@@ -515,6 +595,10 @@ export interface Order {
    * Directions the customer gave. Not internal notes.
    */
   deliveryNotes?: string | null;
+  /**
+   * Shown to the customer in the payment email and page.
+   */
+  customerNote?: string | null;
   /**
    * Empty means the buyer is the recipient.
    */
@@ -543,6 +627,16 @@ export interface Order {
      * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
      */
     lineTotalFils: number;
+    /**
+     * The full unit price before the sale (arrangement + add-ons). Empty when the line was not on sale.
+     */
+    compareAtUnitPriceFils?: number | null;
+    saleLabelEn?: string | null;
+    saleLabelAr?: string | null;
+    /**
+     * Reporting link only. Never read for display or price.
+     */
+    sale?: (number | null) | Discount;
     /**
      * Size, add-ons, e.g. "Size: Deluxe".
      */
@@ -578,6 +672,26 @@ export interface Order {
    */
   couponDiscountFils?: number | null;
   /**
+   * The discount code this order used.
+   */
+  couponDiscount?: (number | null) | Discount;
+  /**
+   * The discount rules as they stood at checkout.
+   */
+  discountSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * When this order was counted as a use of its code.
+   */
+  couponRedeemedAt?: string | null;
+  /**
    * Where the order is in the workshop.
    */
   fulfilmentStatus: 'NEW' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
@@ -585,6 +699,32 @@ export interface Order {
    * Set by the payment provider only. Stays PENDING until Stripe/Tabby is connected.
    */
   paymentStatus: 'PENDING' | 'AUTHORIZED' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
+  payTokenSalt?: string | null;
+  payTokenHash?: string | null;
+  /**
+   * When the emailed payment link stops accepting payment.
+   */
+  payLinkExpiresAt?: string | null;
+  /**
+   * The one Stripe PaymentIntent for this order.
+   */
+  stripePaymentIntentId?: string | null;
+  /**
+   * When Stripe's signed webhook confirmed the money.
+   */
+  paidAt?: string | null;
+  /**
+   * CAL-INV-YYYY-NNNNN. Gap-free, allocated once when the order is paid.
+   */
+  invoiceNumber?: string | null;
+  /**
+   * VAT rate in basis points, frozen at payment. 500 = 5%. 0 = not VAT-registered.
+   */
+  vatRateBps?: number | null;
+  /**
+   * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+   */
+  vatIncludedFils?: number | null;
   /**
    * Who is making this.
    */
@@ -594,9 +734,135 @@ export interface Order {
    */
   internalNotes?: string | null;
   /**
-   * Where the order came from, e.g. "web-checkout", "phone".
+   * Where the order came from, e.g. "web-checkout-card", "phone", or "admin-quote" for a confirmed enquiry paid by link.
    */
   source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Every lead: build-your-own, events, memberships, contact, custom requests.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  /**
+   * Assigned automatically from a Postgres sequence. Never reused.
+   */
+  enquiryNumber?: string | null;
+  type: 'BUILD_YOUR_OWN' | 'EVENT' | 'MEMBERSHIP' | 'CONTACT' | 'CUSTOM_REQUEST';
+  /**
+   * The language the form was filled in. Preselects the payment email language.
+   */
+  locale?: ('en' | 'ar') | null;
+  /**
+   * Empty for guest enquiries.
+   */
+  customer?: (number | null) | User;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string | null;
+  company?: string | null;
+  subject: string;
+  /**
+   * In the enquirer's own words.
+   */
+  message?: string | null;
+  /**
+   * Incomplete requests are expected.
+   */
+  buildYourOwn?: {
+    style?: ('romantic' | 'minimal' | 'wild' | 'structured' | 'luxe' | 'unsure') | null;
+    flowers?: ('roses' | 'peonies' | 'orchids' | 'tulips' | 'lilies' | 'wildflowers' | 'florists-choice')[] | null;
+    colours?: ('blush' | 'white-cream' | 'burgundy' | 'terracotta' | 'sage' | 'bold' | 'pastel')[] | null;
+    size?: ('standard' | 'deluxe' | 'premium' | 'statement') | null;
+    quantity?: number | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    indicativeTotalFils?: number | null;
+    deliveryDate?: string | null;
+    deliveryLocation?: string | null;
+    cardMessage?: string | null;
+    specialInstructions?: string | null;
+    inspirationImages?:
+      | {
+          image: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Link to the Events record, which holds the venue, guest count, services and dates. Not duplicated here.
+   */
+  relatedEvent?: (number | null) | Event;
+  /**
+   * Interest only. Submitting this never activates a membership — that requires a Membership record and a payment.
+   */
+  membership?: {
+    /**
+     * Always 'interest'. Guarded server-side.
+     */
+    status?: 'interest' | null;
+    preferredPlan?: ('MONTHLY' | 'QUARTERLY' | 'CUSTOM') | null;
+    frequency?: ('WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY') | null;
+    deliveryPreference?: ('home' | 'office' | 'gift') | null;
+    preferredStartDate?: string | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    notes?: string | null;
+  };
+  customRequest?: {
+    category?:
+      | ('unusual-flowers' | 'large-order' | 'special-gift' | 'corporate' | 'last-minute' | 'decoration' | 'other')
+      | null;
+    description?: string | null;
+    /**
+     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
+     */
+    budgetFils?: number | null;
+    requestedDate?: string | null;
+    attachments?:
+      | {
+          image: number | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  status: 'NEW' | 'IN_REVIEW' | 'WAITING_FOR_CUSTOMER' | 'QUOTED' | 'CONVERTED' | 'RESOLVED' | 'SPAM' | 'CANCELLED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  source: 'WEBSITE' | 'INSTAGRAM' | 'WHATSAPP' | 'PHONE' | 'ADMIN' | 'OTHER';
+  /**
+   * Unassigned leads are the ones that get dropped.
+   */
+  assignedStaff?: (number | null) | User;
+  /**
+   * Drives the 'follow-ups due' view. Cannot be set in the past.
+   */
+  followUpAt?: string | null;
+  resolvedAt?: string | null;
+  lastContactedAt?: string | null;
+  lastContactMethod?: ('EMAIL' | 'WHATSAPP' | 'PHONE' | 'INSTAGRAM' | 'IN_PERSON') | null;
+  /**
+   * What was said, and when. Internal only.
+   */
+  communicationNotes?: string | null;
+  /**
+   * Internal only. Never shown to the enquirer.
+   */
+  internalNotes?: string | null;
+  /**
+   * Set when a membership enquiry becomes a real membership.
+   */
+  convertedMembership?: (number | null) | Membership;
   updatedAt: string;
   createdAt: string;
 }
@@ -682,124 +948,6 @@ export interface Event {
   createdAt: string;
 }
 /**
- * Every lead: build-your-own, events, memberships, contact, custom requests.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "enquiries".
- */
-export interface Enquiry {
-  id: number;
-  /**
-   * Assigned automatically from a Postgres sequence. Never reused.
-   */
-  enquiryNumber?: string | null;
-  type: 'BUILD_YOUR_OWN' | 'EVENT' | 'MEMBERSHIP' | 'CONTACT' | 'CUSTOM_REQUEST';
-  /**
-   * Empty for guest enquiries.
-   */
-  customer?: (number | null) | User;
-  contactName: string;
-  contactEmail: string;
-  contactPhone?: string | null;
-  company?: string | null;
-  subject: string;
-  /**
-   * In the enquirer's own words.
-   */
-  message?: string | null;
-  /**
-   * Incomplete requests are expected.
-   */
-  buildYourOwn?: {
-    style?: ('romantic' | 'minimal' | 'wild' | 'structured' | 'luxe' | 'unsure') | null;
-    flowers?: ('roses' | 'peonies' | 'orchids' | 'tulips' | 'lilies' | 'wildflowers' | 'florists-choice')[] | null;
-    colours?: ('blush' | 'white-cream' | 'burgundy' | 'terracotta' | 'sage' | 'bold' | 'pastel')[] | null;
-    size?: ('standard' | 'deluxe' | 'premium' | 'statement') | null;
-    quantity?: number | null;
-    /**
-     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
-     */
-    budgetFils?: number | null;
-    deliveryDate?: string | null;
-    deliveryLocation?: string | null;
-    cardMessage?: string | null;
-    specialInstructions?: string | null;
-    inspirationImages?:
-      | {
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
-  };
-  /**
-   * Link to the Events record, which holds the venue, guest count, services and dates. Not duplicated here.
-   */
-  relatedEvent?: (number | null) | Event;
-  /**
-   * Interest only. Submitting this never activates a membership — that requires a Membership record and a payment.
-   */
-  membership?: {
-    /**
-     * Always 'interest'. Guarded server-side.
-     */
-    status?: 'interest' | null;
-    preferredPlan?: ('MONTHLY' | 'QUARTERLY' | 'CUSTOM') | null;
-    frequency?: ('WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY') | null;
-    deliveryPreference?: ('home' | 'office' | 'gift') | null;
-    preferredStartDate?: string | null;
-    /**
-     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
-     */
-    budgetFils?: number | null;
-    notes?: string | null;
-  };
-  customRequest?: {
-    category?:
-      | ('unusual-flowers' | 'large-order' | 'special-gift' | 'corporate' | 'last-minute' | 'decoration' | 'other')
-      | null;
-    description?: string | null;
-    /**
-     * Amount in fils (AED × 100). 48000 = AED 480.00. Whole numbers only.
-     */
-    budgetFils?: number | null;
-    requestedDate?: string | null;
-    attachments?:
-      | {
-          image: number | Media;
-          id?: string | null;
-        }[]
-      | null;
-  };
-  status: 'NEW' | 'IN_REVIEW' | 'WAITING_FOR_CUSTOMER' | 'QUOTED' | 'CONVERTED' | 'RESOLVED' | 'SPAM' | 'CANCELLED';
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  source: 'WEBSITE' | 'INSTAGRAM' | 'WHATSAPP' | 'PHONE' | 'ADMIN' | 'OTHER';
-  /**
-   * Unassigned leads are the ones that get dropped.
-   */
-  assignedStaff?: (number | null) | User;
-  /**
-   * Drives the 'follow-ups due' view. Cannot be set in the past.
-   */
-  followUpAt?: string | null;
-  resolvedAt?: string | null;
-  lastContactedAt?: string | null;
-  lastContactMethod?: ('EMAIL' | 'WHATSAPP' | 'PHONE' | 'INSTAGRAM' | 'IN_PERSON') | null;
-  /**
-   * What was said, and when. Internal only.
-   */
-  communicationNotes?: string | null;
-  /**
-   * Internal only. Never shown to the enquirer.
-   */
-  internalNotes?: string | null;
-  /**
-   * Set when a membership enquiry becomes a real membership.
-   */
-  convertedMembership?: (number | null) | Membership;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Active and pending subscriptions. Billing is not connected yet.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -854,7 +1002,10 @@ export interface EmailLog {
     | 'order-status'
     | 'owner-new-order'
     | 'florist-job-sheet'
-    | 'enquiry-received';
+    | 'enquiry-received'
+    | 'payment-request'
+    | 'payment-received'
+    | 'owner-quote-paid';
   status: 'sent' | 'failed' | 'skipped' | 'suppressed';
   subject: string;
   /**
@@ -974,6 +1125,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'discounts';
+        value: number | Discount;
       } | null)
     | ({
         relationTo: 'orders';
@@ -1228,10 +1383,39 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "discounts_select".
+ */
+export interface DiscountsSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  code?: T;
+  valueType?: T;
+  percentOff?: T;
+  amountOffFils?: T;
+  appliesTo?: T;
+  products?: T;
+  occasions?: T;
+  categories?: T;
+  labelEn?: T;
+  labelAr?: T;
+  startsAt?: T;
+  endsAt?: T;
+  active?: T;
+  minSubtotalFils?: T;
+  usageLimit?: T;
+  oncePerCustomer?: T;
+  timesUsed?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
+  enquiry?: T;
+  locale?: T;
   customerType?: T;
   customer?: T;
   customerName?: T;
@@ -1242,6 +1426,7 @@ export interface OrdersSelect<T extends boolean = true> {
   deliveryDate?: T;
   deliveryTimeSlot?: T;
   deliveryNotes?: T;
+  customerNote?: T;
   recipientName?: T;
   recipientPhone?: T;
   cardMessage?: T;
@@ -1254,6 +1439,10 @@ export interface OrdersSelect<T extends boolean = true> {
         quantity?: T;
         unitPriceFils?: T;
         lineTotalFils?: T;
+        compareAtUnitPriceFils?: T;
+        saleLabelEn?: T;
+        saleLabelAr?: T;
+        sale?: T;
         selectedOptions?:
           | T
           | {
@@ -1270,8 +1459,19 @@ export interface OrdersSelect<T extends boolean = true> {
   currency?: T;
   couponCode?: T;
   couponDiscountFils?: T;
+  couponDiscount?: T;
+  discountSnapshot?: T;
+  couponRedeemedAt?: T;
   fulfilmentStatus?: T;
   paymentStatus?: T;
+  payTokenSalt?: T;
+  payTokenHash?: T;
+  payLinkExpiresAt?: T;
+  stripePaymentIntentId?: T;
+  paidAt?: T;
+  invoiceNumber?: T;
+  vatRateBps?: T;
+  vatIncludedFils?: T;
   assignedStaff?: T;
   internalNotes?: T;
   source?: T;
@@ -1315,6 +1515,7 @@ export interface EventsSelect<T extends boolean = true> {
 export interface EnquiriesSelect<T extends boolean = true> {
   enquiryNumber?: T;
   type?: T;
+  locale?: T;
   customer?: T;
   contactName?: T;
   contactEmail?: T;
@@ -1331,6 +1532,7 @@ export interface EnquiriesSelect<T extends boolean = true> {
         size?: T;
         quantity?: T;
         budgetFils?: T;
+        indicativeTotalFils?: T;
         deliveryDate?: T;
         deliveryLocation?: T;
         cardMessage?: T;

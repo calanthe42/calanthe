@@ -12,6 +12,7 @@ import { PageHeader } from "@admin/ui/PageHeader";
 import { Pagination, listHref, parsePage } from "@admin/ui/Pagination";
 import { EmptyState } from "@admin/ui/States";
 import { Table, Td, Tr } from "@admin/ui/Table";
+import { getQuoteStatesForEnquiries } from "@backend/data/quote";
 import { dubaiDateInputValue } from "@backend/domain/dates";
 
 /**
@@ -77,6 +78,11 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
     user,
     overrideAccess: false,
   });
+
+  /* Where each row's payment request stands — one query for the whole page.
+     Read from the orders, so a row can never claim "paid" on the strength of
+     a status somebody set by hand. */
+  const quoteStates = await getQuoteStatesForEnquiries(result.docs.map((enquiry) => enquiry.id));
 
   const filtered = Boolean(query || status || priority || type || followUp);
   const today = dubaiDateInputValue(now.toISOString());
@@ -162,6 +168,9 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
               const followDay = dubaiDateInputValue(enquiry.followUpAt);
               const due = Boolean(followDay) && OPEN.has(enquiry.status) && followDay <= today;
               const ref = enquiry.enquiryNumber ?? enquiry.subject;
+              /* A cancelled request is history, not a state worth a badge. */
+              const payState = quoteStates.get(enquiry.id);
+              const showPay = payState && payState !== "cancelled" ? payState : null;
               return (
                 <Tr key={enquiry.id}>
                   <Td primary>
@@ -177,9 +186,14 @@ export default async function AdminEnquiriesPage({ searchParams }: { searchParam
                     {label("enquiryType", enquiry.type)}
                   </Td>
                   <Td label={t("enquiries.columns.status")}>
-                    <Badge tone={toneFor("enquiryStatus", enquiry.status)} dot>
-                      {label("enquiryStatus", enquiry.status)}
-                    </Badge>
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <Badge tone={toneFor("enquiryStatus", enquiry.status)} dot>
+                        {label("enquiryStatus", enquiry.status)}
+                      </Badge>
+                      {showPay ? (
+                        <Badge tone={toneFor("payRequest", showPay)}>{label("payRequest", showPay)}</Badge>
+                      ) : null}
+                    </span>
                   </Td>
                   <Td label={t("enquiries.columns.priority")}>
                     <Badge tone={toneFor("priority", enquiry.priority)}>{label("priority", enquiry.priority)}</Badge>

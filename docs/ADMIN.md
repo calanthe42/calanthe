@@ -61,14 +61,55 @@ left-to-right.
 | Products | `/admin/products` (search, availability including missing photos and out of stock, category, highlight, sort, paging) · `/new` · `/[id]/edit` |
 | Occasions | `/admin/occasions` (search, status) · `/new` · `/[id]/edit` |
 | Media | `/admin/media` — upload, search, type and usage filters, a details sheet with editable alt text, delete (refused while in use) |
-| Orders | `/admin/orders` (search, status, payment, needs-attention, delivery dates, paging) · `/[orderNumber]` |
+| Orders | `/admin/orders` (search — order number, name, email, phone or the discount code used — status, payment, needs-attention — past delivery date, payment requests awaiting payment, link expired, paid requests to start — delivery dates, paging) · `/[orderNumber]` (an unpaid payment request shows resend / copy link / cancel at the top and cannot be moved on) |
 | Customers | `/admin/customers` · `/[id]` (owner only) |
-| Enquiries | `/admin/enquiries` (search, status including "waiting for a reply", priority, type, follow-up due) · `/[id]` |
+| Enquiries | `/admin/enquiries` (search, status including "waiting for a reply", priority, type, follow-up due; a payment badge per row) · `/[id]` — for build-your-own, event and custom requests the **Payment** card at the top confirms the enquiry and emails a pay link (owner and staff; each one is named in the activity log). See docs/PAYMENTS.md, "Payment requests" |
 | Events | `/admin/events` (search, status, type) · `/[id]` |
-| Not built yet | Discounts, Delivery, Memberships, Campaigns, Staff, Settings — each marked "Soon", saying plainly what is missing, linking to nothing |
+| Discounts | `/admin/discounts` (owner only: search by name or code, status Active / Scheduled / Expired / Draft, type; value, what it applies to, dates and use count per row; activate / deactivate / duplicate / delete from the row menu) · `/new?kind=automatic` or `?kind=code` (and `?from=<id>` to start from a copy) · `/[id]/edit` (with what the discount has done so far) |
+| Not built yet | Delivery, Memberships, Campaigns, Staff, Settings — each marked "Soon", saying plainly what is missing, linking to nothing |
 
 Navigation is grouped **Overview, Catalog, Sales, Operations, Marketing,
 System**, as a sidebar on desktop and a drawer on a phone.
+
+**Discounts** are the owner's alone: the collection refuses a florist, the
+navigation hides the entry, and the address shows a sentence saying who to
+ask. There are two kinds, chosen before the form opens and fixed afterwards:
+an **automatic sale** (customers see the regular price struck through, the
+sale price and the label she wrote, in English and Arabic) and a **discount
+code** (typed in the cart or at checkout; one per order, on top of any sale
+price). The rules of the money are in docs/PAYMENTS.md and docs/ORDERS.md.
+
+- **Nothing goes live on one click.** A new discount is a **Draft**: the
+  Active switch is off. Saving it active, pressing Activate in the list, or
+  changing what a live discount does all stop at a confirmation that states
+  what will change, in numbers worked out on the server from the real
+  catalogue ("This changes the price of 42 products on the store now. The
+  lowest price becomes AED 96 (Peony Cloud, was AED 480)."). Only her yes
+  saves it. A draft, a discount scheduled for later, a rename and a
+  deactivation change nothing customers pay today and are not asked about.
+- **Status is worked out, never stored**: Draft (switched off), Scheduled
+  (on, start in the future), Active, Expired (end passed — this wins over
+  everything). Dates are typed and shown in Abu Dhabi time.
+- **Deactivate** makes a discount a Draft again; it deletes nothing.
+  **Delete** is refused once any order has used the discount, with the
+  number of orders. **Duplicate** copies the terms into a new Draft with no
+  dates and, for a code, no code.
+- **Used** is the number of paid orders. A code's count is the one its limit
+  is measured against (written when the payment arrives); a sale's is
+  counted from the paid orders that carry it. The edit screen adds what the
+  discount took off those orders and what they came to, read from the
+  orders' own snapshots. A refund does not give a use back.
+- **Where staff see a discount**: on the order. Each line sold on offer
+  shows its regular price struck through and the sale's label; a code is the
+  "Discount (CODE)" row; orders can be searched by code. The products list
+  shows "On offer: AED …" under the price while a sale applies.
+- The product editor's **Compare-at price** is a record only. The store's
+  crossed-out price comes from Discounts and from nowhere else.
+- A discount edited in `/cms` goes through the same validation but does not
+  ask for the confirmation above and does not refresh the storefront cache;
+  the storefront reads sales on every request, so the change still shows on
+  the next page load. Use `/admin`.
+
 
 **The product editor** covers every business field: name, web address, short
 and full description, price and compare-at price **in AED**, category,

@@ -293,3 +293,30 @@ eventually it will:
 
 Output goes to the admin dashboard's *Needs attention* panel and to
 Sentry. Silence is the success case.
+
+---
+
+## 10. Discounts on an order — as built, 2026-10-05
+
+The pricing rules are in [PAYMENTS — Discounts](./PAYMENTS.md). This is what an order **stores**, so that editing or deleting a discount later changes no receipt.
+
+| Stored on the order | Meaning |
+| --- | --- |
+| `items[].unitPriceFils` | What was paid per unit — the sale already applied |
+| `items[].compareAtUnitPriceFils` | The regular unit price (arrangement + add-ons). Empty when the line was not on sale. Must be higher than `unitPriceFils`. |
+| `items[].saleLabelEn`, `saleLabelAr` | What the sale was called, for the customer |
+| `items[].sale` | Reporting link to the discount. Staff-read only. Never read for display or price. |
+| `subtotalFils` | Sum of the lines, after sale prices |
+| `discountFils` | The order-level discount. Always equal to `couponDiscountFils`. |
+| `couponCode`, `couponDiscountFils` | The code as redeemed, and what it took off |
+| `couponDiscount` | Reporting link, and the row a use is counted against. Staff-read only. |
+| `discountSnapshot` | The terms of the code and of each sale as they stood at checkout — this is the `couponSnapshot` of §4. It carries the owner's internal titles, so it is staff-read only. Present only on a discounted order. |
+| `couponRedeemedAt` | When the order was counted as a use of its code. Written by one SQL statement when the order is paid; no role can author it. |
+
+The integrity hook (`validateOrderTotals`) enforces, at creation: `discountFils === couponDiscountFils`; a code discount names its code; a code with nothing taken off is not recorded; a code never exceeds the subtotal; the regular price is higher than the price paid.
+
+**`shownTotalFils`** is sent by the browser at checkout and is not stored. It is the total the customer was shown, compared with the server's total; a difference refuses the order with `PRICE_CHANGED`.
+
+**Rounding.** A sale price is rounded down to the whole dirham; a percentage code is rounded up to the whole dirham; both in the customer's favour.
+
+**Unpaid discounted orders are cancelled after 60 minutes**, with their PaymentIntent, so a sale price cannot be paid after the sale ended. Their internal note says why. Full-price unpaid orders are not touched.

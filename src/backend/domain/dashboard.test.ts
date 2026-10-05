@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { QUOTE_SOURCE } from "@backend/payments/pay-link";
 import {
+  QUOTE_ORDER_SOURCE,
   dailySeries,
+  isAwaitingQuote,
+  isOpen,
   isOverdue,
+  isPaidQuoteToStart,
+  isPlaced,
+  quoteQueue,
   openStatusCounts,
   parsePeriod,
   percentChange,
@@ -147,5 +154,105 @@ describe("openStatusCounts", () => {
       { status: "READY", count: 1 },
       { status: "OUT_FOR_DELIVERY", count: 0 },
     ]);
+  });
+});
+
+/**
+ * AN UNPAID PAYMENT REQUEST IS NOT AN ORDER YET.
+ *
+ * Confirming an enquiry creates an order row so the customer has something
+ * to pay. Until they do, it must not look like a sale, like work waiting for
+ * the florist, or like a delivery — a florist who reads "Today's deliveries"
+ * would otherwise prepare flowers nobody has paid for.
+ */
+describe("unpaid payment requests", () => {
+  const unpaidQuote = (overrides: Partial<OrderLike> = {}): OrderLike =>
+    order({ source: "admin-quote", totalFils: 65_000, paymentStatus: "PENDING", fulfilmentStatus: "NEW", ...overrides });
+  const paidQuote = (overrides: Partial<OrderLike> = {}): OrderLike =>
+    unpaidQuote({ paymentStatus: "PAID", fulfilmentStatus: "CONFIRMED", ...overrides });
+  const todayStart = new Date("2026-09-10T20:00:00.000Z");
+
+  it("uses the same source value the payments code writes", () => {
+    expect(QUOTE_ORDER_SOURCE).toBe(QUOTE_SOURCE);
+  });
+
+  it("recognises one — and stops recognising it the moment it is paid", () => {
+    expect(isAwaitingQuote(unpaidQuote())).toBe(true);
+    expect(isAwaitingQuote(unpaidQuote({ paymentStatus: "FAILED" }))).toBe(true);
+    expect(isAwaitingQuote(paidQuote())).toBe(false);
+    expect(isAwaitingQuote(unpaidQuote({ paymentStatus: "REFUNDED" }))).toBe(false);
+    expect(isAwaitingQuote(order({ source: "web-checkout-card" }))).toBe(false);
+    expect(isAwaitingQuote(order({}))).toBe(false);
+  });
+
+  it("is not revenue and not an order in the summary", () => {
+    const summary = summariseOrders([order({ totalFils: 48_000 }), unpaidQuote()]);
+    expect(summary.orders).toBe(1);
+    expect(summary.revenueFils).toBe(48_000);
+    expect(summary.paidFils).toBe(0);
+  });
+
+  it("becomes revenue once it is paid", () => {
+    const summary = summariseOrders([order({ totalFils: 48_000 }), paidQuote()]);
+    expect(summary.orders).toBe(2);
+    expect(summary.revenueFils).toBe(113_000);
+    expect(summary.paidFils).toBe(65_000);
+  });
+
+  it("is absent from the daily chart", () => {
+    const window = periodWindow(new Date("2026-09-11T10:00:00.000Z"), 7);
+    const createdAt = "2026-09-11T06:00:00.000Z";
+    const series = dailySeries([order({ createdAt, totalFils: 48_000 }), unpaidQuote({ createdAt })], window);
+    const today = series.at(-1)!;
+    expect(today.orders).toBe(1);
+    expect(today.revenueFils).toBe(48_000);
+  });
+
+  it("is absent from the best-sellers", () => {
+    const items = [{ productName: "Bespoke arrangement", quantity: 1, lineTotalFils: 65_000 }];
+    expect(topProducts([unpaidQuote({ items })])).toEqual([]);
+    expect(topProducts([paidQuote({ items })])).toHaveLength(1);
+  });
+
+  it("is not placed, so it is not on today's delivery list", () => {
+    expect(isPlaced(unpaidQuote())).toBe(false);
+    expect(isPlaced(paidQuote())).toBe(true);
+  });
+
+  it("is not open work and not a new order waiting to be confirmed", () => {
+    expect(isOpen(unpaidQuote())).toBe(false);
+    const counts = openStatusCounts([order({}), unpaidQuote()]);
+    expect(counts.find((c) => c.status === "NEW")?.count).toBe(1);
+  });
+
+  it("is never overdue, however long the link has been dead", () => {
+    const deliveryDate = "2026-09-01T08:00:00.000Z";
+    expect(isOverdue(unpaidQuote({ deliveryDate }), todayStart)).toBe(false);
+    /* A paid one is real work, and can be late like any other. */
+    expect(isOverdue(paidQuote({ deliveryDate }), todayStart)).toBe(true);
+  });
+
+  it("is counted as paid-and-waiting-to-start once it is paid, until someone starts it", () => {
+    expect(isPaidQuoteToStart(paidQuote())).toBe(true);
+    expect(isPaidQuoteToStart(paidQuote({ fulfilmentStatus: "PREPARING" }))).toBe(false);
+    expect(isPaidQuoteToStart(unpaidQuote())).toBe(false);
+    expect(isPaidQuoteToStart(order({ paymentStatus: "PAID", fulfilmentStatus: "CONFIRMED" }))).toBe(false);
+  });
+
+  it("sorts requests into awaiting, expired and paid-to-start", () => {
+    const now = new Date("2026-09-11T10:00:00.000Z");
+    const queue = quoteQueue(
+      [
+        { ...unpaidQuote(), payLinkExpiresAt: "2026-09-12T10:00:00.000Z" },
+        { ...unpaidQuote(), payLinkExpiresAt: "2026-09-13T10:00:00.000Z" },
+        { ...unpaidQuote(), payLinkExpiresAt: "2026-09-10T10:00:00.000Z" },
+        { ...unpaidQuote(), payLinkExpiresAt: null },
+        { ...unpaidQuote({ fulfilmentStatus: "CANCELLED" }), payLinkExpiresAt: "2026-09-12T10:00:00.000Z" },
+        paidQuote(),
+        order({}),
+      ],
+      now,
+    );
+    expect(queue).toEqual({ awaiting: 2, expired: 2, paidToStart: 1 });
   });
 });

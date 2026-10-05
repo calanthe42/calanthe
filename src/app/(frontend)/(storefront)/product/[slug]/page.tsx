@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/blocks/JsonLd";
 import { ProductDetail } from "@/components/commerce/ProductDetail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
 import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
+import { effectivePriceAed } from "@/lib/catalogue";
 import { formatAed } from "@/lib/data";
 import {
   getAvailableProductBySlug,
@@ -52,7 +53,7 @@ export async function generateMetadata({
   /* The description is generated from real fields only — the name and
      the price. There is no marketing copy field on the document yet,
      and writing one here would be inventing product claims. */
-  const description = `${product.name} — hand-composed by the Calanthe atelier, from ${formatAed(product.priceAed)}. Delivered across Abu Dhabi.`;
+  const description = `${product.name} — hand-composed by the Calanthe atelier, from ${formatAed(effectivePriceAed(product))}. Delivered across Abu Dhabi.`;
   const image = product.images[0]?.src;
 
   return {
@@ -98,8 +99,10 @@ export default async function ProductPage({
         data={productJsonLd({
           name: product.name,
           slug: product.slug,
-          priceAed: product.priceAed,
+          /* The price a customer pays today, with the sale's real end. */
+          priceAed: effectivePriceAed(product),
           image: product.images[0]?.src,
+          priceValidUntil: product.sale?.endsAt,
         })}
       />
       <JsonLd

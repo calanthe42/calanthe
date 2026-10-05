@@ -16,6 +16,8 @@
  *
  * Next.js runs this file once, early, on the client.
  */
+import { scrubPayTokens } from "@/lib/scrub-pay-token";
+
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 if (dsn && typeof window !== "undefined") {
@@ -33,6 +35,11 @@ if (dsn && typeof window !== "undefined") {
         /* A customer's address and card details pass through this app. PII
            stays off and is turned on deliberately, per event, if ever needed. */
         sendDefaultPii: false,
+
+        /* A payment link's address is its credential (/pay/<token>): scrub
+           it from every URL, breadcrumb and message before anything is sent. */
+        beforeSend: (event) => scrubPayTokens(event),
+        beforeBreadcrumb: (breadcrumb) => scrubPayTokens(breadcrumb),
 
         /* Session Replay is deliberately not enabled: it records the DOM,
            which on this site means the checkout form. */

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Product as PayloadProduct } from "@/payload-types";
+import type { SaleRule } from "@/lib/discounts";
 
 /**
  * These tests exist for one reason: to prove that the storefront cannot be
@@ -19,6 +20,13 @@ vi.mock("payload", () => ({
   getPayload: async () => ({ find }),
 }));
 vi.mock("@payload-config", () => ({ default: {} }));
+
+/* The live sales are read through their own module (data/discounts.ts), so
+   `find` above stays what it has always been here: the products query. */
+let liveSales: SaleRule[] = [];
+vi.mock("@backend/data/discounts", () => ({
+  getLiveSaleRulesForDisplay: async () => liveSales,
+}));
 
 const {
   getAvailableProductBySlug,
@@ -79,7 +87,28 @@ function requiresAvailable(where: unknown): boolean {
 beforeEach(() => {
   find.mockReset();
   find.mockResolvedValue({ docs: [] });
+  liveSales = [];
 });
+
+const NOW = new Date("2026-10-05T10:00:00.000Z");
+
+function sale(over: Partial<SaleRule> = {}): SaleRule {
+  return {
+    id: "3",
+    title: "INTERNAL — Eid margin test",
+    labelEn: "Eid offer",
+    labelAr: "عرض العيد",
+    appliesTo: "all",
+    productIds: [],
+    occasionIds: [],
+    categories: [],
+    active: true,
+    valueType: "percentage",
+    percentOff: 20,
+    amountOffFils: 0,
+    ...over,
+  };
+}
 
 describe("availability is enforced in the query", () => {
   const cases: [string, () => Promise<unknown>][] = [
@@ -281,5 +310,89 @@ describe("document mapping", () => {
     expect(__internal.toStorefrontProduct(doc({ occasions: [7, 9] })).occasions).toEqual(
       [],
     );
+  });
+});
+
+describe("sales on the storefront", () => {
+  it("is unchanged when there are no sales", () => {
+    expect(__internal.toStorefrontProduct(doc(), [], NOW)).toEqual(__internal.toStorefrontProduct(doc()));
+    expect(__internal.toStorefrontProduct(doc(), [], NOW)).not.toHaveProperty("sale");
+  });
+
+  it("attaches the sale price, both labels and the end date — and keeps the regular price", () => {
+    const mapped = __internal.toStorefrontProduct(
+      doc({ priceFils: 48000 }),
+      [sale({ endsAt: "2026-10-10T19:59:00.000Z" })],
+      NOW,
+    );
+    expect(mapped.priceAed).toBe(480);
+    expect(mapped.sale).toEqual({
+      id: "3",
+      label: { en: "Eid offer", ar: "عرض العيد" },
+      valueType: "percentage",
+      percentOff: 20,
+      amountOffFils: 0,
+      priceAed: 384,
+      endsAt: "2026-10-10T19:59:00.000Z",
+    });
+  });
+
+  it("exposes nothing else about a discount: no title, no code, no usage", () => {
+    const mapped = __internal.toStorefrontProduct(doc(), [sale()], NOW);
+    expect(Object.keys(mapped.sale ?? {}).sort()).toEqual([
+      "amountOffFils",
+      "id",
+      "label",
+      "percentOff",
+      "priceAed",
+      "valueType",
+    ]);
+    expect(JSON.stringify(mapped)).not.toContain("INTERNAL");
+  });
+
+  it("matches by occasion id when the relationship is populated", () => {
+    const withOccasion = doc({ occasions: [{ id: 5, slug: "birthday" }] as never });
+    const rule = sale({ appliesTo: "occasions", occasionIds: ["5"] });
+    expect(__internal.toStorefrontProduct(withOccasion, [rule], NOW).sale?.priceAed).toBe(384);
+    expect(
+      __internal.toStorefrontProduct(withOccasion, [sale({ appliesTo: "occasions", occasionIds: ["6"] })], NOW),
+    ).not.toHaveProperty("sale");
+  });
+
+  it("ignores a sale that is not live, or does not match", () => {
+    const scheduled = sale({ startsAt: "2026-11-01T00:00:00.000Z" });
+    const expired = sale({ endsAt: "2026-10-01T00:00:00.000Z" });
+    const draft = sale({ active: false });
+    const elsewhere = sale({ appliesTo: "categories", categories: ["plant"] });
+    expect(
+      __internal.toStorefrontProduct(doc(), [scheduled, expired, draft, elsewhere], NOW),
+    ).not.toHaveProperty("sale");
+  });
+
+  it("picks the best of two matching sales", () => {
+    const mapped = __internal.toStorefrontProduct(
+      doc({ priceFils: 48000 }),
+      [sale({ id: "1" }), sale({ id: "2", valueType: "fixed", percentOff: 0, amountOffFils: 10000 })],
+      NOW,
+    );
+    expect(mapped.sale?.id).toBe("2");
+    expect(mapped.sale?.priceAed).toBe(380);
+  });
+
+  it("every query attaches the live sales", async () => {
+    liveSales = [sale()];
+    find.mockResolvedValue({ docs: [doc({ priceFils: 48000 })] });
+    for (const call of [
+      () => getAvailableProducts(),
+      () => getFeaturedProducts(),
+      () => getNewArrivals(),
+      () => getBestSellers(),
+      () => getProductsForOccasion("birthday"),
+    ]) {
+      const [product] = await call();
+      expect(product?.sale?.priceAed).toBe(384);
+      expect(product?.priceAed).toBe(480);
+    }
+    expect((await getAvailableProductBySlug("amber-hour"))?.sale?.priceAed).toBe(384);
   });
 });

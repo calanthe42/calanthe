@@ -277,3 +277,76 @@ describe("owner email", () => {
     expect(sheet.rendered.html).not.toContain("layla@example.com");
   });
 });
+
+describe("discounts in the order emails", () => {
+  /* AED 480 on a 20% sale (384) + vase 60 = 444; code EID10 takes 45 off. */
+  const DISCOUNTED: OrderEmailInput = {
+    ...ORDER,
+    subtotalFils: 44400,
+    deliveryFeeFils: 0,
+    totalFils: 39900,
+    couponCode: "EID10",
+    couponDiscountFils: 4500,
+    saleSavingsFils: 9600,
+  };
+
+  const emails = (input: OrderEmailInput) =>
+    buildOrderEmails(input, { owner: "owner@example.com", florist: "florist@example.com" });
+  const of = (input: OrderEmailInput, type: string) => emails(input).find((e) => e.type === type)!.rendered;
+
+  it("shows the Discount row and the saved line on a confirmation with a code", () => {
+    const confirmation = of(DISCOUNTED, "order-confirmation");
+    const html = visibleText(confirmation.html);
+    expect(html).toContain("Discount (EID10)");
+    expect(confirmation.html).toContain("&minus;AED 45");
+    /* Sale savings and the code together: 96 + 45. */
+    expect(html).toContain("You saved AED 141 on this order.");
+    expect(confirmation.text).toContain("Discount (EID10): −AED 45");
+    expect(confirmation.text).toContain("You saved AED 141 on this order.");
+    expect(confirmation.text).toContain("Total: AED 399");
+  });
+
+  it("puts the rows in order: subtotal, discount, delivery, total", () => {
+    const { text } = of(DISCOUNTED, "order-confirmation");
+    const at = (needle: string) => text.indexOf(needle);
+    expect(at("Subtotal:")).toBeLessThan(at("Discount (EID10)"));
+    expect(at("Discount (EID10)")).toBeLessThan(at("Delivery: Complimentary"));
+    expect(at("Delivery: Complimentary")).toBeLessThan(at("Total:"));
+  });
+
+  it("shows neither on an order with no discount", () => {
+    const confirmation = of(ORDER, "order-confirmation");
+    expect(confirmation.html).not.toMatch(/Discount|You saved/);
+    expect(confirmation.text).not.toMatch(/Discount|You saved/);
+  });
+
+  it("shows the saved line alone for a sale with no code", () => {
+    const confirmation = of({ ...DISCOUNTED, couponCode: undefined, couponDiscountFils: 0, totalFils: 44400 }, "order-confirmation");
+    expect(confirmation.text).not.toContain("Discount (");
+    expect(confirmation.text).toContain("You saved AED 96 on this order.");
+  });
+
+  it("ignores a code amount that names no code", () => {
+    const confirmation = of({ ...ORDER, couponDiscountFils: 4500 }, "order-confirmation");
+    expect(confirmation.text).not.toMatch(/Discount|You saved/);
+  });
+
+  it("tells the owner why the total is lower than list price", () => {
+    const owner = of(DISCOUNTED, "owner-new-order");
+    expect(owner.subject).toBe("New order CAL-000001 — AED 399");
+    expect(owner.text).toContain("Discount code EID10: −AED 45.");
+    expect(owner.text).toContain("Sale savings included: AED 96.");
+    expect(of(ORDER, "owner-new-order").text).not.toMatch(/Discount code|Sale savings/);
+  });
+
+  it("escapes a code, should one ever carry markup", () => {
+    const confirmation = of({ ...DISCOUNTED, couponCode: "<b>X</b>" }, "order-confirmation");
+    expect(confirmation.html).not.toContain("<b>X</b>");
+  });
+
+  it("still keeps every amount off the florist's job sheet", () => {
+    const sheet = of(DISCOUNTED, "florist-job-sheet");
+    expect(sheet.html).not.toMatch(/AED|EID10|Discount|saved/);
+    expect(sheet.text).not.toMatch(/AED|EID10|Discount|saved/);
+  });
+});

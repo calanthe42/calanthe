@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { FormInputError } from "./form-error";
-import { dubaiDateInputValue, followUpIsoFromDateInput } from "./dates";
+import {
+  dubaiDateInputValue,
+  dubaiDateTimeToIso,
+  dubaiTimeInputValue,
+  followUpIsoFromDateInput,
+} from "./dates";
 
 describe("UAE dates for follow-ups", () => {
   it("shows a stored timestamp as the UAE calendar day", () => {
@@ -32,5 +37,38 @@ describe("UAE dates for follow-ups", () => {
     expect(() => followUpIsoFromDateInput("2026-09-09", now)).toThrow(FormInputError);
     expect(() => followUpIsoFromDateInput("2027-02-30", now)).toThrow(FormInputError);
     expect(() => followUpIsoFromDateInput("next tuesday", now)).toThrow(FormInputError);
+  });
+});
+
+describe("date and time in the discount form", () => {
+  it("reads 18:00 on 10 October in Abu Dhabi as 14:00 UTC", () => {
+    expect(dubaiDateTimeToIso("2026-10-10", "18:00")).toBe("2026-10-10T14:00:00.000Z");
+  });
+
+  it("crosses midnight correctly: 02:30 in Abu Dhabi is the previous day in UTC", () => {
+    expect(dubaiDateTimeToIso("2026-10-10", "02:30")).toBe("2026-10-09T22:30:00.000Z");
+  });
+
+  it("treats an empty time as the start of the day", () => {
+    expect(dubaiDateTimeToIso("2026-10-10", "")).toBe("2026-10-09T20:00:00.000Z");
+  });
+
+  it("round-trips through the two inputs", () => {
+    for (const [day, time] of [["2026-10-10", "18:00"], ["2026-01-01", "00:00"], ["2026-12-31", "23:59"]] as const) {
+      const iso = dubaiDateTimeToIso(day, time);
+      expect(dubaiDateInputValue(iso)).toBe(day);
+      expect(dubaiTimeInputValue(iso)).toBe(time);
+    }
+  });
+
+  it("refuses a date or a time that is not real", () => {
+    for (const [day, time] of [["2026-02-31", "10:00"], ["10/10/2026", "10:00"], ["2026-10-10", "25:00"], ["2026-10-10", "6pm"], ["", "10:00"]] as const) {
+      expect(() => dubaiDateTimeToIso(day, time)).toThrow(FormInputError);
+    }
+  });
+
+  it("shows nothing for an empty or broken timestamp", () => {
+    expect(dubaiTimeInputValue(null)).toBe("");
+    expect(dubaiTimeInputValue("not a date")).toBe("");
   });
 });

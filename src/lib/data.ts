@@ -112,11 +112,34 @@ export const productCategoryNames: Record<ProductCategory, string> = {
   "event-piece": "Event Pieces",
 };
 
+/**
+ * The sale a product is on, as much of it as a browser may know.
+ *
+ * Built on the server by backend/data/products.ts from the one live sale
+ * that applies (lib/discounts.ts `bestSaleFor`). It carries the label the
+ * owner wrote for customers and the terms needed to price any size — and
+ * nothing else: not the sale's internal name, not who else it applies to.
+ */
+export type ProductSale = {
+  id: string;
+  label: { en: string; ar: string };
+  valueType: "percentage" | "fixed";
+  percentOff: number;
+  amountOffFils: number;
+  /** The Standard-size sale price. Other sizes are priced with the terms. */
+  priceAed: number;
+  /** ISO instant the sale ends, when it has an end. */
+  endsAt?: string;
+};
+
 export type Product = {
   id: string;
   slug: string;
   name: string;
+  /** The REGULAR price. A sale never changes this; see `sale`. */
   priceAed: number;
+  /** Present only while an automatic sale applies to this product. */
+  sale?: ProductSale;
   images: readonly [ProductImage, ProductImage];
   occasions: readonly OccasionSlug[];
   flowers: readonly FlowerType[];

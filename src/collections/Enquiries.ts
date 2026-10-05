@@ -110,6 +110,23 @@ export const Enquiries: CollectionConfig = {
       access: immutableAfterCreate,
       admin: { position: "sidebar" },
     },
+    {
+      name: "locale",
+      type: "select",
+      /* No default on purpose: empty means "we do not know", which is true of
+         every enquiry made before this field existed and of every one a
+         florist types in by hand. */
+      options: [
+        { label: "English", value: "en" },
+        { label: "العربية", value: "ar" },
+      ],
+      access: immutableAfterCreate,
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        description: "The language the form was filled in. Preselects the payment email language.",
+      },
+    },
 
     /* ---------------- Who is asking ---------------- */
     {
@@ -211,6 +228,10 @@ export const Enquiries: CollectionConfig = {
         },
         { name: "quantity", type: "number", min: 1 },
         filsField({ name: "budgetFils", label: "Approximate budget (fils)" }),
+        /* The running total the form showed the customer. It used to live
+           only inside the free-text message; the payment request prefills
+           from it. */
+        filsField({ name: "indicativeTotalFils", label: "Indicative total (fils)" }),
         { name: "deliveryDate", type: "date", index: true, admin: { date: { pickerAppearance: "dayOnly" } } },
         { name: "deliveryLocation", type: "text", maxLength: 240 },
         { name: "cardMessage", type: "textarea", maxLength: 300 },

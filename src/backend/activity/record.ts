@@ -54,10 +54,32 @@ const LABELS: Record<string, string> = {
   staffNotes: "internal notes",
   images: "photographs",
   occasions: "occasions",
+  /* Discounts. */
+  title: "name",
+  code: "code",
+  valueType: "discount type",
+  percentOff: "percentage",
+  amountOffFils: "amount off",
+  appliesTo: "applies to",
+  startsAt: "start",
+  endsAt: "end",
+  active: "active",
+  minSubtotalFils: "minimum purchase",
+  usageLimit: "usage limit",
+  oncePerCustomer: "one use per customer",
 };
 
 /** Changes that should stand out in a long list. */
-const NOTABLE = new Set(["priceFils", "compareAtPriceFils", "available", "stock"]);
+const NOTABLE = new Set([
+  "priceFils",
+  "compareAtPriceFils",
+  "available",
+  "stock",
+  /* A discount going live, or its value changing, reprices the shop. */
+  "percentOff",
+  "amountOffFils",
+  "active",
+]);
 
 function money(fils: unknown): string {
   const n = Number(fils);

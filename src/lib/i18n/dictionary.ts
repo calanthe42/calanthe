@@ -342,6 +342,11 @@ export const en = {
     cartWith: "Cart, {items}",
     cartEmpty: "Cart, empty",
     addAddon: "Add {addon} to {product}, {price}",
+    /* Sale prices. "Was"/"Now" are read out, not shown: the eye has the
+       strike-through, a screen reader needs the words. */
+    salePercent: "{n}% off",
+    priceWas: "Was {price}",
+    priceNow: "Now {price}",
   },
   /**
    * The product categories, as the shop's top tab row shows them. They match
@@ -966,6 +971,7 @@ export const en = {
     privacy: "Privacy Policy",
     terms: "Terms & Conditions",
     refunds: "Refund & Cancellation Policy",
+    pay: "Payment",
   },
   /** The wishlist. */
   wishlist: {
@@ -1052,6 +1058,28 @@ export const en = {
 
     gallery: "Photographs of {name}",
     galleryView: "View {n}",
+
+    /* While the arrangement is on offer. */
+    youSave: "You save {amount}",
+    offerEnds: "Offer ends {date}",
+    offerExcludesAddons: "The offer applies to the arrangement. Add-ons are priced as shown.",
+  },
+  /**
+   * THE DISCOUNT CODE FIELD, in the cart and at checkout. The sentences a
+   * refused code is answered with come from the server (server.checkout.*);
+   * these are the words around the field itself.
+   */
+  discount: {
+    toggle: "Add a discount code",
+    label: "Discount code",
+    placeholder: "Enter code",
+    apply: "Apply",
+    checking: "Checking…",
+    remove: "Remove code {code}",
+    applied: "Code {code} applied. You save {amount}.",
+    rowCode: "Code {code}",
+    totalSavings: "You save {amount} on this order",
+    failed: "We could not check that code. Please try again.",
   },
   /**
    * Sizes and add-ons. Like the emirates, these are configuration in code
@@ -1130,6 +1158,18 @@ export const en = {
         "We could not place your order. Nothing has been charged — please try again.",
       paymentUnavailable:
         "Online payment is not available right now. Please message us on WhatsApp to place your order.",
+      /* Discount codes. ONE sentence for a code that does not exist, is
+         switched off, has not started or has ended — so nobody can learn
+         which codes are real by trying them. */
+      codeInvalid:
+        "That code is not valid or is no longer active. Check the spelling and try again.",
+      codeMinSpend: "Add {amount} more to use this code. It needs a minimum order of {min}.",
+      codeAlreadyUsed: "This code has already been used with this email address.",
+      codeExhausted: "This code has reached its limit and is no longer available.",
+      codeRateLimited: "Too many attempts. {wait}",
+      priceChanged: "Prices have just been updated. Please review the new total, then pay.",
+      totalTooLow:
+        "This total is too low to pay by card. Add an arrangement or remove the code.",
     },
     account: {
       credentialsRequired: "Enter your email and password.",
@@ -1172,6 +1212,82 @@ export const en = {
       deliveryPreferenceRequired: "Please choose where the flowers should go.",
       startDateInvalid: "Please check the start date.",
       startDatePast: "Please choose a start date from today onward.",
+    },
+    /**
+     * The payment link (/pay/…). Refusals from the pay action, said in the
+     * visitor's language like every other server message.
+     */
+    pay: {
+      rateLimited: "Too many attempts from this device. {wait}",
+      linkInvalid:
+        "This payment link is not valid. Please open the link from your most recent email.",
+      linkExpired: "This payment link has expired. Message us for a new one.",
+      cancelled: "This payment request was cancelled. Nothing has been charged.",
+      alreadyPaid: "This has already been paid. Thank you.",
+      processing: "Your payment is being confirmed. Please do not pay again.",
+      failed: "We could not start the payment. Nothing has been charged — please try again.",
+    },
+  },
+  /**
+   * THE PAYMENT LINK PAGE — /pay/[token].
+   *
+   * A florist confirms a bespoke arrangement and the customer is emailed a
+   * link. This is everything that page says: the request, the wait while the
+   * payment is confirmed, the invoice once it is paid, and the three ways a
+   * link can be no good (expired, cancelled, not found).
+   */
+  pay: {
+    eyebrow: "Your arrangement",
+    reference: "Reference {number}",
+    title: "Your arrangement is confirmed.",
+    intro: "Your florist has confirmed the details below. Pay securely to reserve your flowers.",
+    arrangement: "Arrangement",
+    delivery: "Delivery",
+    deliverTo: "Deliver to",
+    noteTitle: "A note from your florist",
+    total: "Total to pay",
+    payNow: "Pay now — {amount}",
+    payShort: "Pay now",
+    paying: "Processing…",
+    validUntil: "This link is valid until {date}.",
+    confirmingTitle: "Thank you. We are confirming your payment.",
+    confirmingBody: "This takes a few seconds. Your invoice will arrive by email.",
+    paidTitle: "Thank you. Your payment is received.",
+    paidBody:
+      "Your florist will compose your arrangement by hand and send a photograph on WhatsApp for your approval before it leaves the atelier.",
+    expiredTitle: "This payment link has expired.",
+    expiredBody: "Nothing has been charged. Message us and we will send you a new link.",
+    cancelledTitle: "This payment request was cancelled.",
+    cancelledBody:
+      "Nothing has been charged. If this is unexpected, message us and a florist will help.",
+    invalidTitle: "We could not find this payment link.",
+    invalidBody: "Please open the link from your most recent email, or message us.",
+    whatsapp: "Message us on WhatsApp",
+    bespokeDefault: "Bespoke arrangement",
+    deliveryCharge: "Delivery charge",
+    stillConfirming:
+      "Still confirming. There is no need to pay again — your invoice will arrive by email.",
+    busyTitle: "One moment, please.",
+    /** What a florist sends on WhatsApp with the link. {url} is the pay page. */
+    whatsappMessage: "Your arrangement is confirmed. Pay securely here: {url}",
+    invoice: {
+      title: "Invoice",
+      taxTitle: "Tax invoice",
+      number: "Invoice no.",
+      date: "Date",
+      order: "Order",
+      billedTo: "Billed to",
+      description: "Description",
+      qty: "Qty",
+      amount: "Amount",
+      subtotal: "Subtotal",
+      discount: "Discount",
+      total: "Total",
+      vatIncluded: "Includes VAT ({rate}%)",
+      paidByCard: "Paid by card on {date}",
+      trn: "TRN {trn}",
+      print: "Print or save as PDF",
+      from: "From",
     },
   },
   /**
@@ -1389,6 +1505,8 @@ export const en = {
     placedOn: "Placed {date}",
     whatYouOrdered: "What you ordered",
     deliveryFree: "Free",
+    /* From the order's own snapshot, never from the live discount. */
+    discountRow: "Discount ({code})",
     payableOnDelivery: "Awaiting payment.",
     paymentState: "Payment: {status}",
     deliveryHeading: "Delivery",
@@ -1748,6 +1866,9 @@ export const ar: typeof en = {
     cartWith: "السلة، {items}",
     cartEmpty: "السلة فارغة",
     addAddon: "أضيفوا {addon} إلى {product}، {price}",
+    salePercent: "خصم {n}%",
+    priceWas: "السعر السابق {price}",
+    priceNow: "السعر الآن {price}",
   },
   categoryNames: {
     bouquet: "باقات",
@@ -2253,6 +2374,7 @@ export const ar: typeof en = {
     privacy: "سياسة الخصوصية",
     terms: "الشروط والأحكام",
     refunds: "سياسة الاسترداد والإلغاء",
+    pay: "الدفع",
   },
   wishlist: {
     eyebrow: "قريبة إلى القلب",
@@ -2320,6 +2442,22 @@ export const ar: typeof en = {
 
     gallery: "صور {name}",
     galleryView: "الصورة {n}",
+
+    youSave: "توفّرون {amount}",
+    offerEnds: "ينتهي العرض في {date}",
+    offerExcludesAddons: "العرض يشمل التنسيق فقط، والإضافات بسعرها المعروض.",
+  },
+  discount: {
+    toggle: "أضيفوا رمز الخصم",
+    label: "رمز الخصم",
+    placeholder: "اكتبوا الرمز",
+    apply: "تطبيق",
+    checking: "جارٍ التحقق…",
+    remove: "إزالة الرمز {code}",
+    applied: "تم تطبيق الرمز {code}. توفّرون {amount}.",
+    rowCode: "الرمز {code}",
+    totalSavings: "توفّرون {amount} في هذا الطلب",
+    failed: "تعذّر التحقق من الرمز. حاولوا مرة أخرى.",
   },
   sizeNames: {
     standard: "أساسي",
@@ -2373,6 +2511,13 @@ export const ar: typeof en = {
       pricingRejected: "لم نتمكن من حساب قيمة السلة. راجعوا العناصر وحاولوا مرة أخرى.",
       creationFailed: "لم نتمكن من تأكيد طلبكم، ولم يُخصم أي مبلغ — حاولوا مرة أخرى.",
       paymentUnavailable: "الدفع الإلكتروني غير متاح حاليًا. يُرجى مراسلتنا على واتساب لإتمام طلبكم.",
+      codeInvalid: "هذا الرمز غير صالح أو لم يعد ساريًا. تحقّقوا من كتابته وحاولوا مرة أخرى.",
+      codeMinSpend: "أضيفوا {amount} لاستخدام هذا الرمز. الحد الأدنى للطلب {min}.",
+      codeAlreadyUsed: "سبق استخدام هذا الرمز مع هذا البريد الإلكتروني.",
+      codeExhausted: "بلغ هذا الرمز حدّ الاستخدام ولم يعد متاحًا.",
+      codeRateLimited: "محاولات كثيرة. {wait}",
+      priceChanged: "تم تحديث الأسعار للتو. راجعوا الإجمالي الجديد ثم ادفعوا.",
+      totalTooLow: "الإجمالي أقل من الحد الأدنى للدفع بالبطاقة. أضيفوا تنسيقًا أو أزيلوا الرمز.",
     },
     account: {
       credentialsRequired: "اكتبوا البريد الإلكتروني وكلمة المرور.",
@@ -2409,6 +2554,66 @@ export const ar: typeof en = {
       deliveryPreferenceRequired: "اختاروا إلى أين تُرسل الزهور.",
       startDateInvalid: "تحقّقوا من تاريخ البداية.",
       startDatePast: "اختاروا تاريخ بداية من اليوم أو بعده.",
+    },
+    pay: {
+      rateLimited: "محاولات كثيرة من هذا الجهاز. {wait}",
+      linkInvalid: "رابط الدفع غير صالح. يُرجى فتح الرابط من أحدث رسالة وصلتكم.",
+      linkExpired: "انتهت صلاحية رابط الدفع. تواصلوا معنا للحصول على رابط جديد.",
+      cancelled: "أُلغي طلب الدفع هذا، ولم يُخصم أي مبلغ.",
+      alreadyPaid: "تم الدفع مسبقًا. شكرًا لكم.",
+      processing: "دفعتكم قيد التأكيد. يُرجى عدم الدفع مرة أخرى.",
+      failed: "تعذّر بدء عملية الدفع، ولم يُخصم أي مبلغ. يُرجى المحاولة مرة أخرى.",
+    },
+  },
+  pay: {
+    eyebrow: "تنسيقكم",
+    reference: "المرجع {number}",
+    title: "تم تأكيد تنسيقكم.",
+    intro: "أكّد منسّق الزهور التفاصيل أدناه. ادفعوا بأمان لحجز زهوركم.",
+    arrangement: "التنسيق",
+    delivery: "التوصيل",
+    deliverTo: "عنوان التوصيل",
+    noteTitle: "ملاحظة من منسّق الزهور",
+    total: "المبلغ المطلوب",
+    payNow: "ادفعوا الآن — {amount}",
+    payShort: "ادفعوا الآن",
+    paying: "جارٍ الدفع…",
+    validUntil: "هذا الرابط صالح حتى {date}.",
+    confirmingTitle: "شكرًا لكم. نؤكّد دفعتكم الآن.",
+    confirmingBody: "يستغرق ذلك بضع ثوانٍ، وستصلكم الفاتورة عبر البريد الإلكتروني.",
+    paidTitle: "شكرًا لكم. استلمنا دفعتكم.",
+    paidBody:
+      "سيُعدّ منسّق الزهور تنسيقكم يدويًا، ويرسل لكم صورة عبر واتساب لموافقتكم قبل خروجه من الأتيليه.",
+    expiredTitle: "انتهت صلاحية رابط الدفع.",
+    expiredBody: "لم يُخصم أي مبلغ. تواصلوا معنا وسنرسل لكم رابطًا جديدًا.",
+    cancelledTitle: "أُلغي طلب الدفع هذا.",
+    cancelledBody: "لم يُخصم أي مبلغ. إن لم تتوقعوا ذلك، تواصلوا معنا وسيساعدكم أحد منسّقي الزهور.",
+    invalidTitle: "لم نعثر على رابط الدفع هذا.",
+    invalidBody: "يُرجى فتح الرابط من أحدث رسالة وصلتكم، أو تواصلوا معنا.",
+    whatsapp: "تواصلوا معنا عبر واتساب",
+    bespokeDefault: "تنسيق خاص",
+    deliveryCharge: "رسوم التوصيل",
+    stillConfirming: "ما زلنا نؤكّد دفعتكم. لا حاجة للدفع مرة أخرى — ستصلكم الفاتورة عبر البريد الإلكتروني.",
+    busyTitle: "لحظة من فضلكم.",
+    whatsappMessage: "تم تأكيد تنسيقكم. ادفعوا بأمان من هنا: {url}",
+    invoice: {
+      title: "فاتورة",
+      taxTitle: "فاتورة ضريبية",
+      number: "رقم الفاتورة",
+      date: "التاريخ",
+      order: "الطلب",
+      billedTo: "الفاتورة إلى",
+      description: "الوصف",
+      qty: "الكمية",
+      amount: "المبلغ",
+      subtotal: "المجموع الفرعي",
+      discount: "الخصم",
+      total: "الإجمالي",
+      vatIncluded: "يشمل ضريبة القيمة المضافة ({rate}%)",
+      paidByCard: "مدفوعة بالبطاقة بتاريخ {date}",
+      trn: "الرقم الضريبي {trn}",
+      print: "طباعة أو حفظ بصيغة PDF",
+      from: "من",
     },
   },
   checkout: {
@@ -2587,6 +2792,7 @@ export const ar: typeof en = {
     placedOn: "طُلب في {date}",
     whatYouOrdered: "ما طلبتموه",
     deliveryFree: "مجانًا",
+    discountRow: "خصم ({code})",
     payableOnDelivery: "بانتظار الدفع.",
     paymentState: "الدفع: {status}",
     deliveryHeading: "التوصيل",

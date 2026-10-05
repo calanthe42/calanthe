@@ -1,6 +1,7 @@
 "use client";
 
 import { updateOrderFulfilment, updateOrderOperations } from "@backend/actions/admin";
+import { cancelPaymentRequest } from "@backend/actions/quotes";
 import { useI18n } from "@admin/i18n/client";
 import type { MessageKey } from "@admin/i18n/translate";
 import { ActionButton } from "@admin/ui/ActionButton";
@@ -20,6 +21,12 @@ import type { IconName } from "@admin/ui/icons";
  *
  * Only the legal next steps are offered. The server re-validates regardless;
  * this just avoids presenting a move that will be refused.
+ *
+ * A PAYMENT REQUEST NOBODY HAS PAID (`awaitingPayment`) can only be cancelled.
+ * There is nothing to confirm or prepare until the money has arrived, and
+ * "Confirm order" would email the customer that an unpaid order is confirmed.
+ * The server refuses the same moves (actions/admin.ts and the collection
+ * hook); this is only the honest face of that rule.
  */
 
 const FLOW: Record<string, string[]> = {
@@ -47,9 +54,12 @@ export function OrderOps({
   internalNotes,
   assignedStaffId,
   staff,
+  awaitingPayment = false,
 }: {
   orderId: number;
   fulfilmentStatus: string;
+  /** An unpaid payment request: offer "cancel request" and nothing else. */
+  awaitingPayment?: boolean;
   internalNotes?: string;
   assignedStaffId?: number;
   staff: { label: string; value: string }[];
@@ -60,8 +70,25 @@ export function OrderOps({
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title={t("orders.ops.title")} description={t("orders.ops.paymentUnaffected")} />
-        {next.length === 0 ? (
+        <CardHeader
+          title={t("orders.ops.title")}
+          description={awaitingPayment ? t("orders.ops.awaitingPayment") : t("orders.ops.paymentUnaffected")}
+        />
+        {awaitingPayment ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <ActionButton
+              action={() => cancelPaymentRequest(orderId)}
+              label={t("enquiries.quote.cancel")}
+              icon="close"
+              variant="danger"
+              confirm={{
+                title: t("enquiries.quote.cancelTitle"),
+                body: t("enquiries.quote.cancelBody"),
+                confirmLabel: t("enquiries.quote.cancel"),
+              }}
+            />
+          </div>
+        ) : next.length === 0 ? (
           <p className="mt-3 text-sm text-ink-2">
             {fulfilmentStatus === "DELIVERED" ? t("orders.ops.delivered") : t("orders.ops.cancelled")}
           </p>

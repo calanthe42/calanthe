@@ -2,15 +2,21 @@ import { cache } from "react";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import type { Where } from "payload";
 import type { Enquiry, Order } from "@/payload-types";
 import {
   DAY_MS,
   OPEN_STATUSES,
+  QUOTE_ORDER_SOURCE,
+  SETTLED_PAYMENT_STATUSES,
   dailySeries,
+  isAwaitingQuote,
+  isOpen,
   isOverdue,
   isPlaced,
   openStatusCounts,
   periodWindow,
+  quoteQueue,
   summariseOrders,
   topProducts,
   type DailyPoint,
@@ -18,6 +24,7 @@ import {
   type OrderSummary,
   type PeriodWindow,
   type ProductRank,
+  type QuoteQueue,
 } from "@backend/domain/dashboard";
 
 /**
@@ -30,6 +37,20 @@ import {
  * The arithmetic is not here; it is in backend/domain/dashboard.ts, pure and
  * unit tested. This file only fetches, and fetches each thing once.
  */
+
+/**
+ * "A real order": everything except a payment request nobody has paid for.
+ * The database half of `isAwaitingQuote` (backend/domain/dashboard.ts), for
+ * lists that filter in the query rather than in memory — the orders screen's
+ * "overdue" filter uses it, so that screen and this dashboard agree.
+ */
+export const REAL_ORDER_WHERE: Where = {
+  or: [
+    { source: { exists: false } },
+    { source: { not_equals: QUOTE_ORDER_SOURCE } },
+    { paymentStatus: { in: [...SETTLED_PAYMENT_STATUSES] } },
+  ],
+};
 
 const WAITING_ENQUIRY = ["NEW", "IN_REVIEW", "WAITING_FOR_CUSTOMER"];
 const FOLLOW_UP_OPEN = ["NEW", "IN_REVIEW", "WAITING_FOR_CUSTOMER", "QUOTED"];
@@ -45,6 +66,8 @@ export type DashboardData = {
   openTotal: number;
   newOrders: number;
   overdue: number;
+  /** Payment requests: waiting to be paid, link expired, and paid-but-not-started. */
+  quotes: QuoteQueue;
   top: ProductRank[];
   todaysDeliveries: Order[];
   recentOrders: Order[];
@@ -193,9 +216,12 @@ export const getDashboardData = cache(async (period: DashboardPeriod): Promise<D
       ? dailySeries(inPeriod, window)
       : dailySeries(inPeriod, window).map((d) => ({ ...d, revenueFils: 0 })),
     openStatus: openStatusCounts(openOrders.docs),
-    openTotal: openOrders.docs.length,
-    newOrders: openOrders.docs.filter((o) => o.fulfilmentStatus === "NEW").length,
+    /* An unpaid payment request is not open work: there is nothing to make
+       until it is paid (isAwaitingQuote). */
+    openTotal: openOrders.docs.filter(isOpen).length,
+    newOrders: openOrders.docs.filter((o) => o.fulfilmentStatus === "NEW" && !isAwaitingQuote(o)).length,
     overdue: openOrders.docs.filter((o) => isOverdue(o, window.todayStart)).length,
+    quotes: quoteQueue(openOrders.docs, now),
     top: topProducts(inPeriod),
     todaysDeliveries: todays.docs.filter(isPlaced),
     recentOrders: recent.docs,

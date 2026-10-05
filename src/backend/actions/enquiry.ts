@@ -180,6 +180,9 @@ export async function submitBespokeEnquiry(
       status: "NEW",
       priority: "NORMAL",
       source: "WEBSITE",
+      /* The language the form was filled in: a payment request for this
+         enquiry is written to the customer in the same one. */
+      locale,
       contactName: clean(request.name, 140),
       contactEmail: clean(request.email, 200).toLowerCase(),
       contactPhone: clean(request.phone, 40),
@@ -187,6 +190,11 @@ export async function submitBespokeEnquiry(
       message,
       buildYourOwn: {
         budgetFils: Math.round(request.budgetAed * 100),
+        /* A suggestion for the florist's "final amount", never a charge:
+           the amount actually asked for is typed by staff. */
+        ...(Number.isFinite(request.totalAed) && request.totalAed > 0
+          ? { indicativeTotalFils: Math.round(request.totalAed * 100) }
+          : {}),
         ...(clean(request.deliveryLocation, 240)
           ? { deliveryLocation: clean(request.deliveryLocation, 240) }
           : {}),
@@ -272,6 +280,7 @@ export async function submitEventEnquiry(
        behind a single bouquet enquiry. */
       priority: "HIGH",
       source: "WEBSITE",
+      locale,
       contactName: clean(request.name, 140),
       contactEmail: clean(request.email, 200).toLowerCase(),
       contactPhone: clean(request.phone, 40),

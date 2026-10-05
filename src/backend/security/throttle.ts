@@ -75,6 +75,22 @@ export const LIMITS = {
   /** A real customer places one order; nobody places ten in an hour by hand. */
   checkout: { name: "checkout", limit: 8, windowSeconds: hours(1) },
   enquiry: { name: "enquiry", limit: 6, windowSeconds: hours(1) },
+
+  /* Payment links. Viewing is generous — the page polls while a payment is
+     being confirmed, and a family shares one address. Starting a payment is
+     not: each attempt talks to Stripe. Both are per network address; the
+     token itself is 256 bits and cannot be guessed at any rate. */
+  payView: { name: "pay-view", limit: 60, windowSeconds: minutes(10) },
+  payStart: { name: "pay-start", limit: 10, windowSeconds: minutes(10) },
+  /** Per ORDER, not per florist: nobody needs the same email six times an hour. */
+  payResend: { name: "pay-resend", limit: 5, windowSeconds: hours(1) },
+
+  /* Discount codes. This counts WRONG codes only (see `peek` below): a
+     basket holding a good code re-quotes itself on every quantity change,
+     and charging each of those to the bucket would lock an honest customer
+     out of the discount she was shown. Twelve wrong guesses in ten minutes
+     from one network is a script, not a typo. */
+  discountCode: { name: "discount-code", limit: 12, windowSeconds: minutes(10) },
 } as const satisfies Record<string, Bucket>;
 
 export type Throttled = {
@@ -174,6 +190,51 @@ export async function throttle(bucket: Bucket, identifier: string): Promise<Thro
       error,
     );
     return memoryThrottle(`${bucket.name}:${key}`, bucket, Date.now());
+  }
+}
+
+/**
+ * Is this caller over the limit — WITHOUT counting this call as an attempt.
+ *
+ * `throttle` counts every call, which is right when the call itself is the
+ * thing being limited (a sign-in, an order). It is wrong for a limit on
+ * FAILURES: the caller is asked "may I try?" first (`peek`), and charged
+ * (`throttle`) only once the attempt has turned out to be a wrong one. A
+ * successful attempt costs nothing, however often it is repeated.
+ */
+export async function peek(bucket: Bucket, identifier: string): Promise<Throttled> {
+  const key = identifier.trim().toLowerCase() || "unknown";
+
+  const fromMemory = (): Throttled => {
+    const now = Date.now();
+    const windowMs = bucket.windowSeconds * 1000;
+    const live = (memory.get(`${bucket.name}:${key}`) ?? []).filter((at) => at > now - windowMs);
+    if (live.length < bucket.limit) return { allowed: true, retryAfterSeconds: 0, degraded: true };
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((Math.min(...live) + windowMs - now) / 1000)),
+      degraded: true,
+    };
+  };
+
+  const limiter = rateLimit(
+    bucket.name,
+    bucket.limit,
+    `${bucket.windowSeconds} s` as `${number} s`,
+  );
+  if (!limiter) return fromMemory();
+
+  try {
+    const state = await limiter.getRemaining(key);
+    return {
+      allowed: state.remaining > 0,
+      retryAfterSeconds:
+        state.remaining > 0 ? 0 : Math.max(1, Math.ceil((state.reset - Date.now()) / 1000)),
+      degraded: false,
+    };
+  } catch (error) {
+    console.error(`[throttle] ${bucket.name} store unavailable, reading in process`, error);
+    return fromMemory();
   }
 }
 

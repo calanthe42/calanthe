@@ -43,7 +43,7 @@ const TOKEN = /\{(\w+)\}/g;
  * ARE the subject of the sentence. Translating them would delete the point
  * of the paragraph; only the gloss after the dash changes.
  */
-const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos|Apple Pay|Google Pay|Stripe)\b/g;
+const KEPT_IN_LATIN = /\b(AED|WhatsApp|Instagram|Calanthe|CALANTHE|kalos|anthos|Apple Pay|Google Pay|Stripe|PDF)\b/g;
 
 const isPluralForms = (node: unknown): node is PluralForms =>
   typeof node === "object" && node !== null && "other" in node;
@@ -188,5 +188,22 @@ describe("counting in Arabic", () => {
 
   it("falls back to `other` rather than rendering nothing", () => {
     expect(plural("ar", { other: "{n} عنصرًا" }, 2)).toBe("2 عنصرًا");
+  });
+});
+
+describe("the payment link page", () => {
+  it("addresses everyone in the plural — the button says «ادفعوا»", () => {
+    /* The shop writes to all its customers, never to one woman. The singular
+       feminine "ادفعي" on the button that takes the money is exactly the
+       mistake a native reader spots first. */
+    expect(ar.pay.payNow.startsWith("ادفعوا")).toBe(true);
+    expect(ar.pay.payShort.startsWith("ادفعوا")).toBe(true);
+  });
+
+  it("makes no delivery-speed promise and never calls flowers «طازج»", () => {
+    const pay = [en.pay, ar.pay, en.server.pay, ar.server.pay].map((tree) => JSON.stringify(tree)).join(" ");
+    expect(pay).not.toMatch(/same[- ]day/i);
+    expect(pay).not.toContain("طازج");
+    expect(pay).not.toContain("اليوم نفسه");
   });
 });

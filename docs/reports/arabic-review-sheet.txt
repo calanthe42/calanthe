@@ -8,7 +8,16 @@ A {word} in braces is replaced at runtime by a real value — a price, a
 name, a number. Keep it exactly as written, but move it to wherever it
 belongs in the Arabic sentence.
 
-870 strings in total. 0 are flagged below as likely problems.
+948 strings in total. 1 are flagged below as likely problems.
+
+========================================================================
+FLAGGED FIRST — these are probably wrong
+========================================================================
+
+[LATIN]  pay.invoice.print
+  ENGLISH    Print or save as PDF
+  ARABIC     طباعة أو حفظ بصيغة PDF
+  CORRECTION 
 
 ========================================================================
 EVERYTHING ELSE
@@ -1194,6 +1203,21 @@ ui.cartEmpty
 ui.addAddon
   ENGLISH    Add {addon} to {product}, {price}
   ARABIC     أضيفوا {addon} إلى {product}، {price}
+  CORRECTION 
+
+ui.salePercent
+  ENGLISH    {n}% off
+  ARABIC     خصم {n}%
+  CORRECTION 
+
+ui.priceWas
+  ENGLISH    Was {price}
+  ARABIC     السعر السابق {price}
+  CORRECTION 
+
+ui.priceNow
+  ENGLISH    Now {price}
+  ARABIC     السعر الآن {price}
   CORRECTION 
 
 
@@ -2876,6 +2900,11 @@ meta.refunds
   ARABIC     سياسة الاسترداد والإلغاء
   CORRECTION 
 
+meta.pay
+  ENGLISH    Payment
+  ARABIC     الدفع
+  CORRECTION 
+
 
 --- wishlist ---
 
@@ -3135,6 +3164,74 @@ product.galleryView
   ARABIC     الصورة {n}
   CORRECTION 
 
+product.youSave
+  ENGLISH    You save {amount}
+  ARABIC     توفّرون {amount}
+  CORRECTION 
+
+product.offerEnds
+  ENGLISH    Offer ends {date}
+  ARABIC     ينتهي العرض في {date}
+  CORRECTION 
+
+product.offerExcludesAddons
+  ENGLISH    The offer applies to the arrangement. Add-ons are priced as shown.
+  ARABIC     العرض يشمل التنسيق فقط، والإضافات بسعرها المعروض.
+  CORRECTION 
+
+
+--- discount ---
+
+discount.toggle
+  ENGLISH    Add a discount code
+  ARABIC     أضيفوا رمز الخصم
+  CORRECTION 
+
+discount.label
+  ENGLISH    Discount code
+  ARABIC     رمز الخصم
+  CORRECTION 
+
+discount.placeholder
+  ENGLISH    Enter code
+  ARABIC     اكتبوا الرمز
+  CORRECTION 
+
+discount.apply
+  ENGLISH    Apply
+  ARABIC     تطبيق
+  CORRECTION 
+
+discount.checking
+  ENGLISH    Checking…
+  ARABIC     جارٍ التحقق…
+  CORRECTION 
+
+discount.remove
+  ENGLISH    Remove code {code}
+  ARABIC     إزالة الرمز {code}
+  CORRECTION 
+
+discount.applied
+  ENGLISH    Code {code} applied. You save {amount}.
+  ARABIC     تم تطبيق الرمز {code}. توفّرون {amount}.
+  CORRECTION 
+
+discount.rowCode
+  ENGLISH    Code {code}
+  ARABIC     الرمز {code}
+  CORRECTION 
+
+discount.totalSavings
+  ENGLISH    You save {amount} on this order
+  ARABIC     توفّرون {amount} في هذا الطلب
+  CORRECTION 
+
+discount.failed
+  ENGLISH    We could not check that code. Please try again.
+  ARABIC     تعذّر التحقق من الرمز. حاولوا مرة أخرى.
+  CORRECTION 
+
 
 --- sizeNames ---
 
@@ -3337,6 +3434,41 @@ server.checkout.paymentUnavailable
   ARABIC     الدفع الإلكتروني غير متاح حاليًا. يُرجى مراسلتنا على واتساب لإتمام طلبكم.
   CORRECTION 
 
+server.checkout.codeInvalid
+  ENGLISH    That code is not valid or is no longer active. Check the spelling and try again.
+  ARABIC     هذا الرمز غير صالح أو لم يعد ساريًا. تحقّقوا من كتابته وحاولوا مرة أخرى.
+  CORRECTION 
+
+server.checkout.codeMinSpend
+  ENGLISH    Add {amount} more to use this code. It needs a minimum order of {min}.
+  ARABIC     أضيفوا {amount} لاستخدام هذا الرمز. الحد الأدنى للطلب {min}.
+  CORRECTION 
+
+server.checkout.codeAlreadyUsed
+  ENGLISH    This code has already been used with this email address.
+  ARABIC     سبق استخدام هذا الرمز مع هذا البريد الإلكتروني.
+  CORRECTION 
+
+server.checkout.codeExhausted
+  ENGLISH    This code has reached its limit and is no longer available.
+  ARABIC     بلغ هذا الرمز حدّ الاستخدام ولم يعد متاحًا.
+  CORRECTION 
+
+server.checkout.codeRateLimited
+  ENGLISH    Too many attempts. {wait}
+  ARABIC     محاولات كثيرة. {wait}
+  CORRECTION 
+
+server.checkout.priceChanged
+  ENGLISH    Prices have just been updated. Please review the new total, then pay.
+  ARABIC     تم تحديث الأسعار للتو. راجعوا الإجمالي الجديد ثم ادفعوا.
+  CORRECTION 
+
+server.checkout.totalTooLow
+  ENGLISH    This total is too low to pay by card. Add an arrangement or remove the code.
+  ARABIC     الإجمالي أقل من الحد الأدنى للدفع بالبطاقة. أضيفوا تنسيقًا أو أزيلوا الرمز.
+  CORRECTION 
+
 server.account.credentialsRequired
   ENGLISH    Enter your email and password.
   ARABIC     اكتبوا البريد الإلكتروني وكلمة المرور.
@@ -3485,6 +3617,269 @@ server.enquiry.startDateInvalid
 server.enquiry.startDatePast
   ENGLISH    Please choose a start date from today onward.
   ARABIC     اختاروا تاريخ بداية من اليوم أو بعده.
+  CORRECTION 
+
+server.pay.rateLimited
+  ENGLISH    Too many attempts from this device. {wait}
+  ARABIC     محاولات كثيرة من هذا الجهاز. {wait}
+  CORRECTION 
+
+server.pay.linkInvalid
+  ENGLISH    This payment link is not valid. Please open the link from your most recent email.
+  ARABIC     رابط الدفع غير صالح. يُرجى فتح الرابط من أحدث رسالة وصلتكم.
+  CORRECTION 
+
+server.pay.linkExpired
+  ENGLISH    This payment link has expired. Message us for a new one.
+  ARABIC     انتهت صلاحية رابط الدفع. تواصلوا معنا للحصول على رابط جديد.
+  CORRECTION 
+
+server.pay.cancelled
+  ENGLISH    This payment request was cancelled. Nothing has been charged.
+  ARABIC     أُلغي طلب الدفع هذا، ولم يُخصم أي مبلغ.
+  CORRECTION 
+
+server.pay.alreadyPaid
+  ENGLISH    This has already been paid. Thank you.
+  ARABIC     تم الدفع مسبقًا. شكرًا لكم.
+  CORRECTION 
+
+server.pay.processing
+  ENGLISH    Your payment is being confirmed. Please do not pay again.
+  ARABIC     دفعتكم قيد التأكيد. يُرجى عدم الدفع مرة أخرى.
+  CORRECTION 
+
+server.pay.failed
+  ENGLISH    We could not start the payment. Nothing has been charged — please try again.
+  ARABIC     تعذّر بدء عملية الدفع، ولم يُخصم أي مبلغ. يُرجى المحاولة مرة أخرى.
+  CORRECTION 
+
+
+--- pay ---
+
+pay.eyebrow
+  ENGLISH    Your arrangement
+  ARABIC     تنسيقكم
+  CORRECTION 
+
+pay.reference
+  ENGLISH    Reference {number}
+  ARABIC     المرجع {number}
+  CORRECTION 
+
+pay.title
+  ENGLISH    Your arrangement is confirmed.
+  ARABIC     تم تأكيد تنسيقكم.
+  CORRECTION 
+
+pay.intro
+  ENGLISH    Your florist has confirmed the details below. Pay securely to reserve your flowers.
+  ARABIC     أكّد منسّق الزهور التفاصيل أدناه. ادفعوا بأمان لحجز زهوركم.
+  CORRECTION 
+
+pay.arrangement
+  ENGLISH    Arrangement
+  ARABIC     التنسيق
+  CORRECTION 
+
+pay.delivery
+  ENGLISH    Delivery
+  ARABIC     التوصيل
+  CORRECTION 
+
+pay.deliverTo
+  ENGLISH    Deliver to
+  ARABIC     عنوان التوصيل
+  CORRECTION 
+
+pay.noteTitle
+  ENGLISH    A note from your florist
+  ARABIC     ملاحظة من منسّق الزهور
+  CORRECTION 
+
+pay.total
+  ENGLISH    Total to pay
+  ARABIC     المبلغ المطلوب
+  CORRECTION 
+
+pay.payNow
+  ENGLISH    Pay now — {amount}
+  ARABIC     ادفعوا الآن — {amount}
+  CORRECTION 
+
+pay.payShort
+  ENGLISH    Pay now
+  ARABIC     ادفعوا الآن
+  CORRECTION 
+
+pay.paying
+  ENGLISH    Processing…
+  ARABIC     جارٍ الدفع…
+  CORRECTION 
+
+pay.validUntil
+  ENGLISH    This link is valid until {date}.
+  ARABIC     هذا الرابط صالح حتى {date}.
+  CORRECTION 
+
+pay.confirmingTitle
+  ENGLISH    Thank you. We are confirming your payment.
+  ARABIC     شكرًا لكم. نؤكّد دفعتكم الآن.
+  CORRECTION 
+
+pay.confirmingBody
+  ENGLISH    This takes a few seconds. Your invoice will arrive by email.
+  ARABIC     يستغرق ذلك بضع ثوانٍ، وستصلكم الفاتورة عبر البريد الإلكتروني.
+  CORRECTION 
+
+pay.paidTitle
+  ENGLISH    Thank you. Your payment is received.
+  ARABIC     شكرًا لكم. استلمنا دفعتكم.
+  CORRECTION 
+
+pay.paidBody
+  ENGLISH    Your florist will compose your arrangement by hand and send a photograph on WhatsApp for your approval before it leaves the atelier.
+  ARABIC     سيُعدّ منسّق الزهور تنسيقكم يدويًا، ويرسل لكم صورة عبر واتساب لموافقتكم قبل خروجه من الأتيليه.
+  CORRECTION 
+
+pay.expiredTitle
+  ENGLISH    This payment link has expired.
+  ARABIC     انتهت صلاحية رابط الدفع.
+  CORRECTION 
+
+pay.expiredBody
+  ENGLISH    Nothing has been charged. Message us and we will send you a new link.
+  ARABIC     لم يُخصم أي مبلغ. تواصلوا معنا وسنرسل لكم رابطًا جديدًا.
+  CORRECTION 
+
+pay.cancelledTitle
+  ENGLISH    This payment request was cancelled.
+  ARABIC     أُلغي طلب الدفع هذا.
+  CORRECTION 
+
+pay.cancelledBody
+  ENGLISH    Nothing has been charged. If this is unexpected, message us and a florist will help.
+  ARABIC     لم يُخصم أي مبلغ. إن لم تتوقعوا ذلك، تواصلوا معنا وسيساعدكم أحد منسّقي الزهور.
+  CORRECTION 
+
+pay.invalidTitle
+  ENGLISH    We could not find this payment link.
+  ARABIC     لم نعثر على رابط الدفع هذا.
+  CORRECTION 
+
+pay.invalidBody
+  ENGLISH    Please open the link from your most recent email, or message us.
+  ARABIC     يُرجى فتح الرابط من أحدث رسالة وصلتكم، أو تواصلوا معنا.
+  CORRECTION 
+
+pay.whatsapp
+  ENGLISH    Message us on WhatsApp
+  ARABIC     تواصلوا معنا عبر واتساب
+  CORRECTION 
+
+pay.bespokeDefault
+  ENGLISH    Bespoke arrangement
+  ARABIC     تنسيق خاص
+  CORRECTION 
+
+pay.deliveryCharge
+  ENGLISH    Delivery charge
+  ARABIC     رسوم التوصيل
+  CORRECTION 
+
+pay.stillConfirming
+  ENGLISH    Still confirming. There is no need to pay again — your invoice will arrive by email.
+  ARABIC     ما زلنا نؤكّد دفعتكم. لا حاجة للدفع مرة أخرى — ستصلكم الفاتورة عبر البريد الإلكتروني.
+  CORRECTION 
+
+pay.busyTitle
+  ENGLISH    One moment, please.
+  ARABIC     لحظة من فضلكم.
+  CORRECTION 
+
+pay.whatsappMessage
+  ENGLISH    Your arrangement is confirmed. Pay securely here: {url}
+  ARABIC     تم تأكيد تنسيقكم. ادفعوا بأمان من هنا: {url}
+  CORRECTION 
+
+pay.invoice.title
+  ENGLISH    Invoice
+  ARABIC     فاتورة
+  CORRECTION 
+
+pay.invoice.taxTitle
+  ENGLISH    Tax invoice
+  ARABIC     فاتورة ضريبية
+  CORRECTION 
+
+pay.invoice.number
+  ENGLISH    Invoice no.
+  ARABIC     رقم الفاتورة
+  CORRECTION 
+
+pay.invoice.date
+  ENGLISH    Date
+  ARABIC     التاريخ
+  CORRECTION 
+
+pay.invoice.order
+  ENGLISH    Order
+  ARABIC     الطلب
+  CORRECTION 
+
+pay.invoice.billedTo
+  ENGLISH    Billed to
+  ARABIC     الفاتورة إلى
+  CORRECTION 
+
+pay.invoice.description
+  ENGLISH    Description
+  ARABIC     الوصف
+  CORRECTION 
+
+pay.invoice.qty
+  ENGLISH    Qty
+  ARABIC     الكمية
+  CORRECTION 
+
+pay.invoice.amount
+  ENGLISH    Amount
+  ARABIC     المبلغ
+  CORRECTION 
+
+pay.invoice.subtotal
+  ENGLISH    Subtotal
+  ARABIC     المجموع الفرعي
+  CORRECTION 
+
+pay.invoice.discount
+  ENGLISH    Discount
+  ARABIC     الخصم
+  CORRECTION 
+
+pay.invoice.total
+  ENGLISH    Total
+  ARABIC     الإجمالي
+  CORRECTION 
+
+pay.invoice.vatIncluded
+  ENGLISH    Includes VAT ({rate}%)
+  ARABIC     يشمل ضريبة القيمة المضافة ({rate}%)
+  CORRECTION 
+
+pay.invoice.paidByCard
+  ENGLISH    Paid by card on {date}
+  ARABIC     مدفوعة بالبطاقة بتاريخ {date}
+  CORRECTION 
+
+pay.invoice.trn
+  ENGLISH    TRN {trn}
+  ARABIC     الرقم الضريبي {trn}
+  CORRECTION 
+
+pay.invoice.from
+  ENGLISH    From
+  ARABIC     من
   CORRECTION 
 
 
@@ -4217,6 +4612,11 @@ account.whatYouOrdered
 account.deliveryFree
   ENGLISH    Free
   ARABIC     مجانًا
+  CORRECTION 
+
+account.discountRow
+  ENGLISH    Discount ({code})
+  ARABIC     خصم ({code})
   CORRECTION 
 
 account.payableOnDelivery

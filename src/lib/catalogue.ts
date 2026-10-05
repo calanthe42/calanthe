@@ -19,13 +19,28 @@ import type { Product, ProductImage } from "@/lib/data";
  * At most one is returned. A card wearing two labels reads as a sale
  * rack rather than an atelier, and New wins over Featured because it is
  * the more time-sensitive claim.
+ *
+ * "sale" comes first of all, and it is database state too: `sale` is on the
+ * product only while one of the owner's automatic sales (the `discounts`
+ * collection) applies to it right now. The card then shows the label SHE
+ * wrote for that sale in place of New or Featured — still one label.
  */
 export function productBadge(
-  product: Pick<Product, "featured" | "newArrival">,
-): "new" | "featured" | null {
+  product: Pick<Product, "featured" | "newArrival"> & Partial<Pick<Product, "sale">>,
+): "sale" | "new" | "featured" | null {
+  if (product.sale) return "sale";
   if (product.newArrival) return "new";
   if (product.featured) return "featured";
   return null;
+}
+
+/**
+ * What a product costs right now: its sale price while it is on sale, its
+ * regular price otherwise. For sorting, filtering and "from AED …" — every
+ * place that needs ONE number for a product.
+ */
+export function effectivePriceAed(product: Pick<Product, "priceAed" | "sale">): number {
+  return product.sale?.priceAed ?? product.priceAed;
 }
 
 /**

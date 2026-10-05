@@ -1,8 +1,11 @@
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Media, Product as PayloadProduct } from "@/payload-types";
-import type { PlaceholderPalette, Product, ProductImage } from "@/lib/data";
+import type { PlaceholderPalette, Product, ProductImage, ProductSale } from "@/lib/data";
+import { bestSaleFor, saleUnitFils, type SaleRule } from "@/lib/discounts";
 import { servedMediaPath } from "@backend/domain/media-option";
+import { saleTargetOf } from "@backend/domain/pricing";
+import { getLiveSaleRulesForDisplay } from "./discounts";
 
 /**
  * The only place the storefront reads products from the database.
@@ -24,6 +27,14 @@ import { servedMediaPath } from "@backend/domain/media-option";
  * here filters `available: true` in the `where` clause, so an unavailable
  * product cannot reach a page even if a caller forgets to check — and cannot
  * be reached by guessing a slug either.
+ *
+ * SALES ARE ATTACHED HERE, and only here. Every query below also reads the
+ * live automatic sales (once per request) and gives each product the one
+ * sale that applies to it — chosen by the same pure function the checkout
+ * prices with, so the price on a card is the price that will be charged.
+ * `priceAed` stays the regular price; `sale` carries the reduced one. Of a
+ * discount, only the customer label, its terms and its end date pass through:
+ * never its internal title, its usage, or any code.
  *
  * Note there is no `import "server-only"` here. It would be correct for the
  * browser but breaks the Payload CLI, which loads the config in plain Node
@@ -108,8 +119,38 @@ function toOccasionSlugs(doc: PayloadProduct): Product["occasions"] {
     .filter((slug): slug is string => typeof slug === "string") as Product["occasions"];
 }
 
+/**
+ * The sale on a product, as the browser may know it — or undefined.
+ *
+ * Explicit field mapping: this is the allow-list for discounts.
+ */
+function toProductSale(
+  doc: PayloadProduct,
+  sales: readonly SaleRule[],
+  now: Date,
+): ProductSale | undefined {
+  if (sales.length === 0) return undefined;
+  const target = saleTargetOf(doc);
+  const rule = bestSaleFor(target, sales, now);
+  if (!rule) return undefined;
+  return {
+    id: rule.id,
+    label: { en: rule.labelEn, ar: rule.labelAr },
+    valueType: rule.valueType,
+    percentOff: rule.percentOff,
+    amountOffFils: rule.amountOffFils,
+    priceAed: saleUnitFils(target.priceFils, rule) / 100,
+    ...(rule.endsAt ? { endsAt: rule.endsAt } : {}),
+  };
+}
+
 /** Payload document -> the shape the storefront already renders. */
-function toStorefrontProduct(doc: PayloadProduct): Product {
+function toStorefrontProduct(
+  doc: PayloadProduct,
+  sales: readonly SaleRule[] = [],
+  now: Date = new Date(),
+): Product {
+  const sale = toProductSale(doc, sales, now);
   return {
     id: String(doc.id),
     slug: doc.slug,
@@ -131,7 +172,15 @@ function toStorefrontProduct(doc: PayloadProduct): Product {
        storefront yet, and a sentence the owner wrote is what a customer
        should read before choosing a size. */
     ...(doc.shortDescription?.trim() ? { description: doc.shortDescription.trim() } : {}),
+    ...(sale ? { sale } : {}),
   };
+}
+
+/** Documents -> storefront products, each with the sale it is on right now. */
+async function withSales(docs: readonly PayloadProduct[]): Promise<Product[]> {
+  const sales = await getLiveSaleRulesForDisplay();
+  const now = new Date();
+  return docs.map((doc) => toStorefrontProduct(doc, sales, now));
 }
 
 /* ------------------------------------------------------------------ */
@@ -148,7 +197,7 @@ export async function getAvailableProducts(limit = 100): Promise<Product[]> {
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return result.docs.map(toStorefrontProduct);
+  return withSales(result.docs);
 }
 
 /**
@@ -168,7 +217,9 @@ export async function getAvailableProductBySlug(slug: string): Promise<Product |
     limit: 1,
   });
   const doc = result.docs[0];
-  return doc ? toStorefrontProduct(doc) : null;
+  if (!doc) return null;
+  const [product] = await withSales([doc]);
+  return product ?? null;
 }
 
 export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
@@ -180,7 +231,7 @@ export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return result.docs.map(toStorefrontProduct);
+  return withSales(result.docs);
 }
 
 export async function getNewArrivals(limit = 8): Promise<Product[]> {
@@ -192,7 +243,7 @@ export async function getNewArrivals(limit = 8): Promise<Product[]> {
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return result.docs.map(toStorefrontProduct);
+  return withSales(result.docs);
 }
 
 /**
@@ -215,7 +266,7 @@ export async function getBestSellers(limit = 8): Promise<Product[]> {
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return result.docs.map(toStorefrontProduct);
+  return withSales(result.docs);
 }
 
 /** Available products attached to an occasion, by the occasion's slug. */
@@ -232,7 +283,7 @@ export async function getProductsForOccasion(
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return result.docs.map(toStorefrontProduct);
+  return withSales(result.docs);
 }
 
 /**
@@ -257,7 +308,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
       depth: STOREFRONT_DEPTH,
       limit,
     });
-    if (result.docs.length > 0) return result.docs.map(toStorefrontProduct);
+    if (result.docs.length > 0) return withSales(result.docs);
   }
 
   const fallback = await payload.find({
@@ -267,7 +318,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
     depth: STOREFRONT_DEPTH,
     limit,
   });
-  return fallback.docs.map(toStorefrontProduct);
+  return withSales(fallback.docs);
 }
 
 /** Slugs for generateStaticParams — available products only. */
@@ -284,4 +335,4 @@ export async function getAvailableProductSlugs(): Promise<string[]> {
 }
 
 /** Exported for tests: the document -> view-model mapping is pure. */
-export const __internal = { toStorefrontProduct, toImages, toOccasionSlugs };
+export const __internal = { toStorefrontProduct, toProductSale, toImages, toOccasionSlugs };

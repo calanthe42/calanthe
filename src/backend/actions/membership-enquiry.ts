@@ -143,6 +143,7 @@ export async function submitMembershipEnquiry(
         status: "NEW",
         priority: "NORMAL",
         source: "WEBSITE",
+        locale,
         contactName,
         contactEmail,
         contactPhone,

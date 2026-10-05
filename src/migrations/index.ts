@@ -10,6 +10,8 @@ import * as migration_20260907_202357_catalog_legacy_fields from './20260907_202
 import * as migration_20260910_185013_occasion_description from './20260910_185013_occasion_description';
 import * as migration_20260925_142230_a2_email_log from './20260925_142230_a2_email_log';
 import * as migration_20260925_181233_a3_activity_log from './20260925_181233_a3_activity_log';
+import * as migration_20261004_193027_quote_pay_link from './20261004_193027_quote_pay_link';
+import * as migration_20261004_202611_discounts from './20261004_202611_discounts';
 
 export const migrations = [
   {
@@ -70,6 +72,16 @@ export const migrations = [
   {
     up: migration_20260925_181233_a3_activity_log.up,
     down: migration_20260925_181233_a3_activity_log.down,
-    name: '20260925_181233_a3_activity_log'
+    name: '20260925_181233_a3_activity_log',
+  },
+  {
+    up: migration_20261004_193027_quote_pay_link.up,
+    down: migration_20261004_193027_quote_pay_link.down,
+    name: '20261004_193027_quote_pay_link',
+  },
+  {
+    up: migration_20261004_202611_discounts.up,
+    down: migration_20261004_202611_discounts.down,
+    name: '20261004_202611_discounts'
   },
 ];

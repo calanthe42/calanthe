@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { QuotePayment } from "@admin/components/QuotePayment";
 import { EventWorkflow } from "@admin/components/WorkflowForm";
 import { getAdminI18n } from "@admin/i18n/server";
 import { humanize } from "@admin/i18n/translate";
+import { quoteCardData, quoteFormSetup } from "@admin/lib/quote-card";
 import { toneFor } from "@admin/lib/status";
 import { Badge } from "@admin/ui/Badge";
 import { Card, CardHeader } from "@admin/ui/Card";
@@ -13,6 +15,8 @@ import { Icon } from "@admin/ui/icons";
 import { PageHeader } from "@admin/ui/PageHeader";
 import { getTeamOptions } from "@backend/data/admin-metrics";
 import { getAdminSession } from "@backend/data/admin-session";
+import { getQuoteForEnquiry } from "@backend/data/quote";
+import type { QuoteEnquiry } from "@backend/domain/quote";
 
 export async function generateMetadata() {
   const { t } = await getAdminI18n();
@@ -34,6 +38,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   if (!event) notFound();
 
   const staff = await getTeamOptions();
+
+  /* An event is worked HERE, not on the enquiry it arrived as — so the
+     payment request for it is offered here too. It belongs to the enquiry
+     (one live request per enquiry is a database rule), which is found by its
+     link to this event; an event typed in by hand has none and shows no card. */
+  const source = await payload
+    .find({
+      collection: "enquiries",
+      where: { relatedEvent: { equals: event.id } },
+      sort: "-createdAt",
+      limit: 1,
+      depth: 0,
+      user,
+      overrideAccess: false,
+    })
+    .then((found) => found.docs[0] ?? null)
+    .catch(() => null);
+  const quote = source ? await getQuoteForEnquiry(source.id) : null;
+  const quoteForm = source
+    ? quoteFormSetup({ ...source, relatedEvent: event } as unknown as QuoteEnquiry, quote)
+    : null;
   const services = (event.requestedServices ?? []).map(humanize).join(", ");
 
   return (
@@ -55,6 +80,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           </Badge>
         }
       />
+
+      {quote || quoteForm ? (
+        <QuotePayment quote={quote ? quoteCardData(quote) : null} form={quoteForm} />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <div className="min-w-0 space-y-6 lg:col-span-2">

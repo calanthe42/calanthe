@@ -16,6 +16,14 @@ import { dubaiDateInputValue, uaeMidnight } from "@backend/domain/dates";
  * on delivery, and cash is not yet recorded as paid in the system, so a
  * paid-only figure would read zero forever. Paid money is reported alongside
  * it, separately, so the two are never confused.
+ *
+ * AN UNPAID PAYMENT REQUEST IS NOT AN ORDER YET. When a florist confirms an
+ * enquiry, an order row is created so the customer has something to pay —
+ * but until they pay it, nothing has been sold and there is nothing to make.
+ * `isAwaitingQuote` is that rule, in one place: such a row is not revenue,
+ * not a "new order", not on today's delivery list and never "overdue". If it
+ * were, a florist reading "Today's deliveries" could prepare flowers nobody
+ * has paid for, and an expired link would sit in "overdue" for ever.
  */
 
 export const DASHBOARD_PERIODS = [7, 30, 90] as const;
@@ -41,6 +49,8 @@ export type OrderLike = {
   paymentStatus?: string | null;
   fulfilmentStatus?: string | null;
   deliveryDate?: string | null;
+  /** Where the order came from. "admin-quote" is a payment request. */
+  source?: string | null;
   items?: readonly OrderItemLike[] | null;
 };
 
@@ -48,9 +58,52 @@ export const OPEN_STATUSES = ["NEW", "CONFIRMED", "PREPARING", "READY", "OUT_FOR
 const OPEN = new Set<string>(OPEN_STATUSES);
 const PAID = new Set(["PAID", "PARTIALLY_REFUNDED"]);
 
-export const isPlaced = (order: OrderLike): boolean => order.fulfilmentStatus !== "CANCELLED";
+/**
+ * `orders.source` of a payment request. The same value as QUOTE_SOURCE in
+ * backend/payments/pay-link.ts (a test holds the two together); written out
+ * here so this file stays free of imports that need Node.
+ */
+export const QUOTE_ORDER_SOURCE = "admin-quote";
+/** Money has arrived, whatever happened to it afterwards. */
+export const SETTLED_PAYMENT_STATUSES = ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"] as const;
+const SETTLED = new Set<string>(SETTLED_PAYMENT_STATUSES);
+
+/** A payment request the customer has not paid: not yet a real order. */
+export const isAwaitingQuote = (order: OrderLike): boolean =>
+  order.source === QUOTE_ORDER_SOURCE && !SETTLED.has(order.paymentStatus ?? "");
+
+export const isPlaced = (order: OrderLike): boolean =>
+  order.fulfilmentStatus !== "CANCELLED" && !isAwaitingQuote(order);
 export const isPaid = (order: OrderLike): boolean => PAID.has(order.paymentStatus ?? "");
-export const isOpen = (order: OrderLike): boolean => OPEN.has(order.fulfilmentStatus ?? "");
+export const isOpen = (order: OrderLike): boolean =>
+  OPEN.has(order.fulfilmentStatus ?? "") && !isAwaitingQuote(order);
+
+/**
+ * A payment request that HAS been paid and that nobody has started.
+ *
+ * Payment moves it straight from NEW to CONFIRMED, so it never appears in
+ * the "new orders" queue. This is what keeps it visible the next morning.
+ */
+export const isPaidQuoteToStart = (order: OrderLike): boolean =>
+  order.source === QUOTE_ORDER_SOURCE && isPaid(order) && order.fulfilmentStatus === "CONFIRMED";
+
+export type QuoteQueue = { awaiting: number; expired: number; paidToStart: number };
+
+/** The three payment-request counts the dashboard's "needs attention" shows. */
+export function quoteQueue(
+  orders: readonly (OrderLike & { payLinkExpiresAt?: string | null })[],
+  now: Date,
+): QuoteQueue {
+  const queue: QuoteQueue = { awaiting: 0, expired: 0, paidToStart: 0 };
+  for (const order of orders) {
+    if (isPaidQuoteToStart(order)) queue.paidToStart += 1;
+    if (!isAwaitingQuote(order) || order.fulfilmentStatus === "CANCELLED") continue;
+    const expires = order.payLinkExpiresAt ? new Date(order.payLinkExpiresAt).getTime() : Number.NaN;
+    if (Number.isFinite(expires) && expires > now.getTime()) queue.awaiting += 1;
+    else queue.expired += 1;
+  }
+  return queue;
+}
 
 /** A stored amount as safe, non-negative integer fils. */
 function fils(value: number | null | undefined): number {
@@ -158,6 +211,6 @@ export function isOverdue(order: OrderLike, todayStart: Date): boolean {
 export function openStatusCounts(orders: readonly OrderLike[]): { status: string; count: number }[] {
   return OPEN_STATUSES.map((status) => ({
     status,
-    count: orders.filter((order) => order.fulfilmentStatus === status).length,
+    count: orders.filter((order) => order.fulfilmentStatus === status && !isAwaitingQuote(order)).length,
   }));
 }

@@ -1,7 +1,8 @@
 import { getPayload } from "payload";
 import config from "@payload-config";
 import type Stripe from "stripe";
-import { applySucceededIntent } from "@backend/payments/paid";
+import { applySucceededIntent, noteStripeEventOnOrder } from "@backend/payments/paid";
+import { formatFils } from "@/lib/money";
 import { getStripe } from "@backend/payments/stripe";
 import { env } from "@/lib/env";
 
@@ -14,7 +15,14 @@ import { env } from "@/lib/env";
  * 3. Idempotent by construction: a replayed success finds the order PAID.
  * 4. Unknown events are acknowledged (200) so Stripe stops retrying noise.
  * 5. A thrown error is 500, so Stripe retries.
+ * 6. Refunds, disputes and cancelled intents never change payment state
+ *    here. They are written onto the order as an internal note, so a human
+ *    who refunds in the Stripe dashboard leaves a trace where staff look.
+ *    (They arrive only if the endpoint is subscribed to those events.)
  */
+
+const intentIdOf = (value: string | { id: string } | null | undefined): string | undefined =>
+  typeof value === "string" ? value : value?.id;
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -46,6 +54,28 @@ export async function POST(request: Request): Promise<Response> {
       payload.logger.warn(
         `stripe ${event.id}: payment failed for order ${intent.metadata?.orderNumber ?? "?"} (${intent.last_payment_error?.code ?? "no code"})`,
       );
+    } else if (event.type === "payment_intent.canceled") {
+      /* Expected when a florist cancels a payment request. Logged only. */
+      const intent = event.data.object;
+      payload.logger.info(
+        `stripe ${event.id}: intent ${intent.id} cancelled for order ${intent.metadata?.orderNumber ?? "?"}`,
+      );
+    } else if (event.type === "charge.refunded") {
+      const charge = event.data.object;
+      const outcome = await noteStripeEventOnOrder(
+        payload,
+        intentIdOf(charge.payment_intent),
+        `⚠ STRIPE: ${formatFils(charge.amount_refunded)} refunded on charge ${charge.id}. The order still reads as paid here.`,
+      );
+      payload.logger.warn(`stripe ${event.id} ${event.type}: ${outcome}`);
+    } else if (event.type === "charge.dispute.created") {
+      const dispute = event.data.object;
+      const outcome = await noteStripeEventOnOrder(
+        payload,
+        intentIdOf(dispute.payment_intent),
+        `⚠ STRIPE: the customer's bank has disputed this payment (${dispute.id}). Answer it in the Stripe dashboard.`,
+      );
+      payload.logger.warn(`stripe ${event.id} ${event.type}: ${outcome}`);
     }
     return new Response("ok", { status: 200 });
   } catch (error) {

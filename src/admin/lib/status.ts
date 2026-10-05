@@ -46,6 +46,21 @@ const TONES: Partial<Record<LabelGroup, Record<string, Tone>>> = {
     COMPLETED: "success",
     CANCELLED: "neutral",
   },
+  payRequest: {
+    awaiting: "warning",
+    expired: "neutral",
+    cancelled: "neutral",
+    paid: "success",
+  },
+  /* Derived, never stored (lib/discounts.ts `discountStatus`). Draft and
+     Expired are both quiet — neither means something is wrong; the word
+     tells them apart. */
+  discountStatus: {
+    active: "success",
+    scheduled: "info",
+    expired: "neutral",
+    draft: "neutral",
+  },
   priority: {
     URGENT: "danger",
     HIGH: "warning",
@@ -69,8 +84,13 @@ export const WAITING_ENQUIRY = ["NEW", "IN_REVIEW", "WAITING_FOR_CUSTOMER"] as c
 export const OPEN_ENQUIRY = ["NEW", "IN_REVIEW", "WAITING_FOR_CUSTOMER", "QUOTED"] as const;
 
 /** How an order arrived, as a key into `labels.source`. */
-export function orderSourceKey(source: string | null | undefined): "cod" | "checkout" | "unknown" {
+export function orderSourceKey(
+  source: string | null | undefined,
+): "cod" | "checkout" | "quote" | "unknown" {
   if (!source) return "unknown";
+  /* Before "checkout": a payment request is "admin-quote", and must never be
+     mistaken for a website order if the two words ever meet in one value. */
+  if (/quote/i.test(source)) return "quote";
   if (/cod/i.test(source)) return "cod";
   if (/checkout/i.test(source)) return "checkout";
   return "unknown";

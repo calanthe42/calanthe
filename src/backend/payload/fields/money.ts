@@ -32,10 +32,11 @@ type FilsFieldOptions = {
   index?: boolean;
   access?: NumberField["access"];
   admin?: NumberField["admin"];
+  defaultValue?: number;
 };
 
 export function filsField(options: FilsFieldOptions): NumberField {
-  const { name, label, required, index, access, admin } = options;
+  const { name, label, required, index, access, admin, defaultValue } = options;
 
   return {
     name,
@@ -44,6 +45,7 @@ export function filsField(options: FilsFieldOptions): NumberField {
     required,
     index,
     access,
+    ...(defaultValue === undefined ? {} : { defaultValue }),
     min: 0,
     admin: {
       ...admin,

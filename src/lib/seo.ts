@@ -67,8 +67,11 @@ export function websiteJsonLd(): JsonLd {
 type ProductJsonLdInput = {
   name: string;
   slug: string;
+  /** What it costs today: the sale price while a sale applies. */
   priceAed: number;
   image?: string;
+  /** ISO instant the current price stops applying — a sale's real end. */
+  priceValidUntil?: string;
 };
 
 /**
@@ -93,6 +96,8 @@ export function productJsonLd(product: ProductJsonLdInput): JsonLd {
       url: absoluteUrl(`/product/${product.slug}`),
       priceCurrency: "AED",
       price: product.priceAed.toFixed(2),
+      /* Only ever the real end of a real sale. Never an invented deadline. */
+      ...(product.priceValidUntil ? { priceValidUntil: product.priceValidUntil.slice(0, 10) } : {}),
       availability: "https://schema.org/InStock",
       seller: { "@id": `${SITE_ORIGIN}/#florist` },
     },

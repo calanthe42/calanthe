@@ -12,12 +12,13 @@
  */
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { TransitionLink } from "@/components/motion/TransitionLink";
+import { Price } from "@/components/commerce/Price";
 import { WishlistButton } from "@/components/commerce/WishlistButton";
 import { FloralImage } from "@/components/ui/FloralImage";
 import { hasSecondView, productBadge } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
-import { formatAed, type Product } from "@/lib/data";
-import { useT } from "@/lib/locale";
+import type { Product } from "@/lib/data";
+import { useLocale } from "@/lib/locale";
 
 type ProductCardProps = {
   product: Product;
@@ -45,6 +46,12 @@ type ProductCardProps = {
  * because `featured` is. There is no invented urgency here — no "only
  * 2 left", no "selling fast" — because nothing in the schema knows
  * either of those things.
+ *
+ * A SALE is database state too. While one of the owner's automatic sales
+ * applies, the card wears the label she wrote for it (in place of New or
+ * Featured — one label, always), the regular price struck through, and the
+ * price to pay. Nothing turns orange and nothing counts down: the regular
+ * price is muted, the sale price is Olive, and that is the whole of it.
  */
 export function ProductCard({
   product,
@@ -53,8 +60,9 @@ export function ProductCard({
   showView = false,
   sizes = "(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 25vw",
 }: ProductCardProps) {
-  const t = useT();
+  const { locale, t } = useLocale();
   const [front, back] = product.images;
+  const sale = product.sale;
   /* Both rules are pure and tested — see lib/catalogue.ts. A card
      wearing two labels reads as a sale rack, and a product whose two
      slots hold the same photograph would otherwise crossfade with
@@ -94,8 +102,18 @@ export function ProductCard({
         </ClipReveal>
 
         {badge && (
-          <span className="pointer-events-none absolute left-3 top-3 font-brand text-[0.5625rem] font-medium uppercase tracking-brand text-cream">
-            {badge === "new" ? t.ui.badgeNew : t.ui.badgeFeatured}
+          /* `start`, not `left`: the label sits at the reading edge and the
+             wishlist heart at the far one, in either direction. The owner's
+             sale label may be long, so it wraps to a second line instead of
+             being cut, and stops short of the heart. Arabic is set at 12px:
+             Cinzel has no Arabic, so the fallback face needs the size to be
+             read at all. */
+          <span className="pointer-events-none absolute start-3 top-3 max-w-[calc(100%-4rem)] font-brand text-[0.5625rem] font-medium uppercase leading-snug tracking-brand text-cream rtl:text-xs">
+            {badge === "sale" && sale
+              ? sale.label[locale]
+              : badge === "new"
+                ? t.ui.badgeNew
+                : t.ui.badgeFeatured}
           </span>
         )}
 
@@ -103,9 +121,23 @@ export function ProductCard({
           <h3 className="font-display text-lg font-normal text-olive lg:text-xl">
             {product.name}
           </h3>
-          <p className="shrink-0 text-sm text-ink-muted lg:text-base">
-            {showView && <span className="mr-1 text-xs">{t.ui.from}</span>}
-            {formatAed(product.priceAed)}
+          {/* On offer, the regular price sits on its own line above the
+              price to pay, so a two-up card at 390px never has to squeeze
+              three figures onto one row; the name wraps before this does. */}
+          <p className="shrink-0 text-end text-sm text-ink-muted lg:text-base">
+            <Price
+              t={t}
+              layout="stack"
+              prefix={showView ? <span className="me-1 text-xs">{t.ui.from}</span> : null}
+              nowFils={Math.round((sale?.priceAed ?? product.priceAed) * 100)}
+              wasFils={sale ? Math.round(product.priceAed * 100) : null}
+              wasClassName="text-xs lg:text-sm"
+            />
+            {sale?.valueType === "percentage" && (
+              <span className="block text-xs text-ink-muted">
+                {t.ui.salePercent.replace("{n}", String(sale.percentOff))}
+              </span>
+            )}
           </p>
         </div>
         {showView && (
@@ -118,7 +150,7 @@ export function ProductCard({
       <WishlistButton
         productId={product.id}
         productName={product.name}
-        className="absolute right-1 top-1 text-cream"
+        className="absolute end-1 top-1 text-cream"
       />
     </article>
   );

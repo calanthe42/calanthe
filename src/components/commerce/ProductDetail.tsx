@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/form-classes";
 import { uniqueProductViews } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
-import { itemUnitPrice, useCart } from "@/lib/cart";
+import { useCart } from "@/lib/cart";
+import { cartSaleOf, itemRegularUnitFils, itemUnitFils } from "@/lib/cart-pricing";
+import { formatFils, formatFilsInline } from "@/lib/money";
 import {
   addons,
-  formatAed,
   formatAedDelta,
   occasions as occasionNames,
   sizes,
@@ -97,11 +98,30 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [recipientPhone, setRecipientPhone] = useState("");
   const { days, selectedDay, setDay, slots, slot, setSlot } = useDeliverySchedule();
 
-  /* Same pricing rule the cart charges — never a second copy of it. */
-  const totalAed = useMemo(
-    () => itemUnitPrice({ basePriceAed: product.priceAed, sizeId, addonIds }),
-    [product.priceAed, sizeId, addonIds],
-  );
+  /* Same pricing rule the cart charges — never a second copy of it. The
+     sale, when there is one, lowers the arrangement (base + size) and leaves
+     the add-ons at their price, exactly as the server will. */
+  const sale = product.sale;
+  const { totalFils, regularFils } = useMemo(() => {
+    const selection = { basePriceAed: product.priceAed, sizeId, addonIds };
+    return {
+      totalFils: itemUnitFils({ ...selection, sale: cartSaleOf(sale) }),
+      regularFils: itemRegularUnitFils(selection),
+    };
+  }, [product.priceAed, sale, sizeId, addonIds]);
+  const onOffer = Boolean(sale) && totalFils < regularFils;
+  const total = formatFils(totalFils);
+  /* The real end of the real sale, in Abu Dhabi's calendar — or nothing. */
+  const offerEnds = useMemo(() => {
+    if (!sale?.endsAt) return null;
+    const ends = new Date(sale.endsAt);
+    if (Number.isNaN(ends.getTime())) return null;
+    return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE-u-nu-latn" : "en-GB", {
+      timeZone: "Asia/Dubai",
+      day: "numeric",
+      month: "long",
+    }).format(ends);
+  }, [sale?.endsAt, locale]);
   const size = sizes.find((s) => s.id === sizeId);
 
   function flyToCart() {
@@ -152,6 +172,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
       name: product.name,
       image: product.images[0],
       basePriceAed: product.priceAed,
+      sale: cartSaleOf(sale),
       sizeId,
       addonIds,
       qty: 1,
@@ -295,9 +316,31 @@ export function ProductDetail({ product }: ProductDetailProps) {
           </Reveal>
 
           <Reveal delay={0.06} className="mt-8 border-y border-hairline py-6">
+            {/* ON OFFER: the owner's label and the regular price, above the
+                price to pay. The label is Olive on a hairline chip; the only
+                orange is a 5px dot, the same accent the promise lines below
+                use. No countdown, no "hurry": the one time claim is the
+                sale's real end date. */}
+            {onOffer && sale && (
+              <p className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="inline-flex items-center gap-2 rounded-sm border border-hairline px-2.5 py-1 font-brand text-[0.625rem] font-medium uppercase tracking-brand text-olive rtl:text-xs">
+                  <span aria-hidden className="h-[5px] w-[5px] shrink-0 rounded-full bg-burnt-orange" />
+                  {sale.label[locale]}
+                </span>
+                <span className="text-base text-ink-muted">
+                  <span className="sr-only">
+                    {t.ui.priceWas.replace("{price}", formatFils(regularFils))}
+                  </span>
+                  <s aria-hidden dir="ltr">
+                    {formatFils(regularFils)}
+                  </s>
+                </span>
+              </p>
+            )}
             <div className="flex items-baseline justify-between gap-4">
               <p className="font-display text-4xl text-olive" aria-live="polite">
-                {formatAed(totalAed)}
+                {onOffer && <span className="sr-only">{t.ui.priceNow.replace("{price}", "")}</span>}
+                <span dir="ltr">{total}</span>
               </p>
               <p className="text-sm text-ink-muted">
                 {size ? (t.sizeNames[size.id] ?? size.name) : null}
@@ -305,6 +348,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   plural(locale, t.product.withExtras, addonIds.length)}
               </p>
             </div>
+            {onOffer && (
+              <p className="mt-2 text-base leading-relaxed text-ink-muted">
+                {t.product.youSave.replace("{amount}", formatFilsInline(regularFils - totalFils))}
+                {offerEnds && <> · {t.product.offerEnds.replace("{date}", offerEnds)}</>}
+              </p>
+            )}
+            {onOffer && addonIds.length > 0 && (
+              <p className="mt-1 text-base leading-relaxed text-ink-muted">
+                {t.product.offerExcludesAddons}
+              </p>
+            )}
             <ul className="mt-5 flex flex-col gap-2.5 text-base text-olive">
               <li className="flex gap-3">
                 <span aria-hidden className="mt-3 h-px w-4 shrink-0 bg-burnt-orange" />
@@ -564,7 +618,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <Button variant="primary" className="w-full" onClick={handleAdd}
                 onPointerEnter={prefetchCartDrawer}
                 onTouchStart={prefetchCartDrawer}>
-                {t.product.addToCartWithTotal.replace("{total}", formatAed(totalAed))}
+                {t.product.addToCartWithTotal.replace("{total}", total)}
               </Button>
             </div>
           </div>
@@ -579,7 +633,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <p className="truncate font-display text-lg leading-tight text-olive">
               {product.name}
             </p>
-            <p className="text-sm text-ink-muted">{formatAed(totalAed)}</p>
+            <p className="text-sm text-ink-muted">
+              {onOffer && (
+                <s dir="ltr" className="me-2 text-xs" aria-hidden>
+                  {formatFils(regularFils)}
+                </s>
+              )}
+              <span dir="ltr" className={onOffer ? "text-olive" : undefined}>
+                {total}
+              </span>
+            </p>
           </div>
           <Button variant="primary" className="shrink-0 px-6" onClick={handleAdd}
                 onPointerEnter={prefetchCartDrawer}

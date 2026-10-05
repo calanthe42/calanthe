@@ -115,6 +115,25 @@ export default async function DashboardPage({
     icon: "bag",
     href: "/admin/orders?status=NEW",
   });
+  /* Payment requests. A paid one skips the "new orders" queue (payment moves
+     it straight to Confirmed), so it gets its own row and stays visible the
+     next morning; an unpaid one is "awaiting payment" here and nowhere in
+     the revenue above. */
+  add(data.quotes.paidToStart, "dashboard.attention.quotesPaid", {
+    tone: "warning",
+    icon: "checkCircle",
+    href: "/admin/orders?attention=paid-to-start",
+  });
+  add(data.quotes.awaiting, "dashboard.attention.quotesAwaiting", {
+    tone: "info",
+    icon: "clock",
+    href: "/admin/orders?attention=awaiting-payment",
+  });
+  add(data.quotes.expired, "dashboard.attention.quotesExpired", {
+    tone: "warning",
+    icon: "alert",
+    href: "/admin/orders?attention=link-expired",
+  });
   add(data.enquiriesWaiting, "dashboard.attention.enquiries", {
     tone: "warning",
     icon: "message",
