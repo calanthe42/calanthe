@@ -57,7 +57,10 @@ function intentParams(order: IntentOrder): Stripe.PaymentIntentCreateParams {
     amount: order.totalFils,
     currency: "aed",
     automatic_payment_methods: { enabled: true },
-    receipt_email: order.customerEmail,
+    /* Only when there IS an address. An order written by hand in the admin
+       may have none (stored as ""), and Stripe refuses an empty one — every
+       card, Apple Pay and Google Pay attempt on such an order then failed. */
+    ...(order.customerEmail ? { receipt_email: order.customerEmail } : {}),
     description: `Calanthe order ${orderNumber}`,
     metadata: {
       kind: "order",
@@ -86,13 +89,64 @@ function mismatch(intent: Stripe.PaymentIntent, order: IntentOrder): string | nu
   return null;
 }
 
+type DrizzleLike = { execute: (query: unknown) => Promise<unknown> };
+
+/** How the intent's id is written to the order. Replaceable in tests. */
+export type StoreIntentId = (payload: Payload, orderId: number, intentId: string) => Promise<void>;
+
+/**
+ * Writes the intent id, and ONLY the intent id.
+ *
+ * `payload.update` rewrites the whole order row from a copy it read a moment
+ * earlier. Here that could put a request back to "new" that a florist had
+ * cancelled in the same instant — leaving a cancelled order payable — or
+ * hand an order its old payment state back. One column, one statement.
+ */
+const storeIntentId: StoreIntentId = async (payload, orderId, intentId) => {
+  const { sql } = await import("@payloadcms/db-postgres");
+  const drizzle = (payload.db as unknown as { drizzle: DrizzleLike }).drizzle;
+  const written = await drizzle.execute(sql`
+    UPDATE orders
+    SET stripe_payment_intent_id = ${intentId}::text, updated_at = now()
+    WHERE id = ${orderId}::int
+    RETURNING id
+  `);
+  const rows = Array.isArray(written) ? written : ((written as { rows?: unknown[] })?.rows ?? []);
+  if (rows.length === 0) throw new Error(`order ${orderId} was not found`);
+};
+
+/** Stripe marks a response it replayed for an idempotency key it has seen. */
+function wasReplayed(intent: Stripe.PaymentIntent): boolean {
+  const headers = (intent as { lastResponse?: { headers?: Record<string, string> } }).lastResponse?.headers;
+  return headers?.["idempotent-replayed"] === "true";
+}
+
 async function createAndStore(
   payload: Payload,
   stripe: StripeLike,
   order: IntentOrder,
   idempotencyKey: string,
+  store: StoreIntentId,
 ): Promise<EnsureIntentResult> {
-  const intent = await stripe.paymentIntents.create(intentParams(order), { idempotencyKey });
+  let intent = await stripe.paymentIntents.create(intentParams(order), { idempotencyKey });
+
+  /* NEVER TRUST A REPLAYED CREATE. For about a day Stripe answers a repeated
+     key with the ORIGINAL response — an intent that looks payable even if it
+     has since been cancelled (which is what happens below when its id could
+     not be stored). Ask what it is now; a paid one is not offered again, and
+     a cancelled one is replaced under a key that cannot replay it. */
+  if (wasReplayed(intent)) {
+    const live = await stripe.paymentIntents.retrieve(intent.id);
+    if (live.status === "succeeded" || live.status === "processing") {
+      return { kind: "processing", intentId: live.id };
+    }
+    intent =
+      live.status === "canceled"
+        ? await stripe.paymentIntents.create(intentParams(order), {
+            idempotencyKey: `order-${order.id}-r-${live.id}`,
+          })
+        : live;
+  }
 
   const wrong = mismatch(intent, order);
   if (wrong || !intent.client_secret) {
@@ -102,13 +156,7 @@ async function createAndStore(
   }
 
   try {
-    await payload.update({
-      collection: "orders",
-      id: order.id,
-      /* A server-only field: no role can write it through the API. */
-      overrideAccess: true,
-      data: { stripePaymentIntentId: intent.id },
-    });
+    await store(payload, order.id, intent.id);
   } catch (error) {
     /* The order does not know this intent, so nobody may pay it. */
     payload.logger.error(
@@ -129,14 +177,15 @@ export async function ensureOrderPaymentIntent(
   payload: Payload,
   stripe: StripeLike,
   order: IntentOrder,
-  options: { replaceCanceled?: boolean } = {},
+  options: { replaceCanceled?: boolean; store?: StoreIntentId } = {},
 ): Promise<EnsureIntentResult> {
+  const store = options.store ?? storeIntentId;
   try {
     const storedId = order.stripePaymentIntentId;
     if (!storedId) {
       /* Two tabs pressing pay in the same second send the same key and get
          the same intent back, so both store the same id. */
-      return await createAndStore(payload, stripe, order, `order-${order.id}`);
+      return await createAndStore(payload, stripe, order, `order-${order.id}`, store);
     }
 
     const existing = await stripe.paymentIntents.retrieve(storedId);
@@ -149,7 +198,7 @@ export async function ensureOrderPaymentIntent(
       if (!options.replaceCanceled) return { kind: "canceled", intentId: existing.id };
       /* A different key on purpose: within a day, `order-{id}` would replay
          the cancelled intent's original response. */
-      return await createAndStore(payload, stripe, order, `order-${order.id}-r-${existing.id}`);
+      return await createAndStore(payload, stripe, order, `order-${order.id}-r-${existing.id}`, store);
     }
 
     const wrong = mismatch(existing, order);

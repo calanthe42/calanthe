@@ -532,6 +532,14 @@ function paymentReceivedEmail(
   };
 }
 
+/** How the money arrived, in the owner's notice (always English, like the rest of it). */
+const OWNER_PAID_BY = {
+  card: "paid by card (Stripe)",
+  cash: "recorded as paid in cash",
+  "bank-transfer": "recorded as paid by bank transfer",
+  "card-machine": "recorded as paid on the card machine",
+} as const;
+
 /** Said to the owner when money arrives on a request that was cancelled. */
 const PAID_AFTER_CANCEL =
   "This request was cancelled before the payment arrived. Refund the payment in Stripe — do not reinstate the order.";
@@ -566,7 +574,7 @@ function ownerQuotePaidEmail(
         "en",
       ) +
       para(
-        `<strong>Total ${amount}</strong> — paid by card (Stripe). Invoice ${escape(invoice.number)}.`,
+        `<strong>Total ${amount}</strong> — ${OWNER_PAID_BY[invoice.paymentMethod]}. Invoice ${escape(invoice.number)}.`,
       ) +
       (extra.adminOrderUrl ? button(extra.adminOrderUrl, "Open the order") : ""),
   );
@@ -586,7 +594,7 @@ function ownerQuotePaidEmail(
     ...(order.recipientName ? [`For: ${order.recipientName}`] : []),
     ...(order.recipientPhone ? [`Their phone: ${order.recipientPhone}`] : []),
     "",
-    `Total: ${amount} — paid by card (Stripe). Invoice ${invoice.number}.`,
+    `Total: ${amount} — ${OWNER_PAID_BY[invoice.paymentMethod]}. Invoice ${invoice.number}.`,
     ...(extra.adminOrderUrl ? ["", extra.adminOrderUrl] : []),
   ].join("\n");
 

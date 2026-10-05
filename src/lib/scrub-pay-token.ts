@@ -23,11 +23,15 @@
 /* Real tokens are 43 base64url characters. Sixteen or more is scrubbed, so a
    truncated or mistyped token is caught as well; short words are left alone. */
 const PAY_PATH = /\/pay\/[A-Za-z0-9_-]{16,}/g;
+/* `/invoice/<number>/<key>` is a credential too — and a worse one to leak:
+   the key never expires. The number is kept, so an error can still be traced
+   to its invoice; the key is not. */
+const INVOICE_PATH = /\/invoice\/(CAL-INV-\d{4}-\d{5,})\/[A-Za-z0-9_-]{16,}/g;
 const MAX_DEPTH = 8;
 
 /** One string, with any payment-link token replaced. */
 export function scrubPayPath(text: string): string {
-  return text.replace(PAY_PATH, "/pay/[token]");
+  return text.replace(PAY_PATH, "/pay/[token]").replace(INVOICE_PATH, "/invoice/$1/[key]");
 }
 
 function walk(value: unknown, depth: number): unknown {

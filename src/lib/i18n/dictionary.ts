@@ -1361,9 +1361,15 @@ export const en = {
     tabbyBody: "Interest-free instalments",
     comingSoon: "Coming soon",
     tabbyUnavailable: "Tabby is not available yet. It is coming soon; for now, please pay by card, Apple Pay or Google Pay.",
-    cardBody: "Paid securely through Stripe. Your card details go straight to Stripe and never reach us.",
+    /* The one line under the pay button, beside a small lock. True of this
+       integration: the card fields are Stripe's own frames, and no card
+       number ever reaches Calanthe's servers. */
+    cardBody: "Your card details go straight to Stripe. Calanthe never sees or stores them.",
     paymentLoading: "Loading secure payment…",
     paymentFailed: "The payment did not go through. Nothing has been charged — please check your details or try another card.",
+    /* The order waited unpaid too long and its payment was released on the
+       server. Pressing pay again starts a fresh one. */
+    paymentExpired: "This payment had been waiting too long and was released. Nothing has been charged — please press Pay Now again.",
 
     yourOrder: "Your order",
     withCard: "With a handwritten card",
@@ -2693,9 +2699,10 @@ export const ar: typeof en = {
     tabbyBody: "أقساط بدون فوائد",
     comingSoon: "قريبًا",
     tabbyUnavailable: "خدمة تابي غير متاحة حاليًا وستتوفّر قريبًا. يُرجى الدفع حاليًا بالبطاقة أو Apple Pay أو Google Pay.",
-    cardBody: "دفع آمن عبر Stripe. تذهب بيانات بطاقتكم مباشرة إلى Stripe ولا تصل إلينا أبدًا.",
+    cardBody: "تذهب بيانات بطاقتكم مباشرة إلى Stripe، ولا تراها كالانثي ولا تحتفظ بها.",
     paymentLoading: "جارٍ تحميل الدفع الآمن…",
     paymentFailed: "لم تتم عملية الدفع، ولم يُخصم أي مبلغ. يُرجى التحقق من البيانات أو تجربة بطاقة أخرى.",
+    paymentExpired: "انتظرت هذه الدفعة طويلًا فأُلغيت، ولم يُخصم أي مبلغ. يُرجى الضغط على «ادفعوا الآن» مرة أخرى.",
 
     yourOrder: "طلبكم",
     withCard: "مع بطاقة مكتوبة بخط اليد",

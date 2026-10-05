@@ -13,9 +13,10 @@ import { cn } from "@/lib/cn";
  *
  * It is the wallpaper itself, rendered from the client's vector file and
  * baked onto each ground it is used on (olive lines at about 5% on the
- * page colour or on cream), so it costs one small tiled image (~25 KB) and
- * no work at runtime. The tile's own ground IS the section's colour, so it
- * can be cropped or faded anywhere without a seam.
+ * page colour or on cream, a shade lighter than the ground on olive), so it
+ * costs one small tiled image (25–45 KB) and no work at runtime. The tile's
+ * own ground IS the section's colour, so it can be cropped or faded anywhere
+ * without a seam.
  *
  * Put it first inside a `relative isolate` section; it sits at -z-10 behind
  * everything and never animates. Decorative, so hidden from assistive tech.
@@ -25,6 +26,9 @@ const GROUNDS = {
   canvas: "bg-[url(/brand/print/orchid-canvas.webp)]",
   /* Warm cream (#E4DCC5). */
   cream: "bg-[url(/brand/print/orchid-cream.webp)]",
+  /* Deep olive (#2B2F1B) — the payment counter. Text sits on this one, so
+     its caller lowers the print's opacity until every word reads at ease. */
+  olive: "bg-[url(/brand/print/orchid-olive.webp)]",
 } as const;
 
 export function OrchidPrint({

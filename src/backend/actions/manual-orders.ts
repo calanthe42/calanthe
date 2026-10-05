@@ -21,6 +21,7 @@ import {
 import { internalAddresses } from "@backend/email/internal";
 import { sendAfterCommit, sendEmail } from "@backend/email/send";
 import { MANUAL_PAYMENT_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
+import { activeRole } from "@backend/payload/access";
 import { claimInvoice, issueInvoice, stampPaid } from "@backend/payments/invoice-number";
 import {
   MANUAL_SOURCE,
@@ -85,12 +86,12 @@ const CARD_IN_PROGRESS: ActionResult = {
 async function staffSession(): Promise<Session | null> {
   const payload = await getPayload({ config });
   const { user } = await payload.auth({ headers: await nextHeaders() });
-  const role = (user as { role?: string } | null)?.role;
+  const role = activeRole(user);
   if (!user || (role !== "admin" && role !== "staff")) return null;
   return { payload, user };
 }
 
-const isOwner = (user: Session["user"]): boolean => (user as { role?: string }).role === "admin";
+const isOwner = (user: Session["user"]): boolean => activeRole(user) === "admin";
 
 function origin(): string {
   return payLinkOrigin(SITE_ORIGIN, {
@@ -137,8 +138,6 @@ async function settleOutside(
   reference: string | undefined,
   now: Date,
 ): Promise<ActionResult> {
-  const orderNumber = String(order.orderNumber ?? order.id);
-
   if (order.stripePaymentIntentId) {
     const stripe = getStripe();
     if (!stripe) return CARD_IN_PROGRESS;
@@ -173,6 +172,30 @@ async function settleOutside(
       ...(order.fulfilmentStatus === "NEW" ? { fulfilmentStatus: "CONFIRMED" as const } : {}),
     },
   });
+
+  return finishOutsidePayment(payload, user, order, method, now, reference);
+}
+
+/**
+ * The second half of recording a payment: the invoice number or the payment
+ * stamp, the activity entry and the emails.
+ *
+ * On its own so it can be RESUMED. If the write above succeeded and this
+ * part never ran, the order is paid with no payment time; pressing "Record
+ * payment" again comes straight here and finishes it. Only one caller is
+ * ever let through the stamp, so the thank-you is sent once.
+ */
+async function finishOutsidePayment(
+  payload: Payload,
+  user: Session["user"],
+  order: Order,
+  method: OutsidePaymentMethod,
+  now: Date,
+  reference?: string,
+): Promise<ActionResult> {
+  const orderNumber = String(order.orderNumber ?? order.id);
+  const preNumbered = Boolean(order.invoiceNumber);
+  const paidAtIso = now.toISOString();
 
   const vatRateBps = currentVatRateBps();
   const vatFils = vatIncludedFils(order.totalFils, vatRateBps);
@@ -338,7 +361,19 @@ export async function createManualOrder(form: FormData): Promise<ActionResult> {
     });
 
     if (parsed.payment !== "unpaid") {
-      const settled = await settleOutside(payload, user, numbered, parsed.payment, parsed.paymentReference, now);
+      /* Its own try: the order IS saved by now. A failure here must say
+         "saved, payment not recorded" — never "could not be saved", which
+         would have her write it again and use a second invoice number. */
+      const settled = await settleOutside(payload, user, numbered, parsed.payment, parsed.paymentReference, now).catch(
+        (error: unknown): ActionResult => {
+          payload.logger.error(
+            `order ${orderNumber} saved, but recording its payment failed: ${
+              error instanceof Error ? error.message : "unknown"
+            }`,
+          );
+          return { ok: false, message: "The payment could not be recorded.", code: "actions.manual.recordFailed" };
+        },
+      );
       if (!settled.ok) {
         /* The order exists; only the payment could not be recorded. Say so
            rather than pretend nothing was saved. */
@@ -421,6 +456,15 @@ export async function recordOutsidePayment(orderId: number, form: FormData): Pro
       .findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true })
       .catch(() => null);
     if (!order || order.source !== MANUAL_SOURCE) return NOT_PAYABLE;
+
+    /* RESUMABLE. If an earlier attempt marked the order paid and then
+       stopped before the payment time was stamped (a database blip), the
+       invoice would say "Unpaid" for ever and nobody would be thanked.
+       Pressing again finishes it: the stamp is written and the emails go,
+       exactly once (stampPaid lets only one caller through). */
+    if (order.paymentStatus === "PAID" && order.invoiceNumber && !order.paidAt && order.paymentMethod) {
+      return await finishOutsidePayment(payload, user, order, order.paymentMethod as OutsidePaymentMethod, new Date());
+    }
     if (isSettled(order.paymentStatus) || order.fulfilmentStatus === "CANCELLED") return NOT_PAYABLE;
 
     return await settleOutside(

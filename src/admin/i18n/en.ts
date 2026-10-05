@@ -1486,6 +1486,8 @@ export const en = {
     quote: {
       confirmed: "Confirmed. Payment link sent to {email}.",
       noEmail: "This customer has no email address. Copy the payment link and send it yourself.",
+      paidWhileCancelling:
+        "The customer paid as you were cancelling. The request stays cancelled and is marked paid: refund it in Stripe, or confirm the enquiry again.",
       confirmedEmailNotSent:
         "Confirmed, but the email was not sent. Copy the payment link and send it yourself.",
       resent: "Payment link sent again.",

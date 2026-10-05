@@ -1,19 +1,21 @@
 "use client";
 
-import { memo, useRef, useState, useTransition } from "react";
-import {
-  Elements,
-  ExpressCheckoutElement,
-  PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
+import { memo, useMemo, useRef, useState, useTransition } from "react";
+import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { startCardCheckout, type CheckoutRequest } from "@backend/actions/checkout";
 import {
-  APPEARANCE,
-  EXPRESS_CHECKOUT_OPTIONS,
+  CounterCard,
+  CounterNotice,
+  CounterPay,
+  CounterWallet,
+  PayCounter,
+  payBarClasses,
+  useCounterAhead,
+} from "@/components/commerce/PayCounter";
+import {
   HAS_STRIPE,
   STRIPE_FONTS,
+  stripeAppearance,
   useLazyStripe,
 } from "@/components/commerce/stripe-shared";
 import Link from "next/link";
@@ -71,6 +73,13 @@ const FIELD_ORDER: readonly CheckoutField[] = [
   "email",
   "address",
 ];
+
+/* What the card fields ask for. Checkout already has her email and phone
+   (they go to Stripe with the confirmation), so the element does not ask
+   again. */
+const CARD_FIELDS = {
+  billingDetails: { email: "never", phone: "never", name: "auto" },
+} as const;
 
 const FIELD_IDS: Record<CheckoutField, string> = {
   recipientName: "rec-name",
@@ -244,8 +253,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 /**
- * Card checkout: card, Apple Pay and Google Pay in Stripe's Payment Element
- * (docs/PAYMENTS.md). Deferred-intent flow — the element mounts with the
+ * Card checkout: the device's wallet (Apple Pay or Google Pay) and a card,
+ * through Stripe's elements (docs/PAYMENTS.md), on the payment counter
+ * (PayCounter.tsx). Deferred-intent flow — the elements mount with the
  * basket's amount, the order and its PaymentIntent are created on the server
  * only when the customer presses Pay, and the browser confirms with Stripe
  * directly. The order becomes PAID only when Stripe's signed webhook says so.
@@ -255,6 +265,7 @@ export function CheckoutForm() {
   const { locale } = useLocale();
   /* Stripe.js arrives lazily — see stripe-shared.ts. */
   const stripePromise = useLazyStripe();
+  const appearance = useMemo(() => stripeAppearance(locale), [locale]);
   return (
     <Elements
       stripe={stripePromise}
@@ -268,7 +279,7 @@ export function CheckoutForm() {
            Never below the smallest amount that can be charged. */
         amount: Math.max(MIN_CHARGE_FILS, totalFils),
         locale: locale === "ar" ? "ar" : "en",
-        appearance: APPEARANCE,
+        appearance,
         fonts: STRIPE_FONTS,
       }}
     >
@@ -330,6 +341,10 @@ function CheckoutFormInner() {
   const [attempted, setAttempted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  /* The payment counter, once it is on the page: the phone's pay bar is
+     shown only while it is still further down (PayCounter.tsx). */
+  const [counter, setCounter] = useState<HTMLElement | null>(null);
+  const counterAhead = useCounterAhead(counter);
 
   const zone = deliveryZones.find((z) => z.id === zoneId);
   /* Every figure below is fils, and follows the server's arithmetic
@@ -549,6 +564,20 @@ function CheckoutFormInner() {
         redirect: "if_required",
       });
       if (confirmed.error) {
+        /* The server can cancel this order's PaymentIntent while the page
+           is open: an unpaid order holding a sale price or a code is
+           released after an hour, or when the same code is claimed again
+           (backend/payments/coupon-claims.ts). A cancelled intent can never
+           be confirmed, so keeping it meant every further press was refused
+           until she reloaded. It is dropped, and the next press creates a
+           fresh order and intent at the price of that moment.
+           ONLY "canceled": an intent that has in fact succeeded must never
+           be answered with a second order. */
+        if (confirmed.error.payment_intent?.status === "canceled") {
+          intentRef.current = null;
+          setFormError(t.checkout.paymentExpired);
+          return;
+        }
         setFormError(confirmed.error.message ?? t.checkout.paymentFailed);
         return;
       }
@@ -645,9 +674,8 @@ function CheckoutFormInner() {
        * password. POST keeps it in a body Next simply discards.
        */
       method="post"
-      /* Clearance for the sticky order bar on a phone, so the last field and
-         the WhatsApp line are never trapped underneath it. */
-      className="pb-28 lg:pb-0"
+      /* No clearance for the phone's pay bar is needed any more: the bar is
+         gone by the time the end of the form is on screen (see below). */
       onSubmit={(e) => {
         e.preventDefault();
         placeOrder();
@@ -660,7 +688,16 @@ function CheckoutFormInner() {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-16">
+      {/*
+        THREE PIECES, ONE ORDER ON A PHONE: the steps, then the order and its
+        discount code, then the counter where she pays. The counter states
+        the amount and carries the pay button, so everything that can change
+        that amount — the code above all — has to come before it; it used to
+        sit under the payment step, where a customer with a code met the
+        wallet button first. On a desktop the summary is the second column,
+        beside both the steps and the counter (two rows), and stays in view.
+      */}
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-16">
         <div className="flex flex-col gap-12">
           <Step index={1} title={t.checkout.forWhom}>
             <div
@@ -928,57 +965,10 @@ function CheckoutFormInner() {
             </div>
           </Step>
 
-          <Step index={4} title={t.checkout.payment}>
-            {HAS_STRIPE ? (
-              <>
-                {/* Express: Apple Pay and Google Pay as their own buttons,
-                    shown only on devices and browsers that support them. */}
-                <p className="mb-3 text-sm text-ink-muted">{t.checkout.expressTitle}</p>
-                <ExpressCheckoutElement
-                  onClick={onExpressClick}
-                  onConfirm={onExpressConfirm}
-                  options={EXPRESS_CHECKOUT_OPTIONS}
-                />
-
-                <div
-                  className="my-6 flex items-center gap-4 text-xs text-ink-muted"
-                  role="separator"
-                >
-                  <span className="h-px flex-1 bg-hairline" />
-                  {t.checkout.orPayByCard}
-                  <span className="h-px flex-1 bg-hairline" />
-                </div>
-
-                <p className="text-base text-olive">{t.checkout.cardTitle}</p>
-                <p className="mb-4 mt-1 text-sm leading-relaxed text-ink-muted">
-                  {t.checkout.cardBody}
-                </p>
-                <PaymentElement
-                  options={{
-                    layout: { type: "tabs", defaultCollapsed: false },
-                    /* The wallets have their own buttons above. */
-                    wallets: { applePay: "never", googlePay: "never" },
-                    fields: {
-                      billingDetails: { email: "never", phone: "never", name: "auto" },
-                    },
-                  }}
-                />
-
-                <TabbyOption t={t} />
-              </>
-            ) : (
-              <p
-                role="status"
-                className="rounded-sm border border-hairline p-4 text-sm text-olive"
-              >
-                {t.server.checkout.paymentUnavailable}
-              </p>
-            )}
-          </Step>
         </div>
 
         {/* Summary — sticky beside the form on desktop, folded on a phone. */}
-        <aside className="lg:sticky lg:top-28 lg:self-start">
+        <aside className="lg:sticky lg:top-28 lg:row-span-2 lg:self-start">
           <button
             type="button"
             aria-expanded={summaryOpen}
@@ -1016,43 +1006,50 @@ function CheckoutFormInner() {
           <div id="checkout-code" className="mt-3 border-b border-hairline pb-3 lg:mt-5">
             <DiscountCodeField />
           </div>
+        </aside>
 
-          <div className="mt-6">
-            {formError && (
-              <p
-                role="alert"
-                className="mb-4 border-l border-burnt-orange pl-4 text-sm leading-relaxed text-olive"
-              >
-                {formError}
-              </p>
+        {/* Step 4 — the counter. The fourth step of the same numbered form,
+            on its own surface: see PayCounter.tsx. */}
+        <div>
+          <PayCounter
+            ref={setCounter}
+            headingId="step-4"
+            index={4}
+            title={t.checkout.payment}
+            amountLabel={t.checkout.total}
+            amountText={formatFils(totalFils)}
+          >
+            {HAS_STRIPE ? (
+              <>
+                <CounterWallet onClick={onExpressClick} onConfirm={onExpressConfirm} />
+                <CounterCard fields={CARD_FIELDS} />
+                <TabbyOption t={t} />
+              </>
+            ) : (
+              <CounterNotice>{t.server.checkout.paymentUnavailable}</CounterNotice>
             )}
-            {/* On a phone this is replaced by the sticky bar below: two
-                identical Place Order buttons a thumb's width apart is a
-                choice the customer should not have to make. */}
-            <Button
-              type="submit"
-              variant="primary"
-              className="hidden w-full lg:flex"
+            <CounterPay
+              error={formError}
+              label={t.checkout.placeWithTotal.replace("{total}", formatFils(totalFils))}
               loading={pending}
               loadingText={t.checkout.placing}
               disabled={quoting}
+            />
+          </PayCounter>
+
+          <p className="mt-6 text-sm leading-relaxed text-ink-muted">
+            {t.checkout.questions}{" "}
+            <a
+              href={CONTACT.whatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="text-olive underline decoration-hairline underline-offset-4 hover:decoration-burnt-orange"
             >
-              {t.checkout.placeWithTotal.replace("{total}", formatFils(totalFils))}
-            </Button>
-            <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-              {t.checkout.questions}{" "}
-              <a
-                href={CONTACT.whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                className="text-olive underline decoration-hairline underline-offset-4 hover:decoration-burnt-orange"
-              >
-                {t.checkout.messageFlorist}
-              </a>
-              .
-            </p>
-          </div>
-        </aside>
+              {t.checkout.messageFlorist}
+            </a>
+            .
+          </p>
+        </div>
       </div>
 
       {/*
@@ -1064,8 +1061,14 @@ function CheckoutFormInner() {
         the money, did not have one. Same pattern, same tokens, same
         safe-area inset, so it clears the home indicator on every iPhone
         since the X.
+
+        It is there while she fills in the form and steps aside when the
+        counter arrives, which has the pay button of its own: two identical
+        pay buttons a thumb's width apart is a choice the customer should not
+        have to make. `inert` as well as out of sight, so a keyboard never
+        lands on a button nobody can see.
       */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
+      <div className={payBarClasses(counterAhead)} inert={!counterAhead}>
         <div className="mx-auto flex max-w-xl items-center gap-4">
           <div className="min-w-0 flex-1">
             <p dir="ltr" className="font-display text-xl leading-tight text-olive rtl:text-end">
@@ -1096,34 +1099,33 @@ function CheckoutFormInner() {
 /**
  * Tabby, shown as a payment option ahead of the integration: choosing it says
  * plainly that it is not available yet. Nothing is sent to Tabby.
+ *
+ * ON THE COUNTER IT IS A LINE, NOT A BOX, AND IT WHISPERS. It cannot be
+ * chosen yet, so it must not look like the thing to press: no fill, no
+ * border of its own, and no mint badge — on olive that badge was the
+ * brightest object on the surface, brighter than the pay button. The name is
+ * in the sentence; Tabby's own artwork arrives with the integration.
  */
 function TabbyOption({ t }: { t: Dictionary }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="mt-5">
+    <div className="mt-6 border-y border-cream/20">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-14 w-full items-center gap-4 rounded-sm border border-hairline bg-canvas px-4 text-start transition-colors duration-200 ease-bloom hover:border-sage"
+        className="flex min-h-16 w-full items-center gap-4 py-3 text-start transition-opacity duration-200 ease-bloom hover:opacity-80"
       >
-        <span
-          lang="en"
-          className="rounded-[3px] bg-[#3BFFC1] px-2 py-0.5 text-sm font-semibold lowercase tracking-tight text-[#292929]"
-        >
-          tabby
-        </span>
         <span className="flex-1">
-          <span className="block text-base text-olive">{t.checkout.tabbyTitle}</span>
-          <span className="block text-xs text-ink-muted">{t.checkout.tabbyBody}</span>
+          <span className="block text-base">{t.checkout.tabbyTitle}</span>
+          <span className="block text-base text-cream-muted">{t.checkout.tabbyBody}</span>
         </span>
-        <span className="text-xs text-ink-muted">{t.checkout.comingSoon}</span>
+        <span className="shrink-0 font-brand text-xs font-medium uppercase tracking-brand text-cream-muted rtl:text-sm">
+          {t.checkout.comingSoon}
+        </span>
       </button>
       {open && (
-        <p
-          role="status"
-          className="mt-2 border-s border-burnt-orange ps-4 text-sm leading-relaxed text-olive"
-        >
+        <p role="status" className="pb-4 text-base leading-relaxed">
           {t.checkout.tabbyUnavailable}
         </p>
       )}

@@ -121,6 +121,12 @@ export function WhatsAppButton() {
     };
   }, [heroRoute, pathname]);
 
+  /* WHERE SHE PAYS, NOTHING FLOATS. The checkout and the payment link end in
+     the dark payment counter; an olive badge parked on an olive surface sat
+     on top of the line that says her card details are safe. Both pages keep
+     a WhatsApp link of their own in every state that needs one. */
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/pay/")) return null;
+
   return (
     <a
       href={CONTACT.whatsappHref}

@@ -229,3 +229,18 @@ phase. ✅ done · 🔶 partial · ⏳ pending
 Item 21 is a real gap in the code as it stands: `rateLimit()` returns
 `null` when Redis is unconfigured and leaves the decision to the caller.
 Every production caller must treat `null` as deny.
+
+## Added 2026-10-06
+
+- **Security headers on every response** (`next.config.ts`): `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: SAMEORIGIN`,
+  `Content-Security-Policy: frame-ancestors 'self'`, `Permissions-Policy` (camera, microphone and
+  geolocation off). No `payment` directive and no script-src policy: both would break Apple Pay /
+  Google Pay or force every page to render dynamically. A script policy is to be tried in
+  Report-Only first.
+- **The login cookie is `Secure`** in production.
+- **A suspended or closed account holds no rights**, even with a login that is still valid
+  (`activeRole` in `backend/payload/access`); suspending also clears its sessions.
+- **The invoice link's key is scrubbed** from everything sent to Sentry, like the pay token.
+- **An order cannot be created as paid** through REST, GraphQL, /cms or server code.
+

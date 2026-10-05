@@ -91,7 +91,11 @@ export async function startQuotePayment(token: string): Promise<StartQuotePaymen
   const fresh = await payload
     .findByID({ collection: "orders", id: order.id, depth: 0, overrideAccess: true })
     .catch(() => null);
-  const stateNow = fresh ? payRequestState(fresh, new Date()) : "cancelled";
+  /* "Could not read" is not "not payable". Cancel nothing and hand nothing
+     back: the intent's id is already on the order, so a real cancellation
+     still finds it, and the customer can simply press again. */
+  if (!fresh) return fail("FAILED", m.failed);
+  const stateNow = payRequestState(fresh, new Date());
   if (stateNow !== "awaiting") {
     if (stateNow !== "paid") {
       await stripe.paymentIntents.cancel(intent.intentId).catch((error: unknown) => {

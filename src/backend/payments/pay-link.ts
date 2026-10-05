@@ -87,8 +87,18 @@ export function isPayTokenShape(value: unknown): value is string {
   return typeof value === "string" && TOKEN_SHAPE.test(value);
 }
 
+/**
+ * A link is valid until the END of its last day in Abu Dhabi (UTC+4, no
+ * daylight saving). The customer is told a DATE — "valid until 12 October" —
+ * so a link that died at the minute it was sent turned away everyone who
+ * paid on that last day after the hour it happened to be created.
+ */
+const UAE_OFFSET_MS = 4 * 3_600_000;
+
 export function payLinkExpiry(now: Date, days: number = PAY_LINK_TTL_DAYS): Date {
-  return new Date(now.getTime() + days * DAY_MS);
+  const uae = new Date(now.getTime() + UAE_OFFSET_MS + days * DAY_MS);
+  uae.setUTCHours(23, 59, 59, 999);
+  return new Date(uae.getTime() - UAE_OFFSET_MS);
 }
 
 export type PayRequestState = "awaiting" | "expired" | "cancelled" | "paid";

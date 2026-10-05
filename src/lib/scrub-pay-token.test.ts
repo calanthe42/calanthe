@@ -48,6 +48,18 @@ describe("scrubPayTokens", () => {
     expect(scrubPayTokens(undefined)).toBeUndefined();
   });
 
+  it("removes an invoice link's key and keeps its number", () => {
+    const key = "A".repeat(43);
+    expect(scrubPayPath(`https://www.calanthe.ae/invoice/CAL-INV-2026-00012/${key}?lang=ar`)).toBe(
+      "https://www.calanthe.ae/invoice/CAL-INV-2026-00012/[key]?lang=ar",
+    );
+    expect(scrubPayTokens({ request: { url: `/invoice/CAL-INV-2026-00012/${key}` } })).toEqual({
+      request: { url: "/invoice/CAL-INV-2026-00012/[key]" },
+    });
+    /* The admin's own invoices page carries no key and is left alone. */
+    expect(scrubPayPath("/admin/invoices?q=CAL-INV-2026-00012")).toBe("/admin/invoices?q=CAL-INV-2026-00012");
+  });
+
   it("does not follow a structure for ever", () => {
     type Node = { next?: Node; url: string };
     const loop: Node = { url: `/pay/${TOKEN}` };

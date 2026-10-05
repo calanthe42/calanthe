@@ -3,6 +3,7 @@
 import { getPayload, type RequiredDataFromCollectionSlug } from "payload";
 import config from "@payload-config";
 import { LIMITS, hintByAddress } from "@backend/security/throttle";
+import { BYO_VASE_PRICE_AED } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -109,6 +110,7 @@ export type BespokeEnquiryRequest = Contact & {
   cardMessage: string;
   leaveCardBlank: boolean;
   notes: string;
+  /** What the form displayed. IGNORED: the server works the total out itself. */
   totalAed: number;
 };
 
@@ -151,6 +153,13 @@ export async function submitBespokeEnquiry(
       ]
     : ["For: themselves"];
 
+  /* THE INDICATIVE TOTAL IS WORKED OUT HERE, never taken from the browser.
+     It prefills the "final amount" a florist confirms and the customer is
+     then asked to pay, so a figure the customer's own browser sent would let
+     a replayed request open that sheet at AED 20 under an "AED 800" title.
+     Budget plus the vase, exactly as the form shows it (lib/bespoke.ts). */
+  const indicativeAed = request.budgetAed + (request.vase === true ? BYO_VASE_PRICE_AED : 0);
+
   /* The schema's buildYourOwn group has no column for the vase, the card or
      the running total, so they are written into the message the florist
      actually reads. Losing them would defeat the point of recording this. */
@@ -167,7 +176,7 @@ export async function submitBespokeEnquiry(
       : request.cardMessage
         ? `Card: ${request.cardMessage}`
         : "",
-    request.totalAed ? `Indicative total: AED ${request.totalAed}` : "",
+    `Indicative total: AED ${indicativeAed}`,
     clean(request.notes, 1200) ? `Notes: ${clean(request.notes, 1200)}` : "",
   ]
     .filter(Boolean)
@@ -192,9 +201,7 @@ export async function submitBespokeEnquiry(
         budgetFils: Math.round(request.budgetAed * 100),
         /* A suggestion for the florist's "final amount", never a charge:
            the amount actually asked for is typed by staff. */
-        ...(Number.isFinite(request.totalAed) && request.totalAed > 0
-          ? { indicativeTotalFils: Math.round(request.totalAed * 100) }
-          : {}),
+        indicativeTotalFils: Math.round(indicativeAed * 100),
         ...(clean(request.deliveryLocation, 240)
           ? { deliveryLocation: clean(request.deliveryLocation, 240) }
           : {}),

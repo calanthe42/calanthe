@@ -18,7 +18,9 @@ import { buildPaymentRequestEmail, quoteFactsFromOrder } from "@backend/email/qu
 import { sendEmail } from "@backend/email/send";
 import type { SendOutcome } from "@backend/email/types";
 import { QUOTE_CANCEL_REVERT_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
+import { activeRole } from "@backend/payload/access";
 import { ensureOrderPaymentIntent } from "@backend/payments/intent";
+import { PAID_AFTER_CANCEL_NOTE } from "@backend/payments/paid";
 import {
   hashPayToken,
   isPayLinkSource,
@@ -82,7 +84,7 @@ const PERMISSION: ActionResult = {
 async function staffSession(): Promise<Session | null> {
   const payload = await getPayload({ config });
   const { user } = await payload.auth({ headers: await nextHeaders() });
-  const role = (user as { role?: string } | null)?.role;
+  const role = activeRole(user);
   if (!user || (role !== "admin" && role !== "staff")) return null;
   return { payload, user };
 }
@@ -296,6 +298,12 @@ const NOT_AWAITING: ActionResult = {
   code: "actions.quote.notAwaiting",
 };
 
+const PAID_WHILE_CANCELLING: ActionResult = {
+  ok: false,
+  message:
+    "The customer paid as you were cancelling. The request stays cancelled and is marked paid: refund it in Stripe, or confirm the enquiry again.",
+  code: "actions.quote.paidWhileCancelling",
+};
 const PAYMENT_IN_PROGRESS: ActionResult = {
   ok: false,
   message: "A payment is in progress or has just been received, so this cannot be cancelled.",
@@ -530,6 +538,15 @@ export async function cancelPaymentRequest(orderId: number): Promise<ActionResul
       overrideAccess: true,
     });
     if (isSettled(fresh.paymentStatus)) {
+      /* The payment landed as she was cancelling. If the webhook already saw
+         the request CANCELLED, it has told the owner — on the order and by
+         email — to refund it and NOT to reinstate it. Putting the order back
+         in the work queue now would contradict that: the owner refunds, the
+         florist still makes the flowers. Leave it cancelled and say so. */
+      if ((fresh.internalNotes ?? "").includes(PAID_AFTER_CANCEL_NOTE)) {
+        refresh(order);
+        return PAID_WHILE_CANCELLING;
+      }
       await restore(true);
       return PAYMENT_IN_PROGRESS;
     }
@@ -538,6 +555,7 @@ export async function cancelPaymentRequest(orderId: number): Promise<ActionResul
     if (fresh.stripePaymentIntentId) {
       const stripe = getStripe();
       let cancelled = false;
+      let succeeded = false;
       if (stripe) {
         try {
           await stripe.paymentIntents.cancel(fresh.stripePaymentIntentId);
@@ -549,9 +567,17 @@ export async function cancelPaymentRequest(orderId: number): Promise<ActionResul
             .retrieve(fresh.stripePaymentIntentId)
             .catch(() => null);
           cancelled = intent?.status === "canceled";
+          succeeded = intent?.status === "succeeded";
         }
       }
-      /* 4 — not provably dead, so the request is NOT cancelled. */
+      /* 4a — the money has arrived. The webhook finds (or has found) this
+         request CANCELLED and tells the owner to refund; keep it cancelled so
+         the order, the email and this screen all say the same thing. */
+      if (succeeded) {
+        refresh(order);
+        return PAID_WHILE_CANCELLING;
+      }
+      /* 4b — not provably dead, so the request is NOT cancelled. */
       if (!cancelled) {
         await restore(false);
         return PAYMENT_IN_PROGRESS;

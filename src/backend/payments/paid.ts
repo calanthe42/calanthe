@@ -254,7 +254,16 @@ export async function applySucceededIntent(
         paidAtIso,
       });
   /* Another delivery of this event issued the invoice and sent the emails. */
-  if (!claim.claimedNow) return "already-paid";
+  if (!claim.claimedNow) {
+    /* This delivery has just marked the order paid, yet nothing was claimed
+       and the order has no number: something put the row back between the
+       two writes. Answer 500 so Stripe delivers again, rather than 200 and
+       an order that is paid and silent for ever. */
+    if (!recovering && !claim.invoiceNumber) {
+      throw new Error(`order ${o.orderNumber}: paid by ${intent.id}, but no invoice could be claimed`);
+    }
+    return "already-paid";
+  }
 
   if (recovering) {
     /* An invoice was owed and is now issued. Whether to EMAIL is a separate

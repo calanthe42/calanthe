@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Elements,
-  ExpressCheckoutElement,
-  PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
+import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getQuotePaymentState, startQuotePayment } from "@backend/actions/pay";
 import {
-  APPEARANCE,
-  EXPRESS_CHECKOUT_OPTIONS,
+  CounterCard,
+  CounterNotice,
+  CounterPay,
+  CounterWallet,
+  PayCounter,
+  payBarClasses,
+  useCounterAhead,
+} from "@/components/commerce/PayCounter";
+import {
   HAS_STRIPE,
   STRIPE_FONTS,
+  stripeAppearance,
   useLazyStripe,
 } from "@/components/commerce/stripe-shared";
 import { Button } from "@/components/ui/Button";
@@ -26,8 +28,8 @@ import { useLocale } from "@/lib/locale";
  * Paying a payment link — /pay/[token].
  *
  * A florist confirmed a bespoke arrangement and the customer was emailed this
- * page. Apple Pay / Google Pay come first (Express Checkout), then a card in
- * Stripe's Payment Element, in the same palette as checkout.
+ * page. She pays at the same counter as checkout (PayCounter.tsx): the
+ * device's wallet first, then a card in Stripe's Payment Element.
  *
  * THE BROWSER SENDS ONLY THE TOKEN. `totalFils` configures the wallet sheet
  * and the label on the button; what is charged is the PaymentIntent the
@@ -58,6 +60,7 @@ export function PayRequestForm(props: Props) {
   const { locale } = useLocale();
   /* Stripe.js arrives lazily — see stripe-shared.ts. */
   const stripePromise = useLazyStripe();
+  const appearance = useMemo(() => stripeAppearance(locale), [locale]);
   return (
     <Elements
       stripe={stripePromise}
@@ -66,7 +69,7 @@ export function PayRequestForm(props: Props) {
         currency: "aed",
         amount: props.totalFils,
         locale: locale === "ar" ? "ar" : "en",
-        appearance: APPEARANCE,
+        appearance,
         fonts: STRIPE_FONTS,
       }}
     >
@@ -84,10 +87,10 @@ function PayRequestInner({ token, amountText, validUntil, children }: Props) {
   const [phase, setPhase] = useState<"form" | "confirming">("form");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /* The "Express checkout" label appears only once Stripe says this device
-     has Apple Pay or Google Pay; where neither exists the element renders
-     nothing, and a heading over nothing reads as a broken page. */
-  const [hasWallet, setHasWallet] = useState(false);
+  /* The counter, once it is on the page: the phone's pay bar is shown only
+     while it is still further down (PayCounter.tsx). */
+  const [counter, setCounter] = useState<HTMLElement | null>(null);
+  const counterAhead = useCounterAhead(counter);
   /* A second press while the first is in flight must not start a second
      payment. State alone lags a render behind a fast double tap. */
   const inFlight = useRef(false);
@@ -165,77 +168,43 @@ function PayRequestInner({ token, amountText, validUntil, children }: Props) {
       <form
         method="post"
         noValidate
-        /* Clearance for the fixed pay bar on a phone. */
-        className="mt-10 pb-28 lg:pb-0"
+        className="mt-10"
         onSubmit={(event) => {
           event.preventDefault();
           void pay();
         }}
       >
-        {HAS_STRIPE ? (
-          <>
-            {hasWallet ? (
-              <p className="mb-3 text-base text-ink-muted">{t.checkout.expressTitle}</p>
-            ) : null}
-            <ExpressCheckoutElement
-              options={EXPRESS_CHECKOUT_OPTIONS}
-              onReady={(event) => {
-                const methods = event.availablePaymentMethods;
-                setHasWallet(Boolean(methods?.applePay || methods?.googlePay));
-              }}
-              /* Stripe allows one second, with nothing awaited before
-                 resolve(): there is no form to check here, so it opens at once. */
-              onClick={(event) => event.resolve()}
-              onConfirm={() => void pay()}
-            />
-
-            {hasWallet ? (
-              <div className="my-6 flex items-center gap-4 text-sm text-ink-muted" role="separator">
-                <span className="h-px flex-1 bg-hairline" />
-                {t.checkout.orPayByCard}
-                <span className="h-px flex-1 bg-hairline" />
-              </div>
-            ) : null}
-
-            <PaymentElement
-              options={{
-                layout: { type: "tabs", defaultCollapsed: false },
-                /* The wallets have their own buttons above. */
-                wallets: { applePay: "never", googlePay: "never" },
-              }}
-            />
-          </>
-        ) : (
-          <p role="status" className="rounded-sm border border-hairline p-4 text-base text-olive">
-            {t.server.checkout.paymentUnavailable}
-          </p>
-        )}
-
-        {error ? (
-          <p
-            role="alert"
-            className="mt-6 border-s border-burnt-orange ps-4 text-base leading-relaxed text-olive"
-          >
-            {error}
-          </p>
-        ) : null}
-
-        {/* On a phone this is replaced by the fixed bar below. */}
-        {HAS_STRIPE ? (
-          <Button
-            type="submit"
-            variant="primary"
-            className="mt-8 hidden w-full lg:flex"
+        <PayCounter
+          ref={setCounter}
+          headingId="pay-counter"
+          title={t.checkout.payment}
+          amountLabel={t.pay.total}
+          amountText={amountText}
+        >
+          {HAS_STRIPE ? (
+            <>
+              <CounterWallet
+                /* Stripe allows one second, with nothing awaited before
+                   resolve(): there is no form to check here, so it opens at once. */
+                onClick={(event) => event.resolve()}
+                onConfirm={() => void pay()}
+              />
+              <CounterCard />
+            </>
+          ) : (
+            <CounterNotice>{t.server.checkout.paymentUnavailable}</CounterNotice>
+          )}
+          <CounterPay
+            error={error}
+            label={t.pay.payNow.replace("{amount}", amountText)}
             loading={busy}
             loadingText={t.pay.paying}
-          >
-            {t.pay.payNow.replace("{amount}", amountText)}
-          </Button>
-        ) : null}
+            showButton={HAS_STRIPE}
+          />
+        </PayCounter>
 
-        <div className="mt-8 flex flex-col gap-2 text-base leading-relaxed text-ink-muted">
+        <div className="mt-6 flex flex-col gap-2 text-base leading-relaxed text-ink-muted">
           {validUntil ? <p>{validUntil}</p> : null}
-          <p>{t.checkout.cardBody}</p>
           <p>
             {t.checkout.questions}{" "}
             <a
@@ -251,9 +220,10 @@ function PayRequestInner({ token, amountText, validUntil, children }: Props) {
 
         {/* THE PAY BUTTON, WHERE THE THUMB IS — the same bar as checkout:
             total at the start, the action at the end, clear of the home
-            indicator. */}
+            indicator. Like checkout's, it steps aside when the counter and
+            its own pay button arrive. */}
         {HAS_STRIPE ? (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-canvas px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 lg:hidden">
+          <div className={payBarClasses(counterAhead)} inert={!counterAhead}>
             <div className="mx-auto flex max-w-xl items-center gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-ink-muted">{t.pay.total}</p>

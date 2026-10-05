@@ -70,6 +70,28 @@ const nextConfig: NextConfig = {
  * place that uses it. (Overriding with our own headers() would not work:
  * Payload's rule is appended after ours.)
  */
+/**
+ * SECURITY HEADERS, on every response.
+ *
+ * Only what cannot break a payment. Deliberately NOT here:
+ *   - `payment` in Permissions-Policy: Stripe's wallet frames need it
+ *     delegated; restricting it breaks Apple Pay and Google Pay.
+ *   - X-Frame-Options DENY / Cross-Origin-Opener-Policy: Payload's /cms
+ *     frames its own pages, and Google Pay's window needs its opener.
+ *   - a script-src policy: Next's inline scripts, Stripe and Sentry would
+ *     need nonces, which forces dynamic rendering. To be tried in
+ *     Report-Only first.
+ * `frame-ancestors 'self'` stops any other site framing the checkout or the
+ * admin; Stripe's own frames INSIDE our pages are not affected by it.
+ */
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const payloadConfig = withPayload({ ...nextConfig, poweredByHeader: false });
 const payloadHeaders = payloadConfig.headers;
 
@@ -77,6 +99,8 @@ export default {
   ...payloadConfig,
   async headers() {
     const rules = (await payloadHeaders?.()) ?? [];
-    return rules.map((rule) => (rule.source === "/:path*" ? { ...rule, source: "/cms/:path*" } : rule));
+    const mapped = rules.map((rule) => (rule.source === "/:path*" ? { ...rule, source: "/cms/:path*" } : rule));
+    /* Appended AFTER the mapping above, so it is not narrowed to /cms. */
+    return [...mapped, { source: "/:path*", headers: SECURITY_HEADERS }];
   },
 } satisfies NextConfig;

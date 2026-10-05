@@ -513,7 +513,9 @@ export const Orders: CollectionConfig = {
       /* Not editable by ANY role. Money state arrives from the payment
          provider's webhook and nowhere else; guardPaymentStatus covers the
          overrideAccess path too. There is deliberately nothing to click. */
-      access: { create: isStaffField, update: () => false },
+      /* `create` is server-only too: through REST, GraphQL or /cms an order
+         always starts PENDING, whoever sends it. */
+      access: { create: serverOnlyField, update: () => false },
       admin: {
         position: "sidebar",
         readOnly: true,

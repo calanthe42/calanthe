@@ -221,6 +221,20 @@ export async function setTeamMemberStatus(id: number, status: string): Promise<A
       overrideAccess: false,
       data: { accountStatus: status as Status },
     });
+    /* Suspending or closing also signs her out everywhere: the logins on her
+       devices are dropped rather than left to expire. (The access rules
+       already refuse a suspended account; this removes the sessions too.) */
+    if (status !== "active") {
+      await payload
+        .update({ collection: "users", id, overrideAccess: true, data: { sessions: [] } as never })
+        .catch((error: unknown) => {
+          payload.logger.error(
+            `user ${id}: status set to ${status}, but the sessions could not be cleared: ${
+              error instanceof Error ? error.message : "unknown"
+            }`,
+          );
+        });
+    }
   } catch (error) {
     return failure(error, "That account could not be changed.", "team.errors.statusFailed");
   }

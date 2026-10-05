@@ -421,3 +421,27 @@ through, nothing is recorded.
 Migration `20261005_023342_manual_orders` adds three text columns to
 `orders` (`sales_channel`, `payment_method`, `payment_reference`). Apply it
 to the database BEFORE deploying the code that reads them.
+
+## The money guard (database trigger, 2026-10-06)
+
+Payload's `update` rewrites the whole order row from a copy it read a moment
+earlier, so two writers a few milliseconds apart (the webhook and a staff
+save, or two deliveries of one webhook) could put a paid order back to
+unpaid or empty its invoice number. Migration
+`20261006_000000_orders_money_guard` adds a BEFORE UPDATE trigger on
+`orders` that lets the money columns move forward only: payment status never
+leaves PAID / REFUNDED / PARTIALLY_REFUNDED, and the invoice number, payment
+time, counted discount code, payment method and (once paid) the PaymentIntent
+id keep their first value. It never raises: the innocent save succeeds and
+the settled values are simply kept.
+
+Prove it against a TEST database (everything is rolled back):
+
+    npx tsx --env-file=.env.local scripts/money-guard-probe.mts <test-host-fragment>
+
+Also fixed with it: a PaymentIntent is created without `receipt_email` when
+the order has no email (Stripe refuses an empty one); the intent id is
+written as one column, not a whole-row update; a replayed create is never
+trusted; an order can never be CREATED as paid; a payment link is valid until
+the end of its last day in Abu Dhabi.
+

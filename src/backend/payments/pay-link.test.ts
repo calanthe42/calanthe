@@ -63,7 +63,11 @@ describe("link expiry", () => {
   it("is exactly seven days", () => {
     const now = new Date("2026-10-04T10:00:00.000Z");
     expect(PAY_LINK_TTL_DAYS).toBe(7);
-    expect(payLinkExpiry(now).toISOString()).toBe("2026-10-11T10:00:00.000Z");
+    /* The end of the seventh day in Abu Dhabi (UTC+4): the date the customer
+       is shown stays true until midnight there. */
+    expect(payLinkExpiry(now).toISOString()).toBe("2026-10-11T19:59:59.999Z");
+    /* Sent just after midnight in Abu Dhabi: still the whole of that day. */
+    expect(payLinkExpiry(new Date("2026-10-04T20:30:00.000Z")).toISOString()).toBe("2026-10-12T19:59:59.999Z");
   });
 });
 

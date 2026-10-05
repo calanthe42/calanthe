@@ -74,6 +74,10 @@ export const Users: CollectionConfig = {
   slug: "users",
   auth: {
     tokenExpiration: 60 * 60 * 24 * 7, // 7 days
+    /* Never over plain http in production: a first visit on a hostile network
+       could otherwise carry the session cookie in clear text before the
+       redirect to https. Local development (http) keeps working. */
+    cookies: { secure: process.env.NODE_ENV === "production", sameSite: "Lax" },
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000, // 10 minutes
     /* Payload's own verification, not a home-made flag. Customers must

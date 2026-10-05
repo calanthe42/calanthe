@@ -6,6 +6,7 @@ import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { internalAddresses } from "@backend/email/internal";
+import { activeRole } from "@backend/payload/access";
 import { sendEmail } from "@backend/email/send";
 import {
   floristJobSheet,
@@ -49,7 +50,7 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
   /* Staff or owner only, checked against the real session rather than a
      hidden form field. */
   const { user } = await payload.auth({ headers: await nextHeaders() });
-  const role = (user as { role?: string } | null)?.role;
+  const role = activeRole(user);
   if (role !== "admin" && role !== "staff") {
     return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.notStaff") };
   }

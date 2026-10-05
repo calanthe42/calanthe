@@ -313,12 +313,15 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
           <Card>
             <CardHeader title={t("orders.detail.customer")} />
             <p className="mt-1 font-medium text-ink">{order.customerName}</p>
-            <p className="mt-1.5 flex min-w-0 items-center gap-2 text-sm">
-              <Icon name="mail" className="h-4 w-4 text-ink-3" />
-              <a href={`mailto:${order.customerEmail}`} className="truncate text-ink-2 underline-offset-4 hover:text-ink hover:underline" dir="ltr">
-                {order.customerEmail}
-              </a>
-            </p>
+            {/* An order written by hand may have no email: then there is no line. */}
+            {order.customerEmail ? (
+              <p className="mt-1.5 flex min-w-0 items-center gap-2 text-sm">
+                <Icon name="mail" className="h-4 w-4 text-ink-3" />
+                <a href={`mailto:${order.customerEmail}`} className="truncate text-ink-2 underline-offset-4 hover:text-ink hover:underline" dir="ltr">
+                  {order.customerEmail}
+                </a>
+              </p>
+            ) : null}
             <p className="mt-1 flex items-center gap-2 text-sm">
               <Icon name="phone" className="h-4 w-4 text-ink-3" />
               <a href={`tel:${order.customerPhone}`} className="text-ink-2 underline-offset-4 hover:text-ink hover:underline" dir="ltr">

@@ -26,7 +26,13 @@ import { getPayload } from "payload";
 import config from "../src/payload.config.ts";
 
 const BASE = process.argv[2] ?? "http://localhost:3100";
-const CUSTOMER = process.env.PROOF_EMAIL ?? "nettt420@gmail.com";
+/* No default: the repository is public, and a test must never write to a
+   person nobody chose. Run with PROOF_EMAIL set to an inbox you can read. */
+const CUSTOMER = process.env.PROOF_EMAIL ?? "";
+if (!CUSTOMER) {
+  console.error("Set PROOF_EMAIL to the inbox this proof should write to.");
+  process.exit(1);
+}
 const PASSWORD = "Calanthe-Proof-2026!";
 
 type Pool = { query: (s: string, p?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> };

@@ -21,11 +21,27 @@ import type { Access, FieldAccess, PayloadRequest } from "payload";
 /** Nobody, ever. Used where a row must be immutable (audit log, orders). */
 export const nobody: Access = () => false;
 
-export const isAdmin: Access = ({ req: { user } }) => user?.role === "admin";
+/**
+ * A SUSPENDED OR CLOSED ACCOUNT HOLDS NO RIGHTS — even with a login that is
+ * still valid. Suspending someone used to stop only her NEXT sign-in: the
+ * cookie already on her phone kept working for up to a week. The role is
+ * therefore read through this, everywhere a role grants something.
+ *
+ * Only the two blocking states are named: an account with no status at all
+ * (an old row) is treated as active, so this can never lock the owner out.
+ */
+export function activeRole(user: unknown): string | undefined {
+  const account = user as { role?: string | null; accountStatus?: string | null } | null | undefined;
+  if (!account) return undefined;
+  if (account.accountStatus === "suspended" || account.accountStatus === "closed") return undefined;
+  return account.role ?? undefined;
+}
+
+export const isAdmin: Access = ({ req: { user } }) => activeRole(user) === "admin";
 
 /** Internal staff: florists and drivers. Admin is always also staff. */
 export const isStaff: Access = ({ req: { user } }) =>
-  user?.role === "admin" || user?.role === "staff";
+  activeRole(user) === "admin" || activeRole(user) === "staff";
 
 /** Admins see everyone; anyone else sees only their own row. */
 export const isAdminOrSelf: Access = ({ req: { user } }) => {
@@ -100,7 +116,7 @@ export const publicReadWhenLive =
 
 /** Internal staff may write this field; customers and the public may not. */
 export const isStaffField: FieldAccess = ({ req: { user } }) =>
-  user?.role === "admin" || user?.role === "staff";
+  activeRole(user) === "admin" || activeRole(user) === "staff";
 
 /**
  * Server-only field. Denies every request that arrives through the API or
@@ -113,7 +129,7 @@ export const isStaffField: FieldAccess = ({ req: { user } }) =>
  */
 export const serverOnlyField: FieldAccess = () => false;
 
-export const isAdminField: FieldAccess = ({ req: { user } }) => user?.role === "admin";
+export const isAdminField: FieldAccess = ({ req: { user } }) => activeRole(user) === "admin";
 
 /**
  * Written once when the row is created, then frozen for every role —

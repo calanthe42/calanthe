@@ -1,6 +1,7 @@
 import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
+import { activeRole } from "@backend/payload/access";
 import type { User } from "@/payload-types";
 
 /**
@@ -29,7 +30,9 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   if (!user) return null;
 
-  const role = (user as User).role;
+  /* The role of an ACTIVE account: a suspended or closed one has none, even
+     while its cookie is still valid (backend/payload/access). */
+  const role = activeRole(user);
   /* A customer signing in on the storefront must never reach this interface,
      even though their session is valid. */
   if (role !== "admin" && role !== "staff") return null;

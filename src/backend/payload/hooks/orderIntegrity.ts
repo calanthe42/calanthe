@@ -65,6 +65,15 @@ export const guardPaymentStatus: CollectionBeforeChangeHook = ({
   operation,
   originalDoc,
 }) => {
+  /* AN ORDER IS NEVER BORN PAID. Field access already strips the status
+     from a REST, GraphQL or /cms create; this covers server code too, so no
+     future path can write "paid" without money behind it. */
+  if (operation === "create") {
+    const status = data?.paymentStatus;
+    if (status === undefined || status === null || status === "PENDING") return data;
+    if (context?.[PAYMENT_PROVIDER_CONTEXT] === true) return data;
+    throw new APIError(`An order cannot be created as ${String(status)}: payment is recorded afterwards.`, 403);
+  }
   if (operation !== "update") return data;
   if (data?.paymentStatus === undefined) return data;
   if (data.paymentStatus === originalDoc?.paymentStatus) return data;
