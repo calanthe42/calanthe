@@ -710,9 +710,21 @@ export interface Order {
    */
   stripePaymentIntentId?: string | null;
   /**
-   * When Stripe's signed webhook confirmed the money.
+   * When Stripe's signed webhook confirmed the money, or when the owner recorded a payment taken outside the website.
    */
   paidAt?: string | null;
+  /**
+   * Where a hand-written order came from: WhatsApp, phone…
+   */
+  salesChannel?: string | null;
+  /**
+   * Set only when the owner records a payment taken outside the website.
+   */
+  paymentMethod?: string | null;
+  /**
+   * The owner's note for that payment, e.g. a transfer reference.
+   */
+  paymentReference?: string | null;
   /**
    * CAL-INV-YYYY-NNNNN. Gap-free, allocated once when the order is paid.
    */
@@ -1469,6 +1481,9 @@ export interface OrdersSelect<T extends boolean = true> {
   payLinkExpiresAt?: T;
   stripePaymentIntentId?: T;
   paidAt?: T;
+  salesChannel?: T;
+  paymentMethod?: T;
+  paymentReference?: T;
   invoiceNumber?: T;
   vatRateBps?: T;
   vatIncludedFils?: T;

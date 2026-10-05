@@ -18,6 +18,7 @@ import {
   validateOrderTotals,
 } from "@backend/payload/hooks/orderIntegrity";
 import { assignOrderNumber } from "@backend/payload/hooks/orderNumber";
+import { MANUAL_SOURCE, OUTSIDE_PAYMENT_METHODS, SALES_CHANNELS } from "@backend/payments/pay-link";
 
 /**
  * An order is an immutable historical record, not a set of pointers.
@@ -186,10 +187,25 @@ export const Orders: CollectionConfig = {
         },
         {
           name: "customerEmail",
-          type: "email",
+          /* A text column with its own rule rather than `type: "email"`:
+             an order written by hand in the admin (a WhatsApp or phone
+             sale) may have NO email, stored as the empty string. Every
+             other order must have a real address, exactly as before. */
+          type: "text",
           required: true,
+          maxLength: 200,
           index: true,
           access: immutableAfterCreate,
+          validate: (
+            value: string | null | undefined,
+            { data }: { data?: Partial<{ source: string | null }> },
+          ) => {
+            const email = (value ?? "").trim();
+            if (email === "") {
+              return data?.source === MANUAL_SOURCE ? true : "An email address is required.";
+            }
+            return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? true : "Enter a valid email address.";
+          },
         },
         {
           name: "customerPhone",
@@ -560,8 +576,47 @@ export const Orders: CollectionConfig = {
       admin: {
         readOnly: true,
         date: { pickerAppearance: "dayAndTime" },
-        description: "When Stripe's signed webhook confirmed the money.",
+        description:
+          "When Stripe's signed webhook confirmed the money, or when the owner recorded a payment taken outside the website.",
       },
+    },
+    /* ---------------- Orders written by hand (WhatsApp, phone) ----------------
+     *
+     * Plain text columns held to their lists by `validate`, so a new channel
+     * or method is a one-line change and never a database type change.
+     * All three are written by the server only: backend/actions/
+     * manual-orders.ts sets the channel at creation and the method when the
+     * OWNER records a payment taken outside the website. An empty method on
+     * a paid order means the card, through Stripe. */
+    {
+      name: "salesChannel",
+      type: "text",
+      maxLength: 40,
+      access: { create: serverOnlyField, update: serverOnlyField, read: isStaffField },
+      validate: (value: string | null | undefined) =>
+        !value || (SALES_CHANNELS as readonly string[]).includes(value) ? true : "Unknown sales channel.",
+      admin: { readOnly: true, description: "Where a hand-written order came from: WhatsApp, phone…" },
+    },
+    {
+      name: "paymentMethod",
+      type: "text",
+      maxLength: 40,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      validate: (value: string | null | undefined) =>
+        !value || (OUTSIDE_PAYMENT_METHODS as readonly string[]).includes(value)
+          ? true
+          : "Unknown payment method.",
+      admin: {
+        readOnly: true,
+        description: "Set only when the owner records a payment taken outside the website.",
+      },
+    },
+    {
+      name: "paymentReference",
+      type: "text",
+      maxLength: 140,
+      access: { create: serverOnlyField, update: serverOnlyField, read: isStaffField },
+      admin: { readOnly: true, description: "The owner's note for that payment, e.g. a transfer reference." },
     },
     {
       name: "invoiceNumber",

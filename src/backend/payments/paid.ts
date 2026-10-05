@@ -12,7 +12,7 @@ import { DISCOUNT_HOLD_MINUTES } from "@/lib/discounts";
 import { env } from "@/lib/env";
 import { SITE_ORIGIN } from "@/lib/site";
 import { claimInvoice, type ClaimInvoice } from "./invoice-number";
-import { QUOTE_SOURCE, payLinkOrigin, payToken, payUrl } from "./pay-link";
+import { isPayLinkSource, payLinkOrigin, payToken, payUrl } from "./pay-link";
 import { redeemCoupon, type RedeemCoupon } from "./redeem";
 import { paymentVerdict } from "./verdict";
 
@@ -183,7 +183,9 @@ export async function applySucceededIntent(
 
   const o = order!;
   const now = deps.now();
-  const isQuote = o.source === QUOTE_SOURCE;
+  /* A payment request, or an order written by hand in the admin: both are
+     paid through a link and thanked with the invoice. */
+  const isQuote = isPayLinkSource(o.source);
   /* An order cancelled a moment before its payment landed — a payment
      request the florist withdrew, or a discounted web order released when
      its hold ended. The money is real, so the order is still marked PAID —
@@ -457,7 +459,7 @@ async function afterQuotePaid(
           locale,
         },
         paid.internal,
-      ),
+      ).filter((request) => request.to.trim() !== ""),
     );
   } catch (error) {
     payload.logger.error(

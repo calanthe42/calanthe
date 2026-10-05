@@ -289,6 +289,46 @@ Design rules:
 
 ---
 
+## 3A. Orders written by hand, and invoices
+
+For a sale that did not come through the website — WhatsApp, phone,
+Instagram, in person.
+
+**Create order** (Orders → Create order; Invoices → Create invoice opens the
+same form). Customer name and phone (email is optional), the items — picked
+from the catalogue or typed, each with its own price — the delivery or
+pickup, and how it is paid:
+
+- **Not paid yet.** The order is saved as *Awaiting payment*. Share its
+  payment link (Copy payment link, Send on WhatsApp, or the email with one
+  Pay button if the customer gave an email). The customer pays by card,
+  Apple Pay or Google Pay; the order turns *Paid* by itself. It cannot be
+  prepared before it is paid.
+- **Paid in cash / by bank transfer / on the card machine.** OWNER ONLY. The
+  order is saved as paid straight away.
+
+On an order that is awaiting payment the owner also has **Record payment**
+for money that arrived outside the website. Staff can create orders and
+share links; they cannot record a payment. Every recorded payment is named
+in the activity log.
+
+**Invoices.** An invoice number (`CAL-INV-2026-00001`, one series, no gaps)
+is issued the moment an order becomes paid — website checkout, payment link
+or recorded payment alike. The Invoices list shows every one, newest first,
+searchable by number, name, phone or email. **View / PDF** opens the invoice
+on the atelier's paper; *Download PDF* there saves it (the browser's "Save
+as PDF"). That address can be sent to the customer: it cannot be guessed and
+shows that one invoice only.
+
+Nothing on an invoice can be edited. A wrong unpaid order is cancelled and
+written again; a paid one keeps its number.
+
+How it is built: `backend/domain/manual-order.ts` (the rules, tested),
+`backend/actions/manual-orders.ts` (create, record payment),
+`backend/domain/invoice.ts` (the figures, re-checked before anything is
+shown), `components/commerce/InvoiceSheet.tsx` and
+`app/(frontend)/invoice.css` (the sheet and its print-to-PDF rules).
+
 ## 4. Fields the client never sees
 
 | Hidden | Why | Instead |

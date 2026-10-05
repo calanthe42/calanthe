@@ -86,8 +86,10 @@ export const OPEN_ENQUIRY = ["NEW", "IN_REVIEW", "WAITING_FOR_CUSTOMER", "QUOTED
 /** How an order arrived, as a key into `labels.source`. */
 export function orderSourceKey(
   source: string | null | undefined,
-): "cod" | "checkout" | "quote" | "unknown" {
+): "cod" | "checkout" | "quote" | "manual" | "unknown" {
   if (!source) return "unknown";
+  /* An order written by hand in the admin (a WhatsApp or phone sale). */
+  if (source === "admin-manual") return "manual";
   /* Before "checkout": a payment request is "admin-quote", and must never be
      mistaken for a website order if the two words ever meet in one value. */
   if (/quote/i.test(source)) return "quote";

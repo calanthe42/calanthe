@@ -2,15 +2,16 @@ import "server-only";
 import { getPayload, type Payload } from "payload";
 import config from "@payload-config";
 import type { Order } from "@/payload-types";
-import { buildInvoice, type InvoiceView } from "@backend/domain/invoice";
+import { buildInvoiceSheet, type InvoiceSheetView } from "@backend/domain/invoice";
 import {
-  QUOTE_SOURCE,
+  PAY_LINK_SOURCES,
   hashPayToken,
   isPayTokenShape,
   payRequestState,
   type PayRequestState,
 } from "@backend/payments/pay-link";
 import { getStripe } from "@backend/payments/stripe";
+import { describeLines } from "@backend/domain/manual-order";
 import { BUSINESS } from "@/lib/business";
 
 /**
@@ -39,7 +40,7 @@ export async function findOrderByPayToken(payload: Payload, token: unknown): Pro
   const found = await payload.find({
     collection: "orders",
     where: {
-      and: [{ payTokenHash: { equals: hashPayToken(token) } }, { source: { equals: QUOTE_SOURCE } }],
+      and: [{ payTokenHash: { equals: hashPayToken(token) } }, { source: { in: [...PAY_LINK_SOURCES] } }],
     },
     limit: 1,
     depth: 0,
@@ -74,7 +75,7 @@ export type PayRequest =
       state: PayRequestState;
       view: PayRequestView;
       /** Present once paid and invoiced. Rendered by the page and the email alike. */
-      invoice: InvoiceView | null;
+      invoice: InvoiceSheetView | null;
     };
 
 function viewOf(order: Order): PayRequestView {
@@ -82,7 +83,7 @@ function viewOf(order: Order): PayRequestView {
     orderNumber: String(order.orderNumber ?? ""),
     locale: order.locale === "ar" ? "ar" : "en",
     customerName: order.customerName,
-    description: order.items?.[0]?.productName ?? "",
+    description: describeLines(order.items),
     deliveryDate: order.deliveryDate,
     deliveryTimeSlot: order.deliveryTimeSlot,
     deliveryAddress: order.deliveryAddress,
@@ -101,10 +102,10 @@ export async function loadPayRequest(token: unknown, now: Date = new Date()): Pr
   if (!order) return { state: "invalid" };
 
   const state = payRequestState(order, now);
-  let invoice: InvoiceView | null = null;
+  let invoice: InvoiceSheetView | null = null;
   if (state === "paid" && order.invoiceNumber) {
     try {
-      invoice = buildInvoice(order, BUSINESS);
+      invoice = buildInvoiceSheet(order, BUSINESS);
     } catch (error) {
       payload.logger.error(
         `pay page: invoice for ${order.orderNumber} could not be built: ${error instanceof Error ? error.message : "unknown"}`,

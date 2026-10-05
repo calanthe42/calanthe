@@ -20,8 +20,8 @@ import type { SendOutcome } from "@backend/email/types";
 import { QUOTE_CANCEL_REVERT_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
 import { ensureOrderPaymentIntent } from "@backend/payments/intent";
 import {
-  QUOTE_SOURCE,
   hashPayToken,
+  isPayLinkSource,
   isSettled,
   newPayTokenSalt,
   payLinkExpiry,
@@ -307,7 +307,7 @@ async function loadQuoteOrder(payload: Payload, orderId: number): Promise<Order 
   const order = await payload
     .findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true })
     .catch(() => null);
-  return order && order.source === QUOTE_SOURCE ? order : null;
+  return order && isPayLinkSource(order.source) ? order : null;
 }
 
 /**
@@ -342,6 +342,16 @@ export async function resendPaymentRequest(orderId: number): Promise<ActionResul
 
     const link = linkFor(order);
     if (!link) return NOT_AWAITING;
+
+    /* An order written by hand may have no email: there is nobody to send
+       to, and the link is shared by hand instead. */
+    if (!order.customerEmail) {
+      return {
+        ok: false,
+        message: "This customer has no email address. Copy the payment link and send it yourself.",
+        code: "actions.quote.noEmail",
+      };
+    }
 
     /* If the customer already pressed pay, the order holds an intent. A
        cancelled one is replaced here — by a florist, deliberately — and

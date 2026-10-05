@@ -133,6 +133,11 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
             ? plural(filtered ? "orders.countFiltered" : "orders.count", result.totalDocs)
             : t("orders.description")
         }
+        actions={
+          <ButtonLink href="/admin/orders/new" variant="primary" icon="plus">
+            {t("orders.new.button")}
+          </ButtonLink>
+        }
       />
 
       <FilterBar action="/admin/orders" active={filtered} searchValue={q} searchPlaceholder={t("orders.filters.searchPlaceholder")}>

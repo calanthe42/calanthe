@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrderOps } from "@admin/components/OrderOps";
 import { QuotePayment } from "@admin/components/QuotePayment";
+import { RecordPayment } from "@admin/components/RecordPayment";
 import { getAdminI18n } from "@admin/i18n/server";
 import { quoteCardData } from "@admin/lib/quote-card";
 import { orderSourceKey, toneFor } from "@admin/lib/status";
@@ -14,6 +15,7 @@ import { PageHeader } from "@admin/ui/PageHeader";
 import { Notice } from "@admin/ui/States";
 import { getAdminOrderByNumber, getTeamOptions } from "@backend/data/admin-metrics";
 import { getAdminSession } from "@backend/data/admin-session";
+import { invoiceUrlFor } from "@backend/data/invoices";
 import { getQuoteForOrder } from "@backend/data/quote";
 import { saleSavingsOfItems } from "@backend/domain/checkout-order";
 
@@ -54,11 +56,17 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
 
   const { t, label, money, date, locale } = i18n;
   const isOwner = Boolean(session?.isAdmin);
-  const isQuote = orderSourceKey(order.source) === "quote";
+  const sourceKey = orderSourceKey(order.source);
+  /* Written by hand in the admin: a WhatsApp or phone sale. It waits on its
+     payment link like a payment request, and the owner may also record a
+     payment taken outside the website. */
+  const isManual = sourceKey === "manual";
+  const isQuote = sourceKey === "quote" || isManual;
   const [staff, quote] = await Promise.all([
     getTeamOptions(),
     isQuote ? getQuoteForOrder(order.id) : Promise.resolve(null),
   ]);
+  const invoiceHref = invoiceUrlFor(order);
   /* Unpaid and not cancelled: waiting on the customer, or the link ran out. */
   const unpaidQuote = quote && (quote.state === "awaiting" || quote.state === "expired") ? quote : null;
   const enquiryId = typeof order.enquiry === "object" && order.enquiry ? order.enquiry.id : order.enquiry;
@@ -107,14 +115,19 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
               ? t("orders.detail.expiredQuote")
               : unpaidQuote.lastEmail
                 ? t("orders.detail.awaitingQuote", { date: date(unpaidQuote.lastEmail.createdAt, "datetime") })
-                : t("orders.detail.awaitingQuoteNoEmail")}
+                : isManual
+                  ? t("orders.detail.awaitingManual")
+                  : t("orders.detail.awaitingQuoteNoEmail")}
           </p>
           {unpaidQuote.lastEmail && unpaidQuote.lastEmail.status !== "sent" ? (
             <p className="mt-1 text-ink-2">
               {t("enquiries.quote.emailNotSent", { status: label("emailStatus", unpaidQuote.lastEmail.status) })}
             </p>
           ) : null}
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap gap-2">
+            {isManual && isOwner ? (
+              <RecordPayment orderId={order.id} totalFils={Number(order.totalFils)} />
+            ) : null}
             <QuotePayment variant="notice" quote={quoteCardData(unpaidQuote)} form={null} />
           </div>
           {typeof enquiryId === "number" ? (
@@ -221,8 +234,17 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
             <CardHeader title={t("orders.detail.payment")} />
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge tone={toneFor("payment", order.paymentStatus)}>{label("payment", order.paymentStatus)}</Badge>
-              <span className="text-sm text-ink-2">{label("source", orderSourceKey(order.source))}</span>
+              <span className="text-sm text-ink-2">
+                {label("source", sourceKey)}
+                {order.salesChannel ? ` · ${label("salesChannel", order.salesChannel)}` : ""}
+              </span>
             </div>
+            {order.paymentMethod ? (
+              <p className="mt-2 text-sm text-ink">
+                {t("orders.detail.methodRow")}: {label("paymentMethod", order.paymentMethod)}
+                {order.paymentReference ? ` · ${order.paymentReference}` : ""}
+              </p>
+            ) : null}
             <p className="mt-3 text-sm leading-relaxed text-ink-2">
               {isCashOnDelivery && order.paymentStatus === "PENDING"
                 ? t("orders.detail.codPending")
@@ -238,9 +260,9 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ ord
                     date: date(order.paidAt, "datetime"),
                   })}
                 </span>
-                {quote?.state === "paid" && quote.payUrl ? (
+                {invoiceHref ? (
                   <a
-                    href={quote.payUrl}
+                    href={invoiceHref}
                     target="_blank"
                     rel="noreferrer"
                     className="-my-3 inline-flex items-center gap-1 py-3 font-medium underline underline-offset-4"

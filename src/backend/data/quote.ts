@@ -4,6 +4,7 @@ import type { Order } from "@/payload-types";
 import { getAdminSession } from "@backend/data/admin-session";
 import {
   QUOTE_SOURCE,
+  isPayLinkSource,
   payLinkOrigin,
   payRequestState,
   payToken,
@@ -12,6 +13,7 @@ import {
 } from "@backend/payments/pay-link";
 import { env } from "@/lib/env";
 import { SITE_ORIGIN } from "@/lib/site";
+import { describeLines } from "@backend/domain/manual-order";
 
 /**
  * A payment request, as the admin shows it.
@@ -100,7 +102,7 @@ async function summarise(payload: Payload, order: Order, now: Date): Promise<Quo
     customerName: order.customerName,
     customerEmail: order.customerEmail,
     customerPhone: order.customerPhone,
-    description: order.items?.[0]?.productName ?? "",
+    description: describeLines(order.items),
     deliveryDate: order.deliveryDate,
     deliveryTimeSlot: order.deliveryTimeSlot,
     deliveryAddress: order.deliveryAddress,
@@ -145,7 +147,7 @@ export async function getQuoteForOrder(orderId: number): Promise<QuoteSummary | 
   const order = await payload
     .findByID({ collection: "orders", id: orderId, depth: 0, overrideAccess: true })
     .catch(() => null);
-  if (!order || order.source !== QUOTE_SOURCE) return null;
+  if (!order || !isPayLinkSource(order.source)) return null;
   return summarise(payload, order, new Date());
 }
 

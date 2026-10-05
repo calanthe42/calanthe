@@ -2,7 +2,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Where } from "payload";
 import type { Enquiry, Order } from "@/payload-types";
-import { QUOTE_SOURCE } from "@backend/payments/pay-link";
+import { PAY_LINK_SOURCES, isPayLinkSource } from "@backend/payments/pay-link";
 
 /**
  * WHAT JUST ARRIVED.
@@ -80,11 +80,11 @@ function paymentItem(order: Order): PulseItem {
 
 /* Orders that arrived as orders: everything except payment requests. */
 const SHOP_ORDERS: Where = {
-  or: [{ source: { exists: false } }, { source: { not_equals: QUOTE_SOURCE } }],
+  or: [{ source: { exists: false } }, { source: { not_in: [...PAY_LINK_SOURCES] } }],
 };
 
 const PAID_REQUESTS: Where = {
-  and: [{ source: { equals: QUOTE_SOURCE } }, { paidAt: { exists: true } }],
+  and: [{ source: { in: [...PAY_LINK_SOURCES] } }, { paidAt: { exists: true } }],
 };
 
 /**
@@ -102,8 +102,8 @@ export function mergePulse(
   limit: number = LIMIT,
 ): { fresh: PulseItem[]; recent: PulseItem[] } {
   const recent = [
-    ...shopOrders.filter((order) => order.source !== QUOTE_SOURCE).map(orderItem),
-    ...paidRequests.filter((order) => order.source === QUOTE_SOURCE && order.paidAt).map(paymentItem),
+    ...shopOrders.filter((order) => !isPayLinkSource(order.source)).map(orderItem),
+    ...paidRequests.filter((order) => isPayLinkSource(order.source) && order.paidAt).map(paymentItem),
     ...enquiries.map(enquiryItem),
   ]
     .sort(byNewest)

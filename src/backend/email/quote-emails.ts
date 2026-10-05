@@ -29,6 +29,7 @@ import type { Locale } from "@/lib/i18n/dictionary";
 import { formatFils } from "@/lib/money";
 import { CONTACT } from "@/lib/data";
 import type { InvoiceView } from "@backend/domain/invoice";
+import { describeLines } from "@backend/domain/manual-order";
 import type { InternalAddresses } from "./order-emails";
 import {
   EMAIL_COLORS,
@@ -110,6 +111,9 @@ type QuoteCopy = {
     vatIncluded: string;
     total: string;
     paidByCard: string;
+    paidByCash: string;
+    paidByBankTransfer: string;
+    paidByCardMachine: string;
     trn: string;
     tradeLicence: string;
   };
@@ -163,6 +167,9 @@ export const COPY = {
       vatIncluded: "Includes VAT ({rate}%)",
       total: "Total",
       paidByCard: "Paid by card on {date}",
+      paidByCash: "Paid in cash on {date}",
+      paidByBankTransfer: "Paid by bank transfer on {date}",
+      paidByCardMachine: "Paid by card on {date}",
       trn: "TRN {trn}",
       tradeLicence: "Trade licence {number}",
     },
@@ -214,6 +221,9 @@ export const COPY = {
       vatIncluded: "يشمل ضريبة القيمة المضافة ({rate}%)",
       total: "الإجمالي",
       paidByCard: "مدفوعة بالبطاقة بتاريخ {date}",
+      paidByCash: "مدفوعة نقداً بتاريخ {date}",
+      paidByBankTransfer: "مدفوعة بتحويل بنكي بتاريخ {date}",
+      paidByCardMachine: "مدفوعة بالبطاقة بتاريخ {date}",
       trn: "الرقم الضريبي {trn}",
       tradeLicence: "الرخصة التجارية {number}",
     },
@@ -298,10 +308,8 @@ export function buildPaymentRequestEmail(input: {
       note +
       button(payUrl, fill(c.request.payNow, { amount }), locale) +
       para(escape(fill(c.request.methods, { date: expires })), locale) +
-      para(
-        `<span style="font-size:13px;color:${SAGE};">${escape(c.request.fallback)}<br><span dir="ltr" style="word-break:break-all;">${escape(payUrl)}</span></span>`,
-        locale,
-      ) +
+      /* No raw address in the HTML: the customer sees the bill and one button.
+         The plain-text part below keeps the link for mail apps without buttons. */
       para(
         `<span style="font-size:13px;color:${SAGE};">${fill(escape(c.request.questions), { number: ltr(CONTACT.whatsapp, locale) })}</span>`,
         locale,
@@ -349,6 +357,14 @@ export function buildPaymentRequestEmail(input: {
 /* ------------------------------------------------------------------ */
 /* The invoice, from the same view the /pay page renders               */
 /* ------------------------------------------------------------------ */
+
+/** Which sentence says how an invoice was paid. */
+const PAID_BY_KEY = {
+  card: "paidByCard",
+  cash: "paidByCash",
+  "bank-transfer": "paidByBankTransfer",
+  "card-machine": "paidByCardMachine",
+} as const;
 
 function sellerLines(invoice: InvoiceView, locale: Locale): string[] {
   const c = COPY[locale].invoice;
@@ -417,7 +433,7 @@ ${invoice.discount ? totalRow(discountLabel(invoice, locale), `&minus;${moneyHtm
 ${invoice.vat ? totalRow(fill(c.vatIncluded, { rate: ratePercent(invoice.vat.rateBps) }), moneyHtml(invoice.vat.includedFils, locale)) : ""}
 ${totalRow(c.total, moneyHtml(invoice.totalFils, locale), true)}
 </table>
-<p style="margin:0 0 12px;font-family:${fonts.body};font-size:13px;color:${SAGE};">${escape(fill(c.paidByCard, { date: formatDate(locale, invoice.paidAt) }))}</p>
+<p style="margin:0 0 12px;font-family:${fonts.body};font-size:13px;color:${SAGE};">${escape(fill(c[PAID_BY_KEY[invoice.paymentMethod]], { date: formatDate(locale, invoice.paidAt) }))}</p>
 <p style="margin:0;font-family:${fonts.body};font-size:13px;line-height:1.6;color:${SAGE};">${sellerLines(invoice, locale)
     .map((line, index) => (index === 0 ? escape(line) : /[@+]/.test(line) ? ltr(line, locale) : escape(line)))
     .join("<br>")}</p>
@@ -450,7 +466,7 @@ export function invoiceText(invoice: InvoiceView, locale: Locale): string {
         ]
       : []),
     `${c.total}: ${formatFils(invoice.totalFils)}`,
-    fill(c.paidByCard, { date: formatDate(locale, invoice.paidAt) }),
+    fill(c[PAID_BY_KEY[invoice.paymentMethod]], { date: formatDate(locale, invoice.paidAt) }),
     "",
     ...sellerLines(invoice, locale),
   ].join("\n");
@@ -656,7 +672,7 @@ export function quoteFactsFromOrder(order: {
   customerNote?: string | null;
   totalFils: number;
   fulfilmentStatus?: string | null;
-  items?: readonly { productName: string }[] | null;
+  items?: readonly { productName: string; quantity?: number | null }[] | null;
 }): QuoteOrderFacts {
   return {
     orderId: order.id,
@@ -664,7 +680,7 @@ export function quoteFactsFromOrder(order: {
     customerName: order.customerName,
     customerEmail: order.customerEmail,
     customerPhone: order.customerPhone,
-    description: order.items?.[0]?.productName ?? "",
+    description: describeLines(order.items),
     deliveryDate: order.deliveryDate,
     deliveryTimeSlot: order.deliveryTimeSlot,
     deliveryAddress: order.deliveryAddress,

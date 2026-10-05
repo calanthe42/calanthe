@@ -18,7 +18,7 @@ import {
 import { describeOptions } from "@backend/email/order-emails";
 import { buildQuotePaidEmails, quoteFactsFromOrder } from "@backend/email/quote-emails";
 import { buildInvoice } from "@backend/domain/invoice";
-import { QUOTE_SOURCE, payLinkOrigin, payToken, payUrl } from "@backend/payments/pay-link";
+import { isPayLinkSource, payLinkOrigin, payToken, payUrl } from "@backend/payments/pay-link";
 import type { Order } from "@/payload-types";
 import { BUSINESS } from "@/lib/business";
 import { SITE_ORIGIN } from "@/lib/site";
@@ -150,7 +150,7 @@ export async function resendLoggedEmail(id: string): Promise<ResendResult> {
         /* Both carry the invoice, so both need one to exist: an order that
            has not been paid has nothing to thank anybody for. */
         const quote = order as unknown as Order;
-        if (quote.source !== QUOTE_SOURCE || !quote.invoiceNumber) {
+        if (!isPayLinkSource(quote.source) || !quote.invoiceNumber) {
           return { ok: false, message: (await getAdminI18n()).t("emailLog.errors.notPaidYet") };
         }
         const locale = quote.locale === "ar" ? "ar" : "en";

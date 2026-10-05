@@ -12,6 +12,7 @@ import * as migration_20260925_142230_a2_email_log from './20260925_142230_a2_em
 import * as migration_20260925_181233_a3_activity_log from './20260925_181233_a3_activity_log';
 import * as migration_20261004_193027_quote_pay_link from './20261004_193027_quote_pay_link';
 import * as migration_20261004_202611_discounts from './20261004_202611_discounts';
+import * as migration_20261005_023342_manual_orders from './20261005_023342_manual_orders';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20261004_202611_discounts.up,
     down: migration_20261004_202611_discounts.down,
-    name: '20261004_202611_discounts'
+    name: '20261004_202611_discounts',
+  },
+  {
+    up: migration_20261005_023342_manual_orders.up,
+    down: migration_20261005_023342_manual_orders.down,
+    name: '20261005_023342_manual_orders'
   },
 ];

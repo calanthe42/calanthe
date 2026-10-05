@@ -48,6 +48,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     heading: "nav.sections.sales",
     items: [
       { href: "/admin/orders", label: "nav.orders", icon: "bag" },
+      { href: "/admin/invoices", label: "nav.invoices", icon: "receipt" },
       { href: "/admin/customers", label: "nav.customers", icon: "users" },
       { href: "/admin/enquiries", label: "nav.enquiries", icon: "message" },
       { href: "/admin/emails", label: "nav.emails", icon: "message" },

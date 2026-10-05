@@ -31,6 +31,35 @@ export const PAY_LINK_TTL_DAYS = 7;
 export const BESPOKE_SLUG = "bespoke-arrangement";
 /** `orders.source` for an order created by confirming an enquiry. */
 export const QUOTE_SOURCE = "admin-quote";
+/**
+ * `orders.source` for an order the shop wrote by hand in the admin: a sale
+ * that arrived on WhatsApp, by phone or in person. It carries a pay link
+ * exactly like a payment request, and can ALSO be recorded as paid outside
+ * the website by the owner (cash, bank transfer, card machine).
+ */
+export const MANUAL_SOURCE = "admin-manual";
+/** The slug of a hand-typed line on an admin-created order. Never a product's. */
+export const CUSTOM_SLUG = "custom-item";
+/** Every source whose order is paid through `/pay/<token>`. */
+export const PAY_LINK_SOURCES: readonly string[] = [QUOTE_SOURCE, MANUAL_SOURCE];
+export function isPayLinkSource(source: string | null | undefined): boolean {
+  return PAY_LINK_SOURCES.includes(source ?? "");
+}
+/** How an order was paid. `card` is the website (Stripe); the rest are recorded by the owner. */
+export const OUTSIDE_PAYMENT_METHODS = ["cash", "bank-transfer", "card-machine"] as const;
+export type OutsidePaymentMethod = (typeof OUTSIDE_PAYMENT_METHODS)[number];
+export type PaymentMethod = "card" | OutsidePaymentMethod;
+export const SALES_CHANNELS = ["whatsapp", "phone", "instagram", "in-person", "other"] as const;
+export type SalesChannel = (typeof SALES_CHANNELS)[number];
+
+/** The method to print on an invoice: what was recorded, else the card. */
+export function paymentMethodOf(order: { paymentMethod?: string | null }): PaymentMethod {
+  const recorded = order.paymentMethod ?? "";
+  return (OUTSIDE_PAYMENT_METHODS as readonly string[]).includes(recorded)
+    ? (recorded as OutsidePaymentMethod)
+    : "card";
+}
+
 /** The least a payment request can ask for — the shared minimum charge. */
 export const QUOTE_MIN_FILS = MIN_CHARGE_FILS;
 
@@ -95,14 +124,38 @@ export function payRequestState(order: PayRequestFacts, now: Date): PayRequestSt
 }
 
 /**
- * An order confirmed from an enquiry that nobody has paid for yet.
+ * An order confirmed from an enquiry — or written by hand in the admin —
+ * that nobody has paid for yet.
  *
  * The one predicate behind every "this is not a real order yet" rule: it
  * cannot be prepared, it is not revenue, and it is not a new order waiting
  * on the florist (backend/domain/dashboard.ts re-exports the same idea).
  */
 export function isUnpaidQuote(order: { source?: string | null; paymentStatus?: string | null }): boolean {
-  return order.source === QUOTE_SOURCE && !isSettled(order.paymentStatus);
+  return isPayLinkSource(order.source) && !isSettled(order.paymentStatus);
+}
+
+/**
+ * The shareable address of a PAID invoice: `/invoice/<number>/<key>`.
+ *
+ * Every paid order has one, whatever its source — a website order has no pay
+ * link, but its invoice can still be opened, printed and sent. The key is
+ * HMAC(PAYLOAD_SECRET, number): nothing is stored, the number alone opens
+ * nothing, and the page shows that one invoice and no more.
+ */
+const INVOICE_CONTEXT = "calanthe-invoice:v1:";
+const INVOICE_NUMBER_SHAPE = /^CAL-INV-\d{4}-\d{5,}$/;
+
+export function isInvoiceNumberShape(value: unknown): value is string {
+  return typeof value === "string" && INVOICE_NUMBER_SHAPE.test(value);
+}
+
+export function invoiceKey(secret: string, invoiceNumber: string): string {
+  return createHmac("sha256", secret).update(`${INVOICE_CONTEXT}${invoiceNumber}`).digest("base64url");
+}
+
+export function invoiceUrl(origin: string, secret: string, invoiceNumber: string, locale: "en" | "ar"): string {
+  return `${origin.replace(/\/$/, "")}/invoice/${invoiceNumber}/${invoiceKey(secret, invoiceNumber)}?lang=${locale}`;
 }
 
 export function payUrl(origin: string, token: string, locale: "en" | "ar"): string {

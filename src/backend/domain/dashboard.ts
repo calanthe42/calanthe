@@ -64,13 +64,17 @@ const PAID = new Set(["PAID", "PARTIALLY_REFUNDED"]);
  * here so this file stays free of imports that need Node.
  */
 export const QUOTE_ORDER_SOURCE = "admin-quote";
+/** `orders.source` of an order written by hand in the admin (MANUAL_SOURCE). */
+export const MANUAL_ORDER_SOURCE = "admin-manual";
+/** Both are paid through a link, and neither is a real order until paid. */
+const PAY_LINK_ORDER_SOURCES = new Set<string>([QUOTE_ORDER_SOURCE, MANUAL_ORDER_SOURCE]);
 /** Money has arrived, whatever happened to it afterwards. */
 export const SETTLED_PAYMENT_STATUSES = ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"] as const;
 const SETTLED = new Set<string>(SETTLED_PAYMENT_STATUSES);
 
 /** A payment request the customer has not paid: not yet a real order. */
 export const isAwaitingQuote = (order: OrderLike): boolean =>
-  order.source === QUOTE_ORDER_SOURCE && !SETTLED.has(order.paymentStatus ?? "");
+  PAY_LINK_ORDER_SOURCES.has(order.source ?? "") && !SETTLED.has(order.paymentStatus ?? "");
 
 export const isPlaced = (order: OrderLike): boolean =>
   order.fulfilmentStatus !== "CANCELLED" && !isAwaitingQuote(order);
@@ -85,7 +89,7 @@ export const isOpen = (order: OrderLike): boolean =>
  * the "new orders" queue. This is what keeps it visible the next morning.
  */
 export const isPaidQuoteToStart = (order: OrderLike): boolean =>
-  order.source === QUOTE_ORDER_SOURCE && isPaid(order) && order.fulfilmentStatus === "CONFIRMED";
+  PAY_LINK_ORDER_SOURCES.has(order.source ?? "") && isPaid(order) && order.fulfilmentStatus === "CONFIRMED";
 
 export type QuoteQueue = { awaiting: number; expired: number; paidToStart: number };
 

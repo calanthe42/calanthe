@@ -7,6 +7,7 @@ import type { Enquiry, Order } from "@/payload-types";
 import {
   DAY_MS,
   OPEN_STATUSES,
+  MANUAL_ORDER_SOURCE,
   QUOTE_ORDER_SOURCE,
   SETTLED_PAYMENT_STATUSES,
   dailySeries,
@@ -47,7 +48,7 @@ import {
 export const REAL_ORDER_WHERE: Where = {
   or: [
     { source: { exists: false } },
-    { source: { not_equals: QUOTE_ORDER_SOURCE } },
+    { source: { not_in: [QUOTE_ORDER_SOURCE, MANUAL_ORDER_SOURCE] } },
     { paymentStatus: { in: [...SETTLED_PAYMENT_STATUSES] } },
   ],
 };

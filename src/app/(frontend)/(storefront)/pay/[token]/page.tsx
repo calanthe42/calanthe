@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { PayInvoice } from "@/components/commerce/PayInvoice";
+import { InvoiceSheet } from "@/components/commerce/InvoiceSheet";
 import { PayLocaleAdopter, PayPrintButton } from "@/components/commerce/PayPageBits";
 import { PayConfirming, PayRequestForm } from "@/components/commerce/PayRequestForm";
 import { Reveal } from "@/components/motion/Reveal";
@@ -135,9 +135,10 @@ export default async function PayPage({
 
   if (request.state === "paid") {
     return (
-      <main className={MAIN}>
+      /* Wider than the other states: the invoice is an A4 sheet. */
+      <main className="mx-auto max-w-4xl gutter section-pad">
         {adopter}
-        <div className="print:hidden">
+        <div className="mx-auto max-w-[210mm] print:hidden">
           <Eyebrow>{t.pay.reference.replace("{number}", view.orderNumber)}</Eyebrow>
           <h1 className={`mt-3 ${H1}`}>{t.pay.paidTitle}</h1>
           <p className="mt-5 text-base leading-relaxed text-ink-muted">{t.pay.paidBody}</p>
@@ -145,10 +146,10 @@ export default async function PayPage({
         {invoice ? (
           <>
             <div className="mt-10 print:mt-0">
-              <PayInvoice invoice={invoice} locale={locale} t={t} />
+              <InvoiceSheet sheet={invoice} locale={locale} t={t} />
             </div>
-            <div className="mt-6 print:hidden">
-              <PayPrintButton label={t.pay.invoice.print} />
+            <div className="mx-auto mt-6 max-w-[210mm] print:hidden">
+              <PayPrintButton label={t.pay.invoice.download} />
             </div>
           </>
         ) : (

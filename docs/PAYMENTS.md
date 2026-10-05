@@ -406,3 +406,18 @@ Run migration `20261004_202611_discounts` against production **before** this cod
 ### Not verified
 
 `redeemCoupon`'s SQL and the claim queries are tested against fakes only, never against a real Postgres. Before launch, with `stripe listen`: pay a coded order and check `coupon_redeemed_at` is set and `times_used` goes up by exactly one; resend the same event and check it does not change.
+
+## Payments taken outside the website
+
+An order written by hand in the admin (`source: "admin-manual"`) can be paid
+two ways, and no third: through its payment link (Stripe's signed webhook,
+exactly as above), or recorded by the OWNER as cash, bank transfer or card
+machine (`recordOutsidePayment`, guarded by `MANUAL_PAYMENT_CONTEXT` in
+`backend/payload/hooks/orderIntegrity.ts`). A website order or an enquiry's
+payment request can never be marked paid by hand. Recording a payment first
+cancels any card payment still open for that order; if one is already going
+through, nothing is recorded.
+
+Migration `20261005_023342_manual_orders` adds three text columns to
+`orders` (`sales_channel`, `payment_method`, `payment_reference`). Apply it
+to the database BEFORE deploying the code that reads them.

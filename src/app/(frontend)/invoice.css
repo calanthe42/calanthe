@@ -1,0 +1,382 @@
+/* ------------------------------------------------------------------ */
+/* THE INVOICE — a sheet of the atelier's own paper.
+ *
+ * One document, three places: the customer's pay page, the admin, and the
+ * PDF. Print-first (A4), readable on a 390px phone.
+ *
+ * The paper is Warm Cream with the client's orchid print, tone on tone, so
+ * every figure stays fully legible. Burnt Orange appears twice only: the
+ * status mark and the rule above the total.                              */
+/* ------------------------------------------------------------------ */
+.inv {
+  --inv-paper: #e4dcc5;
+  --inv-ink: #2b2f1b;
+  --inv-muted: #575946;
+  --inv-rule: #cbc4a9;
+  --inv-accent: #b55b29;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 210mm;
+  margin-inline: auto;
+  padding: 28px 20px 24px;
+  border: 1px solid var(--inv-rule);
+  border-radius: 2px;
+  background-color: var(--inv-paper);
+  background-image: url("/brand/print/orchid-cream.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  color: var(--inv-ink);
+  font-family: var(--font-sans, "Instrument Sans", sans-serif);
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: start;
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  page: invoice;
+}
+.inv *,
+.inv *::before,
+.inv *::after {
+  box-sizing: border-box;
+}
+
+/* Cinzel labels: uppercase and tracked in Latin, never tracked in Arabic. */
+.inv-label {
+  font-family: var(--font-brand, "Cinzel", serif);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--inv-muted);
+}
+.inv[dir="rtl"] .inv-label:not([lang="en"]),
+.inv[dir="rtl"] .inv-title,
+.inv[dir="rtl"] .inv-mark {
+  letter-spacing: 0;
+  font-family: var(--font-sans, "Instrument Sans", sans-serif);
+  font-weight: 600;
+}
+.inv[dir="rtl"] .inv-label:not([lang="en"]),
+.inv[dir="rtl"] .inv-mark {
+  font-size: 14px;
+}
+.inv-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Letterhead */
+.inv-head {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--inv-rule);
+}
+.inv-logo {
+  display: block;
+  width: 148px;
+  height: auto;
+}
+
+/* Title row: who it is for, and which invoice this is */
+.inv-top {
+  display: grid;
+  gap: 24px;
+  padding-block: 24px 8px;
+}
+.inv-title {
+  margin: 0 0 20px;
+  font-family: var(--font-brand, "Cinzel", serif);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.inv-name {
+  margin: 6px 0 4px;
+  font-family: var(--font-display, "Cormorant Garamond", serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.inv-contact {
+  margin: 0;
+  color: var(--inv-muted);
+  overflow-wrap: anywhere;
+}
+.inv-meta {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  align-content: start;
+}
+.inv-meta > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.inv-meta dt {
+  white-space: nowrap;
+}
+.inv-meta dd {
+  margin: 0;
+  text-align: end;
+}
+.inv-mark {
+  display: inline-block;
+  padding: 3px 10px 2px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-family: var(--font-brand, "Cinzel", serif);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--inv-accent);
+}
+.inv-mark[data-status="void"] {
+  color: var(--inv-muted);
+}
+
+/* Lines */
+.inv-lines {
+  width: 100%;
+  margin-top: 24px;
+  border-collapse: collapse;
+}
+.inv-lines th {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--inv-ink);
+  text-align: start;
+  vertical-align: bottom;
+}
+.inv-lines td {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--inv-rule);
+  vertical-align: top;
+}
+.inv-lines tr {
+  break-inside: avoid;
+}
+.inv-lines :is(th, td).inv-qty {
+  width: 3.5em;
+  padding-inline: 8px;
+  text-align: center;
+}
+.inv-lines :is(th, td).inv-unit,
+.inv-lines :is(th, td).inv-amount {
+  text-align: end;
+  white-space: nowrap;
+}
+.inv-lines :is(th, td).inv-unit {
+  display: none; /* phone: the amount is enough; A4 shows it */
+  padding-inline-end: 20px;
+}
+.inv-desc {
+  overflow-wrap: anywhere;
+  padding-inline-end: 8px !important;
+}
+.inv-detail {
+  display: block;
+  font-size: 14px;
+  color: var(--inv-muted);
+}
+.inv-was {
+  display: block;
+  font-size: 14px;
+  color: var(--inv-muted);
+  text-decoration: line-through;
+}
+
+/* Totals and the payment line travel together: never split by a page */
+.inv-sum {
+  break-inside: avoid;
+}
+.inv-totals {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin: 16px 0 0;
+  margin-inline-start: auto;
+  break-inside: avoid;
+}
+.inv-totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--inv-muted);
+}
+.inv-totals dd {
+  margin: 0;
+  text-align: end;
+  white-space: nowrap;
+}
+.inv-totals > .inv-total {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--inv-accent);
+  color: var(--inv-ink);
+}
+.inv-total dd {
+  font-family: var(--font-display, "Cormorant Garamond", serif);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+}
+.inv[data-status="void"] .inv-total dd {
+  text-decoration: line-through;
+  color: var(--inv-muted);
+}
+.inv-paid {
+  margin: 14px 0 0;
+  color: var(--inv-muted);
+  text-align: end;
+}
+
+/* Foot of the sheet: thanks, and who it is from */
+.inv-foot {
+  margin-top: auto;
+  padding-top: 40px;
+  text-align: center;
+  break-inside: avoid;
+}
+.inv-thanks {
+  margin: 0 0 20px;
+  font-family: var(--font-display, "Cormorant Garamond", serif);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.inv[dir="rtl"] .inv-thanks {
+  font-style: normal;
+}
+.inv-from {
+  padding-top: 18px;
+  border-top: 1px solid var(--inv-rule);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--inv-muted);
+}
+.inv-from p {
+  margin: 0;
+}
+.inv-from .inv-label {
+  color: var(--inv-ink);
+}
+
+/* A4 on a screen wide enough to show it, and on paper */
+@media (min-width: 720px), print {
+  .inv {
+    min-height: 297mm;
+    padding: 16mm 18mm 14mm;
+  }
+  .inv-logo {
+    width: 46mm;
+  }
+  .inv-head {
+    padding-bottom: 9mm;
+  }
+  .inv-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 80mm);
+    gap: 14mm;
+    padding-block: 10mm 2mm;
+  }
+  .inv-meta {
+    padding-top: 2px;
+  }
+  .inv-lines {
+    margin-top: 10mm;
+  }
+  .inv-lines :is(th, td).inv-unit {
+    display: table-cell;
+  }
+  .inv-totals {
+    width: 78mm;
+  }
+}
+
+/* PAPER. "Download PDF" is the browser's own print-to-PDF, so the print
+   rules ARE the PDF. Scoped to pages that carry the sheet (`:has(.inv)`),
+   so printing any other page is untouched.
+
+   · Everything that is not the sheet is removed or hidden.
+   · The page has NO margin: the paper — painted on the root — runs to every
+     edge, and the sheet's own padding is the margin. `box-decoration-break:
+     clone` repeats that padding on every page of a long invoice.
+   · A short invoice (`data-fit`, decided on the server) is one page with its
+     foot at the foot of the page, like a letterhead; a long one lets the
+     foot follow the totals. */
+@page invoice {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  html:has(.inv) {
+    background-color: #e4dcc5 !important;
+    background-image: url("/brand/print/orchid-cream.webp") !important;
+    background-size: 210mm auto !important;
+    background-repeat: repeat !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body:has(.inv) {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+  /* The SITE's footer — never the sheet's own <footer class="inv-foot">. */
+  body:has(.inv) :is(.site-header, footer:not(.inv-foot), .skip-link, .brand-intro, .floating-whatsapp, .film-grain) {
+    display: none !important;
+  }
+  body:has(.inv) * {
+    visibility: hidden;
+  }
+  body:has(.inv) .inv,
+  body:has(.inv) .inv * {
+    visibility: visible;
+  }
+  /* Whatever wraps the sheet gives up its own box: no padding, no width cap. */
+  body:has(.inv) :is(main, div, section):has(.inv) {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .inv {
+    display: block;
+    max-width: none;
+    min-height: 0;
+    padding: 14mm 18mm 12mm;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .inv-foot {
+    margin-top: 14mm;
+    padding-top: 0;
+  }
+  .inv[data-fit="true"] {
+    position: relative;
+    min-height: 296mm;
+    padding-bottom: 58mm;
+  }
+  .inv[data-fit="true"] .inv-foot {
+    position: absolute;
+    inset-inline: 18mm;
+    bottom: 12mm;
+    margin-top: 0;
+  }
+}

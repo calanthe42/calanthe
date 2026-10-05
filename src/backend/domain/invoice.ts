@@ -54,6 +54,9 @@ export type InvoiceOrder = {
   orderNumber?: string | number | null;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string | null;
+  /** Set only when the owner recorded a payment taken outside the website. */
+  paymentMethod?: string | null;
   items?:
     | readonly {
         productName: string;
@@ -73,6 +76,9 @@ export type InvoiceOrder = {
   vatRateBps?: number | null;
   vatIncludedFils?: number | null;
 };
+
+export type InvoicePaymentMethod = "card" | "cash" | "bank-transfer" | "card-machine";
+const OUTSIDE_METHODS = new Set(["cash", "bank-transfer", "card-machine"]);
 
 export type InvoiceLine = {
   description: string;
@@ -104,7 +110,10 @@ export type InvoiceView = {
   issuedAt: string;
   paidAt: string;
   orderNumber: string;
-  billTo: { name: string; email: string };
+  /** `email` is empty for a customer who gave none (a WhatsApp or phone sale). */
+  billTo: { name: string; email: string; phone?: string };
+  /** How it was paid: the card through the website, unless the owner recorded otherwise. */
+  paymentMethod: InvoicePaymentMethod;
   lines: InvoiceLine[];
   subtotalFils: number;
   deliveryFeeFils: number;
@@ -141,11 +150,8 @@ export function sellerFrom(business: BusinessDetails, taxInvoice: boolean): Invo
   };
 }
 
-export function buildInvoice(order: InvoiceOrder, business: BusinessDetails): InvoiceView {
-  if (!order.invoiceNumber) {
-    throw new Error(`Order ${order.orderNumber ?? "?"} has no invoice number: it has not been paid.`);
-  }
-
+/** Lines, totals and tax of an order — reconciled, or it throws. */
+function bodyOf(order: InvoiceOrder, business: BusinessDetails, label: string) {
   const lines: InvoiceLine[] = (order.items ?? []).map((item) => {
     const detail = optionsDetail(item.selectedOptions);
     const was = Number(item.compareAtUnitPriceFils ?? 0);
@@ -166,9 +172,13 @@ export function buildInvoice(order: InvoiceOrder, business: BusinessDetails): In
   /* The same arithmetic validateOrderTotals enforced when the order was
      written. Re-asserted because this is the document an accountant reads:
      an invoice that does not add up must never be rendered. */
-  if (linesTotal !== order.subtotalFils || linesTotal + deliveryFeeFils - discountFils !== order.totalFils) {
+  if (
+    lines.some((line) => line.totalFils !== line.unitFils * line.quantity) ||
+    linesTotal !== order.subtotalFils ||
+    linesTotal + deliveryFeeFils - discountFils !== order.totalFils
+  ) {
     throw new Error(
-      `Invoice ${order.invoiceNumber} does not reconcile: lines ${linesTotal} + delivery ${deliveryFeeFils} − discount ${discountFils} ≠ total ${order.totalFils}.`,
+      `${label} does not reconcile: lines ${linesTotal} + delivery ${deliveryFeeFils} − discount ${discountFils} ≠ total ${order.totalFils}.`,
     );
   }
 
@@ -178,19 +188,13 @@ export function buildInvoice(order: InvoiceOrder, business: BusinessDetails): In
       ? { rateBps, includedFils: Number(order.vatIncludedFils ?? vatIncludedFils(order.totalFils, rateBps)) }
       : null;
 
-  /* claimInvoice writes the number and the payment time in one statement,
-     so an invoice without a date is corrupt rather than merely early. */
-  if (!order.paidAt) {
-    throw new Error(`Invoice ${order.invoiceNumber} has no payment date.`);
-  }
-  const paidAt = order.paidAt;
+  const phone = (order.customerPhone ?? "").trim();
+  const method = order.paymentMethod ?? "";
 
   return {
-    number: order.invoiceNumber,
-    issuedAt: paidAt,
-    paidAt,
     orderNumber: String(order.orderNumber ?? ""),
-    billTo: { name: order.customerName, email: order.customerEmail },
+    billTo: { name: order.customerName, email: order.customerEmail ?? "", ...(phone ? { phone } : {}) },
+    paymentMethod: (OUTSIDE_METHODS.has(method) ? method : "card") as InvoicePaymentMethod,
     lines,
     subtotalFils: order.subtotalFils,
     deliveryFeeFils,
@@ -199,5 +203,79 @@ export function buildInvoice(order: InvoiceOrder, business: BusinessDetails): In
     totalFils: order.totalFils,
     vat,
     seller: sellerFrom(business, vat !== null),
+  };
+}
+
+export function buildInvoice(order: InvoiceOrder, business: BusinessDetails): InvoiceView {
+  if (!order.invoiceNumber) {
+    throw new Error(`Order ${order.orderNumber ?? "?"} has no invoice number: it has not been paid.`);
+  }
+  const body = bodyOf(order, business, `Invoice ${order.invoiceNumber}`);
+
+  /* claimInvoice writes the number and the payment time in one statement,
+     so an invoice without a date is corrupt rather than merely early. */
+  if (!order.paidAt) {
+    throw new Error(`Invoice ${order.invoiceNumber} has no payment date.`);
+  }
+
+  return { number: order.invoiceNumber, issuedAt: order.paidAt, paidAt: order.paidAt, ...body };
+}
+
+/* ------------------------------------------------------------------ */
+/* The sheet: the same document before and after payment               */
+/* ------------------------------------------------------------------ */
+
+export type SheetStatus = "paid" | "unpaid" | "void";
+
+/**
+ * What the branded sheet prints (components/commerce/InvoiceSheet.tsx).
+ *
+ * An invoice NUMBER exists only once an order is paid — that is what keeps
+ * the series gap-free. Before payment the same sheet is the bill the
+ * customer is asked to pay: it carries the order number, says "Unpaid" and
+ * shows the amount due. A cancelled, unpaid bill is "Void".
+ */
+export type InvoiceSheetView = Omit<InvoiceView, "number" | "paidAt"> & {
+  status: SheetStatus;
+  number: string | null;
+  paidAt: string | null;
+  /** Short enough to be one A4 page, so its foot sits at the foot of the page. */
+  fit: boolean;
+};
+
+/**
+ * One page or more? Decided here, conservatively, because CSS cannot know:
+ * a short invoice pins its foot to the bottom of the page like a letterhead,
+ * a long one lets the foot follow the totals.
+ */
+export function fitsOnePage(lines: readonly InvoiceLine[]): boolean {
+  const words = lines.reduce((sum, line) => sum + line.description.length + (line.detail?.length ?? 0), 0);
+  return lines.length <= 5 && words <= 420;
+}
+
+export function buildInvoiceSheet(
+  order: InvoiceOrder & {
+    createdAt?: string | null;
+    paymentStatus?: string | null;
+    fulfilmentStatus?: string | null;
+  },
+  business: BusinessDetails,
+): InvoiceSheetView {
+  const settled = ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(order.paymentStatus ?? "");
+  if (settled && order.invoiceNumber && order.paidAt) {
+    const invoice = buildInvoice(order, business);
+    return { ...invoice, status: "paid", fit: fitsOnePage(invoice.lines) };
+  }
+
+  const body = bodyOf(order, business, `Order ${order.orderNumber ?? "?"}`);
+  const issuedAt = order.createdAt ?? "";
+  if (!issuedAt) throw new Error(`Order ${order.orderNumber ?? "?"} has no date.`);
+  return {
+    ...body,
+    status: order.fulfilmentStatus === "CANCELLED" ? "void" : "unpaid",
+    number: null,
+    issuedAt,
+    paidAt: null,
+    fit: fitsOnePage(body.lines),
   };
 }
