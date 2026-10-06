@@ -9,6 +9,7 @@ import { MonogramBloom } from "@/components/motion/MonogramBloom";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
+import { PackagingGallery } from "@/components/blocks/PackagingGallery";
 import { PackagingTrio } from "@/components/blocks/PackagingTrio";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -369,110 +370,14 @@ export default async function AboutPage() {
             <p className="mt-4 text-base leading-relaxed text-ink-muted">{t.about.detailsBody}</p>
           </Reveal>
 
-          {/* THE SPREAD. Four objects in two columns on a phone and four on a
-              laptop; every second one sits a step lower, so the row reads as
-              pieces set down on a table rather than a grid of thumbnails. */}
-          <Stagger className="mt-10 grid grid-cols-2 gap-4 lg:mt-14 lg:grid-cols-4 lg:gap-6">
-            {[
-              {
-                key: "bag",
-                label: t.alt.labelBag,
-                panel: (
-                  <Panel>
-                    <Standing shadow="left-[14%] right-[14%]" className="mb-[6%] w-[84%]">
-                      <Image
-                        src="/brand/packaging/bag-olive-tag.webp"
-                        alt={t.alt.aboutBagTile}
-                        width={777}
-                        height={963}
-                        sizes="(max-width: 1024px) 46vw, 23vw"
-                        quality={90}
-                        className="relative h-auto w-full"
-                      />
-                    </Standing>
-                  </Panel>
-                ),
-              },
-              {
-                key: "sleeve",
-                label: t.alt.labelSleeve,
-                panel: (
-                  <Panel>
-                    <Standing shadow="left-[26%] right-[26%]" className="mb-[6%] w-[66%]">
-                      <Image
-                        src="/brand/packaging/sleeve-terracotta.webp"
-                        alt={t.alt.aboutSleeve}
-                        width={567}
-                        height={796}
-                        sizes="(max-width: 1024px) 36vw, 16vw"
-                        quality={90}
-                        className="relative h-auto w-full"
-                      />
-                    </Standing>
-                  </Panel>
-                ),
-              },
-              {
-                key: "tag",
-                label: t.alt.labelTag,
-                panel: (
-                  /* The olive orchid tag hanging from its twine, as it hangs
-                     from the handle: the string above, the tag tipped a
-                     little below it. */
-                  <Panel align="center">
-                    <div role="img" aria-label={t.alt.aboutTag} className="relative flex w-[62%] flex-col items-center">
-                      <Image
-                        src="/brand/packaging/string.webp"
-                        alt=""
-                        width={164}
-                        height={266}
-                        sizes="(max-width: 1024px) 10vw, 5vw"
-                        quality={90}
-                        className="relative z-10 -mb-[8%] h-auto w-[30%]"
-                      />
-                      <Image
-                        src="/brand/packaging/tag-olive.webp"
-                        alt=""
-                        width={470}
-                        height={444}
-                        sizes="(max-width: 1024px) 30vw, 14vw"
-                        quality={90}
-                        className="h-auto w-full rotate-[4deg] drop-shadow-[0_8px_12px_rgba(43,47,27,0.22)]"
-                      />
-                    </div>
-                  </Panel>
-                ),
-              },
-              {
-                key: "cards",
-                label: t.alt.labelCard,
-                panel: (
-                  <Panel align="center">
-                    <Standing shadow="left-[8%] right-[8%]" className="w-[58%]">
-                      <Image
-                        src="/brand/packaging/cards.webp"
-                        alt={t.alt.aboutCard}
-                        width={468}
-                        height={1001}
-                        sizes="(max-width: 1024px) 30vw, 14vw"
-                        quality={90}
-                        className="relative h-auto w-full"
-                      />
-                    </Standing>
-                  </Panel>
-                ),
-              },
-            ].map((item, i) => (
-              <StaggerItem key={item.key} className={i % 2 === 1 ? "mt-8 lg:mt-10" : undefined}>
-                <figure>
-                  {item.panel}
-                  <figcaption className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
-                    {item.label}
-                  </figcaption>
-                </figure>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          {/* THE GALLERY. The deck's four photographs of the details on a
+              turning ring (PackagingGallery): one card steps forward every
+              few seconds and settles without a bounce; a finger can throw
+              it. It replaced the four still tiles at the client's request
+              on 6 Oct 2026. */}
+          <Reveal className="mt-8 lg:mt-12">
+            <PackagingGallery />
+          </Reveal>
         </div>
       </section>
 

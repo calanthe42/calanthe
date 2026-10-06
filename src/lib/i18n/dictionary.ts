@@ -824,6 +824,31 @@ export const en = {
     },
 
     /* IN PRACTICE — the promise, as a list; the items are `trust`. */
+    /* THE GALLERY of the identity book's four detail photographs. */
+    gallery: {
+      label: "The details, as photographed for the identity book",
+      ribbon: {
+        title: "Printed ribbon",
+        subtitle: "Terracotta, the name woven along it",
+        alt: "A roll of terracotta Calanthe ribbon printed with the wordmark and the monogram",
+      },
+      tagOlive: {
+        title: "Hang tag",
+        subtitle: "Olive, among roses and dahlias",
+        alt: "An olive Calanthe hang tag resting among orange roses and dahlias",
+      },
+      tagCream: {
+        title: "Hang tag",
+        subtitle: "Cream, cut as an orchid, on its twine",
+        alt: "A cream Calanthe hang tag cut in the shape of an orchid, hanging on twine among pale roses",
+      },
+      paperWrap: {
+        title: "Paper wrap and sticker",
+        subtitle: "The monogram repeated across the paper",
+        alt: "Cream wrapping paper patterned with the Calanthe monogram, closed with a terracotta sticker",
+      },
+    },
+
     practice: {
       eyebrow: "In practice",
       title: "What every order includes.",
@@ -2363,6 +2388,30 @@ export const ar: typeof en = {
       tags: {
         name: "على البطاقة المعلّقة",
         copy: "تصير الزهرة هي الشكل نفسه: أوركيد مقصوصة، بالكريمي أو الزيتوني أو العنّابي.",
+      },
+    },
+
+    gallery: {
+      label: "التفاصيل كما صُوّرت لكتاب الهوية",
+      ribbon: {
+        title: "شريط مطبوع",
+        subtitle: "بلون التيراكوتا، والاسم منسوج على طوله",
+        alt: "لفّة شريط كالانثي بلون التيراكوتا مطبوع بالاسم والشعار",
+      },
+      tagOlive: {
+        title: "بطاقة معلّقة",
+        subtitle: "زيتونية، بين الورود والداليا",
+        alt: "بطاقة كالانثي المعلّقة الزيتونية بين ورود برتقالية وداليا",
+      },
+      tagCream: {
+        title: "بطاقة معلّقة",
+        subtitle: "كريمية، مقصوصة بشكل أوركيد، على خيطها",
+        alt: "بطاقة كالانثي المعلّقة الكريمية مقصوصة بشكل أوركيد، معلّقة بخيط بين ورود فاتحة",
+      },
+      paperWrap: {
+        title: "ورق تغليف وملصق",
+        subtitle: "الشعار يتكرّر على الورق",
+        alt: "ورق تغليف كريمي منقوش بشعار كالانثي، مغلق بملصق بلون التيراكوتا",
       },
     },
 
