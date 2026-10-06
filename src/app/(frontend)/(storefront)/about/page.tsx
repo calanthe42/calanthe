@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
 import { CONTACT } from "@/lib/data";
+import { cn } from "@/lib/cn";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { HairlineDraw } from "@/components/motion/HairlineDraw";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
@@ -56,6 +57,55 @@ const PALETTE = [
 ] as const;
 
 /**
+ * A SHEET OF THE BRAND'S PAPER for a cut-out to stand on: the page colour or
+ * cream, printed tone on tone with the orchid. 3:4 for the objects, 16:10
+ * for the three treatments.
+ */
+function Panel({
+  children,
+  ground = "canvas",
+  ratio = "portrait",
+  align = "end",
+}: {
+  children: React.ReactNode;
+  ground?: "canvas" | "cream";
+  ratio?: "portrait" | "wide";
+  align?: "end" | "center";
+}) {
+  return (
+    <div
+      className={cn(
+        "relative isolate flex w-full justify-center overflow-hidden rounded-media",
+        ratio === "portrait" ? "aspect-[3/4]" : "aspect-[16/10]",
+        ground === "cream" ? "bg-cream" : "border border-hairline bg-canvas",
+        align === "end" ? "items-end" : "items-center",
+      )}
+    >
+      <OrchidPrint ground={ground} />
+      {children}
+    </div>
+  );
+}
+
+/** A cut-out with the soft contact shadow that keeps it from floating. */
+function Standing({
+  children,
+  shadow,
+  className,
+}: {
+  children: React.ReactNode;
+  shadow: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <span aria-hidden className={cn("absolute -bottom-1 h-2.5 rounded-[50%] bg-olive/25 blur-[6px]", shadow)} />
+      {children}
+    </div>
+  );
+}
+
+/**
  * THE ABOUT PAGE — the identity book, turned into a page.
  *
  * Everything on it comes from the client's own brand book: the name and
@@ -81,11 +131,6 @@ export default async function AboutPage() {
     { title: t.trust.videoTitle, copy: t.trust.videoCopy },
     { title: t.trust.sameDayTitle, copy: t.trust.sameDayCopy },
     { title: t.trust.emiratesTitle, copy: t.trust.emiratesCopy },
-  ];
-  const treatments = [
-    { ...t.about.treatments.bags, src: "/brand/bag-pattern.webp", alt: t.alt.bagPattern },
-    { ...t.about.treatments.cards, src: "/brand/card-front.webp", alt: t.alt.cardFront },
-    { ...t.about.treatments.tags, src: "/brand/tags-trio.webp", alt: t.alt.tagsTrio },
   ];
   const reach = [
     { label: t.footer.whatsapp, value: CONTACT.whatsapp, href: CONTACT.whatsappHref },
@@ -134,7 +179,7 @@ export default async function AboutPage() {
             <FloralImage
               image={{
                 alt: t.alt.aboutBag,
-                src: "/brand/packaging-curtain.webp",
+                src: "/brand/roses.webp",
                 placeholder: { seed: "about-atelier", palette: "burgundy" },
               }}
               sizes="(max-width: 1024px) 92vw, 46vw"
@@ -297,19 +342,23 @@ export default async function AboutPage() {
       </section>
 
       {/*
-        7 · THE PACKAGING — the three pieces standing together, then the
-        details a customer holds. The pictures are the identity book's own,
-        cut with its own masks, at full resolution.
+        7 · THE PACKAGING — the three pieces standing together with the tag,
+        then the four objects a customer holds, laid out like a spread.
+
+        Every picture is a transparent cut-out from the October 2026 deck at
+        its native resolution, standing on the page's own paper — composed
+        here, never flattened or enlarged. The one photograph is the tag
+        among the roses.
       */}
       <section className="bg-cream section-pad">
         <div className="mx-auto max-w-7xl gutter">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-end lg:gap-20">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-end lg:gap-16">
             <Reveal>
               <Eyebrow>{t.about.packaging.eyebrow}</Eyebrow>
               <h2 className="display-2 mt-3 font-display font-light text-olive">{t.about.packaging.title}</h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-ink-muted">{t.about.packaging.body}</p>
             </Reveal>
-            <PackagingTrio />
+            <PackagingTrio withTag className="lg:pb-2" />
           </div>
 
           <HairlineDraw className="mt-14 lg:mt-20" />
@@ -320,25 +369,103 @@ export default async function AboutPage() {
             <p className="mt-4 text-base leading-relaxed text-ink-muted">{t.about.detailsBody}</p>
           </Reveal>
 
+          {/* THE SPREAD. Four objects in two columns on a phone and four on a
+              laptop; every second one sits a step lower, so the row reads as
+              pieces set down on a table rather than a grid of thumbnails. */}
           <Stagger className="mt-10 grid grid-cols-2 gap-4 lg:mt-14 lg:grid-cols-4 lg:gap-6">
             {[
-              { src: "/brand/about-bag.webp", alt: t.alt.aboutBagTile, label: t.alt.labelBag },
-              { src: "/brand/about-sleeve.webp", alt: t.alt.aboutSleeve, label: t.alt.labelSleeve },
-              { src: "/brand/hang-tag.webp", alt: t.alt.aboutTag, label: t.alt.labelTag },
-              { src: "/brand/cards-debossed.webp", alt: t.alt.aboutCard, label: t.alt.labelCard },
-            ].map((item) => (
-              <StaggerItem key={item.src}>
+              {
+                key: "bag",
+                label: t.alt.labelBag,
+                panel: (
+                  <Panel>
+                    <Standing shadow="left-[14%] right-[14%]" className="mb-[6%] w-[84%]">
+                      <Image
+                        src="/brand/packaging/bag-olive-tag.webp"
+                        alt={t.alt.aboutBagTile}
+                        width={777}
+                        height={963}
+                        sizes="(max-width: 1024px) 46vw, 23vw"
+                        quality={90}
+                        className="relative h-auto w-full"
+                      />
+                    </Standing>
+                  </Panel>
+                ),
+              },
+              {
+                key: "sleeve",
+                label: t.alt.labelSleeve,
+                panel: (
+                  <Panel>
+                    <Standing shadow="left-[26%] right-[26%]" className="mb-[6%] w-[66%]">
+                      <Image
+                        src="/brand/packaging/sleeve-terracotta.webp"
+                        alt={t.alt.aboutSleeve}
+                        width={567}
+                        height={796}
+                        sizes="(max-width: 1024px) 36vw, 16vw"
+                        quality={90}
+                        className="relative h-auto w-full"
+                      />
+                    </Standing>
+                  </Panel>
+                ),
+              },
+              {
+                key: "tag",
+                label: t.alt.labelTag,
+                panel: (
+                  /* The olive orchid tag hanging from its twine, as it hangs
+                     from the handle: the string above, the tag tipped a
+                     little below it. */
+                  <Panel align="center">
+                    <div role="img" aria-label={t.alt.aboutTag} className="relative flex w-[62%] flex-col items-center">
+                      <Image
+                        src="/brand/packaging/string.webp"
+                        alt=""
+                        width={164}
+                        height={266}
+                        sizes="(max-width: 1024px) 10vw, 5vw"
+                        quality={90}
+                        className="relative z-10 -mb-[8%] h-auto w-[30%]"
+                      />
+                      <Image
+                        src="/brand/packaging/tag-olive.webp"
+                        alt=""
+                        width={470}
+                        height={444}
+                        sizes="(max-width: 1024px) 30vw, 14vw"
+                        quality={90}
+                        className="h-auto w-full rotate-[4deg] drop-shadow-[0_8px_12px_rgba(43,47,27,0.22)]"
+                      />
+                    </div>
+                  </Panel>
+                ),
+              },
+              {
+                key: "cards",
+                label: t.alt.labelCard,
+                panel: (
+                  <Panel align="center">
+                    <Standing shadow="left-[8%] right-[8%]" className="w-[58%]">
+                      <Image
+                        src="/brand/packaging/cards.webp"
+                        alt={t.alt.aboutCard}
+                        width={468}
+                        height={1001}
+                        sizes="(max-width: 1024px) 30vw, 14vw"
+                        quality={90}
+                        className="relative h-auto w-full"
+                      />
+                    </Standing>
+                  </Panel>
+                ),
+              },
+            ].map((item, i) => (
+              <StaggerItem key={item.key} className={i % 2 === 1 ? "mt-8 lg:mt-10" : undefined}>
                 <figure>
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-media">
-                    <Image
-                      src={item.src}
-                      alt={item.alt}
-                      fill
-                      sizes="(max-width: 1024px) 46vw, 23vw"
-                      quality={90}
-                      className="object-cover"
-                    />
-                  </div>
+                  {item.panel}
                   <figcaption className="mt-3 font-brand text-[0.625rem] uppercase tracking-brand text-ink-muted">
                     {item.label}
                   </figcaption>
@@ -349,7 +476,10 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* 8 · ONE FLOWER, THREE WAYS — how the orchid is drawn on each piece. */}
+      {/* 8 · ONE FLOWER, THREE WAYS — how the orchid is drawn on each piece.
+          Three panels on the brand's cream paper: the bag, large and cropped
+          so the tone-on-tone print fills the frame; one debossed card; the
+          three orchid tags side by side. */}
       <section className="section-pad">
         <div className="mx-auto max-w-7xl gutter">
           <Reveal className="max-w-xl">
@@ -358,22 +488,81 @@ export default async function AboutPage() {
           </Reveal>
 
           <Stagger className="mt-10 grid grid-cols-1 gap-10 lg:mt-14 lg:grid-cols-3 lg:gap-8">
-            {treatments.map((item) => (
-              <StaggerItem key={item.src}>
-                <ClipReveal className="relative aspect-[4/3] w-full overflow-hidden rounded-media shadow-soft">
+            <StaggerItem>
+              <Panel ground="cream" ratio="wide" align="end">
+                <Standing shadow="left-[14%] right-[14%]" className="-mb-[2%] w-[64%]">
                   <Image
-                    src={item.src}
-                    alt={item.alt}
-                    fill
-                    sizes="(max-width: 1024px) 92vw, 30vw"
+                    src="/brand/packaging/bag-olive.webp"
+                    alt={t.alt.packagingOlive}
+                    width={692}
+                    height={857}
+                    sizes="(max-width: 1024px) 60vw, 20vw"
                     quality={90}
-                    className="object-cover"
+                    className="relative h-auto w-full"
                   />
-                </ClipReveal>
-                <h3 className="mt-5 font-display text-2xl font-light text-olive">{item.name}</h3>
-                <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{item.copy}</p>
-              </StaggerItem>
-            ))}
+                </Standing>
+              </Panel>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.treatments.bags.name}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.treatments.bags.copy}</p>
+            </StaggerItem>
+
+            <StaggerItem>
+              <Panel ground="cream" ratio="wide" align="center">
+                <Standing shadow="left-[4%] right-[4%]" className="w-[62%]">
+                  <Image
+                    src="/brand/packaging/card-terracotta.webp"
+                    alt={t.alt.cardFront}
+                    width={467}
+                    height={319}
+                    sizes="(max-width: 1024px) 58vw, 20vw"
+                    quality={90}
+                    className="relative h-auto w-full"
+                  />
+                </Standing>
+              </Panel>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.treatments.cards.name}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.treatments.cards.copy}</p>
+            </StaggerItem>
+
+            <StaggerItem>
+              <Panel ground="cream" ratio="wide" align="center">
+                <div
+                  role="img"
+                  aria-label={t.alt.tagsTrio}
+                  className="relative flex w-[84%] items-center justify-center gap-[6%]"
+                >
+                  <Image
+                    src="/brand/packaging/tag-cream.webp"
+                    alt=""
+                    width={464}
+                    height={424}
+                    sizes="(max-width: 1024px) 26vw, 9vw"
+                    quality={90}
+                    className="h-auto w-[32%] -rotate-6 drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
+                  />
+                  <Image
+                    src="/brand/packaging/tag-olive.webp"
+                    alt=""
+                    width={470}
+                    height={444}
+                    sizes="(max-width: 1024px) 26vw, 9vw"
+                    quality={90}
+                    className="h-auto w-[32%] drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
+                  />
+                  <Image
+                    src="/brand/packaging/tag-burgundy.webp"
+                    alt=""
+                    width={301}
+                    height={410}
+                    sizes="(max-width: 1024px) 20vw, 7vw"
+                    quality={90}
+                    className="h-auto w-[22%] rotate-6 drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
+                  />
+                </div>
+              </Panel>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.treatments.tags.name}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.treatments.tags.copy}</p>
+            </StaggerItem>
           </Stagger>
         </div>
       </section>

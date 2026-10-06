@@ -35,7 +35,7 @@ export async function BestSellers() {
               <FloralImage
                 image={{
                   alt: t.alt.bestSellers,
-                  src: "/brand/lilies-tag.webp",
+                  src: "/brand/roses.webp",
                   placeholder: { seed: "bestseller-editorial", palette: "olive" },
                 }}
                 sizes="(max-width: 1024px) 92vw, 50vw"

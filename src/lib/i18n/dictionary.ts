@@ -448,27 +448,23 @@ export const en = {
   alt: {
     /* The homepage hero: the first image on the site, and its LCP. */
     hero: "A Calanthe arrangement of garden roses, daisies and coral blossom in a white vase",
-    bestSellers: "White lilies with a Calanthe lily hang tag tied among them",
+    bestSellers: "White and blush roses with lisianthus, in a Calanthe arrangement",
     byoPetal: "A lily petal lit from behind, blush against warm light",
     emptyCatalogue: "A white rose arrangement",
-    packagingTerracotta:
-      "A Calanthe terracotta sleeve printed with orchids, holding blush roses, white lisianthus and eucalyptus",
-    packagingOlive:
-      "A Calanthe olive bag printed tone on tone with orchids, holding white and blush roses",
-    packagingBurgundy:
-      "A Calanthe burgundy bag with a terracotta ribbon handle, holding white and blush roses with eucalyptus",
-    sealBag: "A Calanthe arrangement in its burgundy bag against deep green velvet",
-    aboutBag: "A Calanthe arrangement in its burgundy bag, against deep green velvet",
+    packagingTerracotta: "A Calanthe terracotta sleeve holding blush roses, lisianthus and eucalyptus",
+    packagingOlive: "A Calanthe olive bag printed tone on tone with orchids, holding white and blush roses",
+    packagingBurgundy: "A Calanthe burgundy bag with a terracotta handle, holding white and blush roses with eucalyptus",
+    sealBag: "A Calanthe olive bag holding white and blush roses, its orchid tag hanging from the handle",
+    aboutBag: "White and blush roses, lisianthus and eucalyptus in a Calanthe arrangement",
     aboutOrchid: "Calanthe orchid buds, the flower the brand is named after",
-    aboutBagTile: "A Calanthe arrangement standing in its olive bag, against deep green velvet",
-    aboutSleeve: "A Calanthe terracotta sleeve holding white lisianthus and calla lilies",
-    aboutTag: "A Calanthe olive hang tag, cut like a lily, resting among roses and dahlias",
+    aboutBagTile: "The olive Calanthe bag with its orchid tag on the handle, holding a pastel bouquet",
+    aboutSleeve: "The terracotta Calanthe sleeve holding blush roses and lisianthus",
+    aboutTag: "A Calanthe hang tag cut in the shape of an orchid, resting among roses and dahlias",
     aboutCard:
       "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
-    tagsTrio: "Three Calanthe hang tags cut in the shape of a lily: cream, burgundy and olive",
+    tagsTrio: "Three Calanthe hang tags cut in the shape of an orchid: cream, olive and burgundy",
     cardFront: "A terracotta Calanthe card, the orchid debossed into the paper, its cream tab pressed with the monogram",
-    bagPattern: "The body of the olive bag, printed tone on tone with large orchids",
     eventArrangement: "A Calanthe event arrangement",
     eventFavors: "Calanthe guest favors, wrapped by hand",
 
@@ -823,7 +819,7 @@ export const en = {
       },
       tags: {
         name: "On the tag",
-        copy: "The flower becomes the shape itself: a lily, cut out, in cream, burgundy or olive.",
+        copy: "The flower becomes the shape itself: an orchid, cut out, in cream, olive or burgundy.",
       },
     },
 
@@ -968,10 +964,12 @@ export const en = {
     /* Rewritten at the client's request (2026-10-06): warmer, and it no
        longer promises printed ribbon or wrapping paper, which the atelier
        will not offer in its first months. */
-    eyebrow: "Made to be opened",
-    line1: "Half the joy",
-    line2: "is opening it.",
-    body: "Every arrangement leaves us dressed for the occasion — standing in its Calanthe bag, tag on, your message tucked inside. The first smile happens before the flowers are even seen.",
+    /* The client's own words (WhatsApp, 6 Oct 2026, 8:13 PM): "Write
+       something about the slogan" — this is the text she sent. */
+    eyebrow: "The Calanthe experience",
+    line1: "Before the flowers,",
+    line2: "there’s the feeling.",
+    body: "Thoughtfully wrapped, beautifully presented, and finished with your message — because the Calanthe experience begins before the first flower is revealed.",
     shop: "Shop the collection",
     how: "How it arrives",
   },
@@ -2048,27 +2046,23 @@ export const ar: typeof en = {
   },
   alt: {
     hero: "تنسيق كالانثي من ورود الحدائق والأقحوان وزهور مرجانية في مزهرية بيضاء",
-    bestSellers: "زنابق بيضاء مع بطاقة كالانثي مربوطة بينها",
+    bestSellers: "ورود بيضاء ووردية فاتحة مع الليزيانثوس، في تنسيق من كالانثي",
     byoPetal: "بتلة زنبقة مُضاءة من الخلف، بلون وردي فاتح في ضوء دافئ",
     emptyCatalogue: "تنسيق من الورد الأبيض",
-    packagingTerracotta:
-      "غلاف كالانثي بلون التيراكوتا مطبوع بزهور الأوركيد، يحمل ورودًا وردية فاتحة وليزيانثوس أبيض وأغصان الأوكالبتوس",
-    packagingOlive:
-      "حقيبة كالانثي بلون الزيتون مطبوعة بزهور الأوركيد بالدرجة نفسها، تحمل ورودًا بيضاء ووردية فاتحة",
-    packagingBurgundy:
-      "حقيبة كالانثي العنّابية بمقبض من شريط التيراكوتا، تحمل ورودًا بيضاء ووردية فاتحة مع أغصان الأوكالبتوس",
-    sealBag: "تنسيق كالانثي في حقيبته العنّابية على مخمل أخضر غامق",
-    aboutBag: "تنسيق كالانثي في حقيبته العنّابية، على مخمل أخضر غامق",
+    packagingTerracotta: "غلاف كالانثي بلون التيراكوتا يحمل ورودًا وردية فاتحة والليزيانثوس وأغصان الأوكالبتوس",
+    packagingOlive: "حقيبة كالانثي الزيتونية مطبوعة بالدرجة نفسها بزهور الأوركيد، تحمل ورودًا بيضاء ووردية فاتحة",
+    packagingBurgundy: "حقيبة كالانثي العنّابية بمقبض بلون التيراكوتا، تحمل ورودًا بيضاء ووردية فاتحة مع الأوكالبتوس",
+    sealBag: "حقيبة كالانثي الزيتونية تحمل ورودًا بيضاء ووردية فاتحة، وبطاقتها على شكل أوركيد معلّقة من المقبض",
+    aboutBag: "ورود بيضاء ووردية فاتحة والليزيانثوس والأوكالبتوس في تنسيق من كالانثي",
     aboutOrchid: "براعم أوركيد الكالانثي، الزهرة التي سُمّيت العلامة باسمها",
-    aboutBagTile: "تنسيق كالانثي قائمًا في حقيبته الزيتونية، على مخمل أخضر غامق",
-    aboutSleeve: "غلاف كالانثي بلون التيراكوتا يحمل زهور الليزيانثوس البيضاء وزنابق الكالا",
-    aboutTag: "بطاقة كالانثي المعلّقة بلون الزيتون، مقصوصة بشكل زنبقة، بين الورود والداليا",
+    aboutBagTile: "حقيبة كالانثي الزيتونية وبطاقتها على شكل أوركيد على المقبض، تحمل باقة بألوان هادئة",
+    aboutSleeve: "غلاف كالانثي بلون التيراكوتا يحمل ورودًا وردية فاتحة والليزيانثوس",
+    aboutTag: "بطاقة كالانثي المعلّقة مقصوصة بشكل أوركيد، بين الورود والداليا",
     aboutCard:
       "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
-    tagsTrio: "ثلاث بطاقات معلّقة من كالانثي مقصوصة بشكل زنبقة: كريمية وعنّابية وزيتونية",
+    tagsTrio: "ثلاث بطاقات معلّقة من كالانثي مقصوصة بشكل أوركيد: كريمية وزيتونية وعنّابية",
     cardFront: "بطاقة كالانثي بلون التيراكوتا، الأوركيد مضغوطة في الورق، ولسانها الكريمي مطبوع بالشعار",
-    bagPattern: "جسم الحقيبة الزيتونية مطبوعًا بالدرجة نفسها بزهور أوركيد كبيرة",
     eventArrangement: "تنسيق فعاليات من كالانثي",
     eventFavors: "هدايا الضيوف من كالانثي، مُغلّفة يدويًا",
 
@@ -2368,7 +2362,7 @@ export const ar: typeof en = {
       },
       tags: {
         name: "على البطاقة المعلّقة",
-        copy: "تصير الزهرة هي الشكل نفسه: زنبقة مقصوصة، بالكريمي أو العنّابي أو الزيتوني.",
+        copy: "تصير الزهرة هي الشكل نفسه: أوركيد مقصوصة، بالكريمي أو الزيتوني أو العنّابي.",
       },
     },
 
@@ -2481,10 +2475,10 @@ export const ar: typeof en = {
     legal: "قانوني",
   },
   seal: {
-    eyebrow: "صُنعت لتُفتح",
-    line1: "نصف الفرحة",
-    line2: "في فتحها.",
-    body: "كل تنسيق يغادرنا بكامل أناقته: قائمًا في حقيبة كالانثي، ببطاقته المعلّقة، ورسالتكم في داخله — فتبدأ الابتسامة الأولى قبل أن تُرى الزهور.",
+    eyebrow: "تجربة كالانثي",
+    line1: "قبل الزهور،",
+    line2: "يأتي الشعور.",
+    body: "تغليف بعناية، وتقديم جميل، ولمسة أخيرة برسالتكم — لأن تجربة كالانثي تبدأ قبل أن تنكشف أول زهرة.",
     shop: "تسوّقوا المجموعة",
     how: "كيف تصلكم",
   },
