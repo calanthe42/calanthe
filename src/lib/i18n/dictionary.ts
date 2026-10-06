@@ -466,6 +466,10 @@ export const en = {
     aboutCard:
       "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
+    markEmbossed: "The Calanthe monogram, blind-embossed into thick cream paper",
+    tagsTrio: "Three Calanthe hang tags cut in the shape of a lily: cream, burgundy and olive",
+    cardFront: "A terracotta Calanthe card, the orchid debossed into the paper, its cream tab pressed with the monogram",
+    bagPattern: "The body of the olive bag, printed tone on tone with large orchids",
     eventArrangement: "A Calanthe event arrangement",
     eventFavors: "Calanthe guest favors, wrapped by hand",
 
@@ -766,6 +770,77 @@ export const en = {
     detailsTitle: "Down to the last detail.",
     detailsBody:
       "Everything that reaches you is part of the gift — the bag it arrives in, the tag, the card, and the monogram pressed into each.",
+
+
+    /* The identity book's three keywords, said once. */
+    beliefWords: "Refined. Elegant. Personal.",
+
+    /* THE MARK — the symbol explained, and the three ways it is set. */
+    mark: {
+      eyebrow: "The mark",
+      title: "Drawn from the flower.",
+      pressed: "Pressed into paper rather than printed, it is how you know a piece is ours.",
+      stackedName: "The signature",
+      stackedUse:
+        "Symbol and name together, for formal, centred places: the bags, the shopfront, the foot of this page.",
+      monogramName: "The seal",
+      monogramUse:
+        "The symbol alone, for the smallest places: cards, tags, stickers and the corner of a message.",
+      logotypeName: "The name",
+      logotypeUse:
+        "The wordmark on its own, where the cleanest line is wanted: the top of this site, your invoice.",
+    },
+
+    /* THE PALETTE — five colours, each with its place (identity book, p.12). */
+    palette: {
+      eyebrow: "The palette",
+      title: "The colours of the flower itself.",
+      body: "An earthy palette, taken from the orchid and the ground it grows in: deep olive, muted sage, burgundy, terracotta and warm cream. Refined, yet warm — and each with its own place.",
+      olive: { name: "Deep Olive", use: "Our primary: the bags, the signage and the dark surfaces of this site." },
+      sage: { name: "Muted Sage", use: "The quiet one: cards, tags and stationery." },
+      burgundy: { name: "Burgundy", use: "Depth and intimacy, in small measures." },
+      orange: { name: "Burnt Orange", use: "The accent: a handle, a seal, a label — never more than a touch." },
+      cream: { name: "Warm Cream", use: "The breathing space, and the paper everything is printed on." },
+    },
+
+    /* THE PACKAGING — what a customer actually holds. */
+    packaging: {
+      eyebrow: "The packaging",
+      title: "Dressed for the occasion.",
+      body: "Every arrangement leaves the atelier standing in its bag or its sleeve, with its tag on and your card inside. Three pieces, one family — the pieces a customer holds.",
+    },
+
+    /* ONE FLOWER, THREE WAYS — how the orchid is drawn on each piece. */
+    treatments: {
+      eyebrow: "One flower, three ways",
+      title: "The orchid, drawn differently on each piece.",
+      bags: {
+        name: "On the bags",
+        copy: "Drawn large and tone on tone, so the flower reads as a surface rather than a print, and the name sits quietly on it.",
+      },
+      cards: {
+        name: "On the cards",
+        copy: "Pressed into the paper instead of inked, so the illustration shows itself in light and shadow around your message.",
+      },
+      tags: {
+        name: "On the tag",
+        copy: "The flower becomes the shape itself: a lily, cut out, in cream, burgundy or olive.",
+      },
+    },
+
+    /* IN PRACTICE — the promise, as a list; the items are `trust`. */
+    practice: {
+      eyebrow: "In practice",
+      title: "What every order includes.",
+      body: "Not a promise for some orders. Every one.",
+    },
+
+    /* WHERE WE ARE — the ways to reach the atelier. */
+    find: {
+      eyebrow: "Where we are",
+      title: "One atelier, the whole emirate.",
+      body: "We arrange in Abu Dhabi and deliver across it. For anything at all — a question, a date, a colour you have in mind — a florist answers on WhatsApp.",
+    },
 
     closingLine: "Where feelings take form.",
   },
@@ -1992,6 +2067,10 @@ export const ar: typeof en = {
     aboutCard:
       "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
+    markEmbossed: "شعار كالانثي مضغوطًا في ورق كريميّ سميك",
+    tagsTrio: "ثلاث بطاقات معلّقة من كالانثي مقصوصة بشكل زنبقة: كريمية وعنّابية وزيتونية",
+    cardFront: "بطاقة كالانثي بلون التيراكوتا، الأوركيد مضغوطة في الورق، ولسانها الكريمي مطبوع بالشعار",
+    bagPattern: "جسم الحقيبة الزيتونية مطبوعًا بالدرجة نفسها بزهور أوركيد كبيرة",
     eventArrangement: "تنسيق فعاليات من كالانثي",
     eventFavors: "هدايا الضيوف من كالانثي، مُغلّفة يدويًا",
 
@@ -2245,6 +2324,67 @@ export const ar: typeof en = {
     detailsTitle: "حتّى أدقّ التفاصيل.",
     detailsBody:
       "كل ما يصلكم جزء من الهدية — الحقيبة التي يصل فيها، والبطاقة المعلّقة، وبطاقة الإهداء، والشعار المضغوط على كلٍّ منها.",
+
+
+    beliefWords: "رقيّ. أناقة. لمسة شخصية.",
+
+    mark: {
+      eyebrow: "الشعار",
+      title: "مرسومٌ من الزهرة.",
+      pressed: "يُضغط في الورق بدلًا من أن يُطبع، وبه تعرفون أن القطعة من كالانثي.",
+      stackedName: "التوقيع",
+      stackedUse: "الرمز والاسم معًا، للمواضع الرسمية المتوسّطة: الحقائب، وواجهة المتجر، وأسفل هذه الصفحة.",
+      monogramName: "الختم",
+      monogramUse: "الرمز وحده، لأصغر المواضع: البطاقات، والبطاقات المعلّقة، والملصقات، وزاوية الرسالة.",
+      logotypeName: "الاسم",
+      logotypeUse: "الاسم وحده، حيث يُراد أنقى الخطوط: أعلى هذا الموقع، وفاتورتكم.",
+    },
+
+    palette: {
+      eyebrow: "لوحة الألوان",
+      title: "ألوان الزهرة نفسها.",
+      body: "لوحة ترابية مستمدّة من الأوركيد والأرض التي تنبت فيها: زيتونيّ غامق، ومريميّ هادئ، وعنّابي، وتيراكوتا، وكريميّ دافئ. راقية ودافئة في آن، ولكلٍّ منها موضعه.",
+      olive: { name: "زيتونيّ غامق", use: "لوننا الأساسي: الحقائب، واللافتات، والمساحات الداكنة في هذا الموقع." },
+      sage: { name: "مريميّ هادئ", use: "اللون الهادئ: البطاقات، والبطاقات المعلّقة، والقرطاسية." },
+      burgundy: { name: "عنّابي", use: "للعمق والحميمية، بمقادير صغيرة." },
+      orange: { name: "برتقالي محروق", use: "لون اللمسة: مقبض، أو ختم، أو ملصق، ولا يزيد عن لمسة." },
+      cream: { name: "كريميّ دافئ", use: "مساحة التنفّس، والورق الذي يُطبع عليه كل شيء." },
+    },
+
+    packaging: {
+      eyebrow: "التغليف",
+      title: "بكامل أناقته للمناسبة.",
+      body: "كل تنسيق يغادر الأتيليه قائمًا في حقيبته أو غلافه، ببطاقته المعلّقة وبطاقتكم في داخله. ثلاث قطع من عائلة واحدة، وهي ما يحمله العميل بيديه.",
+    },
+
+    treatments: {
+      eyebrow: "زهرة واحدة بثلاث طرق",
+      title: "الأوركيد، مرسومة على كل قطعة بطريقتها.",
+      bags: {
+        name: "على الحقائب",
+        copy: "تُرسم كبيرة وبالدرجة نفسها من اللون، فتُقرأ الزهرة سطحًا لا طبعة، ويستقرّ الاسم عليها بهدوء.",
+      },
+      cards: {
+        name: "على البطاقات",
+        copy: "تُضغط في الورق بدلًا من الحبر، فيظهر الرسم في الضوء والظلّ حول رسالتكم.",
+      },
+      tags: {
+        name: "على البطاقة المعلّقة",
+        copy: "تصير الزهرة هي الشكل نفسه: زنبقة مقصوصة، بالكريمي أو العنّابي أو الزيتوني.",
+      },
+    },
+
+    practice: {
+      eyebrow: "في الواقع",
+      title: "ما يتضمّنه كل طلب.",
+      body: "ليس وعدًا لبعض الطلبات، بل لكلٍّ منها.",
+    },
+
+    find: {
+      eyebrow: "أين نحن",
+      title: "أتيليه واحد، والإمارة كلّها.",
+      body: "ننسّق في أبوظبي ونوصّل في أنحائها. ولأيّ أمر، سؤالٍ أو موعدٍ أو لونٍ يخطر لكم، يجيبكم منسّق زهور على واتساب.",
+    },
 
     closingLine: "حيث تتجسّد المشاعر.",
   },
