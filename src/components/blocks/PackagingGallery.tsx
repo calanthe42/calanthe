@@ -17,7 +17,9 @@ import { getDictionary } from "@/lib/i18n/server";
  * the frame mostly empty. So on phones the container is wider than the
  * screen and the section crops it: the front card is large and centred,
  * the two neighbours run off the edges — the peek the brand's product rows
- * use. From 640px up the ring fits the content width as it is.
+ * use. From a laptop up the ring fits the content width whole, with the
+ * front card at 380px and the frame no taller than the card and its
+ * caption need.
  */
 export async function PackagingGallery() {
   const { t } = await getDictionary();
@@ -51,19 +53,22 @@ export async function PackagingGallery() {
 
   return (
     <div className="relative -mx-[clamp(1.25rem,3vw,2rem)] overflow-hidden sm:mx-0">
-      <div className="relative -ms-[32.5%] h-[27rem] w-[165%] font-sans text-olive sm:ms-0 sm:h-[31rem] sm:w-full lg:h-[37rem]">
+      <div className="relative -ms-[32.5%] h-[26rem] w-[165%] font-sans text-olive sm:ms-0 sm:h-[30rem] sm:w-full lg:h-[42rem]">
         <CircularCarousel
           items={items}
           label={g.label}
           preset="orbit"
+          /* Straight on: no camera tilt, so every photograph is seen square,
+             not from above. */
+          tilt={0}
           intro="rise"
           autoplay="step"
           interval={3.6}
-          cardWidth={250}
+          cardWidth={380}
           aspectRatio={0.75}
-          gap={28}
+          gap={0}
           momentum={0.5}
-          parallax={0.18}
+          parallax={0.1}
           stretch={0}
           depthFade={0.5}
           fadeColor="#E4DCC5"
