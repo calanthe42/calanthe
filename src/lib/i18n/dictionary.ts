@@ -466,7 +466,6 @@ export const en = {
     aboutCard:
       "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
-    markEmbossed: "The Calanthe monogram, blind-embossed into thick cream paper",
     tagsTrio: "Three Calanthe hang tags cut in the shape of a lily: cream, burgundy and olive",
     cardFront: "A terracotta Calanthe card, the orchid debossed into the paper, its cream tab pressed with the monogram",
     bagPattern: "The body of the olive bag, printed tone on tone with large orchids",
@@ -2067,7 +2066,6 @@ export const ar: typeof en = {
     aboutCard:
       "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
-    markEmbossed: "شعار كالانثي مضغوطًا في ورق كريميّ سميك",
     tagsTrio: "ثلاث بطاقات معلّقة من كالانثي مقصوصة بشكل زنبقة: كريمية وعنّابية وزيتونية",
     cardFront: "بطاقة كالانثي بلون التيراكوتا، الأوركيد مضغوطة في الورق، ولسانها الكريمي مطبوع بالشعار",
     bagPattern: "جسم الحقيبة الزيتونية مطبوعًا بالدرجة نفسها بزهور أوركيد كبيرة",

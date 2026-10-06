@@ -199,85 +199,69 @@ export default async function AboutPage() {
       </section>
 
       {/*
-        5 · THE MARK — the symbol pressed into paper, then its three settings.
+        5 · THE MARK — the symbol, and its three settings, as the client's
+        own vector artwork.
 
-        The embossed photograph is the identity book's own; it says "pressed,
-        not printed" better than a sentence can. The three lockups are the
-        client's vector artwork, so they are crisp at any size, each with
-        the one line from the book about where it belongs.
+        The signature is set the way it sits on the bag: cream on deep olive,
+        over the orchid print, and it is the largest thing in the section.
+        The seal and the name are two smaller panels beside it. Asymmetric
+        on a laptop (one tall panel, two square ones), stacked on a phone.
+        No photograph here: a bitmap of the mark could only be softer than
+        the mark itself.
       */}
       <section className="bg-cream section-pad">
-        <div className="mx-auto grid max-w-7xl gutter gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-20">
-          <ClipReveal className="relative aspect-square w-full overflow-hidden rounded-media shadow-soft">
-            <Image
-              src="/brand/mark-embossed.webp"
-              alt={t.alt.markEmbossed}
-              fill
-              sizes="(max-width: 1024px) 92vw, 42vw"
-              quality={90}
-              className="object-cover"
-            />
-          </ClipReveal>
+        <div className="mx-auto max-w-7xl gutter">
+          <Reveal className="max-w-xl">
+            <Eyebrow>{t.about.mark.eyebrow}</Eyebrow>
+            <h2 className="display-2 mt-3 font-display font-light text-olive">{t.about.mark.title}</h2>
+            <p className="mt-4 text-base leading-relaxed text-ink-muted">
+              {/* The "C" is one glyph in the brand face, dropped into the
+                  sentence so the sentence owns the slot (and survives
+                  translation whole). */}
+              {t.about.monogramNote.split("{letter}").map((part, i) => (
+                <span key={i}>
+                  {i > 0 && (
+                    <span lang="en" className="font-brand text-olive">
+                      C
+                    </span>
+                  )}
+                  {part}
+                </span>
+              ))}{" "}
+              {t.about.mark.pressed}
+            </p>
+          </Reveal>
 
-          <div>
-            <Reveal>
-              <Eyebrow>{t.about.mark.eyebrow}</Eyebrow>
-            </Reveal>
-            <SplitLines
-              as="h2"
-              lines={[t.about.mark.title]}
-              className="display-2 mt-3 font-display font-light text-olive"
-            />
-            <Reveal delay={0.15}>
-              <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-                {/* The "C" is one glyph in the brand face, dropped into the
-                    sentence so the sentence owns the slot (and survives
-                    translation whole). */}
-                {t.about.monogramNote.split("{letter}").map((part, i) => (
-                  <span key={i}>
-                    {i > 0 && (
-                      <span lang="en" className="font-brand text-olive">
-                        C
-                      </span>
-                    )}
-                    {part}
-                  </span>
-                ))}{" "}
-                {t.about.mark.pressed}
-              </p>
-            </Reveal>
+          <Stagger className="mt-10 grid grid-cols-1 gap-8 lg:mt-14 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:grid-rows-2 lg:gap-x-8 lg:gap-y-10">
+            {/* The signature — as on the bag. */}
+            <StaggerItem className="flex flex-col lg:row-span-2">
+              <div className="relative isolate flex aspect-[4/5] w-full flex-1 items-center justify-center overflow-hidden rounded-media bg-olive shadow-soft lg:aspect-auto">
+                <OrchidPrint ground="olive" className="opacity-70" />
+                <StackedLogo tone="cream" defineSymbol={false} className="w-[58%] max-w-[22rem]" />
+              </div>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.mark.stackedName}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.mark.stackedUse}</p>
+            </StaggerItem>
 
-            <Stagger className="mt-10 flex flex-col">
-              {[
-                {
-                  name: t.about.mark.stackedName,
-                  use: t.about.mark.stackedUse,
-                  art: <StackedLogo tone="olive" defineSymbol={false} className="w-20" />,
-                },
-                {
-                  name: t.about.mark.monogramName,
-                  use: t.about.mark.monogramUse,
-                  art: <Monogram className="w-11 text-olive" />,
-                },
-                {
-                  name: t.about.mark.logotypeName,
-                  use: t.about.mark.logotypeUse,
-                  art: <Logotype className="text-sm" />,
-                },
-              ].map((lockup) => (
-                <StaggerItem key={lockup.name} className="flex items-start gap-5 border-t border-hairline py-6 lg:gap-7">
-                  {/* The artwork on its own small sheet of the page colour. */}
-                  <span className="flex h-20 w-28 shrink-0 items-center justify-center rounded-sm bg-canvas">
-                    {lockup.art}
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="font-display text-2xl font-light text-olive">{lockup.name}</h3>
-                    <p className="mt-2 text-base leading-relaxed text-ink-muted">{lockup.use}</p>
-                  </div>
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </div>
+            {/* The seal — the symbol alone, in the accent, on the page's paper. */}
+            <StaggerItem className="flex flex-col">
+              <div className="relative isolate flex aspect-[16/10] w-full flex-1 items-center justify-center overflow-hidden rounded-media border border-hairline bg-canvas lg:aspect-auto">
+                <OrchidPrint ground="canvas" />
+                <Monogram className="w-[26%] max-w-[7rem] text-burnt-orange" />
+              </div>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.mark.monogramName}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.mark.monogramUse}</p>
+            </StaggerItem>
+
+            {/* The name — the wordmark on its own. */}
+            <StaggerItem className="flex flex-col">
+              <div className="flex aspect-[16/10] w-full flex-1 items-center justify-center overflow-hidden rounded-media border border-hairline bg-canvas lg:aspect-auto">
+                <Logotype className="text-[clamp(1.5rem,4.2vw,2.25rem)]" />
+              </div>
+              <h3 className="mt-5 font-display text-2xl font-light text-olive">{t.about.mark.logotypeName}</h3>
+              <p className="mt-2 max-w-md text-base leading-relaxed text-ink-muted">{t.about.mark.logotypeUse}</p>
+            </StaggerItem>
+          </Stagger>
         </div>
       </section>
 
