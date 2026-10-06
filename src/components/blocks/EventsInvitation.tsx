@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
+import { GUEST_FAVORS_LIVE } from "@/lib/data";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
@@ -39,7 +40,7 @@ export async function EventsInvitation() {
 
         <div>
           <Reveal>
-            <Eyebrow>{v.eyebrow}</Eyebrow>
+            <Eyebrow>{GUEST_FAVORS_LIVE ? v.eyebrow : t.events.eyebrow}</Eyebrow>
           </Reveal>
           <SplitLines
             as="h2"
@@ -48,7 +49,7 @@ export async function EventsInvitation() {
           />
           <Reveal delay={0.15}>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink-muted">
-              {v.body}
+              {GUEST_FAVORS_LIVE ? v.body : v.bodyNoFavors}
             </p>
           </Reveal>
           <Reveal delay={0.25}>
@@ -56,9 +57,11 @@ export async function EventsInvitation() {
               <ButtonLink href="/events#booth" variant="primary">
                 {t.events.boothLink}
               </ButtonLink>
-              <ButtonLink href="/events#guest-favors" variant="secondary">
-                {v.favors}
-              </ButtonLink>
+              {GUEST_FAVORS_LIVE ? (
+                <ButtonLink href="/events#guest-favors" variant="secondary">
+                  {v.favors}
+                </ButtonLink>
+              ) : null}
             </div>
           </Reveal>
         </div>

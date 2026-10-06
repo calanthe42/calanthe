@@ -16,13 +16,14 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Icon360 } from "@/components/ui/icons";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { CONTACT } from "@/lib/data";
+import { CONTACT, GUEST_FAVORS_LIVE } from "@/lib/data";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
   return {
-    description:
-      "Floral styling for private celebrations, intimate gatherings and larger occasions — plus guest favors finished in Calanthe's signature packaging.",
+    description: GUEST_FAVORS_LIVE
+      ? "Floral styling for private celebrations, intimate gatherings and larger occasions — plus guest favors finished in Calanthe's signature packaging."
+      : "Floral styling for private celebrations, intimate gatherings and larger occasions — planned with you and composed by the Calanthe atelier.",
     title: t.meta.events,
   };
 }
@@ -131,39 +132,41 @@ export default async function EventsPage() {
         </div>
       </section>
 
-      {/* Guest favors */}
-      <section id="guest-favors" className="scroll-mt-24 bg-cream section-pad">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 gutter lg:grid-cols-2 lg:gap-20">
-          <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">
-            <FloralImage
-              image={{
-                alt: t.booth.counterAlt,
-                src: "/brand/booth/counter.webp",
-                placeholder: { seed: "events-favors", palette: "warm" },
-              }}
-              sizes="(max-width: 1024px) 92vw, 46vw"
-            />
-          </ClipReveal>
+      {/* Guest favors — hidden until the client is ready (GUEST_FAVORS_LIVE). */}
+      {GUEST_FAVORS_LIVE ? (
+        <section id="guest-favors" className="scroll-mt-24 bg-cream section-pad">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 gutter lg:grid-cols-2 lg:gap-20">
+            <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">
+              <FloralImage
+                image={{
+                  alt: t.booth.counterAlt,
+                  src: "/brand/booth/counter.webp",
+                  placeholder: { seed: "events-favors", palette: "warm" },
+                }}
+                sizes="(max-width: 1024px) 92vw, 46vw"
+              />
+            </ClipReveal>
 
-          <Reveal>
-            <Eyebrow>{t.events.favorsEyebrow}</Eyebrow>
-            <h2 className="display-2 mt-3 font-display font-light text-olive">
-              {t.events.favorsTitle}
-            </h2>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
-              {t.events.favorsBody}
-            </p>
-            <ul className="mt-8 flex flex-col divide-y divide-hairline border-y border-hairline">
-              {t.events.favors.map((line) => (
-                <li key={line} className="flex items-start gap-3 py-3.5">
-                  <Monogram className="mt-1 w-3.5 shrink-0 text-burnt-orange" />
-                  <span className="text-base leading-relaxed text-olive">{line}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
-      </section>
+            <Reveal>
+              <Eyebrow>{t.events.favorsEyebrow}</Eyebrow>
+              <h2 className="display-2 mt-3 font-display font-light text-olive">
+                {t.events.favorsTitle}
+              </h2>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted">
+                {t.events.favorsBody}
+              </p>
+              <ul className="mt-8 flex flex-col divide-y divide-hairline border-y border-hairline">
+                {t.events.favors.map((line) => (
+                  <li key={line} className="flex items-start gap-3 py-3.5">
+                    <Monogram className="mt-1 w-3.5 shrink-0 text-burnt-orange" />
+                    <span className="text-base leading-relaxed text-olive">{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </section>
+      ) : null}
 
       {/* Enquiry close */}
       <section className="relative overflow-hidden bg-burgundy section-pad">

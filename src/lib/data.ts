@@ -815,6 +815,15 @@ export const primaryNavLinks = [
 ] as const;
 
 /** The layered menu: a heading, then what sits under it. */
+/**
+ * GUEST FAVOURS ARE HIDDEN until the client has the offer ready (her
+ * instruction, 2026-10-06: "hide the guest favors part, just until I make
+ * it ready; I will ask you to unhide it"). Flip this to true to bring back
+ * the section on the Events page, the link in the menus and the homepage
+ * button; nothing was deleted.
+ */
+export const GUEST_FAVORS_LIVE = false;
+
 export const navTree = [
   { label: "About Calanthe", href: "/about", children: [] },
   {
@@ -830,10 +839,12 @@ export const navTree = [
   {
     label: "Events",
     href: "/events",
-    children: [
-      { label: "Guest Favors", href: "/events#guest-favors" },
-      { label: "Event Arrangements", href: "/events#arrangements" },
-    ],
+    children: GUEST_FAVORS_LIVE
+      ? ([
+          { label: "Guest Favors", href: "/events#guest-favors" },
+          { label: "Event Arrangements", href: "/events#arrangements" },
+        ] as const)
+      : ([{ label: "Event Arrangements", href: "/events#arrangements" }] as const),
   },
 ] as const;
 

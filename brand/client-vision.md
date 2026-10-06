@@ -59,3 +59,18 @@ Hero ("Where feelings take form." · FLOWER ATELIER — UAE · [Shop Flowers]
 ## Occasions (exact list)
 
 Birthday · Congratulations · New Baby · Love · Just Because
+
+## Client changes, 6 October 2026
+
+- **The seal (first section after the hero)** rewritten at the client's
+  request ("something more fun; it's the first thing we read"): eyebrow
+  "MADE TO BE OPENED", headline "Half the joy is opening it.", body about the
+  bag, the tag and the card. No mention of printed ribbon or wrapping paper:
+  the client will not offer customised ribbons or wrapping papers in the
+  first months. The same rule applies to "Thoughtful presentation" in The
+  Calanthe Touch and to the About page's details section (bag and sleeve
+  tiles replaced the ribbon and tissue tiles).
+- **Guest favours hidden** everywhere (Events page section, menu link,
+  homepage button) until the client asks for them back: `GUEST_FAVORS_LIVE`
+  in `src/lib/data.ts`.
+

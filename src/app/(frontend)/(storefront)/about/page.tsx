@@ -208,21 +208,26 @@ export default async function AboutPage() {
           </Reveal>
 
           <Stagger className="mt-12 grid grid-cols-2 gap-4 lg:mt-16 lg:grid-cols-4 lg:gap-6">
+            {/* The bag and the sleeve replaced the printed ribbon and the
+                tissue paper (2026-10-06): the atelier will not offer either
+                in its first months, so the page shows only what a customer
+                receives. The pictures are the identity book's own, at full
+                resolution and a higher encoding quality than the default. */}
             {[
               {
-                src: "/brand/ribbon.webp",
-                alt: t.alt.aboutRibbon,
-                label: t.alt.labelRibbon,
+                src: "/brand/about-bag.webp",
+                alt: t.alt.aboutBagTile,
+                label: t.alt.labelBag,
+              },
+              {
+                src: "/brand/about-sleeve.webp",
+                alt: t.alt.aboutSleeve,
+                label: t.alt.labelSleeve,
               },
               {
                 src: "/brand/lilies-tag.webp",
                 alt: t.alt.aboutTag,
                 label: t.alt.labelTag,
-              },
-              {
-                src: "/brand/wrap-sticker.webp",
-                alt: t.alt.aboutTissue,
-                label: t.alt.labelTissue,
               },
               {
                 src: "/brand/cards-debossed.webp",
@@ -238,6 +243,7 @@ export default async function AboutPage() {
                       alt={item.alt}
                       fill
                       sizes="(max-width: 1024px) 46vw, 23vw"
+                      quality={90}
                       className="object-cover"
                     />
                   </div>

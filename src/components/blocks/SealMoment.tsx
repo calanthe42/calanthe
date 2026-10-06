@@ -37,6 +37,7 @@ export async function SealMoment() {
                 placeholder: { seed: "seal-moment", palette: "burgundy" },
               }}
               sizes="(max-width: 1024px) 92vw, 52vw"
+              quality={90}
             />
           </ClipReveal>
         </div>

@@ -246,7 +246,7 @@ export const en = {
     handCopy:
       "Every stem is chosen and placed by hand in our atelier, morning by morning.",
     wrapTitle: "Thoughtful presentation",
-    wrapCopy: "Wrapped in embossed paper, tied and sealed with the Calanthe monogram.",
+    wrapCopy: "Standing in its Calanthe bag, with its hang tag and your card — the monogram on every piece.",
     deliverTitle: "Delivered with care",
     deliverCopy: "Kept cool and upright to your door, across Abu Dhabi.",
   },
@@ -460,9 +460,9 @@ export const en = {
     sealBag: "A Calanthe arrangement in its burgundy bag against deep green velvet",
     aboutBag: "A Calanthe arrangement in its burgundy bag, against deep green velvet",
     aboutOrchid: "Calanthe orchid buds, the flower the brand is named after",
-    aboutRibbon: "Terracotta ribbon printed with the Calanthe wordmark and monogram",
+    aboutBagTile: "A Calanthe arrangement standing in its olive bag, against deep green velvet",
+    aboutSleeve: "A Calanthe terracotta sleeve holding white lisianthus and calla lilies",
     aboutTag: "A die-cut lily hang tag resting among white lilies",
-    aboutTissue: "Monogrammed tissue paper closed with a Calanthe sticker",
     aboutCard:
       "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
@@ -470,9 +470,9 @@ export const en = {
     eventFavors: "Calanthe guest favors, wrapped by hand",
 
     /* The four packaging details on the About page carry a caption too. */
-    labelRibbon: "Printed ribbon",
+    labelBag: "The bag",
+    labelSleeve: "The sleeve",
     labelTag: "Lily hang tag",
-    labelTissue: "Tissue and seal",
     labelCard: "Debossed card",
   },
   /**
@@ -696,6 +696,9 @@ export const en = {
     eyebrow: "Events & guest favors",
     title: "For the days everyone gathers.",
     body: "A booth that arrives in six arrangements, flowers for the whole room, and guest favors finished in our signature packaging.",
+    /* Shown while guest favours are hidden (GUEST_FAVORS_LIVE in lib/data.ts). */
+    bodyNoFavors:
+      "A booth that arrives in six arrangements, and flowers for the whole room — planned with you, composed by the atelier.",
     favors: "See guest favors",
   },
   /**
@@ -760,9 +763,9 @@ export const en = {
       "The mark is built from the same flower: petals and leaves simplified, arranged symmetrically, and resolved until the outline reads as a {letter}.",
 
     detailsEyebrow: "The details",
-    detailsTitle: "Down to the ribbon.",
+    detailsTitle: "Down to the last detail.",
     detailsBody:
-      "Everything that reaches you is part of the gift — the tag, the tissue, the card, the ribbon that ties it.",
+      "Everything that reaches you is part of the gift — the bag it arrives in, the tag, the card, and the monogram pressed into each.",
 
     closingLine: "Where feelings take form.",
   },
@@ -888,12 +891,15 @@ export const en = {
   },
   /** The wrapping section on the homepage. */
   seal: {
-    eyebrow: "Sealed by hand",
-    line1: "Nothing leaves",
-    line2: "this atelier open.",
-    body: "Wrapped in embossed paper, tied with our printed ribbon, and closed with the monogram — pressed while the flowers are still cool from the studio.",
+    /* Rewritten at the client's request (2026-10-06): warmer, and it no
+       longer promises printed ribbon or wrapping paper, which the atelier
+       will not offer in its first months. */
+    eyebrow: "Made to be opened",
+    line1: "Half the joy",
+    line2: "is opening it.",
+    body: "Every arrangement leaves us dressed for the occasion — standing in its Calanthe bag, tag on, your message tucked inside. The first smile happens before the flowers are even seen.",
     shop: "Shop the collection",
-    how: "How we wrap",
+    how: "How it arrives",
   },
   /** The membership band on the homepage. */
   ritual: {
@@ -1811,7 +1817,7 @@ export const ar: typeof en = {
     handTitle: "تُنسّق يدويًا كل يوم",
     handCopy: "كل ساق تُنتقى وتُنسّق يدويًا في الأتيليه، صباحًا بعد صباح.",
     wrapTitle: "تقديم يليق بها",
-    wrapCopy: "تُغلّف بورق مزخرف، وتُربط وتُختم بشعار كالانثي.",
+    wrapCopy: "في حقيبة كالانثي، مع بطاقتها المعلّقة وبطاقة الإهداء — وشعارنا على كل قطعة.",
     deliverTitle: "تُوصَّل بعناية",
     deliverCopy: "تبقى نضِرة وقائمة حتى باب المستلِم، في أنحاء أبوظبي.",
   },
@@ -1980,18 +1986,18 @@ export const ar: typeof en = {
     sealBag: "تنسيق كالانثي في حقيبته العنّابية على مخمل أخضر غامق",
     aboutBag: "تنسيق كالانثي في حقيبته العنّابية، على مخمل أخضر غامق",
     aboutOrchid: "براعم أوركيد الكالانثي، الزهرة التي سُمّيت العلامة باسمها",
-    aboutRibbon: "شريط بلون التيراكوتا مطبوع باسم كالانثي وشعارها",
+    aboutBagTile: "تنسيق كالانثي قائمًا في حقيبته الزيتونية، على مخمل أخضر غامق",
+    aboutSleeve: "غلاف كالانثي بلون التيراكوتا يحمل زهور الليزيانثوس البيضاء وزنابق الكالا",
     aboutTag: "بطاقة مقصوصة بشكل زنبقة بين زنابق بيضاء",
-    aboutTissue: "ورق تغليف مطبوع بالشعار مُغلق بملصق كالانثي",
     aboutCard:
       "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
     eventArrangement: "تنسيق فعاليات من كالانثي",
     eventFavors: "هدايا الضيوف من كالانثي، مُغلّفة يدويًا",
 
-    labelRibbon: "شريط مطبوع",
+    labelBag: "الحقيبة",
+    labelSleeve: "الغلاف",
     labelTag: "بطاقة زنبقة",
-    labelTissue: "ورق وختم",
     labelCard: "بطاقة منقوشة",
   },
   legal: {
@@ -2183,6 +2189,7 @@ export const ar: typeof en = {
     eyebrow: "الفعاليات وهدايا الضيوف",
     title: "للأيام التي يجتمع فيها الجميع.",
     body: "جناحٌ يأتي بستة تشكيلات، وزهورٌ تملأ المكان كلّه، وهدايا للضيوف بتغليف كالانثي المميّز.",
+    bodyNoFavors: "جناحٌ يأتي بستة تشكيلات، وزهورٌ تملأ المكان كلّه — نخطّطها معكم وينسّقها الأتيليه.",
     favors: "اكتشفوا هدايا الضيوف",
   },
   about: {
@@ -2235,9 +2242,9 @@ export const ar: typeof en = {
       "الشعار مبنيّ من الزهرة نفسها: بتلات وأوراق مُبسّطة، مرتّبة بتناظر، ومصقولة حتّى يبدو الخطّ الخارجي كحرف {letter}.",
 
     detailsEyebrow: "التفاصيل",
-    detailsTitle: "حتّى الشريط.",
+    detailsTitle: "حتّى أدقّ التفاصيل.",
     detailsBody:
-      "كل ما يصلكم جزء من الهدية — البطاقة المعلّقة، وورق التغليف، وبطاقة الإهداء، والشريط الذي يربطها.",
+      "كل ما يصلكم جزء من الهدية — الحقيبة التي يصل فيها، والبطاقة المعلّقة، وبطاقة الإهداء، والشعار المضغوط على كلٍّ منها.",
 
     closingLine: "حيث تتجسّد المشاعر.",
   },
@@ -2336,12 +2343,12 @@ export const ar: typeof en = {
     legal: "قانوني",
   },
   seal: {
-    eyebrow: "مختوم باليد",
-    line1: "لا شيء يخرج",
-    line2: "من الأتيليه إلا مختومًا.",
-    body: "يُغلّف بورق منقوش، ويُربط بشريطنا المطبوع، ويُختم بشعارنا والزهور ما زالت باردة من الأتيليه.",
+    eyebrow: "صُنعت لتُفتح",
+    line1: "نصف الفرحة",
+    line2: "في فتحها.",
+    body: "كل تنسيق يغادرنا بكامل أناقته: قائمًا في حقيبة كالانثي، ببطاقته المعلّقة، ورسالتكم في داخله — فتبدأ الابتسامة الأولى قبل أن تُرى الزهور.",
     shop: "تسوّقوا المجموعة",
-    how: "كيف نُغلّف",
+    how: "كيف تصلكم",
   },
   ritual: {
     eyebrow: "موعدكم الأسبوعي مع الزهور",

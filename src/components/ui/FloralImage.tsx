@@ -10,6 +10,9 @@ type FloralImageProps = {
   sizes?: string;
   /** Above-the-fold imagery only (hero). */
   priority?: boolean;
+  /** Encoding quality for next/image (default 75). Brand photography that
+      is shown large asks for 90: the default visibly softens it. */
+  quality?: number;
   className?: string;
 };
 
@@ -28,7 +31,7 @@ type FloralImageProps = {
  * hypothetical here: a media record written by a local session carried a
  * `http://localhost:3000/...` URL that no deployment can fetch.
  */
-export function FloralImage({ image, sizes, priority, className }: FloralImageProps) {
+export function FloralImage({ image, sizes, priority, quality, className }: FloralImageProps) {
   const verdict = checkImageSrc(image.src);
 
   if (verdict.kind === "unusable") {
@@ -46,6 +49,7 @@ export function FloralImage({ image, sizes, priority, className }: FloralImagePr
           fill
           sizes={sizes ?? "100vw"}
           priority={priority}
+          quality={quality}
           className="floral-grade object-cover"
         />
       </div>
