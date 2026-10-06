@@ -225,7 +225,7 @@ export default async function AboutPage() {
                 label: t.alt.labelSleeve,
               },
               {
-                src: "/brand/lilies-tag.webp",
+                src: "/brand/hang-tag.webp",
                 alt: t.alt.aboutTag,
                 label: t.alt.labelTag,
               },

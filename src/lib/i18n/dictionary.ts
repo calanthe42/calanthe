@@ -462,7 +462,7 @@ export const en = {
     aboutOrchid: "Calanthe orchid buds, the flower the brand is named after",
     aboutBagTile: "A Calanthe arrangement standing in its olive bag, against deep green velvet",
     aboutSleeve: "A Calanthe terracotta sleeve holding white lisianthus and calla lilies",
-    aboutTag: "A die-cut lily hang tag resting among white lilies",
+    aboutTag: "A Calanthe olive hang tag, cut like a lily, resting among roses and dahlias",
     aboutCard:
       "Calanthe greeting cards in terracotta and olive, debossed with orchids, each with a cream tab pressed with the monogram",
     aboutBloom: "A bloom opening, lit from within — Calanthe's key visual",
@@ -472,7 +472,7 @@ export const en = {
     /* The four packaging details on the About page carry a caption too. */
     labelBag: "The bag",
     labelSleeve: "The sleeve",
-    labelTag: "Lily hang tag",
+    labelTag: "The hang tag",
     labelCard: "Debossed card",
   },
   /**
@@ -1988,7 +1988,7 @@ export const ar: typeof en = {
     aboutOrchid: "براعم أوركيد الكالانثي، الزهرة التي سُمّيت العلامة باسمها",
     aboutBagTile: "تنسيق كالانثي قائمًا في حقيبته الزيتونية، على مخمل أخضر غامق",
     aboutSleeve: "غلاف كالانثي بلون التيراكوتا يحمل زهور الليزيانثوس البيضاء وزنابق الكالا",
-    aboutTag: "بطاقة مقصوصة بشكل زنبقة بين زنابق بيضاء",
+    aboutTag: "بطاقة كالانثي المعلّقة بلون الزيتون، مقصوصة بشكل زنبقة، بين الورود والداليا",
     aboutCard:
       "بطاقات تهانٍ من كالانثي بلوني التيراكوتا والزيتون، منقوشة بزهور الأوركيد، ولكل منها لسان كريمي مضغوط بالشعار",
     aboutBloom: "زهرة تتفتّح، مُضاءة من الداخل — الصورة الأساسية لكالانثي",
@@ -1997,7 +1997,7 @@ export const ar: typeof en = {
 
     labelBag: "الحقيبة",
     labelSleeve: "الغلاف",
-    labelTag: "بطاقة زنبقة",
+    labelTag: "البطاقة المعلّقة",
     labelCard: "بطاقة منقوشة",
   },
   legal: {
