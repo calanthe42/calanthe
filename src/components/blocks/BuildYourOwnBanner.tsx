@@ -194,7 +194,7 @@ export function BuildYourOwnBanner() {
         {ORCHIDS_DESKTOP.map((o) => (
           <div key={o.src} className={cn("absolute -translate-x-1/2 -translate-y-1/2", o.place)}>
             <div className={cn("byo-orchid-d", reduced ? "opacity-50" : "opacity-0")}>
-              <Image src={o.src} alt="" width={640} height={640} sizes="22rem" className="h-auto w-full" />
+              <Image src={o.src} alt="" width={1280} height={1280} sizes="22rem" className="h-auto w-full" />
             </div>
           </div>
         ))}
@@ -203,7 +203,7 @@ export function BuildYourOwnBanner() {
         {ORCHIDS_MOBILE.map((o) => (
           <div key={o.src} className={cn("absolute -translate-x-1/2 -translate-y-1/2", o.place)}>
             <div className={cn("byo-orchid-m", reduced ? "opacity-50" : "opacity-0")}>
-              <Image src={o.src} alt="" width={640} height={640} sizes="16rem" className="h-auto w-full" />
+              <Image src={o.src} alt="" width={1280} height={1280} sizes="16rem" className="h-auto w-full" />
             </div>
           </div>
         ))}
