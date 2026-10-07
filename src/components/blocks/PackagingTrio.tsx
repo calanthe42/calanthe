@@ -30,8 +30,8 @@ const PIECES = [
   {
     src: "/brand/packaging/bag-burgundy.webp",
     altKey: "packagingBurgundy",
-    width: 656,
-    height: 812,
+    width: 1312,
+    height: 1624,
     className: "relative z-0 w-[40%]",
     /* The paper body spans roughly 12%–88% of the picture. */
     shadow: "left-[14%] right-[14%]",
@@ -40,8 +40,8 @@ const PIECES = [
   {
     src: "/brand/packaging/bag-olive.webp",
     altKey: "packagingOlive",
-    width: 692,
-    height: 857,
+    width: 1384,
+    height: 1714,
     className: "relative z-10 -ms-[6%] w-[42%]",
     shadow: "left-[14%] right-[14%]",
     speed: 1,
@@ -49,8 +49,8 @@ const PIECES = [
   {
     src: "/brand/packaging/sleeve-terracotta.webp",
     altKey: "packagingTerracotta",
-    width: 567,
-    height: 796,
+    width: 1134,
+    height: 1592,
     className: "relative z-0 -ms-[6%] w-[30%]",
     shadow: "left-[26%] right-[26%]",
     speed: 0.95,
@@ -103,8 +103,8 @@ export async function PackagingTrio({
           <Image
             src="/brand/packaging/tag-cream.webp"
             alt=""
-            width={464}
-            height={424}
+            width={928}
+            height={848}
             sizes="(max-width: 1024px) 20vw, 10vw"
             quality={90}
             className="h-auto w-full"

@@ -43,8 +43,8 @@ export function PackagingHero({
         <Image
           src="/brand/packaging/bag-olive-tag.webp"
           alt={alt}
-          width={777}
-          height={963}
+          width={1554}
+          height={1926}
           sizes={sizes}
           quality={90}
           className="relative h-auto w-full"

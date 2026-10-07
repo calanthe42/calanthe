@@ -399,8 +399,8 @@ export default async function AboutPage() {
                   <Image
                     src="/brand/packaging/bag-olive.webp"
                     alt={t.alt.packagingOlive}
-                    width={692}
-                    height={857}
+                    width={1384}
+                    height={1714}
                     sizes="(max-width: 1024px) 60vw, 20vw"
                     quality={90}
                     className="relative h-auto w-full"
@@ -417,8 +417,8 @@ export default async function AboutPage() {
                   <Image
                     src="/brand/packaging/card-terracotta.webp"
                     alt={t.alt.cardFront}
-                    width={467}
-                    height={319}
+                    width={935}
+                    height={638}
                     sizes="(max-width: 1024px) 58vw, 20vw"
                     quality={90}
                     className="relative h-auto w-full"
@@ -439,8 +439,8 @@ export default async function AboutPage() {
                   <Image
                     src="/brand/packaging/tag-cream.webp"
                     alt=""
-                    width={464}
-                    height={424}
+                    width={928}
+                    height={848}
                     sizes="(max-width: 1024px) 26vw, 9vw"
                     quality={90}
                     className="h-auto w-[32%] -rotate-6 drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
@@ -448,8 +448,8 @@ export default async function AboutPage() {
                   <Image
                     src="/brand/packaging/tag-olive.webp"
                     alt=""
-                    width={470}
-                    height={444}
+                    width={940}
+                    height={888}
                     sizes="(max-width: 1024px) 26vw, 9vw"
                     quality={90}
                     className="h-auto w-[32%] drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
@@ -457,8 +457,8 @@ export default async function AboutPage() {
                   <Image
                     src="/brand/packaging/tag-burgundy.webp"
                     alt=""
-                    width={301}
-                    height={410}
+                    width={602}
+                    height={820}
                     sizes="(max-width: 1024px) 20vw, 7vw"
                     quality={90}
                     className="h-auto w-[22%] rotate-6 drop-shadow-[0_6px_10px_rgba(43,47,27,0.18)]"
