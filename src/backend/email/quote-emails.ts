@@ -1,3 +1,4 @@
+import { ownerRecipients } from "@backend/email/order-emails";
 /**
  * The emails of a payment request, in the customer's language.
  *
@@ -627,9 +628,9 @@ export function buildQuotePaidEmails(
 
   const requests: SendRequest[] = [paymentReceivedEmail(order, invoice, payUrl, locale)];
 
-  if (internal.owner) {
+  for (const to of ownerRecipients(internal.owner)) {
     requests.push(
-      ownerQuotePaidEmail(order, invoice, internal.owner, {
+      ownerQuotePaidEmail(order, invoice, to, {
         enquiryNumber: input.enquiryNumber,
         adminOrderUrl: input.adminOrderUrl,
       }),

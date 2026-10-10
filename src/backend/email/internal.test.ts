@@ -32,7 +32,7 @@ describe("the company's mailboxes", () => {
 
 describe("where the shop's own mail goes", () => {
   it("writes to the business by default: owner, florist and replies each have a mailbox", () => {
-    expect(internalAddresses()).toEqual({ owner: "orders@calanthe.ae", florist: "staff@calanthe.ae" });
+    expect(internalAddresses()).toEqual({ owner: "orders@calanthe.ae, manager@calanthe.ae, staff@calanthe.ae", florist: "staff@calanthe.ae" });
     expect(replyToAddress()).toBe("support@calanthe.ae");
   });
 
@@ -47,6 +47,6 @@ describe("where the shop's own mail goes", () => {
 
   it("no longer sends the owner's mail to the reply-to address", () => {
     fakeEnv.EMAIL_REPLY_TO = "someone@example.com";
-    expect(internalAddresses().owner).toBe("orders@calanthe.ae");
+    expect(internalAddresses().owner).toBe("orders@calanthe.ae, manager@calanthe.ae, staff@calanthe.ae");
   });
 });

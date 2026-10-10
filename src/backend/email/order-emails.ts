@@ -42,9 +42,14 @@ export type OrderEmailInput = {
 
 /** Where owner and florist mail goes until the owner supplies real addresses. */
 export type InternalAddresses = {
+  /** One address or several, comma-separated: every one gets the notice. */
   owner?: string;
   florist?: string;
 };
+
+/** The owner notice goes to each address in the list, once. */
+export const ownerRecipients = (owner: string | undefined): string[] =>
+  [...new Set((owner ?? "").split(",").map((a) => a.trim()).filter(Boolean))];
 
 function facts(input: OrderEmailInput): OrderFacts {
   return {
@@ -96,9 +101,9 @@ export function buildOrderEmails(
     },
   ];
 
-  if (internal.owner) {
+  for (const to of ownerRecipients(internal.owner)) {
     requests.push({
-      to: internal.owner,
+      to,
       type: "owner-new-order",
       rendered: ownerNewOrder({ ...priced, audience: "owner" }),
       orderId: input.orderId,
