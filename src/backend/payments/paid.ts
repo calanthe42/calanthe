@@ -7,6 +7,7 @@ import { buildOrderEmails, describeOptions } from "@backend/email/order-emails";
 import { buildQuotePaidEmails, quoteFactsFromOrder } from "@backend/email/quote-emails";
 import { internalAddresses } from "@backend/email/internal";
 import { sendAfterCommit } from "@backend/email/send";
+import { notifyStaffDevices } from "@backend/notify/push";
 import { PAYMENT_PROVIDER_CONTEXT } from "@backend/payload/hooks/orderIntegrity";
 import { BUSINESS, currentVatRateBps } from "@/lib/business";
 import { DISCOUNT_HOLD_MINUTES } from "@/lib/discounts";
@@ -283,6 +284,9 @@ export async function applySucceededIntent(
 
   /* ---- 5. winner only ---- */
   const internal = internalAddresses();
+
+  /* Ring every staff phone and computer that turned alerts on. */
+  await notifyStaffDevices(payload);
 
   if (isQuote) {
     await afterQuotePaid(payload, o, {

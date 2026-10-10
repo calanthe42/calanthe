@@ -32,6 +32,10 @@ import "../admin.css";
 export const metadata: Metadata = {
   title: { default: "Calanthe Admin", template: "%s · Calanthe Admin" },
   robots: { index: false, follow: false },
+  /* Installable, so it can live on a phone's home screen — which is where
+     an iPhone allows notifications from a website. */
+  manifest: "/admin.webmanifest",
+  appleWebApp: { capable: true, title: "Calanthe", statusBarStyle: "black-translucent" },
 };
 
 /* Session- and preference-dependent: never statically rendered. */

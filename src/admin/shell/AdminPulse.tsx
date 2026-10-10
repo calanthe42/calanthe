@@ -14,6 +14,7 @@ import { Icon } from "@admin/ui/icons";
 import { useToast } from "@admin/ui/Toast";
 import { cn } from "@/lib/cn";
 import type { AdminPulse, PulseItem } from "@backend/data/admin-pulse";
+import { VAPID_PUBLIC_KEY } from "@backend/notify/push-public";
 
 /**
  * THE BELL.
@@ -59,7 +60,88 @@ const writeSeen = (iso: string) => {
   }
 };
 
-/** Two soft sine notes, a fifth apart. Quiet, brief, no file to load. */
+/**
+ * THE RING — a new order must be heard across the shop. A telephone-style
+ * double ring (two tones, 440 + 480 Hz, the classic bell cadence), loud,
+ * repeated every 3 seconds until someone opens the bell or the order list,
+ * for at most two minutes. Browsers only allow sound after the page has
+ * been touched once, so `unlockAudio` runs on the first tap anywhere.
+ */
+let sharedCtx: AudioContext | null = null;
+function audio(): AudioContext | null {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return null;
+    sharedCtx ??= new Ctx();
+    if (sharedCtx.state === "suspended") void sharedCtx.resume();
+    return sharedCtx;
+  } catch {
+    return null;
+  }
+}
+function ringOnce() {
+  const ctx = audio();
+  if (!ctx) return;
+  const at = ctx.currentTime;
+  for (const burst of [0, 0.6]) {
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, at + burst);
+    gain.gain.exponentialRampToValueAtTime(0.9, at + burst + 0.02);
+    gain.gain.setValueAtTime(0.9, at + burst + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + burst + 0.45);
+    gain.connect(ctx.destination);
+    for (const freq of [440, 480]) {
+      const osc = ctx.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 2400;
+      osc.connect(lp).connect(gain);
+      osc.start(at + burst);
+      osc.stop(at + burst + 0.46);
+    }
+  }
+  if ("vibrate" in navigator) navigator.vibrate?.([400, 200, 400]);
+}
+let ringTimer: number | null = null;
+function startRinging() {
+  stopRinging();
+  ringOnce();
+  let count = 1;
+  ringTimer = window.setInterval(() => {
+    if (++count > 40) return stopRinging();
+    ringOnce();
+  }, 3000);
+}
+function stopRinging() {
+  if (ringTimer != null) window.clearInterval(ringTimer);
+  ringTimer = null;
+}
+
+async function subscribePush(): Promise<boolean> {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    const reg = await navigator.serviceWorker.register("/admin-sw.js", { scope: "/admin/" });
+    await navigator.serviceWorker.ready;
+    const key = Uint8Array.from(atob(VAPID_PUBLIC_KEY.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+    const sub =
+      (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    const res = await fetch("/admin/push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: sub.endpoint }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Two soft sine notes, a fifth apart — for a new enquiry, which can wait. */
 function chime() {
   try {
     const Ctx =
@@ -145,7 +227,9 @@ export function PulseProvider({ children }: { children: React.ReactNode }) {
       );
       if (ring.length > 0) {
         alertedRef.current = newest;
-        chime();
+        /* Money arriving rings like a phone; an enquiry only chimes. */
+        if (ring.some((item) => item.kind !== "enquiry")) startRinging();
+        else chime();
         const headline = describe(ring[0]!);
         toast.info(
           ring.length === 1
@@ -177,6 +261,18 @@ export function PulseProvider({ children }: { children: React.ReactNode }) {
     }
   }, [describe, t, plural, toast]);
 
+  /* Unlock sound on the first touch, and keep this device's push
+     subscription fresh whenever alerts are already allowed. */
+  useEffect(() => {
+    const unlock = () => void audio();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") void subscribePush();
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      stopRinging();
+    };
+  }, []);
+
   useEffect(() => {
     const stored = readSeen();
     /* First visit on this device: the clock starts now, so old orders are
@@ -200,6 +296,7 @@ export function PulseProvider({ children }: { children: React.ReactNode }) {
   }, [poll]);
 
   const markSeen = useCallback(() => {
+    stopRinging();
     const now = new Date().toISOString();
     seenRef.current = now;
     writeSeen(now);
@@ -208,9 +305,13 @@ export function PulseProvider({ children }: { children: React.ReactNode }) {
 
   const turnOn = useCallback(async () => {
     if (typeof Notification === "undefined") return;
+    audio();
     const result = await Notification.requestPermission();
     setPermission(result);
-    if (result === "granted") toast.success(t("pulse.turnedOn"));
+    if (result === "granted") {
+      await subscribePush();
+      toast.success(t("pulse.turnedOn"));
+    }
   }, [toast, t]);
 
   return (
@@ -260,7 +361,10 @@ export function PulseBell({ compact = false }: { compact?: boolean }) {
         title={label}
         aria-expanded={open}
         aria-haspopup="dialog"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          stopRinging();
+          setOpen((v) => !v);
+        }}
         className={cn(
           "relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-ink-2 transition-colors duration-150 hover:bg-hover hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
           compact && "h-11 w-11",

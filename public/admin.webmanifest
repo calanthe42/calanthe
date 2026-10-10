@@ -1,0 +1,13 @@
+{
+  "name": "Calanthe Admin",
+  "short_name": "Calanthe",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#2B2F1B",
+  "theme_color": "#2B2F1B",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

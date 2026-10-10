@@ -14,6 +14,7 @@ import * as migration_20261004_193027_quote_pay_link from './20261004_193027_quo
 import * as migration_20261004_202611_discounts from './20261004_202611_discounts';
 import * as migration_20261005_023342_manual_orders from './20261005_023342_manual_orders';
 import * as migration_20261006_000000_orders_money_guard from './20261006_000000_orders_money_guard';
+import * as migration_20261011_000000_admin_push from './20261011_000000_admin_push';
 
 export const migrations = [
   {
@@ -95,5 +96,10 @@ export const migrations = [
     up: migration_20261006_000000_orders_money_guard.up,
     down: migration_20261006_000000_orders_money_guard.down,
     name: '20261006_000000_orders_money_guard',
+  },
+  {
+    up: migration_20261011_000000_admin_push.up,
+    down: migration_20261011_000000_admin_push.down,
+    name: '20261011_000000_admin_push',
   },
 ];

@@ -9,7 +9,7 @@ import type { InternalAddresses } from "./order-emails";
  * "an order arrived", the florist's job sheet — went to the single reply-to
  * address, which was somebody's personal inbox. Each now has its own:
  *
- *   owner's notices      manager@calanthe.ae   (EMAIL_OWNER overrides)
+ *   owner's notices      orders@calanthe.ae    (EMAIL_OWNER overrides)
  *   florist's job sheet  staff@calanthe.ae     (EMAIL_STAFF overrides)
  *   a customer's reply   support@calanthe.ae   (EMAIL_REPLY_TO overrides)
  *
@@ -20,7 +20,7 @@ import type { InternalAddresses } from "./order-emails";
  */
 export function internalAddresses(): Required<InternalAddresses> {
   return {
-    owner: env.EMAIL_OWNER ?? COMPANY_EMAIL.manager,
+    owner: env.EMAIL_OWNER ?? COMPANY_EMAIL.orders,
     florist: env.EMAIL_STAFF ?? COMPANY_EMAIL.staff,
   };
 }

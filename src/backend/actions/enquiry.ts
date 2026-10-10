@@ -3,6 +3,7 @@
 import { getPayload, type RequiredDataFromCollectionSlug } from "payload";
 import config from "@payload-config";
 import { LIMITS, hintByAddress } from "@backend/security/throttle";
+import { notifyStaffDevices } from "@backend/notify/push";
 import { BYO_VASE_PRICE_AED } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
@@ -76,6 +77,7 @@ async function create(
     });
     /* `assignEnquiryNumber` fills this in a beforeChange hook. */
     const reference = String((doc as { enquiryNumber?: string }).enquiryNumber ?? doc.id);
+    await notifyStaffDevices(payload);
     return { ok: true, reference };
   } catch (error) {
     /* Neutral for the visitor, detailed for the log. A failed enquiry must
