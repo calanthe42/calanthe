@@ -23,8 +23,8 @@ export async function PackagingTrio({ className }: { className?: string; withTag
       <Image
         src="/brand/ai/trio.webp"
         alt={t.alt.packagingTrio}
-        width={2400}
-        height={1040}
+        width={2378}
+        height={958}
         sizes="(max-width: 1024px) 92vw, 46vw"
         quality={90}
         className="h-auto w-full"
