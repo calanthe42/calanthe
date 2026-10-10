@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
 import { EventEnquiryForm } from "@/components/commerce/EventEnquiryForm";
@@ -16,7 +17,7 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Icon360 } from "@/components/ui/icons";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { CONTACT, GUEST_FAVORS_LIVE } from "@/lib/data";
+import { CONTACT, EVENTS_LIVE, GUEST_FAVORS_LIVE } from "@/lib/data";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -29,6 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventsPage() {
+  /* Hidden until the client asks for it back: EVENTS_LIVE in lib/data.ts. */
+  if (!EVENTS_LIVE) notFound();
   const { t } = await getDictionary();
 
   return (

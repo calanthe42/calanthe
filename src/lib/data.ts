@@ -73,13 +73,32 @@ export const PRODUCT_PHOTOS = {
 /** Real photography for the occasion tiles — one per occasion, chosen
  *  for that occasion's feeling and kept distinct from the product
  *  photos so the page never repeats an image. */
+/**
+ * THE CLIENT'S OWN PICTURES for the five occasions (sent 10 Oct 2026, one
+ * per occasion, with the occasion named). A `/brand/` path here is taken
+ * as her instruction and wins over whatever is attached in /admin — see
+ * backend/data/occasions.ts. The Pexels photographs they replaced are kept
+ * below only as the fallback for an occasion she has not pictured.
+ */
 export const OCCASION_PHOTOS = {
-  birthday: pexels("31497181"),
-  graduation: pexels("30734753"),
-  newBorn: pexels("22880072"),
-  love: pexels("38055799"),
-  justBecause: pexels("37418132"),
+  birthday: "/brand/occasions/birthday.webp",
+  graduation: "/brand/occasions/graduation.webp",
+  newBorn: "/brand/occasions/new-born.webp",
+  love: "/brand/occasions/love.webp",
+  justBecause: "/brand/occasions/just-because.webp",
 } as const;
+
+/** A client-provided picture, as opposed to a stock fallback. */
+export const isBrandPhoto = (src: string | undefined): src is string => Boolean(src && src.startsWith("/brand/"));
+
+/**
+ * EVENTS ARE HIDDEN — the whole page, its link in every menu and footer,
+ * the sitemap entry and the homepage's way in — at the client's request
+ * (10 Oct 2026: "events is still there... hide it please"). Nothing is
+ * deleted: set this to true and all of it returns. Guest favours inside
+ * the page have their own switch below.
+ */
+export const EVENTS_LIVE = false;
 
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
@@ -193,7 +212,12 @@ export const occasions: readonly Occasion[] = [
   {
     slug: "birthday",
     name: "Birthday",
-    image: img("occ-birthday", "warm", "Birthday arrangements", OCCASION_PHOTOS.birthday),
+    image: img(
+      "occ-birthday",
+      "warm",
+      "A Calanthe birthday arrangement of roses, orchids and anthuriums in its terracotta sleeve, beside a cake",
+      OCCASION_PHOTOS.birthday,
+    ),
   },
   {
     slug: "graduation",
@@ -201,19 +225,29 @@ export const occasions: readonly Occasion[] = [
     image: img(
       "occ-congrats",
       "olive",
-      "Graduation arrangements",
+      "A Calanthe graduation arrangement of white orchids, hydrangeas and roses in its burgundy bag, on a study desk",
       OCCASION_PHOTOS.graduation,
     ),
   },
   {
     slug: "new-born",
     name: "New Born",
-    image: img("occ-baby", "warm", "New born arrangements", OCCASION_PHOTOS.newBorn),
+    image: img(
+      "occ-baby",
+      "warm",
+      "A Calanthe new-born arrangement of peach roses, lisianthus and hydrangeas in its terracotta sleeve, in a nursery",
+      OCCASION_PHOTOS.newBorn,
+    ),
   },
   {
     slug: "love",
     name: "Love",
-    image: img("occ-love", "burgundy", "Love arrangements", OCCASION_PHOTOS.love),
+    image: img(
+      "occ-love",
+      "burgundy",
+      "A Calanthe arrangement of red roses, peonies and white orchids in its burgundy bag, on a candlelit dinner table",
+      OCCASION_PHOTOS.love,
+    ),
   },
   {
     slug: "just-because",
@@ -221,7 +255,7 @@ export const occasions: readonly Occasion[] = [
     image: img(
       "occ-because",
       "olive",
-      "Just because arrangements",
+      "A Calanthe arrangement of hydrangeas, chrysanthemums, delphinium and orchids in its terracotta sleeve, on a garden table",
       OCCASION_PHOTOS.justBecause,
     ),
   },
@@ -811,7 +845,7 @@ export const primaryNavLinks = [
   { label: "About", href: "/about" },
   { label: "Shop", href: "/shop" },
   { label: "Memberships", href: "/membership" },
-  { label: "Events", href: "/events" },
+  ...(EVENTS_LIVE ? ([{ label: "Events", href: "/events" }] as const) : []),
 ] as const;
 
 /** The layered menu: a heading, then what sits under it. */
@@ -836,16 +870,20 @@ export const navTree = [
     ],
   },
   { label: "Memberships", href: "/membership", children: [] },
-  {
-    label: "Events",
-    href: "/events",
-    children: GUEST_FAVORS_LIVE
-      ? ([
-          { label: "Guest Favors", href: "/events#guest-favors" },
-          { label: "Event Arrangements", href: "/events#arrangements" },
-        ] as const)
-      : ([{ label: "Event Arrangements", href: "/events#arrangements" }] as const),
-  },
+  ...(EVENTS_LIVE
+    ? ([
+      {
+        label: "Events",
+        href: "/events",
+        children: GUEST_FAVORS_LIVE
+          ? ([
+              { label: "Guest Favors", href: "/events#guest-favors" },
+              { label: "Event Arrangements", href: "/events#arrangements" },
+            ] as const)
+          : ([{ label: "Event Arrangements", href: "/events#arrangements" }] as const),
+      },
+    ] as const)
+    : []),
 ] as const;
 
 export const helpNavLinks = [

@@ -54,11 +54,14 @@ export const HERO_VIDEO_SRC_MOBILE =
  * downloads only the one it needs.
  */
 export const HERO_POSTER = {
+  /* The client's own picture (10 Oct 2026: "use this as the main one in
+     the website"), doubled with neural super-resolution; the phone crop is
+     cut around the arrangement. */
   desktop: "/brand/hero-desktop.jpg",
   mobile: "/brand/hero-mobile.jpg",
-  width: 1600,
-  height: 2000,
-  alt: "A Calanthe arrangement of garden roses, daisies and coral blossom in a white vase",
+  width: 1282,
+  height: 1602,
+  alt: "A Calanthe arrangement of white orchids and burgundy and blush roses in a silver urn, by a tall window",
 } as const;
 
 export const HAS_HERO_VIDEO = HERO_VIDEO_SRC.length > 0;

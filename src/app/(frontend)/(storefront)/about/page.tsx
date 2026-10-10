@@ -180,7 +180,7 @@ export default async function AboutPage() {
             <FloralImage
               image={{
                 alt: t.alt.aboutBag,
-                src: "/brand/roses.webp",
+                src: "/brand/ai/doorway.webp",
                 placeholder: { seed: "about-atelier", palette: "burgundy" },
               }}
               sizes="(max-width: 1024px) 92vw, 46vw"
@@ -530,14 +530,16 @@ export default async function AboutPage() {
       {/* 11 · CLOSE — the line the whole brand rests on. */}
       <section className="relative overflow-hidden bg-olive section-pad">
         <div className="relative mx-auto max-w-7xl gutter text-center">
-          <ClipReveal className="mx-auto mb-12 aspect-[4/5] w-full max-w-sm overflow-hidden rounded-media">
+          {/* The client's gilded-foyer arrangement ("use this anywhere you
+              like", 10 Oct 2026): wide, above the line the brand rests on. */}
+          <ClipReveal className="mx-auto mb-12 aspect-[16/10] w-full max-w-3xl overflow-hidden rounded-media shadow-soft">
             <FloralImage
               image={{
                 alt: t.alt.aboutBloom,
-                src: "/brand/keyvisual-bloom.webp",
+                src: "/brand/ai/foyer.webp",
                 placeholder: { seed: "about-close", palette: "burgundy" },
               }}
-              sizes="(max-width: 640px) 92vw, 24rem"
+              sizes="(max-width: 1024px) 92vw, 48rem"
               quality={90}
             />
           </ClipReveal>

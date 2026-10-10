@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Monogram } from "@/components/ui/Monogram";
-import { CONTACT } from "@/lib/data";
+import { CONTACT, EVENTS_LIVE } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 
 /* inline-flex + min-h-11 gives every footer link the 44px tap area the
@@ -24,7 +24,7 @@ export async function Footer() {
     { label: t.footer.about, href: "/about" },
     { label: t.footer.shop, href: "/shop" },
     { label: t.footer.memberships, href: "/membership" },
-    { label: t.footer.events, href: "/events" },
+    ...(EVENTS_LIVE ? [{ label: t.footer.events, href: "/events" }] : []),
   ];
   const helpLinks: { label: string; href: string }[] = [
     { label: t.footer.delivery, href: "/delivery" },

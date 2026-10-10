@@ -4,16 +4,16 @@ import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { PackagingHero } from "@/components/blocks/PackagingHero";
+import { FloralImage } from "@/components/ui/FloralImage";
 import { OrchidPrint } from "@/components/ui/OrchidPrint";
 
 /**
  * THE SEAL — the first thing after the hero.
  *
- * The olive bag with its pastel bouquet and orchid tag, standing on a sheet
- * of the brand's paper (PackagingHero), beside the client's own sentence.
- * It replaced the bag-on-velvet photograph of the first deck on 6 Oct 2026,
- * when the client asked for the new packaging everywhere.
+ * The client's own picture for her sentence (10 Oct 2026: "before the
+ * flowers there is the feeling"): a woman reading her card beside the
+ * arrangement in its terracotta sleeve. It replaced the composed bag of
+ * 6 Oct. Doubled with neural super-resolution for Retina screens.
  *
  * COMPOSITION. Asymmetric: the photograph holds the reading edge and runs
  * taller than the text beside it, and the client's orchid wallpaper is
@@ -30,7 +30,17 @@ export async function SealMoment() {
       <div className="mx-auto grid max-w-7xl gutter gap-10 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:items-center lg:gap-16">
         <div className="relative">
           <ClipReveal className="relative w-full overflow-hidden rounded-sm shadow-soft">
-            <PackagingHero alt={t.alt.sealBag} ground="cream" sizes="(max-width: 1024px) 92vw, 52vw" />
+            <div className="relative aspect-[4/5] w-full">
+              <FloralImage
+                image={{
+                  alt: t.alt.sealBag,
+                  src: "/brand/ai/card-reading.webp",
+                  placeholder: { seed: "seal-moment", palette: "warm" },
+                }}
+                sizes="(max-width: 1024px) 92vw, 52vw"
+                quality={90}
+              />
+            </div>
           </ClipReveal>
         </div>
 

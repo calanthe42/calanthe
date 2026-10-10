@@ -135,7 +135,7 @@ export function HeroMedia() {
   });
   const {
     props: { srcSet: mobileSrcSet, ...mobileProps },
-  } = getImageProps({ ...common, src: HERO_POSTER.mobile, width: 1600, height: 2000 });
+  } = getImageProps({ ...common, src: HERO_POSTER.mobile, width: HERO_POSTER.width, height: HERO_POSTER.height });
 
   return (
     <div className="relative h-full w-full">

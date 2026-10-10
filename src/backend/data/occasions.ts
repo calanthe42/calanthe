@@ -2,6 +2,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import type { Media, Occasion as PayloadOccasion } from "@/payload-types";
 import {
+  isBrandPhoto,
   occasions as CURATED_OCCASIONS,
   type Occasion,
   type ProductImage,
@@ -41,6 +42,13 @@ function isMedia(value: unknown): value is Media {
  *    the old catalogue never knew still draws the same artwork every time.
  */
 function toImage(doc: PayloadOccasion): ProductImage {
+  /* 0. The client's own picture for this occasion (lib/data.ts, a /brand/
+        path): her instruction of 10 Oct 2026, so it comes before whatever
+        was attached in /admin. Remove the path there and step 1 applies. */
+  const brand = CURATED_OCCASIONS.find((occasion) => occasion.slug === doc.slug)?.image;
+  if (brand && isBrandPhoto(brand.src)) {
+    return { alt: brand.alt, src: brand.src, placeholder: brand.placeholder };
+  }
   const media = doc.image;
   if (isMedia(media)) {
     return {

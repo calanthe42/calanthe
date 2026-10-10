@@ -74,3 +74,15 @@ Birthday · Congratulations · New Baby · Love · Just Because
   homepage button) until the client asks for them back: `GUEST_FAVORS_LIVE`
   in `src/lib/data.ts`.
 
+## Client changes, 10 October 2026
+
+- **Her own AI-generated pictures replace the deck's** where she said: the
+  roses in the silver urn are the hero ("the main one"); the woman reading
+  her card sits beside "Before the flowers, there's the feeling."; the
+  doorway picture ("Romantic Doorway Gift in Bloom") is the About page's
+  photograph; the gilded foyer ("use this anywhere you like") is the Best
+  Sellers tile; the five occasion tiles are her five occasion pictures; her
+  photograph of the three bags replaces the deck's cut-outs.
+- **Events hidden entirely** (page, menus, footer, sitemap, the homepage
+  booth section): `EVENTS_LIVE` in `src/lib/data.ts`. Nothing deleted.
+
