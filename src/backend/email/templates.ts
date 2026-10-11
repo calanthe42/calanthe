@@ -360,9 +360,9 @@ const STATUS_COPY: Record<
     note: "You will get a photograph on WhatsApp for your approval before it leaves.",
   },
   OUT_FOR_DELIVERY: {
-    subject: "On the way",
+    subject: "Your flowers are on the way",
     heading: "On the way",
-    body: "Your flowers have left the atelier and are on their way.",
+    body: "Your flowers have left the atelier and are on their way to you. Thank you for choosing Calanthe.",
     note: "Our courier may call on arrival.",
   },
   DELIVERED: {

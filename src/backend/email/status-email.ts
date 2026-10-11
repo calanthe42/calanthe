@@ -76,6 +76,12 @@ export async function sendStatusEmailAfterCommit(
   if (!doc) return;
   if (!nextStatus || nextStatus === previousStatus) return;
   if (!isEmailableStatus(nextStatus)) return;
+  /* THREE EMAILS AT MOST (the client's rule, 11 Oct 2026): the customer
+     hears when the order is confirmed with its payment button, when the
+     payment succeeds with the invoice, and when the flowers are on the way.
+     The other status moves are for the shop only. A cancellation still
+     tells the customer, because they must know. */
+  if (nextStatus !== "OUT_FOR_DELIVERY" && nextStatus !== "CANCELLED") return;
 
   const to = String(doc.customerEmail ?? "").trim();
   if (!to) return;
