@@ -64,6 +64,7 @@ const PATHS = {
   upload: "M12 16V4M7 9l5-5 5 5M4 20h16",
   calendar: "M5 5h14v15H5zM8 3v4M16 3v4M5 10h14",
   clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v5l3 2",
+  lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1ZM12 15v2",
   external: "M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
   trendUp: "M4 16l6-6 4 4 6-6M15 8h5v5",
   trendDown: "M4 8l6 6 4-4 6 6M15 16h5v-5",

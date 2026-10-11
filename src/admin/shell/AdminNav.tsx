@@ -117,6 +117,14 @@ function NavFooter({ user, theme, locale }: ShellProps) {
           <p className="truncate text-sm font-medium text-nav-ink">{user.name}</p>
           <p className="truncate text-xs text-nav-ink-2">{user.role}</p>
         </div>
+        <Link
+          href="/admin/password"
+          aria-label={t("nav.changePassword")}
+          title={t("nav.changePassword")}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-nav-ink-2 transition-colors duration-150 hover:bg-nav-active hover:text-nav-ink"
+        >
+          <Icon name="lock" className="h-[18px] w-[18px]" />
+        </Link>
         <form action={adminLogout}>
           <IconButton type="submit" tone="nav" icon="logout" label={t("nav.signOut")} />
         </form>

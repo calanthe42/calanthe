@@ -15,6 +15,7 @@ import * as migration_20261004_202611_discounts from './20261004_202611_discount
 import * as migration_20261005_023342_manual_orders from './20261005_023342_manual_orders';
 import * as migration_20261006_000000_orders_money_guard from './20261006_000000_orders_money_guard';
 import * as migration_20261011_000000_admin_push from './20261011_000000_admin_push';
+import * as migration_20261011_010000_must_change_password from './20261011_010000_must_change_password';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261011_000000_admin_push.up,
     down: migration_20261011_000000_admin_push.down,
     name: '20261011_000000_admin_push',
+  },
+  {
+    up: migration_20261011_010000_must_change_password.up,
+    down: migration_20261011_010000_must_change_password.down,
+    name: '20261011_010000_must_change_password',
   },
 ];

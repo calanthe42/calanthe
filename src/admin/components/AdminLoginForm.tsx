@@ -41,6 +41,10 @@ export function AdminLoginForm({ next }: { next: string }) {
      after — which is exactly "has this form been wired up yet". */
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
+  /* Controlled, because React resets a form after its action: a wrong
+     password used to wipe the email too. Only the password is cleared. */
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <form
@@ -52,6 +56,7 @@ export function AdminLoginForm({ next }: { next: string }) {
             router.replace(result.redirectTo);
             router.refresh();
           } else {
+            setPassword("");
             setError(resolve(result.code, undefined, result.message));
           }
         });
@@ -62,11 +67,11 @@ export function AdminLoginForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
 
       <Field id="admin-email" label={t("auth.email")}>
-        <Input id="admin-email" name="email" type="email" autoComplete="username" required dir="ltr" />
+        <Input id="admin-email" name="email" type="email" autoComplete="username" required dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
       </Field>
 
       <Field id="admin-password" label={t("auth.password")}>
-        <Input id="admin-password" name="password" type="password" autoComplete="current-password" required dir="ltr" />
+        <Input id="admin-password" name="password" type="password" autoComplete="current-password" required dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} />
       </Field>
 
       {error ? (

@@ -144,10 +144,12 @@ export async function inviteTeamMember(form: FormData): Promise<InviteResult> {
   const password = temporaryPassword();
 
   try {
-    await payload.create({
+    const created = await payload.create({
       collection: "users",
       user,
       overrideAccess: false,
+      /* They receive the temporary password from the owner, not by email. */
+      disableVerificationEmail: true,
       data: {
         firstName,
         lastName: lastName || undefined,
@@ -157,6 +159,14 @@ export async function inviteTeamMember(form: FormData): Promise<InviteResult> {
         accountStatus: "active",
         ...(phone ? { phone } : {}),
       },
+    });
+    /* Server-only field, so it is set on its own: the first sign-in goes
+       straight to "choose your password". */
+    await payload.update({
+      collection: "users",
+      id: created.id,
+      overrideAccess: true,
+      data: { mustChangePassword: true } as never,
     });
   } catch (error) {
     return failure(error, "That account could not be created.", "team.errors.inviteFailed");
@@ -321,6 +331,12 @@ export async function issueTemporaryPassword(id: number): Promise<InviteResult> 
       user,
       overrideAccess: false,
       data: { password },
+    });
+    await payload.update({
+      collection: "users",
+      id,
+      overrideAccess: true,
+      data: { mustChangePassword: true } as never,
     });
 
     /* Best-effort: a password reset is meaningless if the account stays

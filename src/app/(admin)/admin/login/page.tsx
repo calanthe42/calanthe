@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { AdminLoginForm } from "@admin/components/AdminLoginForm";
-import { getAdminI18n, getAdminPreferences } from "@admin/i18n/server";
-import { LanguageSwitcher, ThemeSwitcher } from "@admin/shell/Preferences";
+import Link from "next/link";
+import { getAdminI18n } from "@admin/i18n/server";
+import { AuthShell } from "@admin/shell/AuthShell";
 import { Notice } from "@admin/ui/States";
 import { getAdminSession } from "@backend/data/admin-session";
 
@@ -30,57 +31,25 @@ export default async function AdminLoginPage({
 
   if (await getAdminSession()) redirect("/admin");
 
-  const [{ t }, preferences] = await Promise.all([getAdminI18n(), getAdminPreferences()]);
+  const { t } = await getAdminI18n();
 
   return (
-    /*
-     * PREFERENCES SIT BELOW THE TASK ON A PHONE.
-     *
-     * Language and theme used to live inside the olive panel, which put two
-     * segmented controls above the sign-in form and pushed "Sign in" roughly
-     * 700px down a 844px screen — the least important controls were the
-     * largest thing on screen, and the actual task was below the fold. They
-     * are still reachable before signing in (the owner may need Arabic to
-     * read this page), just no longer ahead of the reason she came.
-     *
-     * On a laptop nothing moves: the strip is pinned back to the foot of the
-     * olive column, where it was.
-     */
-    <main className="relative flex min-h-svh flex-col lg:flex-row">
-      <section className="admin-nav flex flex-col gap-6 bg-nav px-5 py-6 text-nav-ink sm:px-10 lg:w-[26rem] lg:justify-between lg:py-10 lg:pb-56">
-        <div>
-          <p lang="en" className="font-brand text-lg uppercase tracking-brand">
-            Calanthe
-          </p>
-          <p className="mt-1 text-sm text-nav-ink-2">{t("nav.adminLabel")}</p>
-        </div>
-        {/* pb-56 on the section reserves the foot of this column for the
-            preference strip, which is pinned there absolutely so it can sit
-            after the form in the mobile reading order. Without it the strip
-            lands on top of this line. */}
-        <p className="hidden font-display text-3xl font-light leading-snug lg:block">{t("auth.subtitle")}</p>
-      </section>
-
-      <section className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
-        <div className="w-full max-w-sm">
-          <h1 className="font-display text-3xl font-light text-ink">{t("auth.title")}</h1>
-          <p className="mt-1.5 text-sm text-ink-3 lg:hidden">{t("auth.subtitle")}</p>
-          {signedOut ? (
-            <Notice tone="success" className="mb-0 mt-5">
-              {t("auth.signedOut")}
-            </Notice>
-          ) : null}
-          <AdminLoginForm next={next} />
-          <p className="mt-8 text-xs leading-relaxed text-ink-3">{t("auth.note")}</p>
-        </div>
-      </section>
-
-      <div className="admin-nav order-last bg-nav px-5 py-6 text-nav-ink sm:px-10 lg:absolute lg:bottom-0 lg:start-0 lg:w-[26rem] lg:px-10 lg:py-10">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 [&_fieldset]:px-0">
-          <LanguageSwitcher locale={preferences.locale} />
-          <ThemeSwitcher theme={preferences.theme} />
-        </div>
-      </div>
-    </main>
+    <AuthShell
+      title={t("auth.title")}
+      footnote={<p>{t("auth.note")}</p>}
+    >
+      <p className="mt-1.5 text-sm text-ink-3 lg:hidden">{t("auth.subtitle")}</p>
+      {signedOut ? (
+        <Notice tone="success" className="mb-0 mt-5">
+          {t("auth.signedOut")}
+        </Notice>
+      ) : null}
+      <AdminLoginForm next={next} />
+      <p className="mt-4 text-sm">
+        <Link href="/admin/forgot-password" className="text-ink-2 underline underline-offset-4 hover:text-ink">
+          {t("auth.forgot")}
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

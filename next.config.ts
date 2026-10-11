@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
    * choice, and a permanent redirect would be cached by browsers forever.
    */
   async redirects() {
-    return [{ source: "/cart", destination: "/checkout", permanent: false }];
+    return [
+      /* Reset emails sent before 11 Oct 2026 pointed here. */
+      { source: "/account/reset", destination: "/account/reset-password", permanent: false },{ source: "/cart", destination: "/checkout", permanent: false }];
   },
   // Stray lockfiles exist higher up the tree; pin the workspace root here.
   turbopack: {

@@ -165,6 +165,7 @@ export interface User {
    * Suspended and closed accounts cannot log in.
    */
   accountStatus: 'active' | 'suspended' | 'closed';
+  mustChangePassword?: boolean | null;
   anonymisedAt?: string | null;
   /**
    * Saved delivery addresses. Exactly one is the default.
@@ -1220,6 +1221,7 @@ export interface UsersSelect<T extends boolean = true> {
   phone?: T;
   birthday?: T;
   accountStatus?: T;
+  mustChangePassword?: T;
   anonymisedAt?: T;
   addresses?:
     | T

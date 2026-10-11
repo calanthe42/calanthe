@@ -98,11 +98,16 @@ export const Users: CollectionConfig = {
       generateEmailHTML: (args) => {
         const { token, user } = (args ?? {}) as {
           token?: string;
-          user?: { firstName?: string; name?: string };
+          user?: { firstName?: string; name?: string; role?: string };
         };
+        /* Staff and owners reset in the admin; customers on the storefront.
+           (The link used to point at /account/reset, a page that does not
+           exist, so every reset email led to a 404.) */
+        const internal = user?.role === "admin" || user?.role === "staff";
+        const path = internal ? "/admin/reset-password" : "/account/reset-password";
         return passwordReset({
           name: user?.firstName ?? user?.name,
-          url: `${env.NEXT_PUBLIC_SERVER_URL}/account/reset?token=${token ?? ""}`,
+          url: `${env.NEXT_PUBLIC_SERVER_URL}${path}?token=${encodeURIComponent(token ?? "")}`,
         }).html;
       },
     },
@@ -239,6 +244,16 @@ export const Users: CollectionConfig = {
         position: "sidebar",
         description: "Suspended and closed accounts cannot log in.",
       },
+    },
+    {
+      /* Set when someone is given a temporary password (an invite, or
+         "issue temporary password"); the admin then allows nothing until
+         they choose their own. Cleared by changing or resetting it. */
+      name: "mustChangePassword",
+      type: "checkbox",
+      defaultValue: false,
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: { position: "sidebar", readOnly: true },
     },
     {
       name: "anonymisedAt",

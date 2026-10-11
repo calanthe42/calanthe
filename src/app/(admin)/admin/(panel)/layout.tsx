@@ -35,6 +35,11 @@ export default async function AdminPanelLayout({
     redirect("/admin/login");
   }
 
+  /* Signed in with a temporary password: choose a real one first. */
+  if ((session.user as { mustChangePassword?: boolean }).mustChangePassword) {
+    redirect("/admin/password");
+  }
+
   const [i18n, preferences] = await Promise.all([getAdminI18n(), getAdminPreferences()]);
   const { t } = i18n;
 
