@@ -14,6 +14,7 @@ import { CONTACT } from "@/lib/data";
 import { cn } from "@/lib/cn";
 import { submitEventEnquiry } from "@backend/actions/enquiry";
 import { useT } from "@/lib/locale";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 const KINDS = [
   "Wedding",
@@ -115,16 +116,21 @@ export function EventEnquiryForm() {
           autoComplete="name"
           invalid={error?.code === "name"}
         />
-        <Field
-          id="ev-phone"
-          name="phone"
-          label={t.enquiryForm.phone}
-          required
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+9715…"
-          invalid={error?.code === "phone"}
-        />
+        <div>
+          <label htmlFor="ev-phone" className={cn(labelClasses, "text-cream/70")}>
+            {t.enquiryForm.phone}
+          </label>
+          <PhoneField
+            id="ev-phone"
+            name="phone"
+            required
+            aria-invalid={error?.code === "phone"}
+            fieldClassName={cn(
+              fieldClasses,
+              "border-cream/25 bg-cream/[0.06] text-cream placeholder:text-cream/40 focus:border-cream focus:shadow-none",
+            )}
+          />
+        </div>
         <Field
           id="ev-email"
           name="email"

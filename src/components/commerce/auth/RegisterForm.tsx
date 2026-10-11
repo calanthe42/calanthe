@@ -6,6 +6,8 @@ import { customerRegister, resendCustomerVerification } from "@backend/actions/a
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/lib/locale";
 import { AuthField } from "./AuthField";
+import { PhoneField } from "@/components/ui/PhoneField";
+import { fieldClasses, labelClasses } from "@/components/ui/form-classes";
 
 /**
  * Create account.
@@ -98,14 +100,12 @@ export function RegisterForm() {
         required
         error={error?.field === "email" ? error.message : undefined}
       />
-      <AuthField
-        id="reg-phone"
-        name="phone"
-        type="tel"
-        label={t.account.phoneOptional}
-        autoComplete="tel"
-        placeholder="+9715…"
-      />
+      <div>
+        <label htmlFor="reg-phone" className={labelClasses}>
+          {t.account.phoneOptional}
+        </label>
+        <PhoneField id="reg-phone" name="phone" fieldClassName={fieldClasses} />
+      </div>
       <AuthField
         id="reg-password"
         name="password"

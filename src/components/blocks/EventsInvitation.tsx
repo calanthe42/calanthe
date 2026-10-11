@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getDictionary } from "@/lib/i18n/server";
-import { GUEST_FAVORS_LIVE } from "@/lib/data";
+import { effectiveFlags, getSiteFlags } from "@backend/data/site-flags";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitLines } from "@/components/motion/SplitLines";
@@ -22,6 +22,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 export async function EventsInvitation() {
   const { t } = await getDictionary();
   const v = t.eventsInvite;
+  const { guestFavorsLive: GUEST_FAVORS_LIVE } = effectiveFlags(await getSiteFlags());
 
   return (
     <section className="relative overflow-hidden bg-cream bg-[url(/brand/print/orchid-cream.webp)] bg-[length:30rem_auto] bg-repeat section-pad lg:bg-[length:42rem_auto]">

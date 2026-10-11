@@ -68,6 +68,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     heading: "nav.sections.system",
     items: [
       { href: "/admin/team", label: "nav.staff", icon: "staff" },
+      { href: "/admin/website", label: "nav.website", icon: "settings", ownerOnly: true },
       { href: "/admin/activity", label: "nav.activity", icon: "clock", ownerOnly: true },
     ],
   },

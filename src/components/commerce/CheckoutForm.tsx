@@ -62,6 +62,7 @@ import {
   type DeliveryZone,
 } from "@/lib/data";
 import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 /** Order in which invalid fields receive focus — the order they appear. */
 const FIELD_ORDER: readonly CheckoutField[] = [
@@ -323,7 +324,8 @@ function CheckoutFormInner() {
   /* One emirate served today (Abu Dhabi), so it is chosen for her; with
      more than one she picks. */
   const [zoneId, setZoneId] = useState<string>(
-    deliveryZones.length === 1 ? deliveryZones[0]!.id : "",
+    /* Abu Dhabi, the first and free zone, is already chosen. */
+    deliveryZones[0]?.id ?? "",
   );
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -758,13 +760,11 @@ function CheckoutFormInner() {
                       <label className={labelClasses} htmlFor="rec-phone">
                         {t.checkout.recipientPhone}
                       </label>
-                      <input
+                      <PhoneField
                         id="rec-phone"
                         value={recipientPhone}
-                        onChange={(e) => setRecipientPhone(e.target.value)}
-                        className={fieldClasses}
-                        placeholder={t.checkout.phonePlaceholder}
-                        inputMode="tel"
+                        onChange={setRecipientPhone}
+                        fieldClassName={fieldClasses}
                         autoComplete="off"
                         {...errorProps("recipientPhone")}
                       />
@@ -934,14 +934,12 @@ function CheckoutFormInner() {
                 <label className={labelClasses} htmlFor="phone">
                   {t.checkout.phone}
                 </label>
-                <input
+                <PhoneField
                   id="phone"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={fieldClasses}
-                  placeholder={t.checkout.phonePlaceholder}
-                  inputMode="tel"
-                  autoComplete="tel"
+                  onChange={setPhone}
+                  fieldClassName={fieldClasses}
+                  autoComplete="tel-national"
                   {...errorProps("phone")}
                 />
                 <FieldError id="phone-error" message={errorText("phone")} />

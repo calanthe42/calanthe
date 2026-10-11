@@ -36,6 +36,7 @@ import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
 import { useLocale } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 type ProductDetailProps = {
   product: Product;
@@ -596,13 +597,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
                     <label className={labelClasses} htmlFor="pd-recipient-phone">
                       {t.product.recipientPhone}
                     </label>
-                    <input
+                    <PhoneField
                       id="pd-recipient-phone"
                       value={recipientPhone}
-                      onChange={(e) => setRecipientPhone(e.target.value)}
-                      inputMode="tel"
-                      placeholder={t.product.phonePlaceholder}
-                      className={fieldClasses}
+                      onChange={setRecipientPhone}
+                      fieldClassName={fieldClasses}
                       autoComplete="off"
                     />
                   </div>

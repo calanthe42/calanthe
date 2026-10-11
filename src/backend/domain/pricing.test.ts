@@ -99,10 +99,16 @@ describe("refusals", () => {
     expect(() => deliveryFeeFils("mars", 1000)).toThrow(/INVALID_DELIVERY/);
   });
 
-  it("refuses an emirate the atelier does not serve, even when delivery would be free", () => {
+  it("delivers to all seven emirates (client, 2026-10-11)", () => {
+    for (const emirate of ["abu-dhabi", "dubai", "sharjah", "ajman", "umm-al-quwain", "ras-al-khaimah", "fujairah"]) {
+      expect(() => deliveryFeeFils(emirate, 1000)).not.toThrow();
+    }
+  });
+
+  it("refuses a place the atelier does not serve, even when delivery would be free", () => {
     /* Abu Dhabi only. Dubai used to slip through above the free threshold. */
-    expect(() => deliveryFeeFils("dubai", 1000)).toThrow(/INVALID_DELIVERY/);
-    expect(() => deliveryFeeFils("dubai", 1_000_000)).toThrow(/INVALID_DELIVERY/);
+    expect(() => deliveryFeeFils("doha", 1000)).toThrow(/INVALID_DELIVERY/);
+    expect(() => deliveryFeeFils("doha", 1_000_000)).toThrow(/INVALID_DELIVERY/);
   });
 });
 
@@ -416,7 +422,7 @@ describe("refusals still hold with discounts present", () => {
     expect(() => priceLine(line({ addonIds: ["diamond"] }), product(), sale())).toThrow(/INVALID_OPTION/);
     expect(() => priceOrder([line({ productId: "999" })], new Map(), "abu-dhabi", d)).toThrow(/INVALID_PRODUCT/);
     expect(() => priceOrder([], new Map(), "abu-dhabi", d)).toThrow(/INVALID_ORDER/);
-    expect(() => priceOrder([line()], catalogue(product()), "dubai", d)).toThrow(/INVALID_DELIVERY/);
+    expect(() => priceOrder([line()], catalogue(product()), "doha", d)).toThrow(/INVALID_DELIVERY/);
   });
 
   it("ignores a sale or a price smuggled into the request", () => {

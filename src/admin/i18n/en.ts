@@ -96,6 +96,7 @@ export const en = {
     account: "Account",
     signOut: "Sign out",
     changePassword: "Change password",
+    website: "Website",
     developerCms: "Developer CMS",
     openMenu: "Open menu",
     closeMenu: "Close menu",
@@ -175,6 +176,27 @@ export const en = {
     containsEmail: "Don't use your email address in your password.",
     same: "Choose a password different from the current one.",
     common: "That password is too easy to guess.",
+  },
+
+  website: {
+    title: "Website",
+    description: "Show or hide parts of the website. Changes are live on the next page load.",
+    preview: "Open the Events page:",
+    ownerOnlyTitle: "Only an owner can change the website",
+    ownerOnlyBody: "Ask the owner to show or hide parts of the website.",
+    events: {
+      label: "Events page",
+      hint: "The Events page, its links in the menu and footer, and the Events section on the homepage.",
+    },
+    favors: {
+      label: "Guest favours",
+      hint: "The guest favours section on the Events page, its menu link and the homepage button.",
+      needsEvents: "Turn on the Events page first — guest favours are part of it.",
+    },
+    turnedOn: "It is now visible on the website.",
+    turnedOff: "It is now hidden from the website.",
+    notOwner: "Only an owner can change the website.",
+    unknown: "That switch does not exist.",
   },
 
   dashboard: {

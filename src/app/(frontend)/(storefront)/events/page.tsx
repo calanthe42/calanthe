@@ -17,12 +17,14 @@ import { FloralImage } from "@/components/ui/FloralImage";
 import { Icon360 } from "@/components/ui/icons";
 import { Monogram } from "@/components/ui/Monogram";
 import { MonogramBloom } from "@/components/motion/MonogramBloom";
-import { CONTACT, EVENTS_LIVE, GUEST_FAVORS_LIVE } from "@/lib/data";
+import { CONTACT } from "@/lib/data";
+import { effectiveFlags, getSiteFlags } from "@backend/data/site-flags";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const { guestFavorsLive } = effectiveFlags(await getSiteFlags());
   const { t } = await getDictionary();
   return {
-    description: GUEST_FAVORS_LIVE
+    description: guestFavorsLive
       ? "Floral styling for private celebrations, intimate gatherings and larger occasions — plus guest favors finished in Calanthe's signature packaging."
       : "Floral styling for private celebrations, intimate gatherings and larger occasions — planned with you and composed by the Calanthe atelier.",
     title: t.meta.events,
@@ -30,8 +32,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventsPage() {
-  /* Hidden until the client asks for it back: EVENTS_LIVE in lib/data.ts. */
-  if (!EVENTS_LIVE) notFound();
+  /* Shown or hidden by the owner in Admin → Website. */
+  const { eventsLive, guestFavorsLive } = effectiveFlags(await getSiteFlags());
+  if (!eventsLive) notFound();
   const { t } = await getDictionary();
 
   return (
@@ -135,8 +138,8 @@ export default async function EventsPage() {
         </div>
       </section>
 
-      {/* Guest favors — hidden until the client is ready (GUEST_FAVORS_LIVE). */}
-      {GUEST_FAVORS_LIVE ? (
+      {/* Guest favours — shown or hidden in Admin → Website. */}
+      {guestFavorsLive ? (
         <section id="guest-favors" className="scroll-mt-24 bg-cream section-pad">
           <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 gutter lg:grid-cols-2 lg:gap-20">
             <ClipReveal className="relative aspect-[4/5] w-full overflow-hidden rounded-media shadow-soft">

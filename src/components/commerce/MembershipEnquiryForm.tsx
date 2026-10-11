@@ -19,6 +19,7 @@ import {
   type MembershipEnquiryRequest,
 } from "@backend/actions/membership-enquiry";
 import { useT } from "@/lib/locale";
+import { PhoneField } from "@/components/ui/PhoneField";
 
 type Props = {
   /** The tier the visitor pressed "Begin" on — recorded as-is. */
@@ -203,14 +204,11 @@ export function MembershipEnquiryForm({ planName, planLabel, onClose }: Props) {
             <label htmlFor="m-phone" className={labelClasses}>
               {t.enquiryForm.phone}
             </label>
-            <input
+            <PhoneField
               id="m-phone"
               name="phone"
               required
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="+9715…"
-              className={fieldClasses}
+              fieldClassName={fieldClasses}
               aria-invalid={error?.code === "phone"}
             />
           </div>

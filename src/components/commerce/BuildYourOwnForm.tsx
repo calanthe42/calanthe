@@ -7,6 +7,9 @@ import { EASE_BLOOM } from "@/components/motion/constants";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Monogram } from "@/components/ui/Monogram";
 import {
+  chipClasses,
+  chipOffClasses,
+  chipOnClasses,
   fieldClasses,
   fieldErrorClasses,
   labelClasses,
@@ -30,6 +33,8 @@ import {
   formatAed,
   formatAedDelta,
 } from "@/lib/data";
+import { PhoneField } from "@/components/ui/PhoneField";
+import { useDeliverySchedule } from "@/lib/useDeliverySchedule";
 
 /**
  * Build Your Own, as a consultation rather than a form.
@@ -107,6 +112,10 @@ export function BuildYourOwnForm() {
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState("");
+  /* The day and window the flowers should arrive — the same calendar as the
+     checkout (same cut-off, same closed days), so a request can only ask for
+     a day the atelier can actually deliver on. */
+  const { days, selectedDay, setDay, slots, slot, setSlot } = useDeliverySchedule();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -182,7 +191,7 @@ export function BuildYourOwnForm() {
     const missing: StepId | null =
       budgetValue === 0
         ? "budget"
-        : isGift === null
+        : isGift === null || !selectedDay
           ? "gift"
           : !name.trim() || !phone.trim() || !email.trim()
             ? "contact"
@@ -204,6 +213,8 @@ export function BuildYourOwnForm() {
       recipientName: isGift ? recipientName : undefined,
       recipientPhone: isGift ? recipientPhone : undefined,
       deliveryLocation: deliveryLocation || undefined,
+      deliveryDate: selectedDay ?? "",
+      deliveryTimeSlot: slot || undefined,
       colourNote,
       budgetAed: budgetValue,
       colours,
@@ -584,14 +595,12 @@ export function BuildYourOwnForm() {
                   <label htmlFor="byo-rec-phone" className={labelClasses}>
                     {t.product.recipientPhone}
                   </label>
-                  <input
+                  <PhoneField
                     id="byo-rec-phone"
-                    dir="ltr"
-                    inputMode="tel"
                     value={recipientPhone}
-                    onChange={(e) => setRecipientPhone(e.target.value.slice(0, 40))}
-                    placeholder="+9715…"
-                    className={cn(fieldClasses, "text-start")}
+                    onChange={setRecipientPhone}
+                    fieldClassName={fieldClasses}
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -614,6 +623,67 @@ export function BuildYourOwnForm() {
                 </p>
               </div>
             )}
+
+            {isGift !== null && (
+              <>
+                <fieldset className="mt-6">
+                  <legend className={labelClasses}>{t.checkout.day}</legend>
+                  {/* A row that scrolls on a phone, never wider than the screen. */}
+                  <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [contain:inline-size]">
+                    {days.map((day) => (
+                      <button
+                        key={day.key}
+                        type="button"
+                        disabled={day.disabled}
+                        aria-pressed={selectedDay === day.key}
+                        onClick={() => setDay(day.key)}
+                        className={cn(
+                          chipClasses,
+                          "shrink-0 flex-col gap-0 px-4 py-2",
+                          day.disabled && "cursor-not-allowed opacity-40",
+                          selectedDay === day.key ? chipOnClasses : chipOffClasses,
+                        )}
+                      >
+                        <span className="text-sm">{day.label}</span>
+                        <span className="text-xs text-ink-muted">{day.sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {attempted && !selectedDay ? (
+                    <p role="alert" className="mt-2 text-sm text-olive">
+                      <span aria-hidden className="text-burnt-orange">· </span>
+                      {t.checkout.dayInvalid}
+                    </p>
+                  ) : null}
+                </fieldset>
+
+                <fieldset className="mt-5">
+                  <legend className={labelClasses}>{t.checkout.window}</legend>
+                  <div className="flex flex-wrap gap-2">
+                    {slots.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        disabled={s.disabled}
+                        aria-pressed={slot === s.value}
+                        onClick={() => setSlot(s.value)}
+                        className={cn(
+                          chipClasses,
+                          "flex-col gap-0 py-2",
+                          s.disabled && "cursor-not-allowed opacity-40",
+                          slot === s.value ? chipOnClasses : chipOffClasses,
+                        )}
+                      >
+                        <span dir="ltr" className="text-base text-olive">
+                          {s.value}
+                        </span>
+                        {s.reason ? <span className="text-xs text-ink-muted">{s.reason}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              </>
+            )}
           </Step>
 
           <Step index={6} active={activeIndex === 6} done={activeIndex > 6}>
@@ -635,14 +705,11 @@ export function BuildYourOwnForm() {
                 <label htmlFor="byo-phone" className={labelClasses}>
                   {t.byo.yourPhone}
                 </label>
-                <input
+                <PhoneField
                   id="byo-phone"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value.slice(0, 40))}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="+9715…"
-                  className={fieldClasses}
+                  onChange={setPhone}
+                  fieldClassName={fieldClasses}
                   aria-invalid={error?.code === "phone" || (attempted && !phone.trim())}
                 />
               </div>

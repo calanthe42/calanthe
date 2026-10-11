@@ -6,6 +6,7 @@ import { WhatsAppButton } from "@/components/blocks/WhatsAppButton";
 import { LazyCartDrawer } from "@/components/commerce/LazyCartDrawer";
 import { getDictionary } from "@/lib/i18n/server";
 import { getActiveOccasions } from "@backend/data/occasions";
+import { effectiveFlags, getSiteFlags } from "@backend/data/site-flags";
 import { getAvailableProducts } from "@backend/data/products";
 
 export default async function StorefrontLayout({
@@ -14,10 +15,11 @@ export default async function StorefrontLayout({
   /* Read once, on the server, and hand down as props. The cart provider and
      the search overlay both need the catalogue, and neither may query the
      database from the browser (docs/PROJECT-STRUCTURE.md §4). */
-  const [catalogue, occasions, { locale, t }] = await Promise.all([
+  const [catalogue, occasions, { locale, t }, rawFlags] = await Promise.all([
     getAvailableProducts(),
     getActiveOccasions(),
     getDictionary(),
+    getSiteFlags(),
   ]);
 
   return (
@@ -38,7 +40,7 @@ export default async function StorefrontLayout({
           stacked on one another, and the hard edge between them read as an
           unexplained line across the top of the hero. One element now owns
           the whole top of the page and decides how it is painted. */}
-      <Header products={catalogue} occasions={occasions} />
+      <Header products={catalogue} occasions={occasions} siteFlags={effectiveFlags(rawFlags)} />
       {/* tabIndex -1 so the skip link actually MOVES focus here. Without
           it the browser scrolls but leaves focus in the navigation, and
           the next Tab drops the visitor straight back into the menu —

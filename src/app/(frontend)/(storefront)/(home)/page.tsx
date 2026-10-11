@@ -4,7 +4,7 @@ import { CalantheTouch } from "@/components/blocks/CalantheTouch";
 import { Hero } from "@/components/blocks/Hero";
 import { SealMoment } from "@/components/blocks/SealMoment";
 import { EventsInvitation } from "@/components/blocks/EventsInvitation";
-import { EVENTS_LIVE } from "@/lib/data";
+import { getSiteFlags } from "@backend/data/site-flags";
 import { InstagramMarquee } from "@/components/blocks/InstagramMarquee";
 import {
   LazyBuildYourOwnBanner,
@@ -21,6 +21,7 @@ import { floristJsonLd, websiteJsonLd } from "@/lib/seo";
 /* Client-locked section order preserved; QuickNav, VideoApproval and
    TrustBand are client-approved ADDITIONS between locked sections. */
 export default async function HomePage() {
+  const { eventsLive } = await getSiteFlags();
   const occasions = await getActiveOccasions();
 
   return (
@@ -37,7 +38,7 @@ export default async function HomePage() {
       <ShopByOccasion />
       {/* Added at the client's instruction: the way into Events and guest
           favors, after the occasions a bouquet answers. */}
-      {EVENTS_LIVE ? <EventsInvitation /> : null}
+      {eventsLive ? <EventsInvitation /> : null}
       <LazyBuildYourOwnBanner />
       <VideoApprovalSection />
       <BestSellers />

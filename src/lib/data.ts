@@ -91,14 +91,6 @@ export const OCCASION_PHOTOS = {
 /** A client-provided picture, as opposed to a stock fallback. */
 export const isBrandPhoto = (src: string | undefined): src is string => Boolean(src && src.startsWith("/brand/"));
 
-/**
- * EVENTS ARE HIDDEN — the whole page, its link in every menu and footer,
- * the sitemap entry and the homepage's way in — at the client's request
- * (10 Oct 2026: "events is still there... hide it please"). Nothing is
- * deleted: set this to true and all of it returns. Guest favours inside
- * the page have their own switch below.
- */
-export const EVENTS_LIVE = false;
 
 export type FlowerType =
   "roses" | "peonies" | "orchids" | "tulips" | "lilies" | "wildflowers";
@@ -616,7 +608,16 @@ export type DeliveryZone = {
  * `zoneNames` in the dictionary) and update the "Abu Dhabi" copy.
  */
 export const deliveryZones: readonly DeliveryZone[] = [
+  /* Abu Dhabi first: it is the default, and the free one. All seven
+     emirates are offered (client, 2026-10-11). Each fee is the AED amount
+     charged for delivery there; 0 shows as "complimentary". */
   { id: "abu-dhabi", name: "Abu Dhabi", feeAed: 0 },
+  { id: "dubai", name: "Dubai", feeAed: 0 },
+  { id: "sharjah", name: "Sharjah", feeAed: 0 },
+  { id: "ajman", name: "Ajman", feeAed: 0 },
+  { id: "umm-al-quwain", name: "Umm Al Quwain", feeAed: 0 },
+  { id: "ras-al-khaimah", name: "Ras Al Khaimah", feeAed: 0 },
+  { id: "fujairah", name: "Fujairah", feeAed: 0 },
 ] as const;
 
 export const FREE_DELIVERY_THRESHOLD_AED = 350;
@@ -845,19 +846,16 @@ export const primaryNavLinks = [
   { label: "About", href: "/about" },
   { label: "Shop", href: "/shop" },
   { label: "Memberships", href: "/membership" },
-  ...(EVENTS_LIVE ? ([{ label: "Events", href: "/events" }] as const) : []),
+  { label: "Events", href: "/events" },
 ] as const;
 
 /** The layered menu: a heading, then what sits under it. */
-/**
- * GUEST FAVOURS ARE HIDDEN until the client has the offer ready (her
- * instruction, 2026-10-06: "hide the guest favors part, just until I make
- * it ready; I will ask you to unhide it"). Flip this to true to bring back
- * the section on the Events page, the link in the menus and the homepage
- * button; nothing was deleted.
- */
-export const GUEST_FAVORS_LIVE = false;
 
+/**
+ * The full menu. What a visitor sees is this with the owner's switches
+ * applied (Admin → Website): `visibleNav` drops Events while they are off,
+ * and the guest favours link while those are off.
+ */
 export const navTree = [
   { label: "About Calanthe", href: "/about", children: [] },
   {
@@ -870,20 +868,14 @@ export const navTree = [
     ],
   },
   { label: "Memberships", href: "/membership", children: [] },
-  ...(EVENTS_LIVE
-    ? ([
-      {
-        label: "Events",
-        href: "/events",
-        children: GUEST_FAVORS_LIVE
-          ? ([
-              { label: "Guest Favors", href: "/events#guest-favors" },
-              { label: "Event Arrangements", href: "/events#arrangements" },
-            ] as const)
-          : ([{ label: "Event Arrangements", href: "/events#arrangements" }] as const),
-      },
-    ] as const)
-    : []),
+  {
+    label: "Events",
+    href: "/events",
+    children: [
+      { label: "Guest Favors", href: "/events#guest-favors" },
+      { label: "Event Arrangements", href: "/events#arrangements" },
+    ],
+  },
 ] as const;
 
 export const helpNavLinks = [
@@ -952,3 +944,15 @@ export const CONTACT = {
   email: COMPANY_EMAIL.support,
   site: "www.calanthe.ae",
 } as const;
+
+/** The menu with the owner's website switches applied. */
+export function visibleNav<T extends { href: string; children: readonly { href: string }[] }>(
+  tree: readonly T[],
+  flags: { eventsLive: boolean; guestFavorsLive: boolean },
+): T[] {
+  return tree
+    .filter((group) => flags.eventsLive || !group.href.startsWith("/events"))
+    .map((group) =>
+      flags.guestFavorsLive ? group : { ...group, children: group.children.filter((c) => !c.href.includes("guest-favors")) },
+    );
+}

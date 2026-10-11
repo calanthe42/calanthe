@@ -4,7 +4,8 @@ import { getPayload, type RequiredDataFromCollectionSlug } from "payload";
 import config from "@payload-config";
 import { LIMITS, hintByAddress } from "@backend/security/throttle";
 import { notifyStaffDevices } from "@backend/notify/push";
-import { BYO_VASE_PRICE_AED } from "@/lib/data";
+import { BYO_VASE_PRICE_AED, timeSlots } from "@/lib/data";
+import { buildDays, uaeNow } from "@/lib/delivery";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -104,6 +105,10 @@ export type BespokeEnquiryRequest = Contact & {
   recipientName?: string;
   recipientPhone?: string;
   deliveryLocation?: string;
+  /** "2026-10-14": the day the flowers should arrive (Abu Dhabi calendar). */
+  deliveryDate: string;
+  /** "13:00 – 17:00", one of the shop's windows. */
+  deliveryTimeSlot?: string;
   colourNote: string;
   budgetAed: number;
   colours: readonly string[];
@@ -134,6 +139,20 @@ export async function submitBespokeEnquiry(
   if (!Number.isFinite(request.budgetAed) || request.budgetAed <= 0) {
     return fail("budget", m.budgetRequired);
   }
+
+  /* The delivery day must be one the calendar still offers today (same
+     cut-off and closed days as the checkout), worked out here, not trusted
+     from the browser. The window is optional and must be one of the shop's. */
+  const chosenDay = buildDays(uaeNow()).find((d) => !d.disabled && d.key === String(request.deliveryDate ?? "").trim());
+  if (!chosenDay) return fail("day", m.dayRequired);
+  /* The calendar's dates are Abu Dhabi wall-clock dates; store that day at
+     noon UTC so it reads as the same day in every time zone. */
+  const deliveryDate = new Date(
+    Date.UTC(chosenDay.date.getFullYear(), chosenDay.date.getMonth(), chosenDay.date.getDate(), 12),
+  ).toISOString();
+  const deliveryTimeSlot = (timeSlots as readonly string[]).includes(String(request.deliveryTimeSlot ?? ""))
+    ? String(request.deliveryTimeSlot)
+    : "";
 
   const colours = request.floristChoosesColours
     ? "Florist's choice"
@@ -167,6 +186,7 @@ export async function submitBespokeEnquiry(
      actually reads. Losing them would defeat the point of recording this. */
   const message = [
     `Budget: AED ${request.budgetAed}`,
+    `Delivery: ${deliveryDate.slice(0, 10)}${deliveryTimeSlot ? `, ${deliveryTimeSlot}` : ""}`,
     ...forWhom,
     colours ? `Colours: ${colours}` : "",
     clean(request.colourNote, 240)
@@ -200,6 +220,7 @@ export async function submitBespokeEnquiry(
       subject: `Build your own — AED ${request.budgetAed}`,
       message,
       buildYourOwn: {
+        deliveryDate,
         budgetFils: Math.round(request.budgetAed * 100),
         /* A suggestion for the florist's "final amount", never a charge:
            the amount actually asked for is typed by staff. */

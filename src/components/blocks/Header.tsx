@@ -15,7 +15,7 @@ import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
 import { useLocale, useT } from "@/lib/locale";
 import { plural } from "@/lib/i18n/plural";
-import { CONTACT, navTree } from "@/lib/data";
+import { CONTACT, navTree, visibleNav } from "@/lib/data";
 import { LanguageToggle } from "@/components/blocks/LanguageToggle";
 import { useScrollLock } from "@/lib/useScrollLock";
 
@@ -24,13 +24,9 @@ const OVERLAY_ROUTES = new Set(["/"]);
 
 /* The client's menu tree: headings with what sits under them. Split
    either side of the centred mark on desktop. */
-const NAV_LEFT = navTree.slice(0, 2);
-const NAV_RIGHT = navTree.slice(2);
 
 /* The phone menu splits the same tree either side of OCCASIONS, which it
    promotes to a destination of its own — see the note at the insertion. */
-const NAV_BEFORE_OCCASIONS = navTree.slice(0, 2);
-const NAV_AFTER_OCCASIONS = navTree.slice(2);
 
 function IconSearch({ className }: { className?: string }) {
   return (
@@ -212,7 +208,9 @@ function DesktopNavItem({
 export function Header({
   products = [],
   occasions = [],
+  siteFlags = { eventsLive: false, guestFavorsLive: false },
 }: {
+  siteFlags?: { eventsLive: boolean; guestFavorsLive: boolean };
   products?: readonly Product[];
   occasions?: readonly Occasion[];
 } = {}) {
@@ -225,6 +223,13 @@ export function Header({
   const { count, openCart } = useCart();
   const t = useT();
   const { locale } = useLocale();
+
+  /* The menu with the owner's website switches applied (Admin → Website). */
+  const nav = visibleNav(navTree, siteFlags);
+  const NAV_LEFT = nav.slice(0, 2);
+  const NAV_RIGHT = nav.slice(2);
+  const NAV_BEFORE_OCCASIONS = nav.slice(0, 2);
+  const NAV_AFTER_OCCASIONS = nav.slice(2);
 
   /**
    * THE HEADER PUBLISHES ITS OWN HEIGHT.

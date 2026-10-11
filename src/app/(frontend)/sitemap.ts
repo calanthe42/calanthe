@@ -1,4 +1,4 @@
-import { EVENTS_LIVE } from "@/lib/data";
+import { getSiteFlags } from "@backend/data/site-flags";
 import type { MetadataRoute } from "next";
 import { getActiveOccasionSlugs } from "@backend/data/occasions";
 import { getAvailableProductSlugs } from "@backend/data/products";
@@ -51,7 +51,7 @@ const marketingRoutes: ReadonlyArray<{
   { path: "/occasions", priority: 0.9, changeFrequency: "monthly" },
   { path: "/build-your-own", priority: 0.8, changeFrequency: "monthly" },
   { path: "/membership", priority: 0.8, changeFrequency: "monthly" },
-  ...(EVENTS_LIVE ? [{ path: "/events", priority: 0.7, changeFrequency: "monthly" as const }] : []),
+  { path: "/events", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },
   { path: "/delivery", priority: 0.6, changeFrequency: "monthly" },
   { path: "/faqs", priority: 0.6, changeFrequency: "monthly" },
@@ -68,7 +68,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getActiveOccasionSlugs(),
   ]);
 
-  const marketing: MetadataRoute.Sitemap = marketingRoutes.map(
+  /* Events are listed only while the owner shows them (Admin → Website). */
+  const { eventsLive } = await getSiteFlags();
+  const marketing: MetadataRoute.Sitemap = marketingRoutes.filter((r) => eventsLive || r.path !== "/events").map(
     ({ path, priority, changeFrequency }) => ({
       url: absoluteUrl(path || "/"),
       lastModified: BUILD_TIME,

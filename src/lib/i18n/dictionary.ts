@@ -196,7 +196,7 @@ export const en = {
     skipToContent: "Skip to content",
   },
   strip: {
-    emirates: "Delivering across Abu Dhabi",
+    emirates: "Free delivery in Abu Dhabi",
     video: "Video approval on every order",
     /* No same-day claim and no countdown: the atelier does not offer
        same-day delivery, so a ticker promising it was simply untrue. */
@@ -1308,6 +1308,7 @@ export const en = {
       recordFailed:
         "We could not record that just now. Please try again, or message us on WhatsApp.",
       budgetRequired: "Please choose a budget.",
+      dayRequired: "Please choose a delivery day we can still deliver on.",
       eventTypeRequired: "Please tell us what kind of occasion it is.",
       dateInvalid: "Please check the date.",
       dateRequired: "Please choose the date of the event.",
@@ -1868,7 +1869,7 @@ export const ar: typeof en = {
     skipToContent: "الانتقال إلى المحتوى",
   },
   strip: {
-    emirates: "نوصّل في أنحاء أبوظبي",
+    emirates: "توصيل مجاني في أبوظبي",
     video: "موافقتكم بالفيديو على كل طلب",
     composed: "كل باقة تُنسَّق يدويًا",
   },
@@ -2759,6 +2760,7 @@ export const ar: typeof en = {
       phoneFormat: "اكتبوا رقم الهاتف مع رمز الدولة، مثل +9715…",
       recordFailed: "لم نتمكن من تسجيل ذلك الآن. حاولوا مرة أخرى، أو راسلونا على واتساب.",
       budgetRequired: "اختاروا الميزانية.",
+      dayRequired: "اختاروا يوم توصيل ما زال متاحًا.",
       eventTypeRequired: "أخبرونا بنوع المناسبة.",
       dateInvalid: "تحقّقوا من التاريخ.",
       dateRequired: "اختاروا تاريخ المناسبة.",
