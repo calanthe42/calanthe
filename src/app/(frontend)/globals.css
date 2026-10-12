@@ -1166,6 +1166,16 @@ body.overlay-open .floating-whatsapp {
   outline: none;
   border-radius: 0;
 }
+/* The phone field's country search: its focus is the olive underline of
+   its row, and the sheet it sits in takes focus only to hold the keyboard
+   inside it. */
+.phone-search:focus-visible,
+.phone-sheet:focus-visible {
+  outline: none;
+}
+.phone-search::-webkit-search-cancel-button {
+  appearance: none;
+}
 
 /* Over the dark sections, the accent is still legible but the offset
    ring needs to not sit on top of the text it belongs to. */

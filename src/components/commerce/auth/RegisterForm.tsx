@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { useT } from "@/lib/locale";
 import { AuthField } from "./AuthField";
 import { PhoneField } from "@/components/ui/PhoneField";
-import { fieldClasses, labelClasses } from "@/components/ui/form-classes";
+import {
+  fieldClasses,
+  fieldErrorClasses,
+  labelClasses,
+} from "@/components/ui/form-classes";
 
 /**
  * Create account.
@@ -82,7 +86,16 @@ export function RegisterForm() {
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-6" noValidate>
+    <form
+      className="flex flex-col gap-6"
+      noValidate
+      onSubmit={(e) => {
+        /* Not a form action: React empties a form after its action runs, so a
+           rejected phone number used to clear everything else typed. */
+        e.preventDefault();
+        void onSubmit(new FormData(e.currentTarget));
+      }}
+    >
       <AuthField
         id="reg-name"
         name="name"
@@ -104,7 +117,22 @@ export function RegisterForm() {
         <label htmlFor="reg-phone" className={labelClasses}>
           {t.account.phoneOptional}
         </label>
-        <PhoneField id="reg-phone" name="phone" fieldClassName={fieldClasses} />
+        <PhoneField
+          id="reg-phone"
+          name="phone"
+          fieldClassName={fieldClasses}
+          aria-invalid={error?.field === "phone" ? true : undefined}
+          aria-describedby={error?.field === "phone" ? "reg-phone-error" : undefined}
+        />
+        {/* A number already on an account, or one that is not complete. */}
+        {error?.field === "phone" && (
+          <p id="reg-phone-error" role="alert" className={fieldErrorClasses}>
+            <span aria-hidden className="text-burnt-orange">
+              ·
+            </span>
+            {error.message}
+          </p>
+        )}
       </div>
       <AuthField
         id="reg-password"

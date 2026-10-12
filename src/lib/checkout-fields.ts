@@ -7,8 +7,8 @@
  * way people in the UAE actually write a phone number is accepted.
  */
 
-/** Same pattern the server enforces. */
-const E164 = /^\+[1-9]\d{7,14}$/;
+import { isPlausiblePhone } from "@/lib/phone-countries";
+
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /**
@@ -32,8 +32,9 @@ export function normalisePhone(input: string): string {
   return compact;
 }
 
+/** Same rule the server enforces: international form, the right length for its country. */
 export function isValidPhone(input: string): boolean {
-  return E164.test(normalisePhone(input));
+  return isPlausiblePhone(normalisePhone(input));
 }
 
 export function isValidEmail(input: string): boolean {

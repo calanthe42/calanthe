@@ -1248,7 +1248,7 @@ export const en = {
       basketEmpty: "Your basket is empty.",
       nameRequired: "Please tell us your name.",
       emailInvalid: "That email address does not look right.",
-      phoneFormat: "Enter your phone in international format, e.g. +971501234567.",
+      phoneFormat: "That phone number does not look complete. Check the country and the number.",
       addressRequired: "Please give us a delivery address.",
       slotRequired: "Please choose a delivery time.",
       recipientPhoneInvalid: "The recipient's phone number does not look right.",
@@ -1294,6 +1294,7 @@ export const en = {
       resetLinkInvalid: "That reset link is not valid.",
       phoneTaken:
         "That phone number is already on an account. Sign in instead, or leave the phone blank and add it later.",
+      phoneInvalid: "That phone number does not look complete. Check the country and the number, or leave it blank.",
     },
     /**
      * The two lead forms — Build Your Own, and an event or membership
@@ -1304,7 +1305,7 @@ export const en = {
       rateLimited: "That is a lot of enquiries at once. {wait}",
       nameRequired: "Please tell us your name.",
       emailInvalid: "Please check your email address.",
-      phoneFormat: "Please include your phone number with its country code, like +9715…",
+      phoneFormat: "That phone number does not look complete. Check the country and the number.",
       recordFailed:
         "We could not record that just now. Please try again, or message us on WhatsApp.",
       budgetRequired: "Please choose a budget.",
@@ -1527,7 +1528,7 @@ export const en = {
     /** Typed against CheckoutErrorCode, so a new rule needs its Arabic. */
     errors: {
       recipientNameRequired: "Tell us who is receiving the flowers.",
-      phoneInvalid: "Check the number, for example 050 123 4567.",
+      phoneInvalid: "Check the number and its country, for example 50 123 4567.",
       zoneRequired: "Choose the emirate we are delivering to.",
       nameRequired: "Tell us your name.",
       phoneRequired: "We need a number to confirm the order on WhatsApp.",
@@ -2715,7 +2716,7 @@ export const ar: typeof en = {
       basketEmpty: "السلة فارغة.",
       nameRequired: "يُرجى كتابة الاسم.",
       emailInvalid: "البريد الإلكتروني يبدو غير صحيح.",
-      phoneFormat: "اكتبوا الرقم بالصيغة الدولية، مثال: +971501234567.",
+      phoneFormat: "رقم الهاتف يبدو غير مكتمل. تحقّقوا من الدولة والرقم.",
       addressRequired: "أضيفوا عنوان التوصيل.",
       slotRequired: "اختاروا وقت التوصيل.",
       recipientPhoneInvalid: "رقم هاتف المستلِم يبدو غير صحيح.",
@@ -2752,12 +2753,13 @@ export const ar: typeof en = {
       resetLinkInvalid: "رابط إعادة التعيين غير صالح.",
       phoneTaken:
         "رقم الهاتف هذا مستخدم في حساب آخر. سجّلوا الدخول، أو اتركوا حقل الهاتف فارغًا وأضيفوه لاحقًا.",
+      phoneInvalid: "رقم الهاتف يبدو غير مكتمل. تحقّقوا من الدولة والرقم، أو اتركوه فارغًا.",
     },
     enquiry: {
       rateLimited: "هذا عدد كبير من الطلبات في وقت واحد. {wait}",
       nameRequired: "يُرجى كتابة الاسم.",
       emailInvalid: "تحقّقوا من البريد الإلكتروني.",
-      phoneFormat: "اكتبوا رقم الهاتف مع رمز الدولة، مثل +9715…",
+      phoneFormat: "رقم الهاتف يبدو غير مكتمل. تحقّقوا من الدولة والرقم.",
       recordFailed: "لم نتمكن من تسجيل ذلك الآن. حاولوا مرة أخرى، أو راسلونا على واتساب.",
       budgetRequired: "اختاروا الميزانية.",
       dayRequired: "اختاروا يوم توصيل ما زال متاحًا.",
@@ -2939,7 +2941,7 @@ export const ar: typeof en = {
 
     errors: {
       recipientNameRequired: "أخبرونا من سيستلم الزهور.",
-      phoneInvalid: "تحقّقوا من الرقم، مثال: 050 123 4567.",
+      phoneInvalid: "تحقّقوا من الرقم والدولة، مثال: 50 123 4567.",
       zoneRequired: "اختاروا الإمارة التي نوصّل إليها.",
       nameRequired: "يُرجى كتابة الاسم.",
       phoneRequired: "نحتاج رقمًا لتأكيد الطلب على واتساب.",

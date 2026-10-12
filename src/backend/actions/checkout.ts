@@ -17,6 +17,7 @@ import { LIMITS, clientAddress, peek, throttle, waitHint } from "@backend/securi
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
 import { formatFils } from "@/lib/money";
+import { isPlausiblePhone } from "@/lib/phone-countries";
 import {
   LOST_CLAIM_NOTE,
   abandonOrder,
@@ -119,7 +120,6 @@ export type QuoteResult =
       quote?: CheckoutQuote;
     };
 
-const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /** A basket nobody fills by hand; anything longer is not a customer. */
@@ -325,7 +325,7 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
   if (!EMAIL.test(request.customerEmail ?? "")) {
     return fail("INVALID_CUSTOMER", "emailInvalid");
   }
-  if (!E164.test(request.customerPhone ?? "")) {
+  if (!isPlausiblePhone(request.customerPhone ?? "")) {
     return fail("INVALID_CUSTOMER", "phoneFormat");
   }
   if (!request.deliveryAddress?.trim()) {
@@ -334,7 +334,7 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
   if (!request.deliveryTimeSlot?.trim()) {
     return fail("INVALID_DELIVERY", "slotRequired");
   }
-  if (request.recipientPhone && !E164.test(request.recipientPhone)) {
+  if (request.recipientPhone && !isPlausiblePhone(request.recipientPhone)) {
     return fail("INVALID_DELIVERY", "recipientPhoneInvalid");
   }
 

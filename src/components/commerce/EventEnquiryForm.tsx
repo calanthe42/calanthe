@@ -82,7 +82,15 @@ export function EventEnquiryForm() {
   }
 
   return (
-    <form action={onSubmit} className="mx-auto flex max-w-xl flex-col gap-6">
+    <form
+      className="mx-auto flex max-w-xl flex-col gap-6"
+      onSubmit={(e) => {
+        /* Not a form action: React empties a form after its action runs, so a
+           rejected phone number used to clear everything else typed. */
+        e.preventDefault();
+        void onSubmit(new FormData(e.currentTarget));
+      }}
+    >
       <fieldset>
         <legend className={cn(labelClasses, "text-cream/70")}>
           {t.enquiryForm.whatKind}

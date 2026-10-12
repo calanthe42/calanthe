@@ -5,6 +5,7 @@ import config from "@payload-config";
 import { LIMITS, hintByAddress } from "@backend/security/throttle";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
+import { isPlausiblePhone } from "@/lib/phone-countries";
 
 /**
  * Membership interest, recorded in the system rather than thrown at WhatsApp.
@@ -50,7 +51,6 @@ export type MembershipEnquiryRequest = {
 export type MembershipEnquiryResult =
   { ok: true; reference: string } | { ok: false; code: string; message: string };
 
-const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const FREQUENCIES = ["WEEKLY", "FORTNIGHTLY", "MONTHLY"] as const;
@@ -88,7 +88,7 @@ export async function submitMembershipEnquiry(
   if (!EMAIL.test(contactEmail)) {
     return fail("email", m.emailInvalid);
   }
-  if (!E164.test(contactPhone)) {
+  if (!isPlausiblePhone(contactPhone)) {
     return fail("phone", m.phoneFormat);
   }
   if (!FREQUENCIES.includes(request.frequency)) {

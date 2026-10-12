@@ -130,7 +130,15 @@ export function MembershipEnquiryForm({ planName, planLabel, onClose }: Props) {
         {t.enquiryForm.membershipIntro}
       </p>
 
-      <form action={onSubmit} className="mt-7 flex flex-col gap-6">
+      <form
+        className="mt-7 flex flex-col gap-6"
+        onSubmit={(e) => {
+          /* Not a form action: React empties a form after its action runs, so a
+             rejected phone number used to clear everything else typed. */
+          e.preventDefault();
+          void onSubmit(new FormData(e.currentTarget));
+        }}
+      >
         <fieldset>
           <legend className={labelClasses}>{t.enquiryForm.howOften}</legend>
           <div className="grid grid-cols-3 gap-2">

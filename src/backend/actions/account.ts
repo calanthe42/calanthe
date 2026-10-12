@@ -5,6 +5,7 @@ import { getPayload } from "payload";
 import config from "@payload-config";
 import { LIMITS, clientAddress, throttle, waitHint } from "@backend/security/throttle";
 import { getDictionary } from "@/lib/i18n/server";
+import { isPlausiblePhone } from "@/lib/phone-countries";
 import { waitText, withWait } from "@/lib/i18n/wait";
 import { randomBytes } from "node:crypto";
 import { sendEmail } from "@backend/email/send";
@@ -162,6 +163,7 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
   const confirm = String(form.get("confirmPassword") ?? "");
 
   if (name.length < 2) return { ok: false, field: "name", message: m.nameRequired };
+  if (phone && !isPlausiblePhone(phone)) return { ok: false, field: "phone", message: m.phoneInvalid };
   if (!EMAIL_RE.test(email))
     return { ok: false, field: "email", message: m.emailInvalid };
   if (password.length < MIN_PASSWORD)

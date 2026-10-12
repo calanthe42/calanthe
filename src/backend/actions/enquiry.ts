@@ -8,6 +8,7 @@ import { BYO_VASE_PRICE_AED, timeSlots } from "@/lib/data";
 import { buildDays, uaeNow } from "@/lib/delivery";
 import { getDictionary } from "@/lib/i18n/server";
 import { withWait } from "@/lib/i18n/wait";
+import { isPlausiblePhone } from "@/lib/phone-countries";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /**
@@ -35,7 +36,6 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
  * this function, never accepted from the caller.
  */
 
-const E164 = /^\+[1-9]\d{7,14}$/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export type EnquiryResult =
@@ -59,7 +59,7 @@ function checkContact(c: Contact, m: EnquiryMessages): EnquiryResult | null {
   if (!EMAIL.test(clean(c.email, 200))) {
     return fail("email", m.emailInvalid);
   }
-  if (!E164.test(clean(c.phone, 40))) {
+  if (!isPlausiblePhone(clean(c.phone, 40))) {
     return fail("phone", m.phoneFormat);
   }
   return null;
