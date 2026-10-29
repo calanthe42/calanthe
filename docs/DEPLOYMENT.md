@@ -169,6 +169,13 @@ function and is unit-tested across these cases.
   `image/avif`. **SVG is deliberately excluded**: it is a script container,
   not a picture. Payload also sniffs the real type, so renaming a `.svg` to
   `.jpg` does not get through.
+- **Canon RAW (`.CR3`, `.CR2`) and oversized photos are prepared in the
+  browser**, by the admin's own upload forms (`src/admin/lib/prepare-photo.ts`),
+  and never reach the server as they were chosen. A RAW becomes the
+  full-size JPEG the camera stored inside it, turned the right way up and
+  shrunk to a 2560 px long edge. A JPEG, PNG, WebP or AVIF over 4 MB is
+  re-encoded the same way. The server's allow-list and limit above do not
+  change, so `/cms` and the REST API still refuse both.
 - Sharp still generates the four sizes (`thumbnail`, `card`, `hero`, `og`)
   and all metadata — filename, mime type, filesize, width, height, focal
   point — is preserved in Postgres. **No binaries are stored in the

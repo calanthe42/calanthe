@@ -4,10 +4,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
-import { isOverUploadLimit } from "@/lib/uploads";
+import { UPLOAD_ACCEPT, isOverUploadLimit } from "@/lib/uploads";
 import { deleteMedia, updateMediaAlt, uploadMedia } from "@backend/actions/admin";
 import type { MediaOption } from "@backend/domain/media-option";
 import { useI18n } from "@admin/i18n/client";
+import { preparePhoto } from "@admin/lib/prepare-photo";
 import { Button, ButtonLink } from "@admin/ui/Button";
 import { Card, CardHeader } from "@admin/ui/Card";
 import { DescriptionList } from "@admin/ui/Content";
@@ -160,20 +161,35 @@ export function MediaManager({ items, canDelete }: { items: MediaItem[]; canDele
     event.preventDefault();
     const data = new FormData(event.currentTarget);
 
-    /* Checked here as well as on the server: an oversized photo would
-       otherwise be refused by the framework with a bare 413 before any of our
-       code — including the sentence explaining the limit — ever runs. */
-    const chosen = data.get("file");
-    if (chosen instanceof File && isOverUploadLimit(chosen)) {
-      void upload.run(async () => ({
-        ok: false,
-        message: "That photo is larger than 4 MB. Please use a smaller file.",
-        code: "actions.media.tooLarge",
-      }));
-      return;
-    }
-
-    void upload.run(() => uploadMedia(data), {
+    void upload.run(async () => {
+      const chosen = data.get("file");
+      if (chosen instanceof File && chosen.size > 0) {
+        /* Asked before a RAW is converted, not after: the server would only
+           refuse it for the missing words. */
+        if (!String(data.get("alt") ?? "").trim()) {
+          return {
+            ok: false,
+            message: "Describe the photograph first — for example “Blush peonies in a cream vase”.",
+            code: "actions.media.describe",
+          };
+        }
+        /* A RAW becomes its JPEG, an oversized photo a smaller one. */
+        const prepared = await preparePhoto(chosen);
+        if (!prepared.ok) return prepared;
+        /* Checked here as well as on the server: an oversized photo would
+           otherwise be refused by the framework with a bare 413 before any
+           of our code — including the sentence explaining the limit — runs. */
+        if (isOverUploadLimit(prepared.file)) {
+          return {
+            ok: false,
+            message: "That photo is larger than 4 MB. Please use a smaller file.",
+            code: "actions.media.tooLarge",
+          };
+        }
+        data.set("file", prepared.file);
+      }
+      return uploadMedia(data);
+    }, {
       onSuccess: () => {
         setFormKey((key) => key + 1);
         router.refresh();
@@ -191,7 +207,7 @@ export function MediaManager({ items, canDelete }: { items: MediaItem[]; canDele
               id="upload-file"
               name="file"
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif"
+              accept={UPLOAD_ACCEPT}
               required
               className={cn(fieldClasses, "py-2 file:me-3 file:rounded-sm file:border-0 file:bg-sunken file:px-3 file:py-1 file:text-xs file:text-ink")}
             />

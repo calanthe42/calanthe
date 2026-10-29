@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useI18n } from "@admin/i18n/client";
+import { playOrderChime } from "@admin/lib/order-chime";
 import { Icon } from "@admin/ui/icons";
 import { useToast } from "@admin/ui/Toast";
 import { cn } from "@/lib/cn";
@@ -24,7 +25,7 @@ import { VAPID_PUBLIC_KEY } from "@backend/notify/push-public";
  * shell itself keeps watch: every half minute (and the moment the tab comes
  * back into view) it asks /admin/pulse what arrived since she last looked,
  * and if something did, three things happen at once — the badge on the bell
- * counts it, a soft chime plays, and the browser shows a notification, even
+ * counts it, wind chimes play, and the browser shows a notification, even
  * when the admin is in a background tab. Nothing here is optimistic; every
  * alert is something the server confirmed exists.
  *
@@ -61,12 +62,14 @@ const writeSeen = (iso: string) => {
 };
 
 /**
- * THE RING — a new order must be heard across the shop. A telephone-style
- * double ring (two tones, 440 + 480 Hz, the classic bell cadence), loud,
- * repeated every 3 seconds until someone opens the bell or the order list,
+ * THE RING — a new order must be heard across the shop, without startling
+ * anyone in it. Wind chimes (lib/order-chime.ts, chosen by the owner),
+ * repeated every 5 seconds until someone opens the bell or the order list,
  * for at most two minutes. Browsers only allow sound after the page has
  * been touched once, so `unlockAudio` runs on the first tap anywhere.
  */
+const RING_EVERY_MS = 5_000;
+const RING_FOR_MS = 120_000;
 let sharedCtx: AudioContext | null = null;
 function audio(): AudioContext | null {
   try {
@@ -84,27 +87,13 @@ function audio(): AudioContext | null {
 function ringOnce() {
   const ctx = audio();
   if (!ctx) return;
-  const at = ctx.currentTime;
-  for (const burst of [0, 0.6]) {
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, at + burst);
-    gain.gain.exponentialRampToValueAtTime(0.9, at + burst + 0.02);
-    gain.gain.setValueAtTime(0.9, at + burst + 0.4);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + burst + 0.45);
-    gain.connect(ctx.destination);
-    for (const freq of [440, 480]) {
-      const osc = ctx.createOscillator();
-      osc.type = "square";
-      osc.frequency.value = freq;
-      const lp = ctx.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.value = 2400;
-      osc.connect(lp).connect(gain);
-      osc.start(at + burst);
-      osc.stop(at + burst + 0.46);
-    }
+  try {
+    playOrderChime(ctx);
+  } catch {
+    /* No audio on this device: the badge and the notification still say it. */
   }
-  if ("vibrate" in navigator) navigator.vibrate?.([400, 200, 400]);
+  /* A short double tap, not a phone's long buzz. */
+  if ("vibrate" in navigator) navigator.vibrate?.([120, 90, 120]);
 }
 let ringTimer: number | null = null;
 function startRinging() {
@@ -112,9 +101,9 @@ function startRinging() {
   ringOnce();
   let count = 1;
   ringTimer = window.setInterval(() => {
-    if (++count > 40) return stopRinging();
+    if (++count > RING_FOR_MS / RING_EVERY_MS) return stopRinging();
     ringOnce();
-  }, 3000);
+  }, RING_EVERY_MS);
 }
 function stopRinging() {
   if (ringTimer != null) window.clearInterval(ringTimer);

@@ -556,7 +556,7 @@ export const en = {
       altPlaceholder: "Blush peonies in a cream vase",
       altHint:
         "Describe what the photo shows. It is read aloud to people using screen readers.",
-      rules: "JPEG, PNG, WebP or AVIF, up to 4 MB.",
+      rules: "JPEG, PNG, WebP, AVIF or Canon RAW (.CR3, .CR2). Large photos are made smaller for you.",
     },
     filters: {
       search: "Search photos",
@@ -1506,11 +1506,14 @@ export const en = {
     },
     media: {
       chooseFile: "Choose a photograph to upload.",
-      badType: "Use a JPEG, PNG, WebP or AVIF photograph.",
+      badType: "Use a JPEG, PNG, WebP or AVIF photograph, or a Canon RAW file (.CR3 or .CR2).",
       describe:
         "Describe the photograph first — for example “Blush peonies in a cream vase”.",
       altTooLong: "Keep the alt text under 200 characters.",
       tooLarge: "That photo is larger than 4 MB. Please use a smaller file.",
+      rawNoPhoto:
+        "This RAW file has no full-size photo inside that the browser can read. Export it as a JPEG from your camera app, then upload the JPEG.",
+      prepareFailed: "This photo could not be prepared for upload. Save it as a JPEG and try again.",
       uploaded: "Photo uploaded.",
       uploadFailed: "The upload failed. Please try again.",
       inUse: "This photo is used by {names}. Remove it there first, then delete it.",

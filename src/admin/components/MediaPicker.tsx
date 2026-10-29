@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { isOverUploadLimit } from "@/lib/uploads";
+import { UPLOAD_ACCEPT, isOverUploadLimit } from "@/lib/uploads";
 import { uploadMedia } from "@backend/actions/admin";
 import type { MediaOption } from "@backend/domain/media-option";
 import { useI18n } from "@admin/i18n/client";
+import { preparePhoto } from "@admin/lib/prepare-photo";
 import { Button } from "@admin/ui/Button";
 import { Dialog } from "@admin/ui/Dialog";
 import { Field, Input, SearchInput, fieldClasses } from "@admin/ui/Field";
@@ -76,19 +77,25 @@ export function MediaPickerDialog({ title, library, initialSelected, multiple, m
       altRef.current?.focus();
       return;
     }
-    /* Same rule as the server, checked before sending: past the limit the
-       framework answers a bare 413 and this message never runs. */
-    if (isOverUploadLimit(file)) {
-      setNotice({ ok: false, text: t("actions.media.tooLarge") });
-      return;
-    }
-
-    const data = new FormData();
-    data.set("file", file);
-    data.set("alt", alt);
     setNotice(null);
     setUploading(true);
     try {
+      /* A RAW becomes its JPEG, an oversized photo a smaller one. */
+      const prepared = await preparePhoto(file);
+      if (!prepared.ok) {
+        setNotice({ ok: false, text: resolve(prepared.code, undefined, prepared.message) });
+        return;
+      }
+      /* Same rule as the server, checked before sending: past the limit the
+         framework answers a bare 413 and this message never runs. */
+      if (isOverUploadLimit(prepared.file)) {
+        setNotice({ ok: false, text: t("actions.media.tooLarge") });
+        return;
+      }
+
+      const data = new FormData();
+      data.set("file", prepared.file);
+      data.set("alt", alt);
       const result = await uploadMedia(data);
       if (result.ok && result.media) {
         const added = result.media;
@@ -173,7 +180,7 @@ export function MediaPickerDialog({ title, library, initialSelected, multiple, m
                 ref={fileRef}
                 id="media-picker-file"
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
+                accept={UPLOAD_ACCEPT}
                 className={cn(fieldClasses, "py-2 file:me-3 file:rounded-sm file:border-0 file:bg-sunken file:px-3 file:py-1 file:text-xs file:text-ink")}
               />
             </Field>

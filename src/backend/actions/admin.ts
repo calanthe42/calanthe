@@ -323,7 +323,13 @@ export async function uploadMedia(form: FormData): Promise<ActionResult> {
     return { ok: false, message: "Choose a photograph to upload.", code: "actions.media.chooseFile" };
   }
   if (!UPLOAD_TYPES.includes(file.type)) {
-    return { ok: false, message: "Use a JPEG, PNG, WebP or AVIF photograph.", code: "actions.media.badType" };
+    /* A Canon RAW never arrives here: the upload forms send the JPEG inside
+       it (admin/lib/prepare-photo.ts), which is why the sentence names it. */
+    return {
+      ok: false,
+      message: "Use a JPEG, PNG, WebP or AVIF photograph, or a Canon RAW file (.CR3 or .CR2).",
+      code: "actions.media.badType",
+    };
   }
   if (!alt) return DESCRIBE_FIRST;
   if (alt.length > MAX_ALT_LENGTH) return ALT_TOO_LONG;
