@@ -17,6 +17,7 @@ import * as migration_20261006_000000_orders_money_guard from './20261006_000000
 import * as migration_20261011_000000_admin_push from './20261011_000000_admin_push';
 import * as migration_20261011_010000_must_change_password from './20261011_010000_must_change_password';
 import * as migration_20261011_020000_site_settings from './20261011_020000_site_settings';
+import * as migration_20261029_000000_welcome_offer from './20261029_000000_welcome_offer';
 
 export const migrations = [
   {
@@ -113,5 +114,10 @@ export const migrations = [
     up: migration_20261011_020000_site_settings.up,
     down: migration_20261011_020000_site_settings.down,
     name: '20261011_020000_site_settings',
+  },
+  {
+    up: migration_20261029_000000_welcome_offer.up,
+    down: migration_20261029_000000_welcome_offer.down,
+    name: '20261029_000000_welcome_offer',
   },
 ];

@@ -196,5 +196,20 @@ export const Discounts: CollectionConfig = {
       access: { create: () => false, update: () => false },
       admin: { readOnly: true, description: "Paid orders that used this code." },
     },
+    {
+      name: "welcome",
+      type: "checkbox",
+      defaultValue: false,
+      /* Set once, by the migration that created the welcome gift. The site
+         applies that one row to a confirmed customer's first order
+         (backend/data/welcome.ts); nobody can type it, and no role can mark
+         another discount as the gift. */
+      access: { create: () => false, update: () => false },
+      admin: {
+        readOnly: true,
+        description:
+          "The welcome gift: taken off a new account's first order by the site, once per person. It cannot be typed as a code.",
+      },
+    },
   ],
 };

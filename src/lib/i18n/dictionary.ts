@@ -1185,6 +1185,41 @@ export const en = {
     rowCode: "Code {code}",
     totalSavings: "You save {amount} on this order",
     failed: "We could not check that code. Please try again.",
+    welcomeRow: "Welcome gift ({amount})",
+    welcomeNote: "A code you add replaces the welcome gift.",
+  },
+  /**
+   * THE WELCOME GIFT — the invitation a first-time visitor sees once
+   * (components/blocks/WelcomeOffer.tsx). {amount} is "10%" or an amount in
+   * AED, whichever the owner set in /admin → Discounts.
+   */
+  welcome: {
+    dialogLabel: "Welcome offer",
+    close: "Close",
+    back: "Back",
+    eyebrow: "Welcome to Calanthe",
+    title: "{amount} off your first order",
+    lead: "Create your account and we’ll take it off at checkout.",
+    create: "Create my account",
+    notNow: "Not now",
+    haveAccount: "Already have an account?",
+    signIn: "Sign in",
+    terms:
+      "One welcome gift per person, on a first order. It doesn’t combine with other codes, and delivery is charged as usual.",
+    formEyebrow: "Your welcome gift",
+    formTitle: "Create your account",
+    formLead: "The {amount} comes off your first order once your email is confirmed.",
+    name: "Name",
+    email: "Email",
+    password: "Password",
+    passwordHint: "At least {min} characters.",
+    show: "Show",
+    hide: "Hide",
+    creating: "Creating your account…",
+    doneEyebrow: "Your gift is saved",
+    doneTitle: "Check your inbox",
+    doneLead: "We sent a link to {email}. Confirm your email and the {amount} will be waiting at checkout.",
+    continue: "Continue shopping",
   },
   /**
    * Sizes and add-ons. Like the emirates, these are configuration in code
@@ -1271,6 +1306,8 @@ export const en = {
       codeMinSpend: "Add {amount} more to use this code. It needs a minimum order of {min}.",
       codeAlreadyUsed: "This code has already been used with this email address.",
       codeExhausted: "This code has reached its limit and is no longer available.",
+      welcomeUnavailable:
+        "Your welcome gift no longer applies to this order, and nothing was charged. The total has been updated: please review it, then pay.",
       codeRateLimited: "Too many attempts. {wait}",
       priceChanged: "Prices have just been updated. Please review the new total, then pay.",
       totalTooLow:
@@ -2674,6 +2711,36 @@ export const ar: typeof en = {
     rowCode: "الرمز {code}",
     totalSavings: "توفّرون {amount} في هذا الطلب",
     failed: "تعذّر التحقق من الرمز. حاولوا مرة أخرى.",
+    welcomeRow: "هدية الترحيب ({amount})",
+    welcomeNote: "أي رمز تضيفونه يحلّ محلّ هدية الترحيب.",
+  },
+  welcome: {
+    dialogLabel: "عرض الترحيب",
+    close: "إغلاق",
+    back: "رجوع",
+    eyebrow: "أهلًا بكم في كالانثي",
+    title: "خصم {amount} على طلبكم الأول",
+    lead: "أنشئوا حسابكم، وسنخصمه عند الدفع.",
+    create: "إنشاء حسابي",
+    notNow: "ليس الآن",
+    haveAccount: "لديكم حساب؟",
+    signIn: "تسجيل الدخول",
+    terms:
+      "هدية ترحيب واحدة لكل شخص، على الطلب الأول. لا تُجمع مع رموز الخصم الأخرى، وتُحتسب رسوم التوصيل كالمعتاد.",
+    formEyebrow: "هدية الترحيب",
+    formTitle: "إنشاء حسابكم",
+    formLead: "يُخصم {amount} من طلبكم الأول بعد تأكيد بريدكم الإلكتروني.",
+    name: "الاسم",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    passwordHint: "{min} أحرف على الأقل.",
+    show: "إظهار",
+    hide: "إخفاء",
+    creating: "جارٍ إنشاء حسابكم…",
+    doneEyebrow: "هديتكم محفوظة",
+    doneTitle: "تفقّدوا بريدكم",
+    doneLead: "أرسلنا رابطًا إلى {email}. أكّدوا بريدكم الإلكتروني وسيكون خصم {amount} بانتظاركم عند الدفع.",
+    continue: "متابعة التسوق",
   },
   sizeNames: {
     standard: "أساسي",
@@ -2731,6 +2798,8 @@ export const ar: typeof en = {
       codeMinSpend: "أضيفوا {amount} لاستخدام هذا الرمز. الحد الأدنى للطلب {min}.",
       codeAlreadyUsed: "سبق استخدام هذا الرمز مع هذا البريد الإلكتروني.",
       codeExhausted: "بلغ هذا الرمز حدّ الاستخدام ولم يعد متاحًا.",
+      welcomeUnavailable:
+        "لم تعد هدية الترحيب تنطبق على هذا الطلب، ولم يُخصم أي مبلغ. تم تحديث الإجمالي: راجعوه ثم ادفعوا.",
       codeRateLimited: "محاولات كثيرة. {wait}",
       priceChanged: "تم تحديث الأسعار للتو. راجعوا الإجمالي الجديد ثم ادفعوا.",
       totalTooLow: "الإجمالي أقل من الحد الأدنى للدفع بالبطاقة. أضيفوا تنسيقًا أو أزيلوا الرمز.",

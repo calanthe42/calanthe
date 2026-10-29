@@ -76,6 +76,16 @@ vi.mock("@backend/payments/coupon-claims", () => ({
   sweepStaleDiscountOrders: (...args: unknown[]) => claims.sweepStaleDiscountOrders(...(args as [])),
 }));
 
+/* ---- the welcome gift: who may have it, and what the orders say ---- */
+const gift = {
+  welcomeFor: vi.fn(async (): Promise<CouponRule | null> => null),
+  welcomeStanding: vi.fn(async () => ({ paidOrders: 0, claims: 0 })),
+};
+vi.mock("@backend/data/welcome", () => ({
+  welcomeFor: (...args: unknown[]) => gift.welcomeFor(...(args as [])),
+  welcomeStanding: (...args: unknown[]) => gift.welcomeStanding(...(args as [])),
+}));
+
 /* ---- pricing: the real engine, with the rows supplied here ---- */
 const world: {
   products: Product[];
@@ -88,12 +98,21 @@ const pricingCalls: Doc[] = [];
 vi.mock("@backend/data/checkout-pricing", () => ({
   priceCheckout: async (
     _payload: unknown,
-    input: { lines: never[]; deliveryEmirate: string; discountCode?: string; customerEmail?: string },
+    input: {
+      lines: never[];
+      deliveryEmirate: string;
+      discountCode?: string;
+      customerEmail?: string;
+      welcome?: CouponRule | null;
+    },
     now: Date,
   ) => {
     pricingCalls.push(input as Doc);
     const code = (input.discountCode ?? "").trim().toUpperCase();
-    const coupon = code ? (world.coupons.find((c) => c.code === code) ?? null) : null;
+    const coupon = code
+      ? (world.coupons.find((c) => c.code === code) ?? null)
+      : (input.welcome ?? null);
+    const welcomeOffered = !code && coupon?.welcome === true;
     const discounts: OrderDiscounts = {
       sales: world.sales,
       coupon,
@@ -106,7 +125,16 @@ vi.mock("@backend/data/checkout-pricing", () => ({
     try {
       const priced = priceOrder(input.lines, products, input.deliveryEmirate, discounts);
       if (code && !coupon) priced.couponRefusal = { reason: "inactive" };
-      return { ok: true, priced, products, codeGiven: code !== "" };
+      const welcomeRefusal = welcomeOffered ? priced.couponRefusal : null;
+      if (welcomeOffered) priced.couponRefusal = null;
+      return {
+        ok: true,
+        priced,
+        products,
+        codeGiven: code !== "",
+        welcomeApplied: welcomeOffered && priced.couponDiscountFils > 0,
+        welcomeRefusal,
+      };
     } catch (error) {
       const engine = (error as Error).message.split(":")[0];
       if (engine === "TOTAL_TOO_LOW") {
@@ -199,6 +227,9 @@ beforeEach(() => {
   world.usedBy = [];
   vi.clearAllMocks();
   claims.couponClaimRefusal.mockResolvedValue(null);
+  fakePayload.auth.mockResolvedValue({ user: null });
+  gift.welcomeFor.mockResolvedValue(null);
+  gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 0 });
   fakePayload.findByID.mockResolvedValue({ id: 41, fulfilmentStatus: "NEW" });
   ensureOrderPaymentIntent.mockImplementation(async () => ({
     kind: "ready",
@@ -443,6 +474,7 @@ describe("quoteCheckout", () => {
         subtotalFils: 38400,
         saleSavingsFils: 9600,
         couponCode: null,
+        welcome: false,
         couponDiscountFils: 0,
         deliveryFeeFils: 0,
         totalFils: 38400,
@@ -481,6 +513,7 @@ describe("quoteCheckout", () => {
         subtotalFils: 48000,
         saleSavingsFils: 0,
         couponCode: null,
+        welcome: false,
         couponDiscountFils: 0,
         deliveryFeeFils: 0,
         totalFils: 48000,
@@ -565,5 +598,108 @@ describe("the code throttle counts wrong codes only", () => {
     for (let i = 0; i < LIMITS.discountCode.limit + 3; i += 1) await quote(`GUESS${i}`);
     expect(await quote("EID10")).toMatchObject({ code: "RATE_LIMITED" });
     expect(await startCardCheckout(request({ discountCode: "EID10", shownTotalFils: 43200 }))).toMatchObject({ ok: true });
+  });
+});
+
+describe("the welcome gift", () => {
+  const GIFT = coupon({ id: "12", title: "Welcome gift", code: "WELCOME", oncePerCustomer: true, welcome: true });
+  const CUSTOMER = { id: 7, role: "customer", email: "layla@example.com", _verified: true, accountStatus: "active" };
+  const signedIn = () => fakePayload.auth.mockResolvedValue({ user: CUSTOMER } as never);
+  const quoteWithGift = () => quoteCheckout({ lines: [line], deliveryEmirate: "abu-dhabi", welcome: true });
+
+  it("prices the quote with the gift for a customer it belongs to, and sends no code", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    const result = await quoteWithGift();
+    expect(result).toMatchObject({ ok: true, quote: { welcome: true, couponCode: null, couponDiscountFils: 4800 } });
+    expect(JSON.stringify(result)).not.toContain("WELCOME");
+  });
+
+  it("prices the quote without it when it is not hers", async () => {
+    signedIn();
+    const result = await quoteWithGift();
+    expect(result).toMatchObject({ ok: true, quote: { welcome: false, couponDiscountFils: 0, totalFils: 48000 } });
+  });
+
+  it("never looks for the gift unless the page asks for it", async () => {
+    await quoteCheckout({ lines: [line], deliveryEmirate: "abu-dhabi" });
+    expect(gift.welcomeFor).not.toHaveBeenCalled();
+  });
+
+  it("lets a typed code replace the gift, without asking about the gift", async () => {
+    world.coupons = [coupon()];
+    const result = await quoteCheckout({
+      lines: [line],
+      deliveryEmirate: "abu-dhabi",
+      discountCode: "EID10",
+      welcome: true,
+    });
+    expect(result).toMatchObject({ ok: true, quote: { couponCode: "EID10", welcome: false } });
+    expect(gift.welcomeFor).not.toHaveBeenCalled();
+  });
+
+  it("charges the gifted total, links the order to her, and checks the claim before and after", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    const quoted = await quoteWithGift();
+    const shownTotalFils = quoted.ok ? quoted.quote.totalFils : 0;
+
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils }));
+    expect(result).toMatchObject({ ok: true });
+    expect(created[0]).toMatchObject({
+      customer: 7,
+      customerType: "registered",
+      couponCode: "WELCOME",
+      couponDiscount: 12,
+      couponDiscountFils: 4800,
+      totalFils: shownTotalFils,
+    });
+    expect(gift.welcomeStanding).toHaveBeenCalledTimes(2);
+    /* The second look leaves her own new order out. */
+    expect(gift.welcomeStanding.mock.calls[1]).toEqual([fakePayload, CUSTOMER, "12", 41]);
+  });
+
+  it("refuses an order that showed the gift when it is not hers, and creates nothing", async () => {
+    signedIn();
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+    expect(fakePayload.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses when another order already holds the gift", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 1 });
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+    expect(fakePayload.create).not.toHaveBeenCalled();
+  });
+
+  it("cancels its own order when it loses the gift to another tab, before any payment exists", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    gift.welcomeStanding
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 0 })
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 1 });
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+    expect(claims.abandonOrder).toHaveBeenCalledWith(fakePayload, 41, "lost");
+    expect(ensureOrderPaymentIntent).not.toHaveBeenCalled();
+  });
+
+  it("reports a lost claim on the gift as the gift, never as a refused code", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    claims.couponClaimRefusal.mockResolvedValue("already_used");
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+  });
+
+  it("charges full price, with no gift, when the page did not show it", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    expect(await startCardCheckout(request())).toMatchObject({ ok: true });
+    expect(created[0]).toMatchObject({ totalFils: 48000, discountFils: 0 });
+    expect(gift.welcomeFor).not.toHaveBeenCalled();
   });
 });

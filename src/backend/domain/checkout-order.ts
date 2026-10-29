@@ -19,18 +19,25 @@ export type CheckoutQuote = {
   subtotalFils: number;
   /** What the sales took off. Already reflected in `subtotalFils`. */
   saleSavingsFils: number;
-  /** The code that applied, in capitals — null when none did. */
+  /** The code that applied, in capitals — null when none did, and for the welcome gift. */
   couponCode: string | null;
+  /**
+   * True when the welcome gift is what `couponDiscountFils` took off. Its code
+   * is never sent: the browser has nothing to type, store or send back.
+   */
+  welcome: boolean;
   couponDiscountFils: number;
   deliveryFeeFils: number;
   totalFils: number;
 };
 
 export function toCheckoutQuote(priced: PricedOrder): CheckoutQuote {
+  const welcome = priced.coupon?.welcome === true && priced.couponDiscountFils > 0;
   return {
     subtotalFils: priced.subtotalFils,
     saleSavingsFils: priced.saleSavingsFils,
-    couponCode: priced.coupon?.code ?? null,
+    couponCode: welcome ? null : (priced.coupon?.code ?? null),
+    welcome,
     couponDiscountFils: priced.couponDiscountFils,
     deliveryFeeFils: priced.deliveryFeeFils,
     totalFils: priced.totalFils,

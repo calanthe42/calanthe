@@ -44,8 +44,10 @@ import {
   itemRegularUnitFils,
   itemUnitFils,
   useCart,
+  type CartDiscount,
   type CartItem,
 } from "@/lib/cart";
+import { welcomeAmount } from "@/lib/welcome-offer";
 import { MIN_CHARGE_FILS, formatFils, formatFilsInline } from "@/lib/money";
 import {
   checkoutFieldErrors,
@@ -96,6 +98,7 @@ const OrderSummary = memo(function OrderSummary({
   items,
   subtotalFils,
   discount,
+  giftAmount,
   savedFils,
   zoneName,
   deliveryFeeFils,
@@ -106,8 +109,10 @@ const OrderSummary = memo(function OrderSummary({
   items: readonly CartItem[];
   /** Sum of the lines, sale prices already applied. */
   subtotalFils: number;
-  /** The code the server accepted for this basket, and what it takes off. */
-  discount: { code: string; discountFils: number } | null;
+  /** The code or welcome gift the server accepted for this basket, and what it takes off. */
+  discount: CartDiscount | null;
+  /** The welcome gift's size in words ("10%"), for its row. */
+  giftAmount: string | null;
   /** Everything saved on this order: sale prices plus the code. */
   savedFils: number;
   /** The chosen emirate, already in the reader's language. */
@@ -167,7 +172,9 @@ const OrderSummary = memo(function OrderSummary({
         {discount && (
           <div className="flex justify-between text-olive">
             <dt>
-              {t.discount.rowCode.replace("{code}", `\u2066${discount.code}\u2069`)}
+              {discount.welcome
+                ? t.discount.welcomeRow.replace("{amount}", `\u2066${giftAmount ?? ""}\u2069`)
+                : t.discount.rowCode.replace("{code}", `\u2066${discount.code ?? ""}\u2069`)}
             </dt>
             <dd dir="ltr">−{formatFils(discount.discountFils)}</dd>
           </div>
@@ -295,6 +302,7 @@ function CheckoutFormInner() {
     subtotalFils,
     saleSavingsFils,
     discount,
+    welcomeGift,
     discountState,
     refuseDiscountCode,
     clear,
@@ -458,7 +466,10 @@ function CheckoutFormInner() {
       /* The TEXT of the code, and only when the server's quote accepted it
          for this basket. A code that was refused is not sent again: the
          total on this page no longer includes it. */
-      ...(discount ? { discountCode: discount.code } : {}),
+      ...(discount?.code ? { discountCode: discount.code } : {}),
+      /* The welcome gift has no code here: the page says it showed the gift,
+         and the server checks that it is hers. */
+      ...(discount?.welcome ? { welcome: true } : {}),
       /* The total shown on this page, in fils. The server compares it with
          its own total and refuses the order if they differ; it never uses
          it to decide what to charge (backend/actions/checkout.ts). */
@@ -523,6 +534,11 @@ function CheckoutFormInner() {
                The refresh brings the new catalogue; the basket re-syncs to
                it and re-quotes the code, and she pays the total she can
                now see. */
+            router.refresh();
+          } else if (result.code === "WELCOME_UNAVAILABLE") {
+            /* The gift is no longer hers (used in another tab, or she signed
+               out). The refresh re-reads what she may have; the basket drops
+               the gift and she pays the total she can now see. */
             router.refresh();
           } else if (result.code.startsWith("CODE_")) {
             /* The code no longer applies (used already, run out, ended).
@@ -989,6 +1005,7 @@ function CheckoutFormInner() {
               items={items}
               subtotalFils={subtotalFils}
               discount={discount}
+              giftAmount={welcomeGift ? welcomeAmount(welcomeGift) : null}
               savedFils={savedFils}
               zoneName={zone ? zoneName(zone, t) : undefined}
               deliveryFeeFils={deliveryFeeFils}

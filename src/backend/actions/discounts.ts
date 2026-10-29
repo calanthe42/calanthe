@@ -1,10 +1,11 @@
 "use server";
 
 import { headers as nextHeaders } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getPayload, type Payload } from "payload";
 import config from "@payload-config";
 import { diffFields, recordActivity } from "@backend/activity/record";
+import { WELCOME_TAG } from "@backend/domain/welcome";
 import { loadDiscountProducts } from "@backend/data/discount-form";
 import {
   discountFields,
@@ -84,6 +85,8 @@ function revalidate(id?: number) {
   if (id !== undefined) revalidatePath(`/admin/discounts/${id}/edit`);
   /* The storefront reads sales in its layout and on most pages. */
   revalidatePath("/", "layout");
+  /* The welcome gift is cached apart (backend/data/welcome.ts). */
+  revalidateTag(WELCOME_TAG);
 }
 
 const CONFIRM_NEEDED: ActionResult = {

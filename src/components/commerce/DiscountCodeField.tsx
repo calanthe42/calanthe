@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { CODE_MAX_LENGTH } from "@/lib/discounts";
 import { useT } from "@/lib/locale";
 import { formatFils, formatFilsInline } from "@/lib/money";
+import { welcomeAmount } from "@/lib/welcome-offer";
 
 /**
  * The discount code field — one component, used in the cart drawer and in
@@ -35,6 +36,7 @@ export function DiscountCodeField({ className }: { className?: string }) {
   const {
     discountCode,
     discount,
+    welcomeGift,
     discountState,
     discountMessage,
     applyDiscountCode,
@@ -49,10 +51,28 @@ export function DiscountCodeField({ className }: { className?: string }) {
      was refused goes back into the box, where it can be corrected. */
   const held = discountCode !== null && !failed;
   const value = typed || (failed ? (discountCode ?? "") : "");
+  /* The welcome gift, when the server's quote put it on this basket. It has
+     no code to show and nothing to remove: typing a code replaces it. */
+  const gift = discount?.welcome ? discount : null;
+  /* A row, like an applied code: what it is and what it took off. The
+     "You save" sentence beside the total already says the rest. */
+  const giftLine =
+    gift && welcomeGift ? (
+      <p
+        role="status"
+        className="flex min-h-11 animate-[quiet-fade-in_200ms_cubic-bezier(0.22,1,0.36,1)] items-center justify-between gap-3 text-base text-olive motion-reduce:animate-none"
+      >
+        <span>{t.discount.welcomeRow.replace("{amount}", `⁦${welcomeAmount(welcomeGift)}⁩`)}</span>
+        <span dir="ltr" className="shrink-0">
+          −{formatFils(gift.discountFils)}
+        </span>
+      </p>
+    ) : null;
 
   function apply() {
     const next = value.trim();
-    if (!next || checking) return;
+    /* Only a code already being checked holds Apply; the gift's own quote does not. */
+    if (!next || (checking && discountCode !== null)) return;
     applyDiscountCode(next);
     setTyped("");
   }
@@ -60,6 +80,7 @@ export function DiscountCodeField({ className }: { className?: string }) {
   if (!held && !failed && !open) {
     return (
       <div className={className}>
+        {giftLine}
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -150,13 +171,16 @@ export function DiscountCodeField({ className }: { className?: string }) {
               {t.discount.apply}
             </Button>
           </div>
+          {welcomeGift && !discountCode ? (
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">{t.discount.welcomeNote}</p>
+          ) : null}
         </div>
       )}
 
       {/* One message, fading in. Success is a status; a refusal is an alert,
           with the same burnt-orange rule at the reading edge that the
           checkout's own error uses — never orange text. */}
-      {discount ? (
+      {discount && !gift ? (
         <p role="status" className="mt-2 animate-[quiet-fade-in_200ms_cubic-bezier(0.22,1,0.36,1)] text-base leading-relaxed text-olive motion-reduce:animate-none">
           {t.discount.applied
             .replace("{code}", `⁦${discount.code}⁩`)
@@ -171,6 +195,8 @@ export function DiscountCodeField({ className }: { className?: string }) {
           {discountMessage ?? t.discount.failed}
         </p>
       ) : null}
+      {/* A refused code takes nothing away: the gift stays on the order. */}
+      {gift ? <div className="mt-2">{giftLine}</div> : null}
     </div>
   );
 }

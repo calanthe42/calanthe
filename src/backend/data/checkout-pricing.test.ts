@@ -204,3 +204,48 @@ describe("priceCheckout", () => {
     expect(result).toEqual({ ok: false, failure: "rejected", code: "INVALID_TOTAL" });
   });
 });
+
+describe("priceCheckout — the welcome gift", () => {
+  const gift = coupon({ id: "12", title: "Welcome gift", code: "WELCOME", oncePerCustomer: true, welcome: true });
+
+  it("takes the gift off when no code was typed", async () => {
+    const h = harness();
+    const result = await priceCheckout(h.payload, { lines: [line], deliveryEmirate: "abu-dhabi", welcome: gift }, NOW, h.deps);
+    expect(result).toMatchObject({ ok: true, welcomeApplied: true, welcomeRefusal: null });
+    expect(result.ok && result.priced.couponDiscountFils).toBe(4800);
+    expect(result.ok && result.priced.coupon?.code).toBe("WELCOME");
+    expect(h.deps.findCoupon).not.toHaveBeenCalled();
+  });
+
+  it("lets a typed code replace the gift", async () => {
+    const h = harness({ coupon: coupon({ percentOff: 20 }) });
+    const result = await priceCheckout(
+      h.payload,
+      { lines: [line], deliveryEmirate: "abu-dhabi", discountCode: "EID10", welcome: gift },
+      NOW,
+      h.deps,
+    );
+    expect(result).toMatchObject({ ok: true, welcomeApplied: false, welcomeRefusal: null });
+    expect(result.ok && result.priced.coupon?.code).toBe("EID10");
+    expect(result.ok && result.priced.couponDiscountFils).toBe(9600);
+  });
+
+  it("never reports a gift that does not apply as a refused code", async () => {
+    const h = harness();
+    const result = await priceCheckout(
+      h.payload,
+      { lines: [line], deliveryEmirate: "abu-dhabi", welcome: { ...gift, active: false } },
+      NOW,
+      h.deps,
+    );
+    expect(result).toMatchObject({ ok: true, welcomeApplied: false, welcomeRefusal: { reason: "inactive" } });
+    expect(result.ok && result.priced.couponRefusal).toBeNull();
+    expect(result.ok && result.priced.couponDiscountFils).toBe(0);
+  });
+
+  it("is nothing at all when the caller offers no gift", async () => {
+    const h = harness();
+    const result = await priceCheckout(h.payload, { lines: [line], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
+    expect(result).toMatchObject({ ok: true, welcomeApplied: false, welcomeRefusal: null });
+  });
+});

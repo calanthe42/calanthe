@@ -37,6 +37,13 @@ export type CheckoutPricingInput = {
    * this code" would tell a stranger whose email belongs to a customer.
    */
   customerEmail?: string;
+  /**
+   * The welcome gift, when the CALLER has already established that the
+   * signed-in customer may have it (backend/data/welcome.ts `welcomeFor`).
+   * Applied only when no code was typed: a code she typed is her choice and
+   * replaces the gift.
+   */
+  welcome?: CouponRule | null;
 };
 
 export type CheckoutPricing =
@@ -46,6 +53,14 @@ export type CheckoutPricing =
       products: Map<string, Product>;
       /** True when a code was sent, whether or not it applied. */
       codeGiven: boolean;
+      /** True when the welcome gift is what came off this order. */
+      welcomeApplied: boolean;
+      /**
+       * Why the welcome gift, offered by the caller, did not apply. Kept apart
+       * from `priced.couponRefusal`: nobody typed it, so it is never reported
+       * as a wrong code.
+       */
+      welcomeRefusal: PricedOrder["couponRefusal"];
     }
   | {
       ok: false;
@@ -114,7 +129,7 @@ export async function priceCheckout(
     ]);
     products = new Map(found.docs.map((doc) => [String(doc.id), doc]));
     sales = liveSales;
-    coupon = foundCoupon;
+    coupon = foundCoupon ?? (!codeGiven && input.welcome ? input.welcome : null);
     if (coupon?.oncePerCustomer && input.customerEmail) {
       emailHasUsedCoupon = await deps.emailHasRedeemed(payload, coupon.id, input.customerEmail);
     }
@@ -131,17 +146,40 @@ export async function priceCheckout(
 
   /* ---------- server-side pricing ---------- */
   const discounts: OrderDiscounts = { sales, coupon, emailHasUsedCoupon, now };
+  const welcomeOffered = !codeGiven && coupon !== null && coupon.welcome === true;
   try {
     const priced = priceOrder(lines, products, input.deliveryEmirate, discounts);
     /* A code that does not exist is refused exactly like one that is
        switched off, so a stranger cannot learn which codes are real. */
     if (codeGiven && !coupon) priced.couponRefusal = { reason: "inactive" };
-    return { ok: true, priced, products, codeGiven };
+    /* The gift was never typed: a gift that does not apply is the caller's
+       to explain, not a refused code. */
+    const welcomeRefusal = welcomeOffered ? priced.couponRefusal : null;
+    if (welcomeOffered) priced.couponRefusal = null;
+    const welcomeApplied = welcomeOffered && priced.couponDiscountFils > 0;
+    return { ok: true, priced, products, codeGiven, welcomeApplied, welcomeRefusal };
   } catch (error) {
     const raw = error instanceof Error ? error.message : "INVALID_TOTAL";
     payload.logger.warn(`checkout pricing rejected: ${raw}`);
     const engine = engineCode(error);
 
+    if (engine === "TOTAL_TOO_LOW" && welcomeOffered) {
+      /* The gift would take a tiny basket under the minimum charge. Nobody
+         typed it, so nobody is refused: the basket is priced without it. */
+      try {
+        const priced = priceOrder(lines, products, input.deliveryEmirate, { ...discounts, coupon: null });
+        return {
+          ok: true,
+          priced,
+          products,
+          codeGiven,
+          welcomeApplied: false,
+          welcomeRefusal: { reason: "inactive" },
+        };
+      } catch {
+        return { ok: false, failure: "total_too_low", code: engine };
+      }
+    }
     if (engine === "TOTAL_TOO_LOW" && coupon) {
       /* The code is what took it under the minimum: say so, and show the
          basket as it stands without the code. */

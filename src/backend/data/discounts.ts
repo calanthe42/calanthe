@@ -80,6 +80,7 @@ export function toCouponRule(doc: Discount): CouponRule {
     usageLimit: limit === null || limit === undefined ? null : Number(limit),
     timesUsed: Number(doc.timesUsed ?? 0),
     oncePerCustomer: doc.oncePerCustomer === true,
+    welcome: doc.welcome === true,
     ...value(doc),
     ...timing(doc),
   };
@@ -145,6 +146,10 @@ export const getLiveSaleRulesForDisplay = cache(async (): Promise<SaleRule[]> =>
  * equality on the normalised code: nothing typed into the box can become a
  * pattern. Null for an unknown code and for a malformed one alike; whether
  * the code is live is the pricing engine's question, not this one's.
+ *
+ * The welcome gift is never found this way. It is applied by the server to a
+ * confirmed first order (backend/data/welcome.ts), so typing its code is
+ * answered exactly like typing a code that does not exist.
  */
 export async function findCoupon(payload: Payload, raw: string): Promise<CouponRule | null> {
   const code = normaliseCode(raw);
@@ -159,7 +164,7 @@ export async function findCoupon(payload: Payload, raw: string): Promise<CouponR
     pagination: false,
   });
   const doc = found.docs[0];
-  return doc ? toCouponRule(doc) : null;
+  return doc && doc.welcome !== true ? toCouponRule(doc) : null;
 }
 
 /** Has a PAID order from this email already used this code? */

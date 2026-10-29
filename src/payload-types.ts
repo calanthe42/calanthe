@@ -554,6 +554,10 @@ export interface Discount {
    * Paid orders that used this code.
    */
   timesUsed: number;
+  /**
+   * The welcome gift: taken off a new account's first order by the site, once per person. It cannot be typed as a code.
+   */
+  welcome?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1419,6 +1423,7 @@ export interface DiscountsSelect<T extends boolean = true> {
   usageLimit?: T;
   oncePerCustomer?: T;
   timesUsed?: T;
+  welcome?: T;
   updatedAt?: T;
   createdAt?: T;
 }

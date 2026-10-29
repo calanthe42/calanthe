@@ -256,6 +256,8 @@ export type CouponRule = DiscountValue &
     usageLimit: number | null;
     timesUsed: number;
     oncePerCustomer: boolean;
+    /** The welcome gift: applied by the server to a first order, never typed (backend/data/welcome.ts). */
+    welcome?: boolean;
   };
 
 export type CouponRefusal = "inactive" | "min_spend" | "exhausted" | "already_used";

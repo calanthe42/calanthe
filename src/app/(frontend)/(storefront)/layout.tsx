@@ -2,12 +2,14 @@ import { Footer } from "@/components/blocks/Footer";
 import { BrandIntro } from "@/components/blocks/BrandIntro";
 import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
+import { WelcomeOfferGate } from "@/components/blocks/WelcomeOfferGate";
 import { WhatsAppButton } from "@/components/blocks/WhatsAppButton";
 import { LazyCartDrawer } from "@/components/commerce/LazyCartDrawer";
 import { getDictionary } from "@/lib/i18n/server";
 import { getActiveOccasions } from "@backend/data/occasions";
 import { effectiveFlags, getSiteFlags } from "@backend/data/site-flags";
 import { getAvailableProducts } from "@backend/data/products";
+import { getWelcomeVisitor } from "@backend/data/welcome";
 
 export default async function StorefrontLayout({
   children,
@@ -15,15 +17,21 @@ export default async function StorefrontLayout({
   /* Read once, on the server, and hand down as props. The cart provider and
      the search overlay both need the catalogue, and neither may query the
      database from the browser (docs/PROJECT-STRUCTURE.md §4). */
-  const [catalogue, occasions, { locale, t }, rawFlags] = await Promise.all([
+  const [catalogue, occasions, { locale, t }, rawFlags, welcome] = await Promise.all([
     getAvailableProducts(),
     getActiveOccasions(),
     getDictionary(),
     getSiteFlags(),
+    getWelcomeVisitor(),
   ]);
 
   return (
-    <Providers catalogue={catalogue} locale={locale}>
+    <Providers
+      catalogue={catalogue}
+      locale={locale}
+      /* The basket asks for the gift only when it is this customer's. */
+      welcome={welcome.account === "eligible" ? welcome.offer : null}
+    >
       {/* The opening: once per visit, before anything else is seen. */}
       <BrandIntro tagline={t.about.closingLine} />
       {/* First thing in the tab order on every page: a way past the
@@ -51,6 +59,8 @@ export default async function StorefrontLayout({
       <Footer />
       <LazyCartDrawer />
       <WhatsAppButton />
+      {/* Invited once, and only when nobody is signed in. */}
+      <WelcomeOfferGate gift={welcome.account === "guest" ? welcome.offer : null} />
     </Providers>
   );
 }

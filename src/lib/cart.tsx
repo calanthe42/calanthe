@@ -21,6 +21,7 @@ import {
 } from "@/lib/cart-pricing";
 import { CODE_MAX_LENGTH, normaliseCode } from "@/lib/discounts";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import type { WelcomeGift } from "@/lib/welcome-offer";
 import type { Product } from "@/lib/data";
 
 /* The arithmetic lives in lib/cart-pricing.ts (pure, and tested against the
@@ -251,6 +252,12 @@ const FINAL_REFUSALS: readonly string[] = ["CODE_INVALID", "CODE_EXHAUSTED", "RA
 
 export type DiscountState = "idle" | "checking" | "error";
 
+/**
+ * What comes off the basket, as the server's quote said: a typed code, or
+ * the welcome gift — which has no code the browser knows.
+ */
+export type CartDiscount = { code: string | null; welcome: boolean; discountFils: number };
+
 type CartContextValue = {
   items: readonly CartItem[];
   /**
@@ -277,8 +284,14 @@ type CartContextValue = {
    * only: the amount it takes off always comes from the server's quote.
    */
   discountCode: string | null;
-  /** The code that IS applied to this basket, with what the server says it takes off. */
-  discount: { code: string; discountFils: number } | null;
+  /** What IS applied to this basket — a code or the welcome gift — with what the server says it takes off. */
+  discount: CartDiscount | null;
+  /**
+   * The welcome gift, when the server says the signed-in customer may have
+   * it on this basket (backend/data/welcome.ts). For words only: what it
+   * takes off is always the server's quote.
+   */
+  welcomeGift: WelcomeGift | null;
   discountState: DiscountState;
   /** Why the code did not apply, in the reader's language. Null beside "error": it could not be checked. */
   discountMessage: string | null;
@@ -319,9 +332,12 @@ export function CartProvider({
      must never reach for the database itself. Defaults to empty so the
      provider still mounts in isolation (tests, storybook-style rendering). */
   catalogue = NO_CATALOGUE,
+  welcome = null,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
+  /** The welcome gift, when the layout found it is this signed-in customer's. */
+  welcome?: WelcomeGift | null;
 }) {
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
@@ -499,19 +515,82 @@ export function CartProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, code, linesKey, attempt]);
 
-  const discount = useMemo(
-    () =>
-      code && hasLines && quoted?.code === code && quoted.key === linesKey
-        ? { code, discountFils: Math.min(quoted.discountFils, subtotalFils) }
-        : null,
-    [code, hasLines, quoted, linesKey, subtotalFils],
-  );
+  /*
+   * THE WELCOME GIFT.
+   *
+   * Asked for only when the layout says this signed-in customer may have it
+   * and no code is typed — a typed code is her choice and replaces it. The
+   * browser never knows the gift's code: it asks for "the basket, with the
+   * welcome gift", and shows whatever the server answers for this basket.
+   * Until that answer is in, the total is "checking" and nothing is paid.
+   */
+  const [welcomeQuoted, setWelcomeQuoted] = useState<{ key: string; discountFils: number } | null>(null);
+  /* The basket the server last answered "no gift" for. */
+  const [welcomeDeclined, setWelcomeDeclined] = useState<string | null>(null);
   const isRefused =
     code !== null &&
     refused?.code === code &&
     (refused.final || refused.key === linesKey);
-  const discountState: DiscountState =
-    !code || !hasLines || discount ? "idle" : isRefused ? "error" : "checking";
+  /* Only a code that may still apply replaces the gift: a mistyped one,
+     refused and waiting in the box to be corrected, takes nothing away. */
+  const codeInPlay = code !== null && !isRefused;
+
+  useEffect(() => {
+    if (!isHydrated || codeInPlay || !welcome || !hasLines) return;
+    if (welcomeQuoted?.key === linesKey || welcomeDeclined === linesKey) return;
+
+    let cancelled = false;
+    const key = linesKey;
+    const lines = state.items.map((item) => ({
+      productId: item.productId,
+      quantity: item.qty,
+      sizeId: item.sizeId,
+      addonIds: [...item.addonIds],
+    }));
+    const timer = setTimeout(() => {
+      quoteCheckout({ lines, deliveryEmirate: deliveryZones[0]?.id ?? "", welcome: true })
+        .then((result) => {
+          if (cancelled) return;
+          if (result.ok && result.quote.welcome && result.quote.couponDiscountFils > 0) {
+            setWelcomeQuoted({ key, discountFils: result.quote.couponDiscountFils });
+          } else {
+            setWelcomeDeclined(key);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setWelcomeDeclined(key);
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    /* As above: what this effect writes is read, not watched. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, codeInPlay, welcome, linesKey]);
+
+  const discount = useMemo<CartDiscount | null>(() => {
+    if (code && codeInPlay) {
+      return hasLines && quoted?.code === code && quoted.key === linesKey
+        ? { code, welcome: false, discountFils: Math.min(quoted.discountFils, subtotalFils) }
+        : null;
+    }
+    return welcome && hasLines && welcomeQuoted?.key === linesKey
+      ? { code: null, welcome: true, discountFils: Math.min(welcomeQuoted.discountFils, subtotalFils) }
+      : null;
+  }, [code, codeInPlay, hasLines, quoted, linesKey, subtotalFils, welcome, welcomeQuoted]);
+  const welcomePending =
+    !codeInPlay && welcome !== null && hasLines && !discount && welcomeDeclined !== linesKey;
+  /* A gift still being quoted holds the pay buttons; a refused code is
+     reported even while the gift stands in for it. */
+  const discountState: DiscountState = welcomePending
+    ? "checking"
+    : isRefused
+      ? "error"
+      : !code || !hasLines || discount
+        ? "idle"
+        : "checking";
   const discountMessage = discountState === "error" ? (refused?.message ?? null) : null;
   const totalFils = subtotalFils - (discount?.discountFils ?? 0);
 
@@ -562,6 +641,8 @@ export function CartProvider({
     setCode(null);
     setQuoted(null);
     setRefused(null);
+    setWelcomeQuoted(null);
+    setWelcomeDeclined(null);
   }, []);
 
   const value = useMemo<CartContextValue>(
@@ -574,6 +655,7 @@ export function CartProvider({
       saleSavingsFils,
       discountCode: code,
       discount,
+      welcomeGift: welcome,
       discountState,
       discountMessage,
       totalFils,
@@ -599,6 +681,7 @@ export function CartProvider({
       saleSavingsFils,
       code,
       discount,
+      welcome,
       discountState,
       discountMessage,
       totalFils,

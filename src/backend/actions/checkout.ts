@@ -5,6 +5,9 @@ import { after } from "next/server";
 import { getPayload, type Payload } from "payload";
 import config from "@payload-config";
 import { priceCheckout } from "@backend/data/checkout-pricing";
+import { welcomeFor, welcomeStanding, type WelcomeUser } from "@backend/data/welcome";
+import { welcomeStillOpen } from "@backend/domain/welcome";
+import type { CouponRule } from "@/lib/discounts";
 import {
   couponRefusalCode,
   isGuessableRefusal,
@@ -87,6 +90,11 @@ export type CheckoutRequest = {
   cardMessage?: string;
   /** The text of a discount code, as typed. Never an amount. */
   discountCode?: string;
+  /**
+   * True when the page showed the welcome gift. A claim, checked here from
+   * the session's own account; never an amount, never a code.
+   */
+  welcome?: boolean;
   /** The total the customer was shown, in fils. Compared, never used. */
   shownTotalFils: number;
 };
@@ -99,7 +107,25 @@ export type QuoteRequest = {
   lines: CheckoutLineRequest[];
   deliveryEmirate: string;
   discountCode?: string;
+  /** Price the basket with the welcome gift, if the signed-in account may have it. */
+  welcome?: boolean;
 };
+
+/**
+ * The welcome gift for whoever is signed in, for a QUOTE: null when it is not
+ * hers or cannot be read. The payment asks again, strictly.
+ */
+async function welcomeForQuote(payload: Payload, now: Date): Promise<CouponRule | null> {
+  try {
+    const { user } = await payload.auth({ headers: await nextHeaders() });
+    return await welcomeFor(payload, user as WelcomeUser | null, now);
+  } catch (error) {
+    payload.logger.warn(
+      `welcome gift could not be checked for a quote: ${error instanceof Error ? error.message : "unknown"}`,
+    );
+    return null;
+  }
+}
 
 export type QuoteFailureCode =
   | "CODE_INVALID"
@@ -202,9 +228,17 @@ export async function quoteCheckout(request: QuoteRequest): Promise<QuoteResult>
     }
   }
 
+  /* The gift is asked for only when no code was typed: a typed code replaces it. */
+  const welcome = !code && request.welcome === true ? await welcomeForQuote(payload, now) : null;
+
   const pricing = await priceCheckout(
     payload,
-    { lines, deliveryEmirate: emirate, ...(code ? { discountCode: code } : {}) },
+    {
+      lines,
+      deliveryEmirate: emirate,
+      ...(code ? { discountCode: code } : {}),
+      ...(welcome ? { welcome } : {}),
+    },
     now,
   );
 
@@ -353,6 +387,29 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
     typeof request.discountCode === "string" ? request.discountCode.trim() : "";
   const now = new Date();
 
+  /* ---------- who is signed in, if anyone ---------- */
+  const { user } = await payload.auth({ headers: await nextHeaders() });
+  const isCustomer = user && (user as { role?: string }).role === "customer";
+  const customerId = isCustomer ? (user as { id: number }).id : undefined;
+
+  /* ---------- the welcome gift the page showed ----------
+     Asked again here, strictly, from the session's own account. A page that
+     showed the gift is never charged without it: if it is not hers now, the
+     order is refused and the page re-reads what she may have. */
+  const wantsWelcome = request.welcome === true && !discountCode;
+  let welcome: CouponRule | null = null;
+  if (wantsWelcome) {
+    try {
+      welcome = await welcomeFor(payload, user as WelcomeUser | null, now);
+    } catch (error) {
+      payload.logger.error(
+        `welcome gift could not be checked: ${error instanceof Error ? error.message : "unknown"}`,
+      );
+      return fail("ORDER_CREATION_FAILED", "creationFailed");
+    }
+    if (!welcome) return fail("WELCOME_UNAVAILABLE", "welcomeUnavailable");
+  }
+
   /* ---------- authoritative load and server-side pricing ----------
      Products, live sales and the code are loaded and priced in one place,
      the same place the basket's quote uses. */
@@ -362,6 +419,7 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
       lines: request.lines,
       deliveryEmirate: request.deliveryEmirate,
       ...(discountCode ? { discountCode } : {}),
+      ...(welcome ? { welcome } : {}),
       customerEmail,
     },
     now,
@@ -393,6 +451,13 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
     if (isGuessableRefusal(priced.couponRefusal.reason)) await chargeWrongCode(address);
     return refuseCode(priced.couponRefusal);
   }
+  if (wantsWelcome && !pricing.welcomeApplied) {
+    return fail("WELCOME_UNAVAILABLE", "welcomeUnavailable");
+  }
+  const welcomeApplied = pricing.welcomeApplied;
+  /* A lost claim on the gift is not a refused code: nobody typed one. */
+  const refuseClaim = (refusal: "exhausted" | "already_used"): CheckoutResult =>
+    welcomeApplied ? fail("WELCOME_UNAVAILABLE", "welcomeUnavailable") : refuseCode({ reason: refusal });
 
   /* ---------- the total the customer was shown ----------
      An assertion (see the top of this file). Compared; never used. */
@@ -413,7 +478,13 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
     try {
       await releaseCouponClaims(payload, stripe, coupon, customerEmail, now);
       const refusal = await couponClaimRefusal(payload, coupon, customerEmail);
-      if (refusal) return refuseCode({ reason: refusal });
+      if (refusal) return refuseClaim(refusal);
+      /* The gift is once per PERSON: her account, every account sharing her
+         inbox, and every order sent to it — not only this email. */
+      if (welcomeApplied && user) {
+        const standing = await welcomeStanding(payload, user as WelcomeUser, coupon.id);
+        if (!welcomeStillOpen(standing)) return refuseClaim("already_used");
+      }
     } catch (error) {
       payload.logger.error(
         `code ${coupon.code}: claims could not be checked: ${error instanceof Error ? error.message : "unknown"}`,
@@ -421,11 +492,6 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
       return fail("ORDER_CREATION_FAILED", "creationFailed");
     }
   }
-
-  /* ---------- link to a signed-in customer, if there is one ---------- */
-  const { user } = await payload.auth({ headers: await nextHeaders() });
-  const isCustomer = user && (user as { role?: string }).role === "customer";
-  const customerId = isCustomer ? (user as { id: number }).id : undefined;
 
   /* ---------- create ---------- */
   try {
@@ -481,9 +547,13 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
        before any PaymentIntent exists, so nothing can be charged for it. */
     if (coupon && limited) {
       const refusal = await couponClaimRefusal(payload, coupon, customerEmail, Number(order.id));
-      if (refusal) {
+      const lostWelcome =
+        welcomeApplied &&
+        user &&
+        !welcomeStillOpen(await welcomeStanding(payload, user as WelcomeUser, coupon.id, Number(order.id)));
+      if (refusal || lostWelcome) {
         await abandonOrder(payload, Number(order.id), LOST_CLAIM_NOTE);
-        return refuseCode({ reason: refusal });
+        return refuseClaim(refusal ?? "already_used");
       }
     }
 

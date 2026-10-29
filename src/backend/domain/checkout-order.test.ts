@@ -195,6 +195,7 @@ describe("toCheckoutQuote", () => {
       subtotalFils: 135200,
       saleSavingsFils: (68000 - 55600) * 2 + 6000,
       couponCode: "EID10",
+      welcome: false,
       couponDiscountFils: 13600,
       deliveryFeeFils: 0,
       totalFils: 121600,
@@ -239,5 +240,31 @@ describe("saleSavingsOfItems", () => {
     expect(saleSavingsOfItems(null)).toBe(0);
     expect(saleSavingsOfItems([])).toBe(0);
     expect(saleSavingsOfItems([{ quantity: 1, unitPriceFils: 500, compareAtUnitPriceFils: 500 }])).toBe(0);
+  });
+});
+
+describe("toCheckoutQuote — the welcome gift", () => {
+  const gift: CouponRule = { ...coupon, id: "12", code: "WELCOME", minSubtotalFils: 0, welcome: true };
+
+  it("says the gift applied, and never sends its code", () => {
+    const quote = toCheckoutQuote(price({ coupon: gift }));
+    expect(quote).toMatchObject({ welcome: true, couponCode: null, couponDiscountFils: 13600 });
+    expect(JSON.stringify(quote)).not.toContain("WELCOME");
+  });
+
+  it("still records the gift on the order itself, for the owner and the receipt", () => {
+    expect(orderMoneyFields(price({ coupon: gift }))).toMatchObject({
+      couponCode: "WELCOME",
+      couponDiscount: 12,
+      couponDiscountFils: 13600,
+    });
+  });
+
+  it("is not the gift when nothing came off", () => {
+    expect(toCheckoutQuote(price({ coupon: { ...gift, active: false } }))).toMatchObject({
+      welcome: false,
+      couponCode: null,
+      couponDiscountFils: 0,
+    });
   });
 });

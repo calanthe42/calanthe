@@ -13,6 +13,9 @@ vi.mock("next/cache", () => ({
   revalidatePath: (path: string, type?: string) => {
     revalidated.push(type ? `${path}:${type}` : path);
   },
+  revalidateTag: (tag: string) => {
+    revalidated.push(`tag:${tag}`);
+  },
 }));
 vi.mock("@payload-config", () => ({ default: {} }));
 
@@ -369,6 +372,11 @@ describe("every save is logged and shown on the store at the next request", () =
       itemLabel: "Eid 2026",
       notable: true,
     });
-    expect(revalidated).toEqual(["/admin/discounts", "/admin/discounts/5/edit", "/:layout"]);
+    expect(revalidated).toEqual([
+      "/admin/discounts",
+      "/admin/discounts/5/edit",
+      "/:layout",
+      "tag:welcome-offer",
+    ]);
   });
 });
