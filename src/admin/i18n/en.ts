@@ -373,7 +373,7 @@ export const en = {
     viewLabel: "View {name} on the store",
     deleteTitle: "Delete “{name}”?",
     deleteBody:
-      "This permanently removes the product from your catalogue. If it has ever been ordered, it is kept for your records and you can hide it instead.",
+      "This permanently removes the product from your catalogue and the store. Orders it was part of keep the name and price it was sold at. This cannot be undone.",
     deleteConfirm: "Delete product",
     new: {
       title: "Add a product",
@@ -1500,9 +1500,8 @@ export const en = {
       saveFailed: "Your changes could not be saved.",
       deleteFailed: "The product could not be deleted.",
       ordered: {
-        one: "This product is part of {count} order, so it is kept for your records. Turn off “Available to buy” to hide it instead.",
-        other:
-          "This product is part of {count} orders, so it is kept for your records. Turn off “Available to buy” to hide it instead.",
+        one: "“{name}” deleted. Its past order keeps the name and price it was sold at.",
+        other: "“{name}” deleted. Its {count} past orders keep the name and price they were sold at.",
       },
     },
     media: {

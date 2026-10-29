@@ -19,6 +19,9 @@ export const WELCOME_SEEN_KEY = "calanthe-welcome-v1";
 /** How long a first visit runs before she is invited. */
 export const WELCOME_DELAY_MS = 10_000;
 
+/** How long the page must have been calm (no intro, cookie notice, menu or cart) first. */
+export const WELCOME_SETTLE_MS = 4_000;
+
 /* Pages where an invitation would interrupt what she came to do. */
 const QUIET_PREFIXES = ["/checkout", "/pay", "/cart", "/account", "/login", "/invoice"] as const;
 

@@ -22,10 +22,11 @@ import { validateProductState } from "@backend/payload/hooks/validateProduct";
  *
  * 2. Money is integer fils, never decimal AED. See backend/payload/fields/money.ts.
  *
- * Products are archived, never deleted, once they appear in an order —
- * an order's snapshot must keep resolving for reporting. That guard is
- * added with the Orders collection, since it has nothing to check against
- * until orders exist.
+ * 3. The owner may delete a product even after it has been ordered (her
+ *    decision of 29 Oct 2026). Orders do not depend on it: each line keeps
+ *    its own name, price and options, the database sets the line's link to
+ *    null, and order pages and invoices read the line. Turning off
+ *    "Available to buy" remains the way to hide one and keep it.
  */
 export const Products: CollectionConfig = {
   slug: "products",

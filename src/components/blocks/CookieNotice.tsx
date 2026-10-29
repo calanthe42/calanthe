@@ -13,10 +13,10 @@ const EXIT_MS = 240;
 /**
  * THE COOKIE NOTICE — once per browser, on the first visit.
  *
- * A slim olive band along the foot of the page: one sentence that says what
- * the site keeps and that it runs no advertising or tracking, Accept,
- * Decline, and the Privacy Policy. It is not a wall: the page stays usable
- * behind it, and nothing on the page moves. The welcome invitation waits
+ * A small olive card: one sentence that says what the site keeps and that
+ * it runs no advertising or tracking, the Privacy Policy, Decline and
+ * Accept. It is not a wall: the page stays usable behind it, and nothing on
+ * the page moves. The welcome invitation waits
  * until she has answered (WelcomeOfferGate), so the two never stack.
  *
  * Nothing is rendered on the server: whether she has answered lives in this
@@ -57,34 +57,42 @@ export function CookieNotice() {
   if (phase === "hidden") return null;
   const open = phase === "open";
 
+  /* A small card, not a slab: on a phone it floats just above the foot of
+     the screen; from a tablet up it keeps to the far corner, clear of the
+     hero's buttons. Accept is cream, not burnt orange — the page's one
+     orange button stays the one that sells flowers. */
   return (
     <section
       aria-label={c.label}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-[75] bg-olive text-cream shadow-[0_-12px_32px_rgba(43,47,27,0.18)]",
-        "px-5 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 sm:px-8",
+        "fixed inset-x-3 bottom-[max(env(safe-area-inset-bottom),0.75rem)] z-[75] rounded-md bg-olive p-4 text-cream",
+        "shadow-[0_16px_40px_rgba(43,47,27,0.35)] sm:inset-x-auto sm:end-6 sm:bottom-6 sm:w-[24rem] sm:p-5",
         "transition-[translate,opacity] ease-bloom motion-reduce:translate-none motion-reduce:transition-opacity",
-        open ? "translate-y-0 opacity-100 duration-500" : "translate-y-full opacity-0 duration-200",
+        open ? "translate-y-0 opacity-100 duration-500" : "translate-y-4 opacity-0 duration-200",
       )}
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 md:flex-row md:items-center md:gap-8">
-        <p className="flex-1 text-base leading-relaxed">
-          {c.text}{" "}
-          <Link
-            href="/privacy"
-            className="whitespace-nowrap underline decoration-cream/50 underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-cream"
-          >
-            {c.privacy}
-          </Link>
-        </p>
-        <div className="flex shrink-0 gap-3">
-          <Button type="button" variant="secondary-cream" size="compact" onClick={() => answer("declined")} className="flex-1 md:flex-none">
-            {c.decline}
-          </Button>
-          <Button type="button" variant="primary" size="compact" onClick={() => answer("accepted")} className="flex-1 md:flex-none">
-            {c.accept}
-          </Button>
-        </div>
+      <p className="text-sm leading-relaxed">
+        {c.text}{" "}
+        <Link
+          href="/privacy"
+          className="whitespace-nowrap underline decoration-cream/50 underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-cream"
+        >
+          {c.privacy}
+        </Link>
+      </p>
+      <div className="mt-3 flex gap-3">
+        <Button type="button" variant="secondary-cream" size="compact" onClick={() => answer("declined")} className="flex-1">
+          {c.decline}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary-cream"
+          size="compact"
+          onClick={() => answer("accepted")}
+          className="flex-1 bg-cream text-olive hover:opacity-90"
+        >
+          {c.accept}
+        </Button>
       </div>
     </section>
   );

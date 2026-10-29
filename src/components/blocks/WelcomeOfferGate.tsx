@@ -4,7 +4,13 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { readConsent } from "@/lib/consent";
-import { WELCOME_DELAY_MS, WELCOME_SEEN_KEY, welcomeMayOpen, type WelcomeGift } from "@/lib/welcome-offer";
+import {
+  WELCOME_DELAY_MS,
+  WELCOME_SEEN_KEY,
+  WELCOME_SETTLE_MS,
+  welcomeMayOpen,
+  type WelcomeGift,
+} from "@/lib/welcome-offer";
 
 /* The invitation itself — its images, form and motion — is fetched only for
    the visitor who is about to see it, so no page pays for it at first paint
@@ -44,29 +50,37 @@ export function WelcomeOfferGate({ gift }: { gift: WelcomeGift | null }) {
     }
     if (!welcomeMayOpen(pathname, seen)) return;
 
-    let timer = 0;
-    const wait = () => {
-      timer = window.setTimeout(() => {
-        /* The menu, search and the cart all hold the page still through
-           lib/useScrollLock.ts, which is how an open overlay is recognised. */
-        /* And the cookie notice is answered first: one question at a time. */
-        const busy =
-          readConsent() === null ||
-          document.documentElement.classList.contains("intro-playing") ||
-          document.documentElement.style.overflow === "hidden" ||
-          document.body.classList.contains("overlay-open") ||
-          document.hidden;
-        if (busy) return wait();
-        try {
-          localStorage.setItem(WELCOME_SEEN_KEY, "shown");
-        } catch {
-          return;
-        }
-        setShown(gift);
-      }, WELCOME_DELAY_MS);
-    };
-    wait();
-    return () => window.clearTimeout(timer);
+    /* Opens at the earliest WELCOME_DELAY_MS after she arrives, and only once
+       the page has been calm for WELCOME_SETTLE_MS: a moment after she
+       answers the cookie notice, closes the menu or comes back to the tab —
+       never the instant one thing ends, and never at a random later time. */
+    const arrived = Date.now();
+    let lastBusy = arrived;
+    const timer = window.setInterval(() => {
+      /* The menu, search and the cart all hold the page still through
+         lib/useScrollLock.ts, which is how an open overlay is recognised;
+         the cookie notice is answered first: one question at a time. */
+      const busy =
+        readConsent() === null ||
+        document.documentElement.classList.contains("intro-playing") ||
+        document.documentElement.style.overflow === "hidden" ||
+        document.body.classList.contains("overlay-open") ||
+        document.hidden;
+      const now = Date.now();
+      if (busy) {
+        lastBusy = now;
+        return;
+      }
+      if (now - arrived < WELCOME_DELAY_MS || now - lastBusy < WELCOME_SETTLE_MS) return;
+      window.clearInterval(timer);
+      try {
+        localStorage.setItem(WELCOME_SEEN_KEY, "shown");
+      } catch {
+        return;
+      }
+      setShown(gift);
+    }, 1000);
+    return () => window.clearInterval(timer);
   }, [gift, pathname, open]);
 
   if (!shown) return null;

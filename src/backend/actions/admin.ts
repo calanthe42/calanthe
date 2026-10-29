@@ -227,9 +227,11 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
 export async function deleteProduct(id: number): Promise<ActionResult> {
   const { payload, user } = await authed();
   try {
-    /* Products that have been ordered are hidden, never deleted: the orders
-       keep their own snapshot, but the catalogue's history should too
-       (collections/Products.ts). */
+    /* The owner may delete a product even after it has been ordered (her
+       decision of 29 Oct 2026). Nothing is lost from those orders: every
+       line keeps its own name, price and options, the link to the product
+       is set to null by the database, and the order pages and invoices read
+       the line, not the product. The count is only for telling her so. */
     const ordered = await payload
       .count({
         collection: "orders",
@@ -239,15 +241,6 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
       })
       .then((r) => r.totalDocs)
       .catch(() => 0);
-
-    if (ordered > 0) {
-      return {
-        ok: false,
-        message: `This product is part of ${ordered} order${ordered === 1 ? "" : "s"}, so it is kept for your records. Turn off “Available to buy” to hide it instead.`,
-        code: "actions.product.ordered",
-        vars: { count: ordered },
-      };
-    }
 
     /* Read the name before the row is gone: "product 41 deleted" answers
        nothing a week later. */
@@ -272,6 +265,14 @@ export async function deleteProduct(id: number): Promise<ActionResult> {
 
     revalidatePath("/admin/products");
     revalidateStorefront();
+    if (ordered > 0) {
+      return {
+        ok: true,
+        message: `“${doc.name}” deleted. Its ${ordered} past order${ordered === 1 ? " keeps" : "s keep"} the name and price ${ordered === 1 ? "it was" : "they were"} sold at.`,
+        code: "actions.product.ordered",
+        vars: { count: ordered, name: doc.name },
+      };
+    }
     return {
       ok: true,
       message: `“${doc.name}” deleted.`,

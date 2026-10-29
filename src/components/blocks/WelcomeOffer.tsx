@@ -90,13 +90,41 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
     window.setTimeout(onClose, EXIT_MS);
   }, [pending, step, onClose]);
 
-  /* Focus follows the step: the heading of the offer and of "check your
-     inbox", the first field of the form. */
+  /* Focus follows the step: each step's heading, so a screen reader starts
+     there. With a mouse, the form puts the cursor in the first field; on a
+     phone it does not, or the keyboard would leap up over the Terms and the
+     button before she has read the form. */
   useEffect(() => {
     if (phase !== "open") return;
-    if (step === "form") document.getElementById(`${baseId}-name`)?.focus();
+    const precise = typeof window.matchMedia === "function" && window.matchMedia("(pointer: fine)").matches;
+    if (step === "form" && precise) document.getElementById(`${baseId}-name`)?.focus();
     else headingRef.current?.focus();
   }, [step, phase, baseId]);
+
+  /* SWIPE DOWN TO CLOSE, on a phone. The handle at the top of the sheet
+     follows the finger; let go far enough and the sheet goes, otherwise it
+     settles back. */
+  const dragFrom = useRef<number | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const SWIPE_CLOSE_PX = 90;
+  function onHandleDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (pending) return;
+    dragFrom.current = event.clientY;
+    setDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function onHandleMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (dragFrom.current === null) return;
+    setDragY(Math.max(0, event.clientY - dragFrom.current));
+  }
+  function onHandleUp() {
+    if (dragFrom.current === null) return;
+    dragFrom.current = null;
+    setDragging(false);
+    if (dragY > SWIPE_CLOSE_PX) close();
+    else setDragY(0);
+  }
 
   /* Escape closes; Tab stays inside the sheet. */
   useEffect(() => {
@@ -194,7 +222,10 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
           /* Tailwind 4 moves with `translate`/`rotate`/`scale`, not `transform`. */
           "transition-[translate,opacity] ease-bloom motion-reduce:translate-none motion-reduce:transition-opacity",
           open ? "translate-y-0 opacity-100 duration-700" : "translate-y-8 opacity-0 duration-200 lg:translate-y-4",
+          /* Under the finger, no easing: it must not lag behind her thumb. */
+          dragging && "transition-none",
         )}
+        style={dragY > 0 ? { translate: `0 ${dragY}px` } : undefined}
       >
         {/* The hang-tag: outside the scrolling sheet so it can hang over
             its edge, and decorative — the sentence says the same. */}
@@ -224,7 +255,8 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
           <span
             dir="ltr"
             className={cn(
-              "absolute inset-x-0 top-[42%] text-center font-display leading-none text-olive",
+              /* Lining figures: Cormorant's old-style "10" reads as "IO". */
+              "absolute inset-x-0 top-[42%] text-center font-display leading-none text-olive lining-nums",
               amount.length > 4 ? "text-2xl" : "text-[2.6rem]",
             )}
           >
@@ -244,7 +276,19 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
         </div>
 
         <div className="relative max-h-[92svh] flex-1 overflow-y-auto rounded-t-md bg-canvas shadow-[0_-16px_48px_rgba(43,47,27,0.22)] lg:max-h-[88svh] lg:rounded-md lg:rounded-s-none lg:shadow-none">
-          <div aria-hidden className="absolute inset-x-0 top-2.5 mx-auto h-1 w-9 rounded-sm bg-hairline lg:hidden" />
+          {/* The swipe handle (phones): a strip across the top, clear of the
+              corner buttons. Its bar is hidden on the form, where the tag
+              has stepped aside over it. */}
+          <div
+            aria-hidden
+            onPointerDown={onHandleDown}
+            onPointerMove={onHandleMove}
+            onPointerUp={onHandleUp}
+            onPointerCancel={onHandleUp}
+            className="absolute inset-x-14 top-0 z-[5] h-10 cursor-grab touch-none lg:hidden"
+          >
+            {step !== "form" ? <div className="mx-auto mt-2.5 h-1 w-9 rounded-sm bg-hairline" /> : null}
+          </div>
           <button
             type="button"
             onClick={close}
@@ -285,7 +329,7 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                     id={titleId}
                     ref={headingRef}
                     tabIndex={-1}
-                    className="welcome-heading font-display text-[2.375rem] font-light leading-[1.05] text-olive lg:text-[2.75rem]"
+                    className="welcome-heading font-display text-[2.375rem] font-light leading-[1.05] text-olive lining-nums lg:text-[2.75rem]"
                   >
                     {w.title.replace("{amount}", amount)}
                   </h2>
@@ -308,7 +352,12 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
               <form onSubmit={submit} noValidate className="flex flex-col gap-5">
                 <div className="flex flex-col gap-2">
                   <Eyebrow>{w.formEyebrow}</Eyebrow>
-                  <h2 id={titleId} className="font-display text-[2.125rem] font-light leading-[1.08] text-olive">
+                  <h2
+                    id={titleId}
+                    ref={headingRef}
+                    tabIndex={-1}
+                    className="welcome-heading font-display text-[2.125rem] font-light leading-[1.08] text-olive lining-nums"
+                  >
                     {w.formTitle}
                   </h2>
                   <p className="text-base leading-relaxed text-ink-muted">{w.formLead.replace("{amount}", amount)}</p>
@@ -399,7 +448,7 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                     id={titleId}
                     ref={headingRef}
                     tabIndex={-1}
-                    className="welcome-heading font-display text-[2.375rem] font-light leading-[1.05] text-olive"
+                    className="welcome-heading font-display text-[2.375rem] font-light leading-[1.05] text-olive lining-nums"
                   >
                     {w.doneTitle}
                   </h2>
@@ -408,7 +457,8 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                       <span key={index}>
                         {part}
                         {index < parts.length - 1 ? (
-                          <span dir="ltr" className="font-medium text-olive">
+                          /* Kept whole: an address split at its hyphen reads as two. */
+                          <span dir="ltr" className="inline-block max-w-full break-all font-medium text-olive">
                             {sentTo}
                           </span>
                         ) : null}

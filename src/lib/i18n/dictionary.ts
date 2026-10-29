@@ -1229,7 +1229,7 @@ export const en = {
    */
   cookies: {
     label: "Cookies",
-    text: "We use only the cookies the shop needs: your bag, your language and your sign-in. No advertising, no tracking.",
+    text: "Only the cookies the shop needs, for your bag, language and sign-in. No advertising, no tracking.",
     accept: "Accept",
     decline: "Decline",
     privacy: "Privacy Policy",
@@ -2766,7 +2766,7 @@ export const ar: typeof en = {
   },
   cookies: {
     label: "ملفات تعريف الارتباط",
-    text: "نستخدم فقط ملفات تعريف الارتباط التي يحتاجها المتجر: حقيبتكم ولغتكم وتسجيل دخولكم. لا إعلانات ولا تتبّع.",
+    text: "فقط ما يحتاجه المتجر من ملفات تعريف الارتباط، لحقيبتكم ولغتكم وتسجيل دخولكم. لا إعلانات ولا تتبّع.",
     accept: "موافقة",
     decline: "رفض",
     privacy: "سياسة الخصوصية",
