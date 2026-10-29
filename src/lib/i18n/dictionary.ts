@@ -1216,10 +1216,23 @@ export const en = {
     show: "Show",
     hide: "Hide",
     creating: "Creating your account…",
-    doneEyebrow: "Your gift is saved",
-    doneTitle: "Check your inbox",
-    doneLead: "We sent a link to {email}. Confirm your email and the {amount} will be waiting at checkout.",
+    doneEyebrow: "Welcome to Calanthe",
+    doneTitle: "You’re signed in",
+    doneLead:
+      "Your account is ready. Confirm your email from the link we sent to {email}, and the {amount} will be waiting at checkout.",
     continue: "Continue shopping",
+  },
+  /**
+   * THE COOKIE NOTICE — once, on a first visit (components/blocks/
+   * CookieNotice.tsx). True to what the site does: it keeps only what the
+   * shop needs, and runs no advertising or tracking.
+   */
+  cookies: {
+    label: "Cookies",
+    text: "We use only the cookies the shop needs: your bag, your language and your sign-in. No advertising, no tracking.",
+    accept: "Accept",
+    decline: "Decline",
+    privacy: "Privacy Policy",
   },
   /**
    * Sizes and add-ons. Like the emirates, these are configuration in code
@@ -1326,6 +1339,9 @@ export const en = {
       passwordMismatch: "Those passwords do not match.",
       registerRateLimited: "Too many accounts created from here. {wait}",
       registerFailed: "We could not create that account just now. Please try again.",
+      termsRequired: "Please agree to the Terms and the Privacy Policy to create your account.",
+      emailTaken:
+        "This email already has an account. Sign in instead, or reset your password if you have forgotten it.",
       verifyLinkInvalid: "That verification link is not valid.",
       linkUsedOrExpired: "That link has expired or has already been used.",
       resetLinkInvalid: "That reset link is not valid.",
@@ -1657,6 +1673,12 @@ export const en = {
     resendIfWaiting:
       "If that address is waiting to be confirmed, a new link is on its way.",
     passwordChanged: "Your password has been changed. You can sign in with it now.",
+    /* The Terms box at sign-up; {terms} and {privacy} become links. */
+    termsAgree: "I agree to the {terms} and the {privacy}.",
+    termsLink: "Terms",
+    privacyLink: "Privacy Policy",
+    /* A signed-in account whose address is not confirmed yet. */
+    confirmNotice: "Please confirm your email. We sent a link to {email}; following it also unlocks your welcome gift.",
     /* The customer's own order history. */
     orders: "Your orders",
     noOrders: "No orders yet",
@@ -2737,10 +2759,17 @@ export const ar: typeof en = {
     show: "إظهار",
     hide: "إخفاء",
     creating: "جارٍ إنشاء حسابكم…",
-    doneEyebrow: "هديتكم محفوظة",
-    doneTitle: "تفقّدوا بريدكم",
-    doneLead: "أرسلنا رابطًا إلى {email}. أكّدوا بريدكم الإلكتروني وسيكون خصم {amount} بانتظاركم عند الدفع.",
+    doneEyebrow: "أهلًا بكم في كالانثي",
+    doneTitle: "تم تسجيل دخولكم",
+    doneLead: "حسابكم جاهز. أكّدوا بريدكم من الرابط الذي أرسلناه إلى {email}، وسيكون خصم {amount} بانتظاركم عند الدفع.",
     continue: "متابعة التسوق",
+  },
+  cookies: {
+    label: "ملفات تعريف الارتباط",
+    text: "نستخدم فقط ملفات تعريف الارتباط التي يحتاجها المتجر: حقيبتكم ولغتكم وتسجيل دخولكم. لا إعلانات ولا تتبّع.",
+    accept: "موافقة",
+    decline: "رفض",
+    privacy: "سياسة الخصوصية",
   },
   sizeNames: {
     standard: "أساسي",
@@ -2817,6 +2846,8 @@ export const ar: typeof en = {
       passwordMismatch: "كلمتا المرور غير متطابقتين.",
       registerRateLimited: "حسابات كثيرة أُنشئت من هنا. {wait}",
       registerFailed: "لم نتمكن من إنشاء الحساب الآن. حاولوا مرة أخرى.",
+      termsRequired: "يُرجى الموافقة على الشروط وسياسة الخصوصية لإنشاء حسابكم.",
+      emailTaken: "لهذا البريد حساب لدينا بالفعل. سجّلوا الدخول، أو أعيدوا تعيين كلمة المرور إن نسيتموها.",
       verifyLinkInvalid: "رابط التأكيد غير صالح.",
       linkUsedOrExpired: "انتهت صلاحية الرابط أو أنّه استُخدم من قبل.",
       resetLinkInvalid: "رابط إعادة التعيين غير صالح.",
@@ -3083,6 +3114,10 @@ export const ar: typeof en = {
       "إذا كان لهذا البريد حساب لدينا، فرابط اختيار كلمة مرور جديدة في طريقه إليكم. تنتهي صلاحيته خلال ساعة تقريبًا.",
     resendIfWaiting: "إذا كان هذا البريد بانتظار التأكيد، فرابط جديد في طريقه إليكم.",
     passwordChanged: "تم تغيير كلمة المرور. يمكنكم تسجيل الدخول بها الآن.",
+    termsAgree: "أوافق على {terms} و{privacy}.",
+    termsLink: "الشروط",
+    privacyLink: "سياسة الخصوصية",
+    confirmNotice: "يُرجى تأكيد بريدكم الإلكتروني. أرسلنا رابطًا إلى {email}؛ وفتحه يفعّل أيضًا هدية الترحيب.",
     orders: "طلباتكم",
     noOrders: "لا توجد طلبات بعد",
     noOrdersBody: "عندما تطلبون، سيظهر الطلب هنا مع مراحل تقدّمه.",

@@ -26,6 +26,18 @@ import { collidingFields } from "@backend/payload/validation-errors";
 
 export type AuthResult = { ok: true } | { ok: false; message: string };
 
+/** The same session cookie Payload's own login sets, for a customer. */
+async function setCustomerSession(token: string): Promise<void> {
+  const jar = await nextCookies();
+  jar.set("payload-token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
 export async function customerLogin(form: FormData): Promise<AuthResult> {
   /*
    * Refusals are read by whoever is trying to sign in, so they are written
@@ -88,15 +100,7 @@ export async function customerLogin(form: FormData): Promise<AuthResult> {
       return { ok: false, message: m.staffAccount };
     }
 
-    const jar = await nextCookies();
-    jar.set("payload-token", result.token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
+    await setCustomerSession(result.token);
     return { ok: true };
   } catch {
     /* Deliberately one message for wrong password, unknown address, locked
@@ -141,8 +145,19 @@ export async function getCustomerSession() {
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MIN_PASSWORD = 10;
 
+/**
+ * ACCOUNTS WORK AT ONCE. A new customer is signed in the moment the account
+ * exists; the email we send is how she CONFIRMS the address, and only the
+ * welcome gift waits for that (Users.emailConfirmedAt, backend/data/welcome.ts).
+ * `_verified` is therefore set true here, so Payload lets her sign in, and
+ * Payload still sends its verification email with the link.
+ *
+ * The price of signing her in is that a taken address can no longer look
+ * like a fresh sign-up: someone who already has an account is told so, and
+ * offered sign-in. Registration stays throttled per network.
+ */
 export type RegisterResult =
-  { ok: true; email: string } | { ok: false; field?: string; message: string };
+  { ok: true; email: string; signedIn: boolean } | { ok: false; field?: string; message: string };
 
 export async function customerRegister(form: FormData): Promise<RegisterResult> {
   const { locale, t } = await getDictionary();
@@ -174,6 +189,8 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
     };
   if (password !== confirm)
     return { ok: false, field: "confirmPassword", message: m.passwordMismatch };
+  /* The box is required, and the moment it was ticked is kept. */
+  if (form.get("terms") !== "on") return { ok: false, field: "terms", message: m.termsRequired };
 
   /* Account creation is the one public write to the users table. Without a
      limit it is a script that fills the customer list — the business's most
@@ -204,10 +221,12 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
         password,
         role: "customer",
         accountStatus: "active",
+        /* Signs in now; the emailed link confirms the address later. */
+        _verified: true,
+        termsAcceptedAt: new Date().toISOString(),
         ...(phone ? { phone } : {}),
-      },
+      } as never,
     });
-    return { ok: true, email };
   } catch (error) {
     /*
      * WHICH FIELD ACTUALLY COLLIDED.
@@ -227,17 +246,14 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
 
     if (collided.includes("email")) {
       /*
-       * The address is already registered. If that account has never been
-       * verified, the most likely person here is its owner, coming back
-       * because the first email never arrived — so send it again. This is
-       * the unlock for exactly that situation.
-       *
-       * If it IS verified, nothing is sent and the caller still shows the
-       * same screen. Distinguishing the two would turn this form into a way
-       * to test which addresses have accounts here.
+       * The address is already registered. Nobody is signed in to an
+       * account they did not just create: she is told the address has an
+       * account and offered sign-in. If it was never confirmed, the link is
+       * sent again quietly — the likeliest person here is its owner, back
+       * because the first email never arrived.
        */
       await resendCustomerVerification(email).catch(() => undefined);
-      return { ok: true, email };
+      return { ok: false, field: "email", message: m.emailTaken };
     }
 
     if (collided.includes("phone")) {
@@ -251,6 +267,19 @@ export async function customerRegister(form: FormData): Promise<RegisterResult> 
     console.error("customer registration failed", error);
     return { ok: false, message: m.registerFailed };
   }
+
+  /* ---------- signed in at once ---------- */
+  try {
+    const session = await payload.login({ collection: "users", data: { email, password } });
+    if (session.token) {
+      await setCustomerSession(session.token);
+      return { ok: true, email, signedIn: true };
+    }
+  } catch (error) {
+    console.error("new account could not be signed in", error);
+  }
+  /* The account exists either way; she can sign in from the form. */
+  return { ok: true, email, signedIn: false };
 }
 
 export async function resendCustomerVerification(email: string): Promise<AuthResult> {
@@ -280,10 +309,17 @@ export async function resendCustomerVerification(email: string): Promise<AuthRes
       overrideAccess: true,
     });
     const user = docs[0] as
-      | { id: number | string; _verified?: boolean; firstName?: string; name?: string }
+      | {
+          id: number | string;
+          role?: string;
+          emailConfirmedAt?: string | null;
+          firstName?: string;
+          name?: string;
+        }
       | undefined;
-    /* Already verified, or no such account: say the same thing either way. */
-    if (user && !user._verified) {
+    /* Already confirmed, the team, or no such account: say the same thing
+       either way. Confirming is a customer's step (Users.emailConfirmedAt). */
+    if (user && user.role === "customer" && !user.emailConfirmedAt) {
       /*
        * MINT A NEW TOKEN AND SEND IT OURSELVES.
        *
@@ -295,11 +331,13 @@ export async function resendCustomerVerification(email: string): Promise<AuthRes
        * the customer waits instead of asking for help.
        */
       const token = randomBytes(32).toString("hex");
+      /* Only the token. `_verified` stays as it is: accounts sign in before
+         they are confirmed, and setting it false would lock her out. */
       await payload.update({
         collection: "users",
         id: user.id,
         overrideAccess: true,
-        data: { _verified: false, _verificationToken: token } as never,
+        data: { _verificationToken: token } as never,
       });
 
       await sendEmail(payload, {
@@ -324,7 +362,23 @@ export async function verifyCustomerEmail(token: string): Promise<AuthResult> {
   if (!token) return { ok: false, message: m.verifyLinkInvalid };
   const payload = await getPayload({ config });
   try {
+    /* Whose link this is, read before Payload spends the token. */
+    const owner = (await payload.db.findOne({
+      collection: "users",
+      where: { _verificationToken: { equals: token } },
+    })) as { id: number | string; emailConfirmedAt?: string | null } | null;
+
     await payload.verifyEmail({ collection: "users", token });
+
+    /* The address is confirmed: this is what unlocks the welcome gift. */
+    if (owner && !owner.emailConfirmedAt) {
+      await payload.update({
+        collection: "users",
+        id: owner.id,
+        overrideAccess: true,
+        data: { emailConfirmedAt: new Date().toISOString() },
+      });
+    }
     return { ok: true };
   } catch {
     return { ok: false, message: m.linkUsedOrExpired };

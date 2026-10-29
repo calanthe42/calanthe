@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { readConsent } from "@/lib/consent";
 import { WELCOME_DELAY_MS, WELCOME_SEEN_KEY, welcomeMayOpen, type WelcomeGift } from "@/lib/welcome-offer";
 
 /* The invitation itself — its images, form and motion — is fetched only for
@@ -27,7 +28,11 @@ const WelcomeOffer = dynamic(() => import("./WelcomeOffer").then((m) => m.Welcom
  */
 export function WelcomeOfferGate({ gift }: { gift: WelcomeGift | null }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  /* The gift as it was when the invitation opened. Signing up inside it
+     refreshes the page, and the layout then has no gift to offer a
+     signed-in visitor — the invitation must still finish its last step. */
+  const [shown, setShown] = useState<WelcomeGift | null>(null);
+  const open = shown !== null;
 
   useEffect(() => {
     if (!gift || open) return;
@@ -44,7 +49,9 @@ export function WelcomeOfferGate({ gift }: { gift: WelcomeGift | null }) {
       timer = window.setTimeout(() => {
         /* The menu, search and the cart all hold the page still through
            lib/useScrollLock.ts, which is how an open overlay is recognised. */
+        /* And the cookie notice is answered first: one question at a time. */
         const busy =
+          readConsent() === null ||
           document.documentElement.classList.contains("intro-playing") ||
           document.documentElement.style.overflow === "hidden" ||
           document.body.classList.contains("overlay-open") ||
@@ -55,13 +62,13 @@ export function WelcomeOfferGate({ gift }: { gift: WelcomeGift | null }) {
         } catch {
           return;
         }
-        setOpen(true);
+        setShown(gift);
       }, WELCOME_DELAY_MS);
     };
     wait();
     return () => window.clearTimeout(timer);
   }, [gift, pathname, open]);
 
-  if (!gift || !open) return null;
-  return <WelcomeOffer gift={gift} onClose={() => setOpen(false)} />;
+  if (!shown) return null;
+  return <WelcomeOffer gift={shown} onClose={() => setShown(null)} />;
 }

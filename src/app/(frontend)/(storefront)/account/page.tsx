@@ -4,6 +4,7 @@ import { headers as nextHeaders } from "next/headers";
 import { getPayload } from "payload";
 import config from "@payload-config";
 import { CustomerLogout } from "@/components/commerce/CustomerLogout";
+import { ConfirmEmailNotice } from "@/components/commerce/auth/ConfirmEmailNotice";
 import { Reveal } from "@/components/motion/Reveal";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -89,8 +90,10 @@ export default async function AccountPage() {
     overrideAccess: false,
   });
 
+  /* Sign-up asks for one full name (Users.name); first and last are set
+     only where the admin split them. */
   const name =
-    [customer.firstName, customer.lastName].filter(Boolean).join(" ") || customer.email;
+    [customer.firstName, customer.lastName].filter(Boolean).join(" ") || customer.name || customer.email;
 
   return (
     <main className="mx-auto max-w-6xl gutter section-pad">
@@ -102,6 +105,9 @@ export default async function AccountPage() {
         </div>
         <CustomerLogout />
       </Reveal>
+
+      {/* The account works already; confirming the address unlocks the gift. */}
+      {!customer.emailConfirmedAt ? <ConfirmEmailNotice email={customer.email} /> : null}
 
       <h2 className="mb-4 font-display text-2xl font-light text-olive">
         {t.account.orders}

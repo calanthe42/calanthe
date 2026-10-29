@@ -1,5 +1,6 @@
 import { Footer } from "@/components/blocks/Footer";
 import { BrandIntro } from "@/components/blocks/BrandIntro";
+import { CookieNotice } from "@/components/blocks/CookieNotice";
 import { Header } from "@/components/blocks/Header";
 import { Providers } from "@/components/blocks/Providers";
 import { WelcomeOfferGate } from "@/components/blocks/WelcomeOfferGate";
@@ -59,7 +60,9 @@ export default async function StorefrontLayout({
       <Footer />
       <LazyCartDrawer />
       <WhatsAppButton />
-      {/* Invited once, and only when nobody is signed in. */}
+      {/* Asked once, on the first visit. */}
+      <CookieNotice />
+      {/* Invited once, and only when nobody is signed in — after the cookie answer. */}
       <WelcomeOfferGate gift={welcome.account === "guest" ? welcome.offer : null} />
     </Providers>
   );

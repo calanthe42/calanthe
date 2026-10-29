@@ -6,6 +6,7 @@ import { customerRegister, resendCustomerVerification } from "@backend/actions/a
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/lib/locale";
 import { AuthField } from "./AuthField";
+import { TermsCheckbox } from "./TermsCheckbox";
 import { PhoneField } from "@/components/ui/PhoneField";
 import {
   fieldClasses,
@@ -16,14 +17,12 @@ import {
 /**
  * Create account.
  *
- * On success this does NOT sign anyone in. Users carries `auth.verify: true`,
- * so Payload has sent a verification email and the account cannot log in
- * until the link is followed — showing a session here would be a lie about
- * the account's state.
- *
- * A duplicate address returns success too (see customerRegister): the person
- * who already has an account sees the same screen and receives nothing new,
- * which is correct and tells a stranger nothing about who is registered.
+ * The account works at once: customerRegister signs her in and she goes to
+ * her account, where a line asks her to confirm the address from the email
+ * we sent (that is what unlocks the welcome gift). An address that already
+ * has an account is a field error pointing to sign-in. The "check your
+ * inbox" screen remains only for the rare case the new session could not be
+ * started.
  */
 export function RegisterForm() {
   const router = useRouter();
@@ -37,6 +36,12 @@ export function RegisterForm() {
     setPending(true);
     setError(null);
     const result = await customerRegister(formData);
+    if (result.ok && result.signedIn) {
+      /* Kept pending across the navigation, as SignInForm does. */
+      router.push("/account");
+      router.refresh();
+      return;
+    }
     setPending(false);
     if (result.ok) setSentTo(result.email);
     else setError({ field: result.field, message: result.message });
@@ -153,6 +158,7 @@ export function RegisterForm() {
         required
         error={error?.field === "confirmPassword" ? error.message : undefined}
       />
+      <TermsCheckbox id="reg-terms" error={error?.field === "terms" ? error.message : undefined} />
 
       {error && !error.field && (
         <p role="alert" className="text-sm leading-relaxed text-olive">

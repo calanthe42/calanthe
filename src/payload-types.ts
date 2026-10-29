@@ -166,6 +166,8 @@ export interface User {
    */
   accountStatus: 'active' | 'suspended' | 'closed';
   mustChangePassword?: boolean | null;
+  emailConfirmedAt?: string | null;
+  termsAcceptedAt?: string | null;
   anonymisedAt?: string | null;
   /**
    * Saved delivery addresses. Exactly one is the default.
@@ -1226,6 +1228,8 @@ export interface UsersSelect<T extends boolean = true> {
   birthday?: T;
   accountStatus?: T;
   mustChangePassword?: T;
+  emailConfirmedAt?: T;
+  termsAcceptedAt?: T;
   anonymisedAt?: T;
   addresses?:
     | T

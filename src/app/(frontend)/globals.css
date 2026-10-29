@@ -1023,7 +1023,8 @@ html[dir="rtl"] .brand-intro__line { font-style: normal; }
    exists — the mark lives in the header on every route now (see Header.tsx),
    which removed the logo jump, the bleed-through over the navigation and the
    empty centre of the homepage header in one go. */
-body.overlay-open .floating-whatsapp {
+body.overlay-open .floating-whatsapp,
+body.consent-open .floating-whatsapp {
   opacity: 0;
   pointer-events: none;
 }

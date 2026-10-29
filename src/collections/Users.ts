@@ -256,6 +256,24 @@ export const Users: CollectionConfig = {
       admin: { position: "sidebar", readOnly: true },
     },
     {
+      /* A customer's account works the moment it is made; this is the day
+         she followed the link we emailed her. Set by /account/verify (or by
+         Google, which has already confirmed the address). The welcome gift
+         waits for it: one gift per inbox means nothing without the inbox. */
+      name: "emailConfirmedAt",
+      type: "date",
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: { position: "sidebar", readOnly: true },
+    },
+    {
+      /* When she ticked "I agree to the Terms and the Privacy Policy" at
+         sign-up. Empty for accounts made before the box existed. */
+      name: "termsAcceptedAt",
+      type: "date",
+      access: { create: serverOnlyField, update: serverOnlyField },
+      admin: { position: "sidebar", readOnly: true },
+    },
+    {
       name: "anonymisedAt",
       type: "date",
       /* A customer with order history is anonymised, never deleted — orders

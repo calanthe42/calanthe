@@ -18,6 +18,7 @@ import * as migration_20261011_000000_admin_push from './20261011_000000_admin_p
 import * as migration_20261011_010000_must_change_password from './20261011_010000_must_change_password';
 import * as migration_20261011_020000_site_settings from './20261011_020000_site_settings';
 import * as migration_20261029_000000_welcome_offer from './20261029_000000_welcome_offer';
+import * as migration_20261030_000000_instant_accounts from './20261030_000000_instant_accounts';
 
 export const migrations = [
   {
@@ -119,5 +120,10 @@ export const migrations = [
     up: migration_20261029_000000_welcome_offer.up,
     down: migration_20261029_000000_welcome_offer.down,
     name: '20261029_000000_welcome_offer',
+  },
+  {
+    up: migration_20261030_000000_instant_accounts.up,
+    down: migration_20261030_000000_instant_accounts.down,
+    name: '20261030_000000_instant_accounts',
   },
 ];

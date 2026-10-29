@@ -33,7 +33,7 @@ describe("emailIdentityKey", () => {
 });
 
 describe("accountMayHaveWelcome", () => {
-  const customer = { role: "customer", accountStatus: "active", _verified: true };
+  const customer = { role: "customer", accountStatus: "active", emailConfirmedAt: "2026-10-30T09:00:00.000Z" };
 
   it("is a confirmed, active customer", () => {
     expect(accountMayHaveWelcome(customer)).toBe(true);
@@ -45,9 +45,9 @@ describe("accountMayHaveWelcome", () => {
     expect(accountMayHaveWelcome({ ...customer, role: "staff" })).toBe(false);
   });
 
-  it("needs a confirmed address", () => {
-    expect(accountMayHaveWelcome({ ...customer, _verified: false })).toBe(false);
-    expect(accountMayHaveWelcome({ ...customer, _verified: null })).toBe(false);
+  it("needs a confirmed address: an account that works is not enough", () => {
+    expect(accountMayHaveWelcome({ ...customer, emailConfirmedAt: null })).toBe(false);
+    expect(accountMayHaveWelcome({ ...customer, emailConfirmedAt: undefined })).toBe(false);
   });
 
   it("is never a suspended, closed or anonymised account", () => {

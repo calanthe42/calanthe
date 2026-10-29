@@ -603,7 +603,13 @@ describe("the code throttle counts wrong codes only", () => {
 
 describe("the welcome gift", () => {
   const GIFT = coupon({ id: "12", title: "Welcome gift", code: "WELCOME", oncePerCustomer: true, welcome: true });
-  const CUSTOMER = { id: 7, role: "customer", email: "layla@example.com", _verified: true, accountStatus: "active" };
+  const CUSTOMER = {
+    id: 7,
+    role: "customer",
+    email: "layla@example.com",
+    emailConfirmedAt: "2026-10-30T09:00:00.000Z",
+    accountStatus: "active",
+  };
   const signedIn = () => fakePayload.auth.mockResolvedValue({ user: CUSTOMER } as never);
   const quoteWithGift = () => quoteCheckout({ lines: [line], deliveryEmirate: "abu-dhabi", welcome: true });
 

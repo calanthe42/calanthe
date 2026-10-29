@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { customerRegister } from "@backend/actions/account";
 import { AuthField } from "@/components/commerce/auth/AuthField";
+import { TermsCheckbox } from "@/components/commerce/auth/TermsCheckbox";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { fieldClasses, fieldErrorClasses, labelClasses } from "@/components/ui/form-classes";
@@ -52,6 +53,7 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
   const { t } = useLocale();
   const w = t.welcome;
   const pathname = usePathname();
+  const router = useRouter();
   const baseId = useId();
   const titleId = `${baseId}-title`;
   const panelRef = useRef<HTMLDivElement>(null);
@@ -140,6 +142,9 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
         remember("registered");
         setSentTo(result.email);
         setStep("done");
+        /* She is signed in now: the header and the basket catch up behind
+           the sheet. */
+        if (result.signedIn) router.refresh();
       } else {
         setError({ field: result.field, message: result.message });
         if (result.field) document.getElementById(`${baseId}-${result.field}`)?.focus();
@@ -370,6 +375,8 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                     </p>
                   )}
                 </div>
+
+                <TermsCheckbox id={`${baseId}-terms`} error={fieldError("terms")} disabled={pending} />
 
                 {error && !error.field ? (
                   <p role="alert" className="border-s border-burnt-orange ps-4 text-base leading-relaxed text-olive">

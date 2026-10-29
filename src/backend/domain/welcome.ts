@@ -46,20 +46,21 @@ export type WelcomeAccount = {
   role?: string | null;
   accountStatus?: string | null;
   anonymisedAt?: string | null;
-  _verified?: boolean | null;
+  /** When she followed the link we emailed (or Google confirmed it). */
+  emailConfirmedAt?: string | null;
 };
 
 /**
  * May this signed-in account be offered the gift at all, before any order
  * is counted? A customer, not suspended or closed, not anonymised, and with
  * her address confirmed — the confirmation is what makes "one per inbox"
- * mean anything.
+ * mean anything. An account works before that; the gift does not.
  */
 export function accountMayHaveWelcome(user: WelcomeAccount | null | undefined): boolean {
   if (!user || user.role !== "customer") return false;
   if (user.accountStatus === "suspended" || user.accountStatus === "closed") return false;
   if (user.anonymisedAt) return false;
-  return user._verified === true;
+  return Boolean(user.emailConfirmedAt);
 }
 
 /**
