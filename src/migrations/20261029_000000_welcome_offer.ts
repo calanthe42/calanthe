@@ -19,9 +19,17 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   WHERE NOT EXISTS (SELECT 1 FROM "discounts" WHERE "welcome" OR "code" = 'WELCOME');`)
 }
 
+/**
+ * A gift no order used is deleted. One that orders used stays, for their
+ * history — but without the "welcome" column that hid it, it would be an
+ * ordinary live code called WELCOME, with no usage limit, that anyone could
+ * type. So it is switched off and ended first: an ended discount is
+ * "expired", which no switch in /admin turns back on.
+ */
 export async function down({ db }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
   DELETE FROM "discounts" WHERE "welcome" AND NOT EXISTS (SELECT 1 FROM "orders" WHERE "orders"."coupon_discount_id" = "discounts"."id");
+  UPDATE "discounts" SET "active" = false, "ends_at" = LEAST("ends_at", now()) WHERE "welcome";
   DROP INDEX IF EXISTS "discounts_one_welcome_idx";
   ALTER TABLE "discounts" DROP COLUMN IF EXISTS "welcome";`)
 }

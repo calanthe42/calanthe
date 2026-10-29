@@ -3,12 +3,15 @@ import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
 import { validateBespokeLines, validateOrderTotals } from "@backend/payload/hooks/orderIntegrity";
 import {
+  WELCOME_TRIES,
   couponRefusalCode,
   discountSnapshotOf,
   isGuessableRefusal,
   orderMoneyFields,
   saleSavingsOfItems,
   toCheckoutQuote,
+  welcomeAnswerOf,
+  welcomeStateOf,
 } from "./checkout-order";
 import { priceOrder } from "./pricing";
 
@@ -266,5 +269,71 @@ describe("toCheckoutQuote — the welcome gift", () => {
       couponCode: null,
       couponDiscountFils: 0,
     });
+  });
+});
+
+/*
+ * What the basket makes of the server's answers about the welcome gift. The
+ * one rule that matters: a gift that COULD NOT BE CHECKED is never taken for
+ * a gift that is not hers. A first order paid at full price uses the gift up
+ * for good, so a failed read is asked again, and then said out loud.
+ */
+describe("welcomeAnswerOf", () => {
+  const quoted = (welcome: boolean, couponDiscountFils: number) => ({ welcome, couponDiscountFils });
+  const gifted = { ok: true as const, quote: quoted(true, 4800) };
+  const notHers = { ok: true as const, quote: quoted(false, 0) };
+
+  it("takes the gift the quote applied, for exactly what it took off", () => {
+    expect(welcomeAnswerOf("A", gifted, null)).toEqual({ key: "A", status: "applied", discountFils: 4800 });
+  });
+
+  it("settles a quote without the gift as declined, with the server's reason when there is one", () => {
+    expect(welcomeAnswerOf("A", notHers, null)).toEqual({ key: "A", status: "declined", message: null });
+    const short = { ...notHers, welcomeMessage: "Add AED 120 more to use your welcome gift." };
+    expect(welcomeAnswerOf("A", short, null)).toEqual({
+      key: "A",
+      status: "declined",
+      message: "Add AED 120 more to use your welcome gift.",
+    });
+  });
+
+  it("never takes a failed check, a failed price or a dropped connection for 'not hers'", () => {
+    for (const failure of [{ ok: false as const }, null]) {
+      expect(welcomeAnswerOf("A", failure, null)).toEqual({ key: "A", status: "unchecked", tries: 1 });
+    }
+  });
+
+  it("counts the unanswered asks for one basket, and starts again for another", () => {
+    const twice = welcomeAnswerOf("A", { ok: false }, welcomeAnswerOf("A", null, null));
+    expect(twice).toEqual({ key: "A", status: "unchecked", tries: 2 });
+    expect(welcomeAnswerOf("B", null, twice)).toEqual({ key: "B", status: "unchecked", tries: 1 });
+  });
+
+  it("forgets the failures once an answer comes", () => {
+    const failing = welcomeAnswerOf("A", null, welcomeAnswerOf("A", null, null));
+    expect(welcomeAnswerOf("A", gifted, failing)).toMatchObject({ status: "applied" });
+  });
+});
+
+describe("welcomeStateOf", () => {
+  const gifted = { ok: true as const, quote: { welcome: true, couponDiscountFils: 4800 } };
+
+  it("is still checking until this basket has an answer — pay waits", () => {
+    expect(welcomeStateOf(null, "A")).toBe("checking");
+    expect(welcomeStateOf(welcomeAnswerOf("A", gifted, null), "B")).toBe("checking");
+  });
+
+  it("is the answer, once there is one for this basket", () => {
+    expect(welcomeStateOf(welcomeAnswerOf("A", gifted, null), "A")).toBe("applied");
+    expect(welcomeStateOf({ key: "A", status: "declined", message: null }, "A")).toBe("declined");
+  });
+
+  it("keeps asking after a failure, and says so only after the last try", () => {
+    let answer = welcomeAnswerOf("A", null, null);
+    for (let tries = 1; tries < WELCOME_TRIES; tries += 1) {
+      expect(welcomeStateOf(answer, "A")).toBe("checking");
+      answer = welcomeAnswerOf("A", null, answer);
+    }
+    expect(welcomeStateOf(answer, "A")).toBe("failed");
   });
 });

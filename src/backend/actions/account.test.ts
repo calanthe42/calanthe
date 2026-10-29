@@ -18,7 +18,7 @@ vi.mock("@/lib/i18n/server", async () => {
   return { getDictionary: async () => ({ locale: "en", t: en }) };
 });
 vi.mock("@backend/security/throttle", () => ({
-  LIMITS: { customerLogin: {}, loginIdentity: {}, register: {}, verifyResend: {} },
+  LIMITS: { customerLogin: {}, loginIdentity: {}, register: {}, verifyResend: {}, passwordResetIp: {} },
   clientAddress: async () => "203.0.113.9",
   throttle: async () => ({ allowed: true, retryAfterSeconds: 0 }),
   waitHint: () => "",
@@ -36,12 +36,14 @@ const fakePayload = {
   find: vi.fn(async () => ({ docs: [] as Doc[] })),
   update: vi.fn(async ({ data }: { data: Doc }) => data),
   verifyEmail: vi.fn(async () => true),
+  resetPassword: vi.fn(async () => ({ token: "jwt-from-reset", user: { id: 31, role: "customer" } as Doc })),
   db: { findOne: vi.fn(async () => null as Doc | null) },
   auth: vi.fn(async () => ({ user: null })),
 };
 vi.mock("payload", () => ({ getPayload: async () => fakePayload }));
 
-const { customerRegister, resendCustomerVerification, verifyCustomerEmail } = await import("./account");
+const { customerRegister, resendCustomerVerification, resetCustomerPassword, verifyCustomerEmail } =
+  await import("./account");
 
 const form = (over: Record<string, string> = {}) => {
   const f = new FormData();
@@ -68,6 +70,8 @@ beforeEach(() => {
   fakePayload.create.mockImplementation(async ({ data }: { data: Doc }) => ({ id: 31, ...data }));
   fakePayload.login.mockResolvedValue({ token: "jwt-for-31", user: { id: 31, role: "customer" } });
   fakePayload.find.mockResolvedValue({ docs: [] });
+  fakePayload.update.mockImplementation(async ({ data }: { data: Doc }) => data);
+  fakePayload.resetPassword.mockResolvedValue({ token: "jwt-from-reset", user: { id: 31, role: "customer" } });
   fakePayload.db.findOne.mockResolvedValue(null);
 });
 
@@ -164,5 +168,58 @@ describe("verifyCustomerEmail", () => {
     fakePayload.verifyEmail.mockRejectedValue(new Error("Verification token is invalid."));
     expect(await verifyCustomerEmail("old")).toMatchObject({ ok: false });
     expect(fakePayload.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("resetCustomerPassword — taking the account back", () => {
+  const resetForm = (over: Record<string, string> = {}) => {
+    const f = new FormData();
+    const fields = { token: "reset-tok", password: "a-new-bouquet", confirmPassword: "a-new-bouquet", ...over };
+    for (const [key, value] of Object.entries(fields)) f.set(key, value);
+    return f;
+  };
+
+  /* The squatter's case: someone registered her address first and has been
+     signed in since. Her reset must leave that session nothing to stand on. */
+  it("ends every session the account had, once the new password is set", async () => {
+    expect(await resetCustomerPassword(resetForm())).toEqual({ ok: true });
+    expect(fakePayload.resetPassword).toHaveBeenCalledWith({
+      collection: "users",
+      data: { token: "reset-tok", password: "a-new-bouquet" },
+      overrideAccess: true,
+    });
+    expect(fakePayload.update).toHaveBeenCalledWith({
+      collection: "users",
+      id: 31,
+      overrideAccess: true,
+      data: { sessions: [] },
+    });
+    /* The reset's own session is dropped too; no cookie is set for it. */
+    expect(jar.set).not.toHaveBeenCalled();
+  });
+
+  it("touches nothing when the link is spent or unknown", async () => {
+    fakePayload.resetPassword.mockRejectedValue(new Error("Token is either invalid or has expired."));
+    expect(await resetCustomerPassword(resetForm())).toEqual({
+      ok: false,
+      message: "That link has expired or has already been used.",
+    });
+    expect(fakePayload.update).not.toHaveBeenCalled();
+  });
+
+  it("still reports the new password if the old sessions could not be ended", async () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    fakePayload.update.mockRejectedValue(new Error("connection reset"));
+    expect(await resetCustomerPassword(resetForm())).toEqual({ ok: true });
+    expect(quiet).toHaveBeenCalled();
+    quiet.mockRestore();
+  });
+
+  it("checks the two passwords before spending the link", async () => {
+    expect(await resetCustomerPassword(resetForm({ confirmPassword: "something-else" }))).toMatchObject({
+      ok: false,
+      field: "confirmPassword",
+    });
+    expect(fakePayload.resetPassword).not.toHaveBeenCalled();
   });
 });

@@ -32,6 +32,7 @@ type Order = {
   fulfilmentStatus: string;
   source: string;
   customerEmail: string;
+  customer: number | null;
   couponDiscount: number | null;
   couponRedeemedAt: string | null;
   discountSnapshot: unknown;
@@ -50,6 +51,7 @@ const order = (over: Partial<Order> = {}): Order => ({
   fulfilmentStatus: "NEW",
   source: "web-checkout-card",
   customerEmail: "layla@example.com",
+  customer: null,
   couponDiscount: 9,
   couponRedeemedAt: null,
   discountSnapshot: { coupon: { id: "9" }, sales: [] },
@@ -232,6 +234,30 @@ describe("once per customer", () => {
     await releaseCouponClaims(w.payload, w.stripe, oncePer, "layla@example.com", NOW);
     expect(w.table.get(1)!.fulfilmentStatus).toBe("NEW");
     expect(w.cancelled).toEqual([]);
+  });
+
+  it("releases her ACCOUNT's earlier unpaid order when asked to — the gift is hers, whatever email it was sent to", async () => {
+    const w = world([
+      order({ id: 1, customer: 7, customerEmail: "work@example.com", stripePaymentIntentId: "pi_mine" }),
+      order({ id: 2, customer: 8, customerEmail: "other@example.com", stripePaymentIntentId: "pi_theirs" }),
+    ]);
+    await releaseCouponClaims(w.payload, w.stripe, oncePer, "layla@example.com", NOW, 7);
+    expect(w.table.get(1)!.fulfilmentStatus).toBe("CANCELLED");
+    expect(w.table.get(1)!.internalNotes).toBe(SUPERSEDED_NOTE);
+    expect(w.table.get(2)!.fulfilmentStatus).toBe("NEW");
+    expect(w.cancelled).toEqual(["pi_mine"]);
+  });
+
+  it("leaves her account's orders alone when no account is given: a typed code belongs to an email", async () => {
+    const w = world([order({ id: 1, customer: 7, customerEmail: "work@example.com" })]);
+    await releaseCouponClaims(w.payload, w.stripe, oncePer, "layla@example.com", NOW);
+    expect(w.table.get(1)!.fulfilmentStatus).toBe("NEW");
+  });
+
+  it("keeps her account's order as a claim when it is being paid at that moment", async () => {
+    const w = world([order({ id: 1, customer: 7, customerEmail: "work@example.com" })], { pi_1: "processing" });
+    await releaseCouponClaims(w.payload, w.stripe, oncePer, "layla@example.com", NOW, 7);
+    expect(w.table.get(1)!.fulfilmentStatus).toBe("NEW");
   });
 });
 

@@ -13,6 +13,7 @@ export function Providers({
   catalogue = [],
   locale = "en",
   welcome = null,
+  welcomeUnsettled = false,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
@@ -21,10 +22,12 @@ export function Providers({
   locale?: Locale;
   /* The welcome gift, when it is this signed-in customer's (backend/data/welcome.ts). */
   welcome?: WelcomeGift | null;
+  /* The layout could not settle the gift: checkout asks again (lib/cart.tsx). */
+  welcomeUnsettled?: boolean;
 }) {
   return (
     <LocaleProvider initialLocale={locale}>
-      <CartProvider catalogue={catalogue} welcome={welcome}>
+      <CartProvider catalogue={catalogue} welcome={welcome} welcomeUnsettled={welcomeUnsettled}>
         <WishlistProvider>
           <ToastProvider>{children}</ToastProvider>
         </WishlistProvider>

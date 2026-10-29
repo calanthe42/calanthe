@@ -7,7 +7,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { customerRegister } from "@backend/actions/account";
 import { AuthField } from "@/components/commerce/auth/AuthField";
 import { TermsCheckbox } from "@/components/commerce/auth/TermsCheckbox";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { fieldClasses, fieldErrorClasses, labelClasses } from "@/components/ui/form-classes";
 import { cn } from "@/lib/cn";
@@ -49,7 +49,16 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
  * action as /account/register; the gift is decided at checkout, from the
  * orders, once her address is confirmed (backend/data/welcome.ts).
  */
-export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: () => void }) {
+export function WelcomeOffer({
+  gift,
+  openedOn: openedOnPath,
+  onClose,
+}: {
+  gift: WelcomeGift;
+  /** The page the gate opened it on — not the page it first renders on. */
+  openedOn: string;
+  onClose: () => void;
+}) {
   const { t } = useLocale();
   const w = t.welcome;
   const pathname = usePathname();
@@ -64,6 +73,9 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
   const [sentTo, setSentTo] = useState("");
+  /* The account is made even when signing her in fails; the last step then
+     says so and offers the sign-in, instead of "You're signed in". */
+  const [signedIn, setSignedIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const amount = welcomeAmount(gift);
 
@@ -89,6 +101,17 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
     setPhase("closing");
     window.setTimeout(onClose, EXIT_MS);
   }, [pending, step, onClose]);
+
+  /* A new page closes the sheet. The storefront layout that holds it stays
+     mounted through client-side navigation, so the Sign in link, Back or
+     Forward would otherwise leave it open over the page she went to: the
+     login form she asked for, or a checkout it must never cover. The page
+     compared against is the one the gate opened it on: this chunk loads
+     after that decision, and a tap to the basket while it downloads must
+     still close it on its first render. */
+  useEffect(() => {
+    if (pathname !== openedOnPath) onClose();
+  }, [pathname, openedOnPath, onClose]);
 
   /* Focus follows the step: each step's heading, so a screen reader starts
      there. With a mouse, the form puts the cursor in the first field; on a
@@ -156,6 +179,17 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
     return () => document.removeEventListener("keydown", onKey);
   }, [close]);
 
+  /* The field the server turned down takes focus once the form is enabled
+     again. While the request is out every field is disabled, and a disabled
+     input cannot take focus, so focusing it as the answer arrives did
+     nothing and left her on the page behind. */
+  const refocus = useRef<string | null>(null);
+  useEffect(() => {
+    if (pending || !refocus.current) return;
+    document.getElementById(`${baseId}-${refocus.current}`)?.focus();
+    refocus.current = null;
+  }, [pending, baseId]);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -169,13 +203,14 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
       if (result.ok) {
         remember("registered");
         setSentTo(result.email);
+        setSignedIn(result.signedIn);
         setStep("done");
         /* She is signed in now: the header and the basket catch up behind
            the sheet. */
         if (result.signedIn) router.refresh();
       } else {
         setError({ field: result.field, message: result.message });
-        if (result.field) document.getElementById(`${baseId}-${result.field}`)?.focus();
+        refocus.current = result.field ?? null;
       }
     } catch {
       setError({ message: t.server.account.registerFailed });
@@ -191,9 +226,11 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
   const signIn = (
     <p className="text-base text-olive">
       {w.haveAccount}{" "}
+      {/* The sheet starts its exit as she taps, so the login page arrives
+          in the clear; a page change closes it in any case (above). */}
       <Link
         href={signInHref}
-        onClick={() => remember("dismissed")}
+        onClick={close}
         className="underline decoration-hairline underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange"
       >
         {w.signIn}
@@ -233,12 +270,14 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
           aria-hidden
           className={cn(
             "pointer-events-none absolute -top-14 start-5 z-10 h-[7.5rem] w-[8.25rem] lg:-top-12 lg:start-[18.5rem]",
-            "transition-[translate,rotate,scale,opacity] ease-bloom motion-reduce:rotate-none motion-reduce:scale-none motion-reduce:translate-none motion-reduce:transition-opacity",
+            "transition-[translate,rotate,scale,opacity] ease-bloom motion-reduce:rotate-none motion-reduce:scale-none motion-reduce:transition-opacity",
             open
               ? "-rotate-[7deg] scale-100 opacity-100 delay-200 duration-[900ms] rtl:rotate-[7deg]"
               : "-rotate-[16deg] scale-90 opacity-0 duration-200 rtl:rotate-[16deg]",
             /* On a phone the form has a Back arrow where the tag hangs: the tag
-               steps aside for it. */
+               steps aside for it. That is where it belongs, not a movement,
+               so reduced motion keeps the offset and drops only the glide
+               (`translate-none` there used to put the tag back on the arrow). */
             step === "form" && "translate-x-[3.25rem] rtl:-translate-x-[3.25rem] lg:translate-x-0 lg:rtl:translate-x-0",
           )}
         >
@@ -275,7 +314,13 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
           />
         </div>
 
-        <div className="relative max-h-[92svh] flex-1 overflow-y-auto rounded-t-md bg-canvas shadow-[0_-16px_48px_rgba(43,47,27,0.22)] lg:max-h-[88svh] lg:rounded-md lg:rounded-s-none lg:shadow-none">
+        {/* Scrolls while Lenis is stopped — see the mobile menu in Header.tsx.
+            On a phone the form is taller than the sheet, and without this a
+            stopped Lenis swallows the finger that reaches for its button. */}
+        <div
+          data-lenis-prevent
+          className="relative max-h-[92svh] flex-1 overflow-y-auto overscroll-contain rounded-t-md bg-canvas shadow-[0_-16px_48px_rgba(43,47,27,0.22)] lg:max-h-[88svh] lg:rounded-md lg:rounded-s-none lg:shadow-none"
+        >
           {/* The swipe handle (phones): a strip across the top, clear of the
               corner buttons. Its bar is hidden on the form, where the tag
               has stepped aside over it. */}
@@ -450,10 +495,10 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                     tabIndex={-1}
                     className="welcome-heading font-display text-[2.375rem] font-light leading-[1.05] text-olive lining-nums"
                   >
-                    {w.doneTitle}
+                    {signedIn ? w.doneTitle : w.createdTitle}
                   </h2>
                   <p className="max-w-sm text-base leading-relaxed text-ink-muted">
-                    {w.doneLead.replace("{amount}", amount).split("{email}").map((part, index, parts) => (
+                    {(signedIn ? w.doneLead : w.createdLead).replace("{amount}", amount).split("{email}").map((part, index, parts) => (
                       <span key={index}>
                         {part}
                         {index < parts.length - 1 ? (
@@ -466,9 +511,22 @@ export function WelcomeOffer({ gift, onClose }: { gift: WelcomeGift; onClose: ()
                     ))}
                   </p>
                 </div>
-                <Button type="button" variant="primary" onClick={close} className="w-full lg:w-auto lg:self-start lg:px-8">
-                  {w.continue}
-                </Button>
+                {signedIn ? (
+                  <Button type="button" variant="primary" onClick={close} className="w-full lg:w-auto lg:self-start lg:px-8">
+                    {w.continue}
+                  </Button>
+                ) : (
+                  /* The account exists but the session did not take: signing
+                     in is what attaches the gift, so it is the one button. */
+                  <div className="flex flex-col items-stretch gap-1 lg:flex-row lg:items-center lg:gap-5">
+                    <ButtonLink href={signInHref} variant="primary" onClick={close} className="w-full lg:w-auto lg:px-8">
+                      {w.signIn}
+                    </ButtonLink>
+                    <Button type="button" variant="text" onClick={close} className="self-center px-3 text-base lg:self-auto">
+                      {w.continue}
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </div>

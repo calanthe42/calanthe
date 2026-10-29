@@ -68,6 +68,7 @@ const claims = {
 };
 vi.mock("@backend/payments/coupon-claims", () => ({
   LOST_CLAIM_NOTE: "lost",
+  CLAIM_UNCHECKED_NOTE: "unchecked",
   isLimited: (c: { usageLimit: number | null; oncePerCustomer: boolean }) =>
     c.usageLimit !== null || c.oncePerCustomer,
   releaseCouponClaims: (...args: unknown[]) => claims.releaseCouponClaims(...(args as [])),
@@ -79,7 +80,7 @@ vi.mock("@backend/payments/coupon-claims", () => ({
 /* ---- the welcome gift: who may have it, and what the orders say ---- */
 const gift = {
   welcomeFor: vi.fn(async (): Promise<CouponRule | null> => null),
-  welcomeStanding: vi.fn(async () => ({ paidOrders: 0, claims: 0 })),
+  welcomeStanding: vi.fn(async () => ({ paidOrders: 0, claims: 0, ownHeld: 0 })),
 };
 vi.mock("@backend/data/welcome", () => ({
   welcomeFor: (...args: unknown[]) => gift.welcomeFor(...(args as [])),
@@ -229,7 +230,7 @@ beforeEach(() => {
   claims.couponClaimRefusal.mockResolvedValue(null);
   fakePayload.auth.mockResolvedValue({ user: null });
   gift.welcomeFor.mockResolvedValue(null);
-  gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 0 });
+  gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 0, ownHeld: 0 });
   fakePayload.findByID.mockResolvedValue({ id: 41, fulfilmentStatus: "NEW" });
   ensureOrderPaymentIntent.mockImplementation(async () => ({
     kind: "ready",
@@ -453,6 +454,22 @@ describe("startCardCheckout — a limited code is reserved, not merely checked",
     expect(fakePayload.create).not.toHaveBeenCalled();
   });
 
+  it("cancels its own order, and creates no payment, when the second look cannot be made", async () => {
+    world.coupons = [limited()];
+    claims.couponClaimRefusal.mockResolvedValueOnce(null).mockRejectedValueOnce(new Error("connection terminated"));
+    expect(await pay()).toMatchObject({ ok: false, code: "ORDER_CREATION_FAILED" });
+    /* Not left holding the claim for an hour: that would refuse her own next try. */
+    expect(claims.abandonOrder).toHaveBeenCalledWith(fakePayload, 41, "unchecked");
+    expect(ensureOrderPaymentIntent).not.toHaveBeenCalled();
+  });
+
+  it("releases a typed code's earlier claims by the email only, never by the account", async () => {
+    fakePayload.auth.mockResolvedValue({ user: { id: 7, role: "customer" } } as never);
+    world.coupons = [limited()];
+    expect(await pay()).toMatchObject({ ok: true });
+    expect((claims.releaseCouponClaims.mock.calls[0] as unknown[])[5]).toBeUndefined();
+  });
+
   it("sweeps stale discounted orders after the response, not before it", async () => {
     expect(await startCardCheckout(request())).toMatchObject({ ok: true });
     expect(claims.sweepStaleDiscountOrders).not.toHaveBeenCalled();
@@ -621,10 +638,44 @@ describe("the welcome gift", () => {
     expect(JSON.stringify(result)).not.toContain("WELCOME");
   });
 
-  it("prices the quote without it when it is not hers", async () => {
+  it("prices the quote without it when it is not hers, and says nothing more", async () => {
     signedIn();
     const result = await quoteWithGift();
     expect(result).toMatchObject({ ok: true, quote: { welcome: false, couponDiscountFils: 0, totalFils: 48000 } });
+    expect(result).not.toHaveProperty("welcomeMessage");
+  });
+
+  it("says the gift could not be checked — never 'not hers' — when the check fails", async () => {
+    signedIn();
+    gift.welcomeFor.mockRejectedValue(new Error("connection terminated"));
+    expect(await quoteWithGift()).toEqual({
+      ok: false,
+      code: "WELCOME_UNCHECKED",
+      message: "We could not check your welcome gift. Please try again.",
+    });
+  });
+
+  it("says the same when the session itself cannot be read", async () => {
+    fakePayload.auth.mockRejectedValue(new Error("connection terminated"));
+    expect(await quoteWithGift()).toMatchObject({ ok: false, code: "WELCOME_UNCHECKED" });
+  });
+
+  it("explains a gift that needs a bigger basket, with the basket priced without it", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue({ ...GIFT, minSubtotalFils: 60000 });
+    expect(await quoteWithGift()).toEqual({
+      ok: true,
+      quote: {
+        subtotalFils: 48000,
+        saleSavingsFils: 0,
+        couponCode: null,
+        welcome: false,
+        couponDiscountFils: 0,
+        deliveryFeeFils: 0,
+        totalFils: 48000,
+      },
+      welcomeMessage: "Add AED 120 more to use your welcome gift. It needs a minimum order of AED 600.",
+    });
   });
 
   it("never looks for the gift unless the page asks for it", async () => {
@@ -665,6 +716,62 @@ describe("the welcome gift", () => {
     expect(gift.welcomeStanding.mock.calls[1]).toEqual([fakePayload, CUSTOMER, "12", 41]);
   });
 
+  it("keeps her gift when she starts again: her account's earlier checkout is released before every claim is counted", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    expect(await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }))).toMatchObject({ ok: true });
+
+    /* Released by the email she typed AND by her account (id 7). */
+    const release = claims.releaseCouponClaims.mock.calls[0] as unknown[];
+    expect(release[0]).toBe(fakePayload);
+    expect(release[2]).toMatchObject({ id: "12", welcome: true });
+    expect(release[3]).toBe("layla@example.com");
+    expect(release[5]).toBe(7);
+    /* …and only then counted, strictly, with nobody left out. */
+    const released = claims.releaseCouponClaims.mock.invocationCallOrder[0]!;
+    const counted = gift.welcomeStanding.mock.invocationCallOrder[0]!;
+    expect(released).toBeLessThan(counted);
+    expect(gift.welcomeStanding.mock.calls[0]).toEqual([fakePayload, CUSTOMER, "12"]);
+  });
+
+  it("still refuses when her earlier checkout could not be released (it is being paid right now)", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    /* The release left it alone, so the strict count still sees it. */
+    gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 1, ownHeld: 1 });
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+    expect(fakePayload.create).not.toHaveBeenCalled();
+  });
+
+  it("is once per person even when the owner unticks 'once per customer' on the gift", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue({ ...GIFT, oncePerCustomer: false });
+    gift.welcomeStanding
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 0, ownHeld: 0 })
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 1, ownHeld: 0 });
+    /* Another tab created its gift order in between: this one loses, before
+       any payment, and asks her to try again rather than taking the gift away. */
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "ORDER_CREATION_FAILED" });
+    expect(claims.releaseCouponClaims).toHaveBeenCalledTimes(1);
+    expect(gift.welcomeStanding).toHaveBeenCalledTimes(2);
+    expect(claims.abandonOrder).toHaveBeenCalledWith(fakePayload, 41, "lost");
+    expect(ensureOrderPaymentIntent).not.toHaveBeenCalled();
+  });
+
+  it("cancels its gift order when the second look cannot be made", async () => {
+    signedIn();
+    gift.welcomeFor.mockResolvedValue(GIFT);
+    gift.welcomeStanding
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 0, ownHeld: 0 })
+      .mockRejectedValueOnce(new Error("connection terminated"));
+    const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
+    expect(result).toMatchObject({ ok: false, code: "ORDER_CREATION_FAILED" });
+    expect(claims.abandonOrder).toHaveBeenCalledWith(fakePayload, 41, "unchecked");
+    expect(ensureOrderPaymentIntent).not.toHaveBeenCalled();
+  });
+
   it("refuses an order that showed the gift when it is not hers, and creates nothing", async () => {
     signedIn();
     const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
@@ -675,7 +782,7 @@ describe("the welcome gift", () => {
   it("refuses when another order already holds the gift", async () => {
     signedIn();
     gift.welcomeFor.mockResolvedValue(GIFT);
-    gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 1 });
+    gift.welcomeStanding.mockResolvedValue({ paidOrders: 0, claims: 1, ownHeld: 0 });
     const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
     expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
     expect(fakePayload.create).not.toHaveBeenCalled();
@@ -685,10 +792,12 @@ describe("the welcome gift", () => {
     signedIn();
     gift.welcomeFor.mockResolvedValue(GIFT);
     gift.welcomeStanding
-      .mockResolvedValueOnce({ paidOrders: 0, claims: 0 })
-      .mockResolvedValueOnce({ paidOrders: 0, claims: 1 });
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 0, ownHeld: 0 })
+      .mockResolvedValueOnce({ paidOrders: 0, claims: 1, ownHeld: 0 });
     const result = await startCardCheckout(request({ welcome: true, shownTotalFils: 43200 }));
-    expect(result).toMatchObject({ ok: false, code: "WELCOME_UNAVAILABLE" });
+    /* Both racing orders are cancelled, so the gift is free again: "try
+       again", never "no longer yours", which would drop it from her basket. */
+    expect(result).toMatchObject({ ok: false, code: "ORDER_CREATION_FAILED" });
     expect(claims.abandonOrder).toHaveBeenCalledWith(fakePayload, 41, "lost");
     expect(ensureOrderPaymentIntent).not.toHaveBeenCalled();
   });

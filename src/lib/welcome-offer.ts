@@ -19,7 +19,7 @@ export const WELCOME_SEEN_KEY = "calanthe-welcome-v1";
 /** How long a first visit runs before she is invited. */
 export const WELCOME_DELAY_MS = 10_000;
 
-/** How long the page must have been calm (no intro, cookie notice, menu or cart) first. */
+/** How long the page must have been calm (no intro, cookie notice, menu, cart or typing) first. */
 export const WELCOME_SETTLE_MS = 4_000;
 
 /* Pages where an invitation would interrupt what she came to do. */
@@ -29,6 +29,39 @@ const QUIET_PREFIXES = ["/checkout", "/pay", "/cart", "/account", "/login", "/in
 export function welcomeMayOpen(pathname: string, seen: string | null): boolean {
   if (seen) return false;
   return !QUIET_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+/**
+ * This browser's memory of the invitation, read afresh each time it is
+ * asked: another tab may have shown it, or she may have answered it there,
+ * since this page loaded. Storage that cannot be read counts as seen — an
+ * invitation it could not remember dismissing would return on every page.
+ */
+export function readWelcomeSeen(): string | null {
+  try {
+    return localStorage.getItem(WELCOME_SEEN_KEY);
+  } catch {
+    return "unavailable";
+  }
+}
+
+/* Inputs that are pressed rather than typed into: focus rests on them only
+   for the moment they are used. */
+const PRESSED_INPUTS = new Set(["button", "checkbox", "color", "file", "hidden", "image", "radio", "range", "reset", "submit"]);
+
+/**
+ * Is she typing into this element? The invitation takes focus when it opens,
+ * which on a phone drops the keyboard, so it waits while a field has it: the
+ * card message on a product, the notes on Build Your Own, an enquiry.
+ */
+export function isTypingInto(
+  element: { tagName: string; type?: string; isContentEditable?: boolean } | null,
+): boolean {
+  if (!element) return false;
+  if (element.isContentEditable) return true;
+  const tag = element.tagName.toLowerCase();
+  if (tag === "textarea" || tag === "select") return true;
+  return tag === "input" && !PRESSED_INPUTS.has((element.type ?? "text").toLowerCase());
 }
 
 /** "10%", or an amount in AED — whichever the owner set. */

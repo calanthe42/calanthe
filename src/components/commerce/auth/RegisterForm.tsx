@@ -30,6 +30,8 @@ export function RegisterForm() {
   const [pending, setPending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
 
   async function onSubmit(formData: FormData) {
@@ -72,16 +74,30 @@ export function RegisterForm() {
           {t.account.checkInboxNote}
         </p>
         <div className="mt-8 flex flex-col gap-3">
+          {/* "Sent again" only when the server sent it; a throttled resend
+              shows the server's own sentence, which says how long to wait. */}
           <Button
             variant="secondary"
-            disabled={resent}
+            /* Held while it is sent: a second tap would mint a second link
+               and leave the first email's link dead. */
+            disabled={resent || resending}
+            loading={resending}
             onClick={async () => {
-              await resendCustomerVerification(sentTo);
-              setResent(true);
+              setResending(true);
+              setResendError(null);
+              const result = await resendCustomerVerification(sentTo).catch(() => null);
+              setResending(false);
+              if (result?.ok) setResent(true);
+              else setResendError(result?.message ?? t.account.resendFailed);
             }}
           >
             {resent ? t.account.resent : t.account.resend}
           </Button>
+          {resendError && (
+            <p role="alert" className="text-base leading-relaxed text-olive">
+              {resendError}
+            </p>
+          )}
           <Button variant="text" onClick={() => router.push("/account/login")}>
             {t.account.backToSignIn}
           </Button>

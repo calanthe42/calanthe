@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { quoteCheckout } from "@backend/actions/checkout";
+import { welcomeAnswerOf, welcomeStateOf, type WelcomeAnswer } from "@backend/domain/checkout-order";
 import type { AddonId, ProductImage, SizeId } from "@/lib/data";
 import { addons, deliveryZones, sizes, timeSlots } from "@/lib/data";
 import {
@@ -258,6 +259,10 @@ export type DiscountState = "idle" | "checking" | "error";
  */
 export type CartDiscount = { code: string | null; welcome: boolean; discountFils: number };
 
+/* The wait before asking about the gift again, times the unanswered asks so
+   far: 1.5 s, then 3 s (backend/domain/checkout-order.ts `WelcomeAnswer`). */
+const WELCOME_RETRY_MS = 1500;
+
 type CartContextValue = {
   items: readonly CartItem[];
   /**
@@ -292,6 +297,23 @@ type CartContextValue = {
    * takes off is always the server's quote.
    */
   welcomeGift: WelcomeGift | null;
+  /**
+   * The gift could not be checked for this basket, even after asking again.
+   * Paying is not held for it: she is told (DiscountCodeField) and may ask
+   * once more with `retryWelcome`.
+   */
+  welcomeFailed: boolean;
+  /** Why the gift is not on this basket, when she can act on it (a minimum spend). */
+  welcomeMessage: string | null;
+  /**
+   * The layout could not settle the gift for good: she is signed in and has
+   * not confirmed her address yet, or it could not be read. Checkout asks
+   * the layout again before she pays (CheckoutForm.tsx).
+   */
+  welcomeUnsettled: boolean;
+  retryWelcome: () => void;
+  /** Checkout reports that the payment refused the gift: this basket goes without it. */
+  refuseWelcome: () => void;
   discountState: DiscountState;
   /** Why the code did not apply, in the reader's language. Null beside "error": it could not be checked. */
   discountMessage: string | null;
@@ -333,11 +355,14 @@ export function CartProvider({
      provider still mounts in isolation (tests, storybook-style rendering). */
   catalogue = NO_CATALOGUE,
   welcome = null,
+  welcomeUnsettled = false,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
   /** The welcome gift, when the layout found it is this signed-in customer's. */
   welcome?: WelcomeGift | null;
+  /** The layout could not settle the gift: see `welcomeUnsettled` on the context. */
+  welcomeUnsettled?: boolean;
 }) {
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
@@ -523,10 +548,9 @@ export function CartProvider({
    * browser never knows the gift's code: it asks for "the basket, with the
    * welcome gift", and shows whatever the server answers for this basket.
    * Until that answer is in, the total is "checking" and nothing is paid.
+   * An answer that never came is asked again (see `WelcomeAnswer`).
    */
-  const [welcomeQuoted, setWelcomeQuoted] = useState<{ key: string; discountFils: number } | null>(null);
-  /* The basket the server last answered "no gift" for. */
-  const [welcomeDeclined, setWelcomeDeclined] = useState<string | null>(null);
+  const [welcomeAnswer, setWelcomeAnswer] = useState<WelcomeAnswer | null>(null);
   const isRefused =
     code !== null &&
     refused?.code === code &&
@@ -534,10 +558,14 @@ export function CartProvider({
   /* Only a code that may still apply replaces the gift: a mistyped one,
      refused and waiting in the box to be corrected, takes nothing away. */
   const codeInPlay = code !== null && !isRefused;
+  /* Unanswered asks for this basket so far; each one asks again, later. */
+  const welcomeTries =
+    welcomeAnswer?.key === linesKey && welcomeAnswer.status === "unchecked" ? welcomeAnswer.tries : 0;
 
   useEffect(() => {
     if (!isHydrated || codeInPlay || !welcome || !hasLines) return;
-    if (welcomeQuoted?.key === linesKey || welcomeDeclined === linesKey) return;
+    /* Answered for this basket, or given up on until she asks again. */
+    if (welcomeStateOf(welcomeAnswer, linesKey) !== "checking") return;
 
     let cancelled = false;
     const key = linesKey;
@@ -547,28 +575,28 @@ export function CartProvider({
       sizeId: item.sizeId,
       addonIds: [...item.addonIds],
     }));
-    const timer = setTimeout(() => {
-      quoteCheckout({ lines, deliveryEmirate: deliveryZones[0]?.id ?? "", welcome: true })
-        .then((result) => {
-          if (cancelled) return;
-          if (result.ok && result.quote.welcome && result.quote.couponDiscountFils > 0) {
-            setWelcomeQuoted({ key, discountFils: result.quote.couponDiscountFils });
-          } else {
-            setWelcomeDeclined(key);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setWelcomeDeclined(key);
-        });
-    }, 400);
+    const timer = setTimeout(
+      () => {
+        quoteCheckout({ lines, deliveryEmirate: deliveryZones[0]?.id ?? "", welcome: true })
+          .then((result) => {
+            if (!cancelled) setWelcomeAnswer((previous) => welcomeAnswerOf(key, result, previous));
+          })
+          .catch(() => {
+            /* The connection dropped: that is "unchecked", never "not hers". */
+            if (!cancelled) setWelcomeAnswer((previous) => welcomeAnswerOf(key, null, previous));
+          });
+      },
+      welcomeTries === 0 ? 400 : WELCOME_RETRY_MS * welcomeTries,
+    );
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-    /* As above: what this effect writes is read, not watched. */
+    /* As above: what this effect writes is read, not watched — except the
+       count of unanswered asks, which is what schedules the next one. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated, codeInPlay, welcome, linesKey]);
+  }, [isHydrated, codeInPlay, welcome, linesKey, welcomeTries]);
 
   const discount = useMemo<CartDiscount | null>(() => {
     if (code && codeInPlay) {
@@ -576,12 +604,16 @@ export function CartProvider({
         ? { code, welcome: false, discountFils: Math.min(quoted.discountFils, subtotalFils) }
         : null;
     }
-    return welcome && hasLines && welcomeQuoted?.key === linesKey
-      ? { code: null, welcome: true, discountFils: Math.min(welcomeQuoted.discountFils, subtotalFils) }
+    return welcome && hasLines && welcomeAnswer?.key === linesKey && welcomeAnswer.status === "applied"
+      ? { code: null, welcome: true, discountFils: Math.min(welcomeAnswer.discountFils, subtotalFils) }
       : null;
-  }, [code, codeInPlay, hasLines, quoted, linesKey, subtotalFils, welcome, welcomeQuoted]);
-  const welcomePending =
-    !codeInPlay && welcome !== null && hasLines && !discount && welcomeDeclined !== linesKey;
+  }, [code, codeInPlay, hasLines, quoted, linesKey, subtotalFils, welcome, welcomeAnswer]);
+  /* Where the gift stands on this basket, when it is in question at all. */
+  const welcomeState = !codeInPlay && welcome !== null && hasLines ? welcomeStateOf(welcomeAnswer, linesKey) : null;
+  const welcomePending = welcomeState === "checking";
+  const welcomeFailed = welcomeState === "failed";
+  const welcomeMessage =
+    welcomeState === "declined" && welcomeAnswer?.status === "declined" ? welcomeAnswer.message : null;
   /* A gift still being quoted holds the pay buttons; a refused code is
      reported even while the gift stands in for it. */
   const discountState: DiscountState = welcomePending
@@ -619,6 +651,14 @@ export function CartProvider({
     },
     [code, linesKey],
   );
+  const refuseWelcome = useCallback(() => {
+    /* The payment has the last word: the gift comes off this basket, so the
+       total she now sees is the one the server will charge. Whatever the
+       layout says after its refresh, this basket is not asked about again. */
+    setWelcomeAnswer({ key: linesKey, status: "declined", message: null });
+  }, [linesKey]);
+  /* Forgetting the unanswered asks is what asks again: the effect watches their count. */
+  const retryWelcome = useCallback(() => setWelcomeAnswer(null), []);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
@@ -641,8 +681,7 @@ export function CartProvider({
     setCode(null);
     setQuoted(null);
     setRefused(null);
-    setWelcomeQuoted(null);
-    setWelcomeDeclined(null);
+    setWelcomeAnswer(null);
   }, []);
 
   const value = useMemo<CartContextValue>(
@@ -656,6 +695,11 @@ export function CartProvider({
       discountCode: code,
       discount,
       welcomeGift: welcome,
+      welcomeFailed,
+      welcomeMessage,
+      welcomeUnsettled,
+      retryWelcome,
+      refuseWelcome,
       discountState,
       discountMessage,
       totalFils,
@@ -682,6 +726,11 @@ export function CartProvider({
       code,
       discount,
       welcome,
+      welcomeFailed,
+      welcomeMessage,
+      welcomeUnsettled,
+      retryWelcome,
+      refuseWelcome,
       discountState,
       discountMessage,
       totalFils,

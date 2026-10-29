@@ -97,6 +97,40 @@ export const autoVerifyInvitedStaff: CollectionBeforeChangeHook = ({ data, opera
 };
 
 /**
+ * A confirmation belongs to an ADDRESS, not to the account.
+ *
+ * `emailConfirmedAt` records that she followed a link sent to one inbox, and
+ * the welcome gift trusts it to mean "one gift per inbox". When the address
+ * changes (only the owner can change it: see the `email` field in Users),
+ * the new inbox has proved nothing, so the confirmation goes. So does any
+ * link still waiting in the OLD inbox: Payload leaves `_verificationToken`
+ * alone when the email changes, so a link opened after the change would
+ * otherwise confirm the new address on the strength of the old one. The
+ * account page then offers a fresh link, which resendCustomerVerification
+ * sends to the address the account holds now.
+ *
+ * `_verified` is left as it is. Accounts sign in before they are confirmed,
+ * and clearing it would lock her out.
+ *
+ * Compared case- and space-blind, because Payload lower-cases the address
+ * only after this hook runs: "Layla@x.com" for "layla@x.com" is no change.
+ */
+export const forgetConfirmationOnEmailChange: CollectionBeforeChangeHook = ({
+  data,
+  operation,
+  originalDoc,
+}) => {
+  if (operation !== "update" || !data || typeof data.email !== "string") return data;
+
+  const before = typeof originalDoc?.email === "string" ? originalDoc.email : "";
+  if (data.email.trim().toLowerCase() === before.trim().toLowerCase()) return data;
+
+  data.emailConfirmedAt = null;
+  data._verificationToken = null;
+  return data;
+};
+
+/**
  * A suspended or anonymised account cannot authenticate.
  *
  * Access rules govern what a session may read; they do not stop a session

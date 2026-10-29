@@ -1022,14 +1022,26 @@ html[dir="rtl"] .brand-intro__line { font-style: normal; }
    The hero's travelling brand mark used to be hidden here too. It no longer
    exists — the mark lives in the header on every route now (see Header.tsx),
    which removed the logo jump, the bleed-through over the navigation and the
-   empty centre of the homepage header in one go. */
+   empty centre of the homepage header in one go.
+
+   HIDDEN MEANS OUT OF THE TAB ORDER TOO. The cookie card is not modal: it
+   holds no focus, so a keyboard visitor tabbing from the footer to it used to
+   stop on this faded link, a control she could not see, where Enter opened
+   WhatsApp. `visibility` takes it out of the tab order and the accessibility
+   tree; it flips only once the fade has played, and back at once on return. */
 body.overlay-open .floating-whatsapp,
 body.consent-open .floating-whatsapp {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 0.2s var(--ease-bloom),
+    visibility 0s linear 0.2s;
 }
 .floating-whatsapp {
-  transition: opacity 0.2s var(--ease-bloom);
+  transition:
+    opacity 0.2s var(--ease-bloom),
+    visibility 0s;
 }
 
 /* Original ribbon motif: settles in once, just after the monogram

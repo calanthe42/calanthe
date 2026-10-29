@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { accountMayHaveWelcome, emailIdentityKey, welcomeStillOpen } from "./welcome";
+import {
+  accountAwaitsConfirmation,
+  accountMayHaveWelcome,
+  emailIdentityKey,
+  welcomeOpenOnceReleased,
+  welcomeStillOpen,
+  welcomeUsedUp,
+} from "./welcome";
 
 describe("emailIdentityKey", () => {
   it("lower-cases and trims", () => {
@@ -62,16 +69,60 @@ describe("accountMayHaveWelcome", () => {
   });
 });
 
+describe("accountAwaitsConfirmation", () => {
+  const unconfirmed = { role: "customer", accountStatus: "active", emailConfirmedAt: null };
+
+  it("is a customer in good standing whose address is not confirmed yet", () => {
+    expect(accountAwaitsConfirmation(unconfirmed)).toBe(true);
+    expect(accountAwaitsConfirmation({ ...unconfirmed, emailConfirmedAt: "2026-10-30T09:00:00.000Z" })).toBe(false);
+  });
+
+  it("is never the team, a closed account, or nobody", () => {
+    expect(accountAwaitsConfirmation({ ...unconfirmed, role: "staff" })).toBe(false);
+    expect(accountAwaitsConfirmation({ ...unconfirmed, accountStatus: "suspended" })).toBe(false);
+    expect(accountAwaitsConfirmation({ ...unconfirmed, anonymisedAt: "2026-10-01T00:00:00.000Z" })).toBe(false);
+    expect(accountAwaitsConfirmation(null)).toBe(false);
+  });
+});
+
 describe("welcomeStillOpen", () => {
   it("is open before any paid order and any claim", () => {
-    expect(welcomeStillOpen({ paidOrders: 0, claims: 0 })).toBe(true);
+    expect(welcomeStillOpen({ paidOrders: 0, claims: 0, ownHeld: 0 })).toBe(true);
   });
 
   it("closes after a paid order, gift or not", () => {
-    expect(welcomeStillOpen({ paidOrders: 1, claims: 0 })).toBe(false);
+    expect(welcomeStillOpen({ paidOrders: 1, claims: 0, ownHeld: 0 })).toBe(false);
   });
 
-  it("closes while an order holds the gift", () => {
-    expect(welcomeStillOpen({ paidOrders: 0, claims: 1 })).toBe(false);
+  it("closes while an order holds the gift — her own unpaid one included", () => {
+    expect(welcomeStillOpen({ paidOrders: 0, claims: 1, ownHeld: 0 })).toBe(false);
+    expect(welcomeStillOpen({ paidOrders: 0, claims: 1, ownHeld: 1 })).toBe(false);
+  });
+});
+
+describe("welcomeOpenOnceReleased", () => {
+  it("stays open while the only claim is her own unpaid checkout, which her next one releases", () => {
+    expect(welcomeOpenOnceReleased({ paidOrders: 0, claims: 1, ownHeld: 1 })).toBe(true);
+    expect(welcomeOpenOnceReleased({ paidOrders: 0, claims: 2, ownHeld: 2 })).toBe(true);
+  });
+
+  it("still closes for a claim she cannot release: another account's, or a redeemed one", () => {
+    expect(welcomeOpenOnceReleased({ paidOrders: 0, claims: 2, ownHeld: 1 })).toBe(false);
+    expect(welcomeOpenOnceReleased({ paidOrders: 0, claims: 1, ownHeld: 0 })).toBe(false);
+  });
+
+  it("still closes after a paid order", () => {
+    expect(welcomeOpenOnceReleased({ paidOrders: 1, claims: 1, ownHeld: 1 })).toBe(false);
+  });
+});
+
+describe("welcomeUsedUp", () => {
+  it("is a capped gift used as often as the cap allows", () => {
+    expect(welcomeUsedUp({ usageLimit: 50, timesUsed: 50 })).toBe(true);
+    expect(welcomeUsedUp({ usageLimit: 50, timesUsed: 49 })).toBe(false);
+  });
+
+  it("is never a gift without a cap", () => {
+    expect(welcomeUsedUp({ usageLimit: null, timesUsed: 5000 })).toBe(false);
   });
 });

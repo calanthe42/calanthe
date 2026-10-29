@@ -1187,6 +1187,10 @@ export const en = {
     failed: "We could not check that code. Please try again.",
     welcomeRow: "Welcome gift ({amount})",
     welcomeNote: "A code you add replaces the welcome gift.",
+    /* The gift could not be checked, even after asking again. Paying is not
+       held: she is told, and may ask once more. */
+    welcomeFailed: "We could not check your welcome gift.",
+    welcomeRetry: "Try again",
   },
   /**
    * THE WELCOME GIFT — the invitation a first-time visitor sees once
@@ -1220,6 +1224,11 @@ export const en = {
     doneTitle: "You’re signed in",
     doneLead:
       "Your account is ready. Confirm your email from the link we sent to {email}, and the {amount} will be waiting at checkout.",
+    /* The account was made but signing her in did not go through: she signs
+       in herself, and the step must not claim she already is. */
+    createdTitle: "Your account is ready",
+    createdLead:
+      "Sign in with the password you just chose. Then confirm your email from the link we sent to {email}, and the {amount} will be waiting at checkout.",
     continue: "Continue shopping",
   },
   /**
@@ -1321,6 +1330,8 @@ export const en = {
       codeExhausted: "This code has reached its limit and is no longer available.",
       welcomeUnavailable:
         "Your welcome gift no longer applies to this order, and nothing was charged. The total has been updated: please review it, then pay.",
+      welcomeUnchecked: "We could not check your welcome gift. Please try again.",
+      welcomeMinSpend: "Add {amount} more to use your welcome gift. It needs a minimum order of {min}.",
       codeRateLimited: "Too many attempts. {wait}",
       priceChanged: "Prices have just been updated. Please review the new total, then pay.",
       totalTooLow:
@@ -1656,6 +1667,8 @@ export const en = {
     saving: "Saving…",
     resend: "Resend the email",
     resent: "Sent again",
+    /* When the request never reached us, so nothing can say why. */
+    resendFailed: "We could not send it just now. Please try again in a moment.",
     backToSignIn: "Back to sign in",
     newHere: "New here?",
     haveAccount: "Already have an account?",
@@ -1666,8 +1679,10 @@ export const en = {
     rememberedIt: "Remembered it?",
     checkInbox:
       "Check {email} for a link to confirm your address. It expires in a few hours.",
+    /* Shown when the account was made but signing in did not follow: the
+       account already works, so the note says so. */
     checkInboxNote:
-      "Nothing is active until you confirm — you can still order as a guest in the meantime.",
+      "Your account is ready, and you can sign in now. Confirming your address unlocks your welcome gift.",
     resetSentIfExists:
       "If that address has an account with us, a link to choose a new password is on its way. It expires in about an hour.",
     resendIfWaiting:
@@ -2735,6 +2750,8 @@ export const ar: typeof en = {
     failed: "تعذّر التحقق من الرمز. حاولوا مرة أخرى.",
     welcomeRow: "هدية الترحيب ({amount})",
     welcomeNote: "أي رمز تضيفونه يحلّ محلّ هدية الترحيب.",
+    welcomeFailed: "تعذّر التحقق من هدية الترحيب.",
+    welcomeRetry: "حاولوا مرة أخرى",
   },
   welcome: {
     dialogLabel: "عرض الترحيب",
@@ -2762,6 +2779,9 @@ export const ar: typeof en = {
     doneEyebrow: "أهلًا بكم في كالانثي",
     doneTitle: "تم تسجيل دخولكم",
     doneLead: "حسابكم جاهز. أكّدوا بريدكم من الرابط الذي أرسلناه إلى {email}، وسيكون خصم {amount} بانتظاركم عند الدفع.",
+    createdTitle: "حسابكم جاهز",
+    createdLead:
+      "سجّلوا الدخول بكلمة المرور التي اخترتموها للتو، ثم أكّدوا بريدكم من الرابط الذي أرسلناه إلى {email}، وسيكون خصم {amount} بانتظاركم عند الدفع.",
     continue: "متابعة التسوق",
   },
   cookies: {
@@ -2829,6 +2849,8 @@ export const ar: typeof en = {
       codeExhausted: "بلغ هذا الرمز حدّ الاستخدام ولم يعد متاحًا.",
       welcomeUnavailable:
         "لم تعد هدية الترحيب تنطبق على هذا الطلب، ولم يُخصم أي مبلغ. تم تحديث الإجمالي: راجعوه ثم ادفعوا.",
+      welcomeUnchecked: "تعذّر التحقق من هدية الترحيب. حاولوا مرة أخرى.",
+      welcomeMinSpend: "أضيفوا {amount} لاستخدام هدية الترحيب. الحد الأدنى للطلب {min}.",
       codeRateLimited: "محاولات كثيرة. {wait}",
       priceChanged: "تم تحديث الأسعار للتو. راجعوا الإجمالي الجديد ثم ادفعوا.",
       totalTooLow: "الإجمالي أقل من الحد الأدنى للدفع بالبطاقة. أضيفوا تنسيقًا أو أزيلوا الرمز.",
@@ -3102,6 +3124,7 @@ export const ar: typeof en = {
     saving: "جارٍ الحفظ…",
     resend: "إعادة إرسال البريد",
     resent: "تم الإرسال مجددًا",
+    resendFailed: "لم نتمكن من إرساله الآن. حاولوا مرة أخرى بعد قليل.",
     backToSignIn: "العودة لتسجيل الدخول",
     newHere: "ليس لديكم حساب؟",
     haveAccount: "لديكم حساب بالفعل؟",
@@ -3109,7 +3132,7 @@ export const ar: typeof en = {
     resendLink: "لم يصلكم بريد التأكيد؟",
     rememberedIt: "تذكّرتموها؟",
     checkInbox: "تفقّدوا {email} لرابط تأكيد البريد. تنتهي صلاحيته خلال ساعات.",
-    checkInboxNote: "لا شيء يُفعَّل قبل التأكيد — ويمكنكم الطلب دون حساب في هذه الأثناء.",
+    checkInboxNote: "حسابكم جاهز، ويمكنكم تسجيل الدخول الآن. تأكيد بريدكم يفعّل هدية الترحيب.",
     resetSentIfExists:
       "إذا كان لهذا البريد حساب لدينا، فرابط اختيار كلمة مرور جديدة في طريقه إليكم. تنتهي صلاحيته خلال ساعة تقريبًا.",
     resendIfWaiting: "إذا كان هذا البريد بانتظار التأكيد، فرابط جديد في طريقه إليكم.",

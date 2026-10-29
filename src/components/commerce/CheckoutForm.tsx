@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useRef, useState, useTransition } from "react";
+import { memo, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { startCardCheckout, type CheckoutRequest } from "@backend/actions/checkout";
 import {
@@ -303,8 +303,10 @@ function CheckoutFormInner() {
     saleSavingsFils,
     discount,
     welcomeGift,
+    welcomeUnsettled,
     discountState,
     refuseDiscountCode,
+    refuseWelcome,
     clear,
   } = useCart();
   const { locale, t } = useLocale();
@@ -356,6 +358,29 @@ function CheckoutFormInner() {
   const [counter, setCounter] = useState<HTMLElement | null>(null);
   const counterAhead = useCounterAhead(counter);
 
+  /* THE WELCOME GIFT, ASKED AGAIN. The storefront layout says whether the
+     gift is hers, and it is not rendered again on a soft navigation. A
+     customer who confirms her address in another tab (or on the confirmation
+     page, which reads the layout before it writes the confirmation) would
+     reach this page still marked "not yet", and pay in full a first order
+     the gift was promised to. When the layout could not settle it, this page
+     re-reads it on arrival and whenever she comes back to the tab — never in
+     the middle of a payment. The re-read is a transition, and Pay waits for
+     it: a press while it is in flight would be priced without the gift the
+     refreshed layout is about to give her. */
+  const [rereading, startReread] = useTransition();
+  useEffect(() => {
+    if (welcomeUnsettled) startReread(() => router.refresh());
+  }, [welcomeUnsettled, router]);
+  useEffect(() => {
+    if (!welcomeUnsettled) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && !pending) startReread(() => router.refresh());
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [welcomeUnsettled, pending, router]);
+
   const zone = deliveryZones.find((z) => z.id === zoneId);
   /* Every figure below is fils, and follows the server's arithmetic
      (backend/domain/pricing.ts): the code comes off the subtotal, the
@@ -371,9 +396,10 @@ function CheckoutFormInner() {
   const deliveryFeeFils = zone ? (freeDelivery ? 0 : Math.round(zone.feeAed * 100)) : 0;
   const totalFils = afterCodeFils + deliveryFeeFils;
   const savedFils = saleSavingsFils + codeFils;
-  /* A code whose quote is still on its way: the total is not settled, so
-     nothing may be paid — or a wallet sheet opened — against it. */
-  const quoting = discountState === "checking";
+  /* A code whose quote is still on its way, or the gift still being asked
+     again: the total is not settled, so nothing may be paid — or a wallet
+     sheet opened — against it. */
+  const quoting = discountState === "checking" || rereading;
 
   const fieldErrors = attempted
     ? checkoutFieldErrors({
@@ -536,9 +562,13 @@ function CheckoutFormInner() {
                now see. */
             router.refresh();
           } else if (result.code === "WELCOME_UNAVAILABLE") {
-            /* The gift is no longer hers (used in another tab, or she signed
-               out). The refresh re-reads what she may have; the basket drops
-               the gift and she pays the total she can now see. */
+            /* The gift is no longer hers (used in another tab, the address
+               she typed has had it, or she signed out). The basket drops it
+               HERE, so the total really changes and she pays the one she can
+               now see — a refresh alone left it on whenever the layout still
+               called her eligible, and every press was refused again. The
+               refresh still re-reads what she may have. */
+            refuseWelcome();
             router.refresh();
           } else if (result.code.startsWith("CODE_")) {
             /* The code no longer applies (used already, run out, ended).

@@ -22,6 +22,7 @@ import { withWait } from "@/lib/i18n/wait";
 import { formatFils } from "@/lib/money";
 import { isPlausiblePhone } from "@/lib/phone-countries";
 import {
+  CLAIM_UNCHECKED_NOTE,
   LOST_CLAIM_NOTE,
   abandonOrder,
   couponClaimRefusal,
@@ -113,9 +114,12 @@ export type QuoteRequest = {
 
 /**
  * The welcome gift for whoever is signed in, for a QUOTE: null when it is not
- * hers or cannot be read. The payment asks again, strictly.
+ * hers, "unchecked" when it could not be read. The two are kept apart because
+ * the basket treats them differently — "not hers" is settled, "unchecked" is
+ * asked again (lib/cart.tsx) — and a read that failed for a moment must not
+ * become a first order paid at full price. The payment asks again, strictly.
  */
-async function welcomeForQuote(payload: Payload, now: Date): Promise<CouponRule | null> {
+async function welcomeForQuote(payload: Payload, now: Date): Promise<CouponRule | null | "unchecked"> {
   try {
     const { user } = await payload.auth({ headers: await nextHeaders() });
     return await welcomeFor(payload, user as WelcomeUser | null, now);
@@ -123,7 +127,7 @@ async function welcomeForQuote(payload: Payload, now: Date): Promise<CouponRule 
     payload.logger.warn(
       `welcome gift could not be checked for a quote: ${error instanceof Error ? error.message : "unknown"}`,
     );
-    return null;
+    return "unchecked";
   }
 }
 
@@ -134,10 +138,19 @@ export type QuoteFailureCode =
   | "CODE_EXHAUSTED"
   | "RATE_LIMITED"
   | "TOTAL_TOO_LOW"
-  | "PRICING_REJECTED";
+  | "PRICING_REJECTED"
+  | "WELCOME_UNCHECKED";
 
 export type QuoteResult =
-  | { ok: true; quote: CheckoutQuote }
+  | {
+      ok: true;
+      quote: CheckoutQuote;
+      /**
+       * Why the welcome gift, asked for and hers, did not apply to this
+       * basket — only when she can do something about it (a minimum spend).
+       */
+      welcomeMessage?: string;
+    }
   | {
       ok: false;
       code: QuoteFailureCode;
@@ -230,6 +243,9 @@ export async function quoteCheckout(request: QuoteRequest): Promise<QuoteResult>
 
   /* The gift is asked for only when no code was typed: a typed code replaces it. */
   const welcome = !code && request.welcome === true ? await welcomeForQuote(payload, now) : null;
+  if (welcome === "unchecked") {
+    return { ok: false, code: "WELCOME_UNCHECKED", message: messages.welcomeUnchecked };
+  }
 
   const pricing = await priceCheckout(
     payload,
@@ -275,7 +291,19 @@ export async function quoteCheckout(request: QuoteRequest): Promise<QuoteResult>
     };
   }
 
-  return { ok: true, quote: toCheckoutQuote(priced) };
+  /* A gift that needs a bigger basket is hers to unlock, so she is told how
+     much more — never silently priced without it. Any other reason the gift
+     does not apply is nothing she can act on: the basket simply goes without. */
+  const shortfall =
+    pricing.welcomeRefusal?.reason === "min_spend" ? (pricing.welcomeRefusal.shortfallFils ?? 0) : 0;
+  const welcomeMessage =
+    shortfall > 0
+      ? messages.welcomeMinSpend
+          .replace("{amount}", formatFils(shortfall))
+          .replace("{min}", formatFils(priced.subtotalFils + shortfall))
+      : null;
+
+  return { ok: true, quote: toCheckoutQuote(priced), ...(welcomeMessage ? { welcomeMessage } : {}) };
 }
 
 /** After the response: tidy up unpaid discounted orders that went stale. */
@@ -393,9 +421,11 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
   const customerId = isCustomer ? (user as { id: number }).id : undefined;
 
   /* ---------- the welcome gift the page showed ----------
-     Asked again here, strictly, from the session's own account. A page that
-     showed the gift is never charged without it: if it is not hers now, the
-     order is refused and the page re-reads what she may have. */
+     Asked again here, from the session's own account. A page that showed
+     the gift is never charged without it: if it is not hers now, the order
+     is refused and the page drops it. Her own unpaid checkouts holding the
+     gift do not count yet — she is starting again — and are released below,
+     before every claim is counted strictly. */
   const wantsWelcome = request.welcome === true && !discountCode;
   let welcome: CouponRule | null = null;
   if (wantsWelcome) {
@@ -471,12 +501,26 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
   /* ---------- a limited code must be claimable ----------
      A usage limit or once-per-customer is enforced by counting the orders
      that still hold a claim (backend/payments/coupon-claims.ts). First look,
-     before anything is created. */
+     before anything is created.
+     The gift is limited whatever its own boxes say: it is once per person by
+     definition, and the owner can untick "once per customer" on its row in
+     /admin. Without these two looks, two tabs paying at the same moment
+     would both pass the check above and both take it. */
   const coupon = priced.couponDiscountFils > 0 ? priced.coupon : null;
-  const limited = coupon !== null && isLimited(coupon);
+  const limited = coupon !== null && (isLimited(coupon) || welcomeApplied);
   if (coupon && limited) {
     try {
-      await releaseCouponClaims(payload, stripe, coupon, customerEmail, now);
+      /* For the gift, her account's earlier unpaid checkouts are hers to
+         release too, whatever email they were sent to: that is what lets a
+         declined card or a corrected address keep the gift. */
+      await releaseCouponClaims(
+        payload,
+        stripe,
+        coupon,
+        customerEmail,
+        now,
+        welcomeApplied ? customerId : undefined,
+      );
       const refusal = await couponClaimRefusal(payload, coupon, customerEmail);
       if (refusal) return refuseClaim(refusal);
       /* The gift is once per PERSON: her account, every account sharing her
@@ -546,14 +590,29 @@ export async function startCardCheckout(request: CheckoutRequest): Promise<Check
        without this order, it lost the race for the last use: it is cancelled
        before any PaymentIntent exists, so nothing can be charged for it. */
     if (coupon && limited) {
-      const refusal = await couponClaimRefusal(payload, coupon, customerEmail, Number(order.id));
-      const lostWelcome =
-        welcomeApplied &&
-        user &&
-        !welcomeStillOpen(await welcomeStanding(payload, user as WelcomeUser, coupon.id, Number(order.id)));
-      if (refusal || lostWelcome) {
+      let lost: "exhausted" | "already_used" | null;
+      try {
+        const refusal = await couponClaimRefusal(payload, coupon, customerEmail, Number(order.id));
+        const lostWelcome =
+          welcomeApplied &&
+          user &&
+          !welcomeStillOpen(await welcomeStanding(payload, user as WelcomeUser, coupon.id, Number(order.id)));
+        lost = refusal ?? (lostWelcome ? "already_used" : null);
+      } catch (error) {
+        /* The second look could not be made. No PaymentIntent exists yet, so
+           the order is cancelled rather than left holding the claim for an
+           hour — which would refuse her own next try. */
+        await abandonOrder(payload, Number(order.id), CLAIM_UNCHECKED_NOTE).catch(() => undefined);
+        throw error;
+      }
+      if (lost) {
         await abandonOrder(payload, Number(order.id), LOST_CLAIM_NOTE);
-        return refuseClaim(refusal ?? "already_used");
+        /* Two of her own tabs pressing Pay at once both lose here, and both
+           orders are now cancelled, so the gift is free again. "No longer
+           yours" would take it out of her basket for good; "try again" runs
+           every check afresh on the next press, where a claim that really
+           stands (another account on her inbox) is refused at the first look. */
+        return welcomeApplied ? fail("ORDER_CREATION_FAILED", "creationFailed") : refuseClaim(lost);
       }
     }
 

@@ -32,6 +32,11 @@ export default async function StorefrontLayout({
       locale={locale}
       /* The basket asks for the gift only when it is this customer's. */
       welcome={welcome.account === "eligible" ? welcome.offer : null}
+      /* This layout is not rendered again on a soft navigation, so a
+         customer who confirms her address in another tab — or whose gift
+         could not be read just now — would keep this "no" until a reload.
+         Checkout asks again before she pays. */
+      welcomeUnsettled={welcome.account === "unconfirmed" || welcome.account === "unknown"}
     >
       {/* The opening: once per visit, before anything else is seen. */}
       <BrandIntro tagline={t.about.closingLine} />

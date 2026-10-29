@@ -463,14 +463,43 @@ export async function resetCustomerPassword(form: FormData): Promise<ResetResult
   }
 
   const payload = await getPayload({ config });
+  let userId: number | string | undefined;
   try {
-    await payload.resetPassword({
+    const result = await payload.resetPassword({
       collection: "users",
       data: { token, password },
       overrideAccess: true,
     });
-    return { ok: true };
+    userId = (result.user as { id?: number | string } | undefined)?.id;
   } catch {
     return { ok: false, message: m.linkUsedOrExpired };
   }
+
+  /*
+   * A NEW PASSWORD ENDS EVERY SESSION, as it does for the team
+   * (actions/admin-password.ts). A reset is how the owner of an inbox takes
+   * an account back: from a lost phone, or from someone who registered her
+   * address before she did and has been signed in ever since, because
+   * accounts work before they are confirmed. Payload's resetPassword only
+   * ADDS a session; every login made with the old password stays valid, and
+   * can be refreshed for as long as its holder likes. So all of them go,
+   * including the one the reset itself made, which no device holds: she
+   * signs in with the new password next (ResetPasswordForm sends her there).
+   *
+   * The password has changed by now, so a failure here is logged rather than
+   * reported as a dead link.
+   */
+  if (userId !== undefined) {
+    try {
+      await payload.update({
+        collection: "users",
+        id: userId,
+        overrideAccess: true,
+        data: { sessions: [] } as never,
+      });
+    } catch (error) {
+      console.error(`user ${userId}: password reset, but the old sessions could not be ended`, error);
+    }
+  }
+  return { ok: true };
 }

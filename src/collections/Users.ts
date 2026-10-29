@@ -13,6 +13,7 @@ import {
   blockSuspendedLogin,
   deriveDisplayName,
   enforceSingleDefaultAddress,
+  forgetConfirmationOnEmailChange,
 } from "@backend/payload/hooks/customerAccount";
 import {
   protectLastAdminOnChange,
@@ -145,6 +146,7 @@ export const Users: CollectionConfig = {
     beforeChange: [
       protectLastAdminOnChange,
       autoVerifyInvitedStaff,
+      forgetConfirmationOnEmailChange,
       deriveDisplayName,
       enforceSingleDefaultAddress,
       stampMarketingConsent,
@@ -154,6 +156,29 @@ export const Users: CollectionConfig = {
   },
   fields: [
     /* ---------------- Identity ---------------- */
+    {
+      /*
+       * Payload's own sign-in address, declared here only to add a rule.
+       * Payload merges this into its auth email field (mergeBaseFields), so
+       * the type, uniqueness, lower-casing and validation stay its own, and
+       * the column is unchanged.
+       *
+       * ONLY THE OWNER CHANGES AN ADDRESS. A user may update her own row
+       * (isAdminOrSelf) and Payload's email field has no access rule of its
+       * own, so a signed-in customer could PATCH /api/users/:id with a new
+       * address. Two things went with that: anyone holding her session could
+       * move the account to an inbox she cannot reach, so a password reset
+       * could never take it back; and a confirmed account could be repointed,
+       * freeing the inbox to register, confirm and repoint again, one welcome
+       * gift per round. For anyone else the field is stripped from the write,
+       * as `role` is. Server code that must change an address does so with
+       * overrideAccess, and forgetConfirmationOnEmailChange then clears the
+       * confirmation whoever made the change.
+       */
+      name: "email",
+      type: "email",
+      access: { update: isAdminField },
+    },
     {
       name: "firstName",
       type: "text",
@@ -259,7 +284,9 @@ export const Users: CollectionConfig = {
       /* A customer's account works the moment it is made; this is the day
          she followed the link we emailed her. Set by /account/verify (or by
          Google, which has already confirmed the address). The welcome gift
-         waits for it: one gift per inbox means nothing without the inbox. */
+         waits for it: one gift per inbox means nothing without the inbox.
+         It belongs to the address, so a new address clears it
+         (forgetConfirmationOnEmailChange). */
       name: "emailConfirmedAt",
       type: "date",
       access: { create: serverOnlyField, update: serverOnlyField },

@@ -40,7 +40,9 @@ import { countCouponClaims } from "@backend/data/discounts";
  * counted, the same email's earlier unpaid orders with this code are
  * released (cancelled, with their intents). If one of them cannot be
  * cancelled because it is being paid at that very moment, it stays a claim —
- * correctly.
+ * correctly. The welcome gift belongs to her account rather than to an
+ * email she types, so for the gift her account's own earlier unpaid orders
+ * are released as well, whatever address they were sent to.
  */
 
 /* How long an unpaid discounted order may hold its price and its claim is
@@ -56,6 +58,8 @@ export const SUPERSEDED_NOTE =
   "Cancelled automatically: the customer started checkout again with the same discount code.";
 export const LOST_CLAIM_NOTE =
   "Cancelled automatically: the discount code ran out while this order was being placed. Nothing was charged.";
+export const CLAIM_UNCHECKED_NOTE =
+  "Cancelled automatically: the discount could not be checked again while this order was being placed. Nothing was charged.";
 
 type StripeLike = Pick<Stripe, "paymentIntents">;
 
@@ -228,7 +232,8 @@ export async function sweepStaleDiscountOrders(
 
 /**
  * Before a new claim on a limited code is counted: release this code's stale
- * claims, and this customer's own earlier unpaid ones.
+ * claims, and this customer's own earlier unpaid ones — by the email she
+ * typed, and, when `customerId` is given (the welcome gift), by her account.
  */
 export async function releaseCouponClaims(
   payload: Payload,
@@ -236,15 +241,17 @@ export async function releaseCouponClaims(
   coupon: Pick<CouponRule, "id">,
   email: string,
   now: Date,
+  customerId?: number,
 ): Promise<void> {
   const address = email.trim().toLowerCase();
-  const mine = address
-    ? await findHeld(
-        payload,
-        { and: [{ couponDiscount: { equals: Number(coupon.id) } }, { customerEmail: { equals: address } }] },
-        10,
-      )
-    : [];
+  const owner: Where[] = [
+    ...(address ? [{ customerEmail: { equals: address } }] : []),
+    ...(customerId !== undefined ? [{ customer: { equals: customerId } }] : []),
+  ];
+  const mine =
+    owner.length > 0
+      ? await findHeld(payload, { and: [{ couponDiscount: { equals: Number(coupon.id) } }, { or: owner }] }, 10)
+      : [];
   await releaseAll(payload, stripe, mine, SUPERSEDED_NOTE);
 
   const stale = await findHeld(

@@ -50,6 +50,14 @@ export type WelcomeAccount = {
   emailConfirmedAt?: string | null;
 };
 
+/* A customer, not suspended or closed, not anonymised: everything the gift
+   asks of an account except the confirmed address. */
+function customerInGoodStanding(user: WelcomeAccount | null | undefined): user is WelcomeAccount {
+  if (!user || user.role !== "customer") return false;
+  if (user.accountStatus === "suspended" || user.accountStatus === "closed") return false;
+  return !user.anonymisedAt;
+}
+
 /**
  * May this signed-in account be offered the gift at all, before any order
  * is counted? A customer, not suspended or closed, not anonymised, and with
@@ -57,10 +65,17 @@ export type WelcomeAccount = {
  * mean anything. An account works before that; the gift does not.
  */
 export function accountMayHaveWelcome(user: WelcomeAccount | null | undefined): boolean {
-  if (!user || user.role !== "customer") return false;
-  if (user.accountStatus === "suspended" || user.accountStatus === "closed") return false;
-  if (user.anonymisedAt) return false;
-  return Boolean(user.emailConfirmedAt);
+  return customerInGoodStanding(user) && Boolean(user.emailConfirmedAt);
+}
+
+/**
+ * Is the gift waiting only for her to confirm her address? She usually
+ * confirms in another tab, or on a page whose layout was read a moment
+ * before the confirmation was written, so a page that saw her unconfirmed
+ * must ask again before she pays (components/commerce/CheckoutForm.tsx).
+ */
+export function accountAwaitsConfirmation(user: WelcomeAccount | null | undefined): boolean {
+  return customerInGoodStanding(user) && !user.emailConfirmedAt;
 }
 
 /**
@@ -68,9 +83,33 @@ export function accountMayHaveWelcome(user: WelcomeAccount | null | undefined): 
  *
  *   paidOrders   orders of hers that were paid for, with or without the gift
  *   claims       orders that hold the gift: redeemed, or not cancelled
+ *   ownHeld      those claims that are THIS account's own unpaid web
+ *                checkouts, still payable — the ones her next checkout
+ *                releases before it counts (backend/payments/coupon-claims.ts)
  */
-export type WelcomeStanding = { paidOrders: number; claims: number };
+export type WelcomeStanding = { paidOrders: number; claims: number; ownHeld: number };
 
-/** The gift is for a FIRST order, and only once. */
+/** The gift is for a FIRST order, and only once. Strict: every claim counts. */
 export const welcomeStillOpen = (standing: WelcomeStanding): boolean =>
   standing.paidOrders === 0 && standing.claims === 0;
+
+/**
+ * The same question, asked before her next checkout has released her own
+ * unpaid ones. A declined card, a corrected phone number, a reloaded page:
+ * each starts a new order and leaves the last one unpaid, still holding the
+ * gift. That order is hers, and the payment cancels it before it counts
+ * strictly (backend/actions/checkout.ts), so it must not tell the page, the
+ * basket or the payment's first look that her gift is used. A claim she
+ * cannot release this way — another account's, or one already redeemed —
+ * still counts.
+ */
+export const welcomeOpenOnceReleased = (standing: WelcomeStanding): boolean =>
+  standing.paidOrders === 0 && standing.claims <= standing.ownHeld;
+
+/**
+ * A gift the owner capped, used as often as the cap allows. Pricing would
+ * refuse it as spent, so it is offered to nobody rather than shown and
+ * then taken away.
+ */
+export const welcomeUsedUp = (rule: { usageLimit: number | null; timesUsed: number }): boolean =>
+  rule.usageLimit !== null && rule.timesUsed >= rule.usageLimit;

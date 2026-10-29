@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { fieldClasses, labelClasses } from "@/components/ui/form-classes";
 import { useCart } from "@/lib/cart";
@@ -37,6 +37,9 @@ export function DiscountCodeField({ className }: { className?: string }) {
     discountCode,
     discount,
     welcomeGift,
+    welcomeFailed,
+    welcomeMessage,
+    retryWelcome,
     discountState,
     discountMessage,
     applyDiscountCode,
@@ -44,8 +47,19 @@ export function DiscountCodeField({ className }: { className?: string }) {
   } = useCart();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
+  /* "Try again" pressed and its answer not back yet. The line that holds
+     the button stays mounted meanwhile, so focus stays on it. */
+  const [retrying, setRetrying] = useState(false);
+  const lineRef = useRef<HTMLDivElement>(null);
 
   const checking = discountState === "checking";
+  useEffect(() => {
+    if (checking || !retrying) return;
+    setRetrying(false);
+    /* The answer replaced the button she pressed: keep her place there,
+       not at the top of the page. */
+    if (document.activeElement === document.body) lineRef.current?.focus();
+  }, [checking, retrying]);
   const failed = discountState === "error";
   /* A held code that is applied or being checked shows as a chip; one that
      was refused goes back into the box, where it can be corrected. */
@@ -54,8 +68,9 @@ export function DiscountCodeField({ className }: { className?: string }) {
   /* The welcome gift, when the server's quote put it on this basket. It has
      no code to show and nothing to remove: typing a code replaces it. */
   const gift = discount?.welcome ? discount : null;
-  /* A row, like an applied code: what it is and what it took off. The
-     "You save" sentence beside the total already says the rest. */
+  /* The gift's one line. Applied: a row, like an applied code — what it is
+     and what it took off; the "You save" sentence beside the total already
+     says the rest. Not applied: why, whenever she should know. */
   const giftLine =
     gift && welcomeGift ? (
       <p
@@ -66,6 +81,36 @@ export function DiscountCodeField({ className }: { className?: string }) {
         <span dir="ltr" className="shrink-0">
           −{formatFils(gift.discountFils)}
         </span>
+      </p>
+    ) : welcomeFailed || (retrying && checking) ? (
+      /* Never a silent "no": a gift that could not be checked is said to be
+         so, with the rule at the reading edge a refused code has. Paying is
+         not held for it — she may ask again, or go on without it. */
+      <p
+        role="alert"
+        className="flex min-h-11 animate-[quiet-fade-in_200ms_cubic-bezier(0.22,1,0.36,1)] flex-wrap items-center gap-x-3 border-s border-burnt-orange ps-4 text-base leading-relaxed text-olive motion-reduce:animate-none"
+      >
+        <span>{t.discount.welcomeFailed}</span>
+        <button
+          type="button"
+          aria-disabled={retrying || undefined}
+          onClick={() => {
+            if (retrying) return;
+            setRetrying(true);
+            retryWelcome();
+          }}
+          className="min-h-11 text-base text-olive underline decoration-hairline underline-offset-4 transition-colors duration-200 ease-bloom hover:decoration-burnt-orange focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-olive aria-disabled:no-underline"
+        >
+          {retrying ? t.discount.checking : t.discount.welcomeRetry}
+        </button>
+      </p>
+    ) : welcomeMessage ? (
+      /* The gift needs a bigger basket: how much more, from the server. */
+      <p
+        role="status"
+        className="animate-[quiet-fade-in_200ms_cubic-bezier(0.22,1,0.36,1)] py-2 text-base leading-relaxed text-ink-muted motion-reduce:animate-none"
+      >
+        {welcomeMessage}
       </p>
     ) : null;
 
@@ -80,7 +125,9 @@ export function DiscountCodeField({ className }: { className?: string }) {
   if (!held && !failed && !open) {
     return (
       <div className={className}>
-        {giftLine}
+        <div ref={lineRef} tabIndex={-1} className="focus:outline-none">
+          {giftLine}
+        </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -196,7 +243,9 @@ export function DiscountCodeField({ className }: { className?: string }) {
         </p>
       ) : null}
       {/* A refused code takes nothing away: the gift stays on the order. */}
-      {gift ? <div className="mt-2">{giftLine}</div> : null}
+      <div ref={lineRef} tabIndex={-1} className={cn("focus:outline-none", giftLine && "mt-2")}>
+        {giftLine}
+      </div>
     </div>
   );
 }

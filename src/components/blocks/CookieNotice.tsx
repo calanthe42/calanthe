@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -26,6 +27,14 @@ const EXIT_MS = 240;
 export function CookieNotice() {
   const t = useT();
   const c = t.cookies;
+  const pathname = usePathname();
+  /* The pages whose phone layout ends in a sticky action bar — Add to bag,
+     Pay — the same list WhatsAppButton floats above. */
+  const hasStickyBar =
+    pathname.startsWith("/product/") ||
+    pathname.startsWith("/build-your-own") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/pay/");
   const [phase, setPhase] = useState<"hidden" | "entering" | "open" | "closing">("hidden");
 
   useEffect(() => {
@@ -60,13 +69,23 @@ export function CookieNotice() {
   /* A small card, not a slab: on a phone it floats just above the foot of
      the screen; from a tablet up it keeps to the far corner, clear of the
      hero's buttons. Accept is cream, not burnt orange — the page's one
-     orange button stays the one that sells flowers. */
+     orange button stays the one that sells flowers.
+
+     "The page stays usable" holds only if it covers none of the page's own
+     actions. Where a sticky bar carries them (lg:hidden), it rises 5rem clear
+     of the bar, as WhatsAppButton does, instead of sitting on Add to bag or
+     Pay. And it sits under the cart (z-60), the open menu and search (the
+     header at z-70), so it never covers their Checkout or language controls;
+     she answers it once they are closed. */
   return (
     <section
       aria-label={c.label}
       className={cn(
-        "fixed inset-x-3 bottom-[max(env(safe-area-inset-bottom),0.75rem)] z-[75] rounded-md bg-olive p-4 text-cream",
-        "shadow-[0_16px_40px_rgba(43,47,27,0.35)] sm:inset-x-auto sm:end-6 sm:bottom-6 sm:w-[24rem] sm:p-5",
+        "fixed inset-x-3 z-[55] rounded-md bg-olive p-4 text-cream",
+        "shadow-[0_16px_40px_rgba(43,47,27,0.35)] sm:inset-x-auto sm:end-6 sm:w-[24rem] sm:p-5",
+        hasStickyBar
+          ? "bottom-[calc(max(env(safe-area-inset-bottom),0.75rem)+5rem)] lg:bottom-6"
+          : "bottom-[max(env(safe-area-inset-bottom),0.75rem)] sm:bottom-6",
         "transition-[translate,opacity] ease-bloom motion-reduce:translate-none motion-reduce:transition-opacity",
         open ? "translate-y-0 opacity-100 duration-500" : "translate-y-4 opacity-0 duration-200",
       )}
