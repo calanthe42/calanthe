@@ -3,12 +3,17 @@ import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
 import { validateBespokeLines, validateOrderTotals } from "@backend/payload/hooks/orderIntegrity";
 
-/* The add-on prices these sums were written against. The shop's own list
-   is the owner's to change (the vase went to AED 150 on 2026-10-30); the
-   arithmetic under test does not change with it. */
-vi.mock("@/lib/data", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/data")>();
-  return { ...actual, addons: actual.addons.map((a) => (a.id === "vase" ? { ...a, priceAed: 60 } : a)) };
+/* The add-on prices these sums were written against: the vase at AED 60.
+   The shop's list is the owner's own (Admin → Add-ons; the vase went to
+   AED 150 on 2026-10-30), and the engine falls back to the code defaults
+   when it is given none — so the defaults are pinned here, and the
+   arithmetic under test does not move with her prices. */
+vi.mock("@/lib/store-settings", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/store-settings")>();
+  return {
+    ...actual,
+    DEFAULT_ADDONS: actual.DEFAULT_ADDONS.map((a) => (a.key === "vase" ? { ...a, priceFils: 6000 } : a)),
+  };
 });
 import {
   WELCOME_TRIES,

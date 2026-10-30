@@ -7,7 +7,9 @@ import {
   type PricedOrder,
 } from "@backend/domain/pricing";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
+import type { StoreAddon } from "@/lib/store-settings";
 import { emailHasRedeemed, findCoupon, loadLiveSaleRules } from "./discounts";
+import { readStoreAddons } from "./store-settings";
 
 /**
  * ONE pricing entry for everything that shows or charges an order total.
@@ -15,7 +17,8 @@ import { emailHasRedeemed, findCoupon, loadLiveSaleRules } from "./discounts";
  * The basket's quote (`quoteCheckout`) and the payment (`startCardCheckout`)
  * both call this, so the total a customer is shown and the total she is
  * charged are computed by the same code from the same rows: the products as
- * they are now, the sales that are live now, the code as it stands now.
+ * they are now, the add-ons as the owner last saved them, the sales that are
+ * live now, the code as it stands now.
  *
  * NOTHING HERE COMES FROM THE BROWSER EXCEPT WHAT IS BEING BOUGHT — product
  * ids, quantities, option ids, a delivery emirate and the text of a code.
@@ -78,12 +81,15 @@ export type CheckoutPricing =
 /** Injected in tests; the real ones in production. */
 export type CheckoutPricingDeps = {
   loadSales: (payload: Payload, now: Date) => Promise<SaleRule[]>;
+  /** The owner's add-ons, every row, read fresh (backend/data/store-settings.ts). */
+  loadAddons: (payload: Payload) => Promise<StoreAddon[]>;
   findCoupon: (payload: Payload, code: string) => Promise<CouponRule | null>;
   emailHasRedeemed: (payload: Payload, couponId: string, email: string) => Promise<boolean>;
 };
 
 const DEFAULT_DEPS: CheckoutPricingDeps = {
   loadSales: loadLiveSaleRules,
+  loadAddons: readStoreAddons,
   findCoupon,
   emailHasRedeemed,
 };
@@ -106,14 +112,15 @@ export async function priceCheckout(
   const code = typeof input.discountCode === "string" ? input.discountCode.trim() : "";
   const codeGiven = code !== "";
 
-  /* ---------- authoritative load: products, sales, the code ---------- */
+  /* ---------- authoritative load: products, add-ons, sales, the code ---------- */
   const ids = [...new Set(lines.map((l) => String(l.productId)))];
   let products: Map<string, Product>;
   let sales: SaleRule[];
+  let addons: StoreAddon[];
   let coupon: CouponRule | null = null;
   let emailHasUsedCoupon = false;
   try {
-    const [found, liveSales, foundCoupon] = await Promise.all([
+    const [found, liveSales, foundCoupon, liveAddons] = await Promise.all([
       ids.length > 0
         ? payload.find({
             collection: "products",
@@ -126,9 +133,11 @@ export async function priceCheckout(
         : Promise.resolve({ docs: [] as Product[] }),
       deps.loadSales(payload, now),
       codeGiven ? deps.findCoupon(payload, code) : Promise.resolve(null),
+      deps.loadAddons(payload),
     ]);
     products = new Map(found.docs.map((doc) => [String(doc.id), doc]));
     sales = liveSales;
+    addons = liveAddons;
     coupon = foundCoupon ?? (!codeGiven && input.welcome ? input.welcome : null);
     if (coupon?.oncePerCustomer && input.customerEmail) {
       emailHasUsedCoupon = await deps.emailHasRedeemed(payload, coupon.id, input.customerEmail);
@@ -148,7 +157,7 @@ export async function priceCheckout(
   const discounts: OrderDiscounts = { sales, coupon, emailHasUsedCoupon, now };
   const welcomeOffered = !codeGiven && coupon !== null && coupon.welcome === true;
   try {
-    const priced = priceOrder(lines, products, input.deliveryEmirate, discounts);
+    const priced = priceOrder(lines, products, input.deliveryEmirate, discounts, addons);
     /* A code that does not exist is refused exactly like one that is
        switched off, so a stranger cannot learn which codes are real. */
     if (codeGiven && !coupon) priced.couponRefusal = { reason: "inactive" };
@@ -167,7 +176,7 @@ export async function priceCheckout(
       /* The gift would take a tiny basket under the minimum charge. Nobody
          typed it, so nobody is refused: the basket is priced without it. */
       try {
-        const priced = priceOrder(lines, products, input.deliveryEmirate, { ...discounts, coupon: null });
+        const priced = priceOrder(lines, products, input.deliveryEmirate, { ...discounts, coupon: null }, addons);
         return {
           ok: true,
           priced,
@@ -184,10 +193,13 @@ export async function priceCheckout(
       /* The code is what took it under the minimum: say so, and show the
          basket as it stands without the code. */
       try {
-        const withoutCode = priceOrder(lines, products, input.deliveryEmirate, {
-          ...discounts,
-          coupon: null,
-        });
+        const withoutCode = priceOrder(
+          lines,
+          products,
+          input.deliveryEmirate,
+          { ...discounts, coupon: null },
+          addons,
+        );
         return { ok: false, failure: "total_too_low", code: engine, withoutCode };
       } catch {
         return { ok: false, failure: "total_too_low", code: engine };

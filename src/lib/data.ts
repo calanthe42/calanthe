@@ -548,52 +548,15 @@ export const sizes: readonly ProductSize[] = [
   { id: "premium", name: "Premium", priceDeltaAed: 320, note: "Twice the stems" },
 ] as const;
 
-export type AddonId = "vase" | "chocolates" | "balloon" | "cake" | "teddy" | "polaroid";
-
-export type Addon = {
-  id: AddonId;
-  name: string;
-  priceAed: number;
-  /** Placeholder art until the client photographs real add-ons. */
-  image: ProductImage;
-};
-
-/* The client's add-ons (2026-10-30: the vase is AED 150, and chocolates are
-   no longer offered). `chocolates` stays a valid AddonId so orders that
-   carry it still read correctly; a basket that still holds it drops it on
-   load, and the server refuses it, because only this list is for sale. */
-export const addons: readonly Addon[] = [
-  {
-    id: "vase",
-    name: "Vase",
-    priceAed: 150,
-    image: img("addon-vase", "olive", "A ceramic vase"),
-  },
-  {
-    id: "balloon",
-    name: "Balloon",
-    priceAed: 35,
-    image: img("addon-balloon", "warm", "A heart balloon"),
-  },
-  {
-    id: "cake",
-    name: "Bento Cake",
-    priceAed: 95,
-    image: img("addon-cake", "warm", "A bento cake"),
-  },
-  {
-    id: "teddy",
-    name: "Teddy Bear",
-    priceAed: 90,
-    image: img("addon-teddy", "warm", "A teddy bear"),
-  },
-  {
-    id: "polaroid",
-    name: "Polaroid Card",
-    priceAed: 25,
-    image: img("addon-polaroid", "olive", "A polaroid card"),
-  },
-] as const;
+/**
+ * An add-on's key — "vase", "bento-cake". The add-ons themselves are the
+ * owner's list in Admin → Add-ons (lib/store-settings.ts `StoreAddon`), so
+ * this is any key she has made, not a fixed set. A key that has left her
+ * list (`chocolates`) still names its add-on through the storefront
+ * dictionary's `addonNames`; a basket that holds it drops it on load, and
+ * the server refuses it, because only her list is for sale.
+ */
+export type AddonId = string;
 
 export type DeliveryZone = {
   id: string;

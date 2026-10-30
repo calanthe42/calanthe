@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addFils, aedToFils, assertFils, formatFils, percentOfFils } from "./money";
+import { addFils, aedToFils, assertFils, formatFils, formatFilsDelta, percentOfFils } from "./money";
 
 describe("money (integer fils)", () => {
   it("converts AED to fils as integers", () => {
@@ -34,5 +34,13 @@ describe("money (integer fils)", () => {
     expect(percentOfFils(30, 5)).toBe(2); // 1.5 rounds up
     expect(() => percentOfFils(100, -5)).toThrow();
     expect(() => percentOfFils(100, 101)).toThrow();
+  });
+});
+
+describe("an add-on price", () => {
+  it("reads + AED to the fils, isolated so the plus stays in front in Arabic", () => {
+    expect(formatFilsDelta(15_000)).toBe("⁦+AED 150⁩");
+    expect(formatFilsDelta(1_250)).toBe("⁦+AED 12.50⁩");
+    expect(formatFilsDelta(0)).toBe("⁦+AED 0⁩");
   });
 });

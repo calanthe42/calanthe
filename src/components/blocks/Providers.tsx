@@ -4,6 +4,7 @@ import { CartProvider } from "@/lib/cart";
 import type { Product } from "@/lib/data";
 import { LocaleProvider } from "@/lib/locale";
 import type { Locale } from "@/lib/i18n/dictionary";
+import type { StoreAddon } from "@/lib/store-settings";
 import { ToastProvider } from "@/lib/toast";
 import type { WelcomeGift } from "@/lib/welcome-offer";
 import { WishlistProvider } from "@/lib/wishlist";
@@ -11,12 +12,15 @@ import { WishlistProvider } from "@/lib/wishlist";
 export function Providers({
   children,
   catalogue = [],
+  addons = [],
   locale = "en",
   welcome = null,
   welcomeUnsettled = false,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
+  /* The owner's add-ons for sale (backend/data/store-settings.ts). */
+  addons?: readonly StoreAddon[];
   /* Read from the cookie on the server so the first render is already in
      the visitor's language (lib/locale.tsx). */
   locale?: Locale;
@@ -27,7 +31,7 @@ export function Providers({
 }) {
   return (
     <LocaleProvider initialLocale={locale}>
-      <CartProvider catalogue={catalogue} welcome={welcome} welcomeUnsettled={welcomeUnsettled}>
+      <CartProvider catalogue={catalogue} addons={addons} welcome={welcome} welcomeUnsettled={welcomeUnsettled}>
         <WishlistProvider>
           <ToastProvider>{children}</ToastProvider>
         </WishlistProvider>

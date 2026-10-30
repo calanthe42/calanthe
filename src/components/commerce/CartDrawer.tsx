@@ -16,12 +16,10 @@ import {
   useCart,
   type CartItem as CartItemType,
 } from "@/lib/cart";
-import { formatFils, formatFilsInline } from "@/lib/money";
+import { formatFils, formatFilsDelta, formatFilsInline } from "@/lib/money";
 import {
-  addons,
   DELIVERY_ALWAYS_FREE,
   formatAed,
-  formatAedDelta,
   FREE_DELIVERY_THRESHOLD_AED,
 } from "@/lib/data";
 import { useLocale, useT } from "@/lib/locale";
@@ -67,7 +65,7 @@ function QtyStepper({ item }: { item: CartItemType }) {
 }
 
 function CartLine({ item }: { item: CartItemType }) {
-  const { removeItem } = useCart();
+  const { removeItem, addons, addonName } = useCart();
   const { locale, t } = useLocale();
 
   return (
@@ -89,13 +87,13 @@ function CartLine({ item }: { item: CartItemType }) {
             t={t}
             layout="stack"
             className="shrink-0 text-sm text-olive"
-            nowFils={itemUnitFils(item) * item.qty}
-            wasFils={item.sale ? itemRegularUnitFils(item) * item.qty : null}
+            nowFils={itemUnitFils(item, addons) * item.qty}
+            wasFils={item.sale ? itemRegularUnitFils(item, addons) * item.qty : null}
             wasClassName="text-xs"
           />
         </div>
-        <p className="text-sm text-ink-muted">{describeCartItem(item, t)}</p>
-        {item.sale && itemUnitFils(item) < itemRegularUnitFils(item) && (
+        <p className="text-sm text-ink-muted">{describeCartItem(item, t, addonName)}</p>
+        {item.sale && itemUnitFils(item, addons) < itemRegularUnitFils(item, addons) && (
           <p className="text-sm text-ink-muted">{item.sale.label[locale]}</p>
         )}
         {item.giftMessage && (
@@ -118,11 +116,12 @@ function CartLine({ item }: { item: CartItemType }) {
 }
 
 function CompleteTheGift() {
-  const { items, addAddonToItem } = useCart();
+  const { items, addAddonToItem, addons, addonName } = useCart();
   const t = useT();
   const last = items[items.length - 1];
   if (!last) return null;
-  const suggestions = addons.filter((a) => !last.addonIds.includes(a.id)).slice(0, 3);
+  /* The owner's first three, in her order, that this line does not have. */
+  const suggestions = addons.filter((a) => !last.addonIds.includes(a.key)).slice(0, 3);
   if (suggestions.length === 0) return null;
 
   return (
@@ -135,20 +134,18 @@ function CompleteTheGift() {
           something other than what was being added. */}
       <ul className="flex flex-col gap-2">
         {suggestions.map((addon) => (
-          <li key={addon.id}>
+          <li key={addon.key}>
             <button
               type="button"
-              onClick={() => addAddonToItem(last.key, addon.id)}
+              onClick={() => addAddonToItem(last.key, addon.key)}
               aria-label={t.ui.addAddon
-                .replace("{addon}", t.addonNames[addon.id] ?? addon.name)
+                .replace("{addon}", addonName(addon.key))
                 .replace("{product}", last.name)
-                .replace("{price}", formatAed(addon.priceAed))}
+                .replace("{price}", formatFils(addon.priceFils))}
               className="flex min-h-11 w-full items-center justify-between gap-3 rounded-sm border border-hairline px-4 text-left transition-colors duration-200 ease-bloom hover:border-sage"
             >
-              <span className="text-sm text-olive">
-                {t.addonNames[addon.id] ?? addon.name}
-              </span>
-              <span className="text-sm text-ink-muted">{formatAedDelta(addon.priceAed)}</span>
+              <span className="text-sm text-olive">{addonName(addon.key)}</span>
+              <span className="text-sm text-ink-muted">{formatFilsDelta(addon.priceFils)}</span>
             </button>
           </li>
         ))}

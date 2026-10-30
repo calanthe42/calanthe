@@ -1,5 +1,6 @@
-import { addons, sizes, type AddonId, type ProductSale, type SizeId } from "@/lib/data";
+import { sizes, type AddonId, type ProductSale, type SizeId } from "@/lib/data";
 import { saleUnitFils } from "@/lib/discounts";
+import type { StoreAddon } from "@/lib/store-settings";
 
 /**
  * What one basket line costs, in the browser.
@@ -13,6 +14,11 @@ import { saleUnitFils } from "@/lib/discounts";
  *
  * This is a DISPLAY. The server never reads a price from the browser; if the
  * two ever did disagree, checkout answers PRICE_CHANGED and charges nothing.
+ *
+ * THE ADD-ONS ARE PASSED IN: the owner's list as the storefront layout read
+ * it (lib/store-settings.ts), the same list the server prices with. A key that
+ * is not on it costs nothing here — and the basket never keeps one, because
+ * the server would refuse the line (lib/cart-lines.ts `liveAddonIds`).
  */
 
 /** As much of a sale as a basket line needs: the label and the terms. */
@@ -28,10 +34,13 @@ export type PricedSelection = {
 
 const toFils = (aed: number): number => Math.round(aed * 100);
 
-function parts(item: PricedSelection): { arrangementFils: number; addonFils: number } {
+function parts(
+  item: PricedSelection,
+  addons: readonly StoreAddon[],
+): { arrangementFils: number; addonFils: number } {
   const size = sizes.find((s) => s.id === item.sizeId);
   const addonFils = item.addonIds.reduce(
-    (sum, id) => sum + toFils(addons.find((a) => a.id === id)?.priceAed ?? 0),
+    (sum, id) => sum + (addons.find((a) => a.key === id)?.priceFils ?? 0),
     0,
   );
   return {
@@ -41,25 +50,25 @@ function parts(item: PricedSelection): { arrangementFils: number; addonFils: num
 }
 
 /** The regular unit price in fils: no sale applied. */
-export function itemRegularUnitFils(item: PricedSelection): number {
-  const { arrangementFils, addonFils } = parts(item);
+export function itemRegularUnitFils(item: PricedSelection, addons: readonly StoreAddon[]): number {
+  const { arrangementFils, addonFils } = parts(item, addons);
   return arrangementFils + addonFils;
 }
 
 /** The unit price the customer pays, in fils: the sale lowers the arrangement only. */
-export function itemUnitFils(item: PricedSelection): number {
-  const { arrangementFils, addonFils } = parts(item);
+export function itemUnitFils(item: PricedSelection, addons: readonly StoreAddon[]): number {
+  const { arrangementFils, addonFils } = parts(item, addons);
   const arrangement = item.sale ? saleUnitFils(arrangementFils, item.sale) : arrangementFils;
   return arrangement + addonFils;
 }
 
 /** The same two figures in dirhams, for the places that still speak AED. */
-export function itemUnitPrice(item: PricedSelection): number {
-  return itemUnitFils(item) / 100;
+export function itemUnitPrice(item: PricedSelection, addons: readonly StoreAddon[]): number {
+  return itemUnitFils(item, addons) / 100;
 }
 
-export function itemRegularUnitPrice(item: PricedSelection): number {
-  return itemRegularUnitFils(item) / 100;
+export function itemRegularUnitPrice(item: PricedSelection, addons: readonly StoreAddon[]): number {
+  return itemRegularUnitFils(item, addons) / 100;
 }
 
 /** The part of a product's sale a basket line keeps. */

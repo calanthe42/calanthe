@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
+import { DEFAULT_ADDONS, type StoreAddon } from "@/lib/store-settings";
 import { priceOrder, type OrderDiscounts } from "@backend/domain/pricing";
 import { validateBespokeLines, validateOrderTotals } from "@backend/payload/hooks/orderIntegrity";
 
@@ -93,7 +94,9 @@ const world: {
   sales: SaleRule[];
   coupons: CouponRule[];
   usedBy: string[];
-} = { products: [], sales: [], coupons: [], usedBy: [] };
+  /* The owner's add-ons as the global holds them now. */
+  addons: StoreAddon[];
+} = { products: [], sales: [], coupons: [], usedBy: [], addons: [] };
 const pricingCalls: Doc[] = [];
 
 vi.mock("@backend/data/checkout-pricing", () => ({
@@ -124,7 +127,7 @@ vi.mock("@backend/data/checkout-pricing", () => ({
     };
     const products = new Map(world.products.map((p) => [String(p.id), p]));
     try {
-      const priced = priceOrder(input.lines, products, input.deliveryEmirate, discounts);
+      const priced = priceOrder(input.lines, products, input.deliveryEmirate, discounts, world.addons);
       if (code && !coupon) priced.couponRefusal = { reason: "inactive" };
       const welcomeRefusal = welcomeOffered ? priced.couponRefusal : null;
       if (welcomeOffered) priced.couponRefusal = null;
@@ -143,7 +146,13 @@ vi.mock("@backend/data/checkout-pricing", () => ({
           ok: false,
           failure: "total_too_low",
           code: engine,
-          withoutCode: priceOrder(input.lines, products, input.deliveryEmirate, { ...discounts, coupon: null }),
+          withoutCode: priceOrder(
+            input.lines,
+            products,
+            input.deliveryEmirate,
+            { ...discounts, coupon: null },
+            world.addons,
+          ),
         };
       }
       return { ok: false, failure: "rejected", code: engine };
@@ -226,6 +235,7 @@ beforeEach(() => {
   world.sales = [];
   world.coupons = [];
   world.usedBy = [];
+  world.addons = DEFAULT_ADDONS.map((addon) => ({ ...addon }));
   vi.clearAllMocks();
   claims.couponClaimRefusal.mockResolvedValue(null);
   fakePayload.auth.mockResolvedValue({ user: null });
@@ -298,6 +308,33 @@ describe("startCardCheckout — the browser never sets the price", () => {
       code: "PRICE_CHANGED",
       message: "Prices have just been updated. Please review the new total, then pay.",
     });
+    expect(fakePayload.create).not.toHaveBeenCalled();
+  });
+
+  it("charges the add-on at the owner's price, and refuses the old total once she changes it", async () => {
+    const withVase = request({ lines: [{ ...line, addonIds: ["vase"] }], shownTotalFils: 48000 + 15000 });
+    expect(await startCardCheckout(withVase)).toMatchObject({ ok: true });
+    expect((created[0]!.items as Doc[])[0]).toMatchObject({
+      unitPriceFils: 63000,
+      selectedOptions: [
+        { label: "Size", value: "Standard" },
+        { label: "Add-on", value: "Vase" },
+      ],
+    });
+    /* She raises the vase in Admin → Add-ons while the page is open. */
+    world.addons = world.addons.map((a) => (a.key === "vase" ? { ...a, priceFils: 16000 } : a));
+    created.length = 0;
+    fakePayload.create.mockClear();
+    expect(await startCardCheckout(withVase)).toMatchObject({ ok: false, code: "PRICE_CHANGED" });
+    expect(fakePayload.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses an add-on she has switched off, and creates nothing", async () => {
+    world.addons = world.addons.map((a) => (a.key === "teddy" ? { ...a, active: false } : a));
+    const result = await startCardCheckout(
+      request({ lines: [{ ...line, addonIds: ["teddy"] }], shownTotalFils: 48000 + 9000 }),
+    );
+    expect(result).toMatchObject({ ok: false, code: "INVALID_OPTION" });
     expect(fakePayload.create).not.toHaveBeenCalled();
   });
 });

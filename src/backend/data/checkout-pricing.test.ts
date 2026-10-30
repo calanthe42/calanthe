@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Payload } from "payload";
 import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
+import { DEFAULT_ADDONS, type StoreAddon } from "@/lib/store-settings";
 
 /* data/discounts.ts reads the Payload config at import; a unit test has none. */
 vi.mock("@payload-config", () => ({ default: {} }));
@@ -61,13 +62,16 @@ const coupon = (over: Partial<CouponRule> = {}): CouponRule => ({
 
 const line = { productId: "1", quantity: 1, sizeId: "standard" as const, addonIds: [] as never[] };
 
-function harness(options: { products?: Product[]; sales?: SaleRule[]; coupon?: CouponRule | null; used?: boolean } = {}) {
+function harness(
+  options: { products?: Product[]; sales?: SaleRule[]; coupon?: CouponRule | null; used?: boolean; addons?: StoreAddon[] } = {},
+) {
   const find = vi.fn<
     (args: { collection: string; where: unknown; overrideAccess: boolean }) => Promise<{ docs: Product[] }>
   >(async () => ({ docs: options.products ?? [product()] }));
   const payload = { find, logger: { error: vi.fn(), warn: vi.fn() } } as unknown as Payload;
   const deps = {
     loadSales: vi.fn<Deps["loadSales"]>(async () => options.sales ?? []),
+    loadAddons: vi.fn<Deps["loadAddons"]>(async () => options.addons ?? DEFAULT_ADDONS.map((a) => ({ ...a }))),
     findCoupon: vi.fn<Deps["findCoupon"]>(async () => options.coupon ?? null),
     emailHasRedeemed: vi.fn<Deps["emailHasRedeemed"]>(async () => options.used ?? false),
   };
@@ -247,5 +251,41 @@ describe("priceCheckout — the welcome gift", () => {
     const h = harness();
     const result = await priceCheckout(h.payload, { lines: [line], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
     expect(result).toMatchObject({ ok: true, welcomeApplied: false, welcomeRefusal: null });
+  });
+});
+
+describe("priceCheckout — the owner's add-ons", () => {
+  const vaseLine = { ...line, addonIds: ["vase"] };
+  const herList = (vaseFils: number, vaseOn = true): StoreAddon[] =>
+    DEFAULT_ADDONS.map((a) => (a.key === "vase" ? { ...a, priceFils: vaseFils, active: vaseOn } : { ...a }));
+
+  it("reads her list for every quote and every payment, and prices from it", async () => {
+    const h = harness({ addons: herList(16_000) });
+    const result = await priceCheckout(h.payload, { lines: [vaseLine], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
+    expect(h.deps.loadAddons).toHaveBeenCalledWith(h.payload);
+    expect(result.ok && result.priced.totalFils).toBe(48_000 + 16_000);
+  });
+
+  it("names a new total the moment she changes a price — the total checkout compares (PRICE_CHANGED)", async () => {
+    const total = async (vaseFils: number) => {
+      const h = harness({ addons: herList(vaseFils) });
+      const result = await priceCheckout(h.payload, { lines: [vaseLine], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
+      return result.ok ? result.priced.totalFils : null;
+    };
+    expect(await total(15_000)).toBe(63_000);
+    expect(await total(16_000)).toBe(64_000);
+  });
+
+  it("refuses an add-on she has switched off, by its code", async () => {
+    const h = harness({ addons: herList(15_000, false) });
+    const result = await priceCheckout(h.payload, { lines: [vaseLine], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
+    expect(result).toEqual({ ok: false, failure: "rejected", code: "INVALID_OPTION" });
+  });
+
+  it("is a catalogue failure, not a price, when her list cannot be loaded at all", async () => {
+    const h = harness();
+    h.deps.loadAddons.mockRejectedValueOnce(new Error("connection reset"));
+    const result = await priceCheckout(h.payload, { lines: [vaseLine], deliveryEmirate: "abu-dhabi" }, NOW, h.deps);
+    expect(result).toEqual({ ok: false, failure: "catalogue", code: "ORDER_CREATION_FAILED" });
   });
 });

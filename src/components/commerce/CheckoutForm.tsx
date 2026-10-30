@@ -55,6 +55,7 @@ import {
   type CheckoutField,
 } from "@/lib/checkout-fields";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import type { StoreAddon } from "@/lib/store-settings";
 import {
   CONTACT,
   deliveryZones,
@@ -96,6 +97,8 @@ const FIELD_IDS: Record<CheckoutField, string> = {
 
 const OrderSummary = memo(function OrderSummary({
   items,
+  addons,
+  addonName,
   subtotalFils,
   discount,
   giftAmount,
@@ -107,6 +110,9 @@ const OrderSummary = memo(function OrderSummary({
   t,
 }: {
   items: readonly CartItem[];
+  /** The owner's add-ons for sale, and their names in the reader's language (the cart's). */
+  addons: readonly StoreAddon[];
+  addonName: (key: string) => string;
   /** Sum of the lines, sale prices already applied. */
   subtotalFils: number;
   /** The code or welcome gift the server accepted for this basket, and what it takes off. */
@@ -142,16 +148,16 @@ const OrderSummary = memo(function OrderSummary({
                   t={t}
                   layout="stack"
                   className="shrink-0 text-sm text-olive"
-                  nowFils={itemUnitFils(item) * item.qty}
-                  wasFils={item.sale ? itemRegularUnitFils(item) * item.qty : null}
+                  nowFils={itemUnitFils(item, addons) * item.qty}
+                  wasFils={item.sale ? itemRegularUnitFils(item, addons) * item.qty : null}
                   wasClassName="text-xs"
                 />
               </div>
               <p className="mt-1 text-sm text-ink-muted">
                 {item.qty > 1 && <>{item.qty} × </>}
-                {describeCartItem(item, t)}
+                {describeCartItem(item, t, addonName)}
               </p>
-              {item.sale && itemUnitFils(item) < itemRegularUnitFils(item) && (
+              {item.sale && itemUnitFils(item, addons) < itemRegularUnitFils(item, addons) && (
                 <p className="mt-1 text-sm text-ink-muted">{item.sale.label[locale]}</p>
               )}
               {item.giftMessage && (
@@ -299,6 +305,8 @@ export function CheckoutForm() {
 function CheckoutFormInner() {
   const {
     items,
+    addons,
+    addonName,
     subtotalFils,
     saleSavingsFils,
     discount,
@@ -554,11 +562,12 @@ function CheckoutFormInner() {
           /* The cart is untouched, so she can correct and send again. */
           setFormError(result.message);
           intentRef.current = null;
-          if (result.code === "PRICE_CHANGED") {
-            /* A sale started or ended, or a price was edited, while this
-               page was open. Nothing was created and nothing was charged.
-               The refresh brings the new catalogue; the basket re-syncs to
-               it and re-quotes the code, and she pays the total she can
+          if (result.code === "PRICE_CHANGED" || result.code === "INVALID_OPTION") {
+            /* A sale started or ended, or a price was edited — or an add-on
+               in the basket was switched off — while this page was open.
+               Nothing was created and nothing was charged. The refresh
+               brings the new catalogue and add-ons; the basket re-syncs to
+               them and re-quotes the code, and she pays the total she can
                now see. */
             router.refresh();
           } else if (result.code === "WELCOME_UNAVAILABLE") {
@@ -1033,6 +1042,8 @@ function CheckoutFormInner() {
           >
             <OrderSummary
               items={items}
+              addons={addons}
+              addonName={addonName}
               subtotalFils={subtotalFils}
               discount={discount}
               giftAmount={welcomeGift ? welcomeAmount(welcomeGift) : null}

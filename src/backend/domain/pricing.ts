@@ -1,4 +1,4 @@
-import { addons, deliveryZones, FREE_DELIVERY_THRESHOLD_AED, sizes } from "@/lib/data";
+import { deliveryZones, FREE_DELIVERY_THRESHOLD_AED, sizes } from "@/lib/data";
 import type { AddonId, SizeId } from "@/lib/data";
 import {
   bestSaleFor,
@@ -12,6 +12,7 @@ import {
   type SaleTarget,
 } from "@/lib/discounts";
 import { MIN_CHARGE_FILS } from "@/lib/money";
+import { DEFAULT_ADDONS, type StoreAddon } from "@/lib/store-settings";
 import type { Product } from "@/payload-types";
 
 /**
@@ -22,13 +23,15 @@ import type { Product } from "@/payload-types";
  *
  * THE BROWSER IS NEVER A SOURCE OF PRICE. The client may say "product X,
  * quantity 2, deluxe, with a vase". It may not say what any of that costs.
- * Every figure below is derived from the product record the server loaded and
- * from constants the server holds, so a tampered payload changes what is
- * bought, never what is charged.
+ * Every figure below is derived from the product record and the add-on list
+ * the server loaded and from constants the server holds, so a tampered
+ * payload changes what is bought, never what is charged.
  *
- * Size deltas, add-on prices and delivery fees still live in lib/data.ts as
- * configuration. They are not yet database collections; when they become
- * collections this function's inputs change and its arithmetic does not.
+ * Size deltas and delivery fees still live in lib/data.ts as configuration.
+ * ADD-ONS are the owner's list (Admin → Add-ons, the `settings` global): the
+ * caller loads it and passes it in (backend/data/checkout-pricing.ts), so this
+ * stays pure. Left out, it is the code defaults — the list the shop sells
+ * while she has saved none (lib/store-settings.ts `DEFAULT_ADDONS`).
  *
  * DISCOUNTS (lib/discounts.ts holds the arithmetic; this file applies it).
  *
@@ -132,6 +135,7 @@ export function priceLine(
   line: CheckoutLineRequest,
   product: Product,
   sale?: SaleRule | null,
+  addons: readonly StoreAddon[] = DEFAULT_ADDONS,
 ): PricedLine {
   if (!product.available) {
     throw new Error(`PRODUCT_UNAVAILABLE: ${product.name} is not currently for sale`);
@@ -143,9 +147,13 @@ export function priceLine(
   const size = sizes.find((s) => s.id === line.sizeId);
   if (!size) throw new Error(`INVALID_OPTION: unknown size "${line.sizeId}"`);
 
+  /* Only what is on her list AND switched on is for sale. A key she has
+     removed or switched off — still in a basket left open — is refused, not
+     dropped: the customer is told, and her basket re-reads the list. */
   const chosenAddons = line.addonIds.map((id) => {
-    const addon = addons.find((a) => a.id === id);
+    const addon = addons.find((a) => a.key === id);
     if (!addon) throw new Error(`INVALID_OPTION: unknown add-on "${id}"`);
+    if (!addon.active) throw new Error(`INVALID_OPTION: add-on "${id}" is not offered`);
     return addon;
   });
 
@@ -155,7 +163,7 @@ export function priceLine(
      Add-ons are bought-in goods and stay at full price. */
   const arrangementFils = baseFils + aedToFils(size.priceDeltaAed);
   const saleArrangementFils = sale ? saleUnitFils(arrangementFils, sale) : arrangementFils;
-  const addonsFils = chosenAddons.reduce((sum, a) => sum + aedToFils(a.priceAed), 0);
+  const addonsFils = chosenAddons.reduce((sum, a) => sum + a.priceFils, 0);
   const unitPriceFils = saleArrangementFils + addonsFils;
 
   if (!Number.isSafeInteger(unitPriceFils) || unitPriceFils <= 0) {
@@ -164,7 +172,9 @@ export function priceLine(
 
   const selectedOptions = [
     { label: "Size", value: size.name },
-    ...chosenAddons.map((a) => ({ label: "Add-on", value: a.name })),
+    /* The English name, frozen on the order as it was sold: the order reads
+       the same after she renames or removes the add-on. */
+    ...chosenAddons.map((a) => ({ label: "Add-on", value: a.nameEn })),
   ];
 
   const applied = sale && saleArrangementFils < arrangementFils ? sale : null;
@@ -219,13 +229,15 @@ export function saleTargetOf(product: Product): SaleTarget {
 /**
  * The whole order. Reconciles exactly, in integers, or throws.
  *
- * `discounts` is optional so a caller with none prices exactly as before.
+ * `discounts` is optional so a caller with none prices exactly as before;
+ * `addons` is the owner's list as the caller loaded it.
  */
 export function priceOrder(
   lines: CheckoutLineRequest[],
   products: Map<string, Product>,
   emirate: string,
   discounts?: OrderDiscounts,
+  addons: readonly StoreAddon[] = DEFAULT_ADDONS,
 ): PricedOrder {
   if (lines.length === 0) throw new Error("INVALID_ORDER: the basket is empty");
 
@@ -238,7 +250,7 @@ export function priceOrder(
     const sale = discounts
       ? bestSaleFor(saleTargetOf(product), discounts.sales, discounts.now)
       : null;
-    return priceLine(line, product, sale);
+    return priceLine(line, product, sale, addons);
   });
 
   const subtotalFils = priced.reduce((sum, l) => sum + l.lineTotalFils, 0);

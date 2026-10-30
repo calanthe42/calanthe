@@ -68,3 +68,12 @@ export function percentOfFils(fils: Fils, percent: number): Fils {
 export function formatFilsInline(fils: Fils): string {
   return `⁦${formatFils(fils)}⁩`;
 }
+
+/**
+ * An add-on price, "+ AED 12.50", isolated like formatFilsInline so the plus
+ * stays in front on an Arabic page (lib/data.ts `formatAedDelta` is the same
+ * for whole dirhams). The owner prices add-ons to the fils.
+ */
+export function formatFilsDelta(fils: Fils): string {
+  return `⁦+${formatFils(fils)}⁩`;
+}

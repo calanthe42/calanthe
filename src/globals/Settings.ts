@@ -1,27 +1,34 @@
 import type { GlobalConfig } from "payload";
 import { isAdmin } from "@backend/payload/access";
-import { deliveryZones } from "@/lib/data";
+import { ADDON_LIMITS, isAddonKey } from "@/lib/store-settings";
 
 /**
  * The store's operating settings — one record, edited by the owner.
  *
- * DELIVERY first, because it is the part that prices an order: a zone the
- * owner switches off disappears from checkout, a fee she changes is what the
- * next order pays, and the cut-off she sets is when "today" stops being
- * offered. Everything here is read by the storefront through
+ * ADD-ONS today: the "Something extra" list on every product, which she
+ * keeps in /admin/addons. Everything here is read through
  * `backend/data/store-settings.ts`, which fills in the code defaults for
- * anything not yet saved, so this global may be empty and the shop still
- * runs exactly as before.
+ * anything not yet saved (lib/store-settings.ts), so this global may be
+ * empty and the shop still runs exactly as before.
  *
- * Public read, deliberately: the storefront prices and offers delivery from
- * it on every request. Owner-only write.
+ * Delivery joins this record when /admin/delivery is built, with its own
+ * migration; lib/store-settings.ts already reads the shape it will have.
+ * It was drafted here before the global was registered and taken out when
+ * it was, so that nothing in /cms looks editable that the shop does not
+ * read.
+ *
+ * Public read, deliberately: the storefront prices from it on every
+ * request. Owner-only write.
  */
 export const Settings: GlobalConfig = {
   slug: "settings",
   label: "Store settings",
   admin: {
     group: "Shop",
-    description: "Delivery zones, fees, cut-off and time windows. Edited from /admin/delivery.",
+    description: "The add-ons offered on every product. Edited from /admin → Add-ons.",
+    /* Edited only from Admin → Add-ons, whose save clears the shop's cached
+       list and writes the activity log. A /cms save would do neither. */
+    hidden: true,
   },
   access: {
     read: () => true,
@@ -29,50 +36,39 @@ export const Settings: GlobalConfig = {
   },
   fields: [
     {
-      name: "delivery",
-      type: "group",
+      name: "addons",
+      type: "array",
+      labels: { singular: "Add-on", plural: "Add-ons" },
+      maxRows: ADDON_LIMITS.maxCount,
+      admin: {
+        description:
+          "In the order customers see them. While this is empty the shop offers its default list. The key never changes once saved.",
+      },
+      /* The one rule the admin's own form cannot be trusted to keep for a row
+         edited here by hand: a basket names an add-on by its key, so two rows
+         with one key would be one add-on at two prices. */
+      validate: (rows: unknown) => {
+        const list = Array.isArray(rows) ? (rows as { key?: unknown }[]) : [];
+        if (list.length > ADDON_LIMITS.maxCount) return `Keep to ${ADDON_LIMITS.maxCount} add-ons or fewer.`;
+        const keys = list.map((row) => row?.key);
+        if (keys.some((key) => !isAddonKey(key))) {
+          return "Each key is lower-case letters and numbers joined by hyphens, like bento-cake.";
+        }
+        return new Set(keys).size === keys.length ? true : "Two add-ons have the same key.";
+      },
       fields: [
+        { name: "key", type: "text", required: true, maxLength: ADDON_LIMITS.keyMax },
+        { name: "nameEn", type: "text", required: true, maxLength: ADDON_LIMITS.nameMax },
+        { name: "nameAr", type: "text", required: true, maxLength: ADDON_LIMITS.nameMax },
         {
-          name: "zones",
-          type: "array",
-          labels: { singular: "Zone", plural: "Zones" },
-          admin: { description: "One row per emirate. An emirate with no row is delivered at its default fee." },
-          fields: [
-            {
-              name: "emirate",
-              type: "select",
-              required: true,
-              options: deliveryZones.map((zone) => ({ label: zone.name, value: zone.id })),
-            },
-            { name: "feeFils", type: "number", required: true, min: 0, admin: { description: "In fils (AED × 100)." } },
-            { name: "enabled", type: "checkbox", defaultValue: true },
-          ],
-        },
-        {
-          name: "freeDeliveryThresholdFils",
+          name: "priceFils",
           type: "number",
+          required: true,
           min: 0,
-          admin: { description: "Orders at or above this amount (fils) are delivered free." },
+          max: ADDON_LIMITS.maxPriceFils,
+          admin: { description: "In fils (AED × 100)." },
         },
-        {
-          name: "freeDeliveryNever",
-          type: "checkbox",
-          defaultValue: false,
-          admin: { description: "Delivery is always charged, whatever the order's size." },
-        },
-        {
-          name: "sameDayCutoffHour",
-          type: "number",
-          min: 0,
-          max: 23,
-          admin: { description: "Hour of the day (UAE time, 0–23) after which same-day delivery is no longer offered." },
-        },
-        {
-          name: "timeSlots",
-          type: "array",
-          labels: { singular: "Time window", plural: "Time windows" },
-          fields: [{ name: "label", type: "text", required: true, maxLength: 40 }],
-        },
+        { name: "active", type: "checkbox", defaultValue: true, admin: { description: "Shown on products." } },
       ],
     },
   ],

@@ -60,6 +60,7 @@ export type RawSettings = {
     sameDayCutoffHour?: number | null;
     timeSlots?: Array<{ label?: string | null }> | null;
   } | null;
+  addons?: ReadonlyArray<RawAddonRow | null | undefined> | null;
 } | null;
 
 const isHour = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 23;
@@ -102,4 +103,119 @@ export function normaliseSettings(raw: RawSettings): StoreSettings {
 /** The zones a customer may choose from, in the catalogue's order. */
 export function enabledZones(delivery: DeliverySettings): DeliveryZoneSetting[] {
   return delivery.zones.filter((zone) => zone.enabled);
+}
+
+/* ------------------------------------------------------------------ */
+/* Add-ons — "Something extra" on every product                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * THE ADD-ONS ARE THE OWNER'S TO SET, like delivery: what they are called in
+ * both languages, what each costs, which are offered and in what order. She
+ * keeps them in Admin → Add-ons (the `settings` global, globals/Settings.ts),
+ * and everything that shows or charges one reads that same list — the
+ * product page and the basket from the storefront layout, the server's
+ * quote and payment from the global itself (backend/data/store-settings.ts).
+ *
+ * THE KEY IS FOR EVER. `key` is what a basket and the checkout call an
+ * add-on by. It is made from the English name when the row is first saved
+ * and never changes after: renaming "Vase" to "Glass vase" changes the
+ * names, not the key, so a basket that holds it still holds it. Orders do
+ * not depend on it at all — each one keeps the name it was sold under.
+ */
+export type StoreAddon = {
+  key: string;
+  nameEn: string;
+  nameAr: string;
+  priceFils: number;
+  /** "Show on products". Off: kept on her list, not for sale. */
+  active: boolean;
+};
+
+export const ADDON_LIMITS = {
+  maxCount: 12,
+  /** AED 10,000. */
+  maxPriceFils: 1_000_000,
+  nameMax: 40,
+  keyMax: 40,
+} as const;
+
+/* Lower-case words joined by single hyphens: "vase", "bento-cake". */
+const ADDON_KEY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const isAddonKey = (value: unknown): value is string =>
+  typeof value === "string" && value.length <= ADDON_LIMITS.keyMax && ADDON_KEY.test(value);
+
+/**
+ * DEFAULTS ARE THE LIST THE SHOP SELLS TODAY (client, 2026-10-30: the vase
+ * is AED 150, and chocolates are no longer offered), with the Arabic names
+ * the storefront dictionary has always shown. Until the owner saves her own
+ * list, this is the list — so nothing changes for a customer on the deploy
+ * that introduces the screen.
+ */
+export const DEFAULT_ADDONS: readonly StoreAddon[] = [
+  { key: "vase", nameEn: "Vase", nameAr: "مزهرية", priceFils: 15_000, active: true },
+  { key: "balloon", nameEn: "Balloon", nameAr: "بالون", priceFils: 3_500, active: true },
+  { key: "cake", nameEn: "Bento Cake", nameAr: "كيكة بنتو", priceFils: 9_500, active: true },
+  { key: "teddy", nameEn: "Teddy Bear", nameAr: "دبدوب", priceFils: 9_000, active: true },
+  { key: "polaroid", nameEn: "Polaroid Card", nameAr: "بطاقة بولارويد", priceFils: 2_500, active: true },
+];
+
+/** One saved row, as Payload hands it back, loosely typed. */
+export type RawAddonRow = {
+  key?: string | null;
+  nameEn?: string | null;
+  nameAr?: string | null;
+  priceFils?: number | null;
+  active?: boolean | null;
+};
+
+/**
+ * The saved list in her order, or the defaults while nothing is saved.
+ *
+ * A row that could not be sold as it stands — no key, a key already used
+ * above it, no English name, a price out of range — is left out rather than
+ * shown wrong. The admin's own save never writes one; this is for a row
+ * edited by hand in the developer CMS.
+ */
+export function normaliseAddons(raw: ReadonlyArray<RawAddonRow | null | undefined> | null | undefined): StoreAddon[] {
+  const rows = Array.isArray(raw) ? raw : [];
+  if (rows.length === 0) return DEFAULT_ADDONS.map((addon) => ({ ...addon }));
+
+  const seen = new Set<string>();
+  const list: StoreAddon[] = [];
+  for (const row of rows) {
+    const key = row?.key?.trim() ?? "";
+    const nameEn = row?.nameEn?.trim() ?? "";
+    const priceFils = row?.priceFils;
+    if (!isAddonKey(key) || seen.has(key) || !nameEn) continue;
+    if (!isFils(priceFils) || priceFils > ADDON_LIMITS.maxPriceFils) continue;
+    seen.add(key);
+    list.push({ key, nameEn, nameAr: row?.nameAr?.trim() || nameEn, priceFils, active: row?.active !== false });
+  }
+  return list;
+}
+
+/** The add-ons a customer may choose from, in the owner's order. */
+export function addonsForSale(list: readonly StoreAddon[]): StoreAddon[] {
+  return list.filter((addon) => addon.active);
+}
+
+/**
+ * An add-on's name in the reader's language.
+ *
+ * The live list answers first — her own words, as she last saved them. A key
+ * that is no longer on it (`chocolates`, offered until 2026-10-30) falls back
+ * to the storefront dictionary's `addonNames`, and then to the key itself,
+ * so a name is never blank.
+ */
+export function addonLabel(
+  key: string,
+  list: readonly StoreAddon[],
+  locale: "en" | "ar",
+  fallback: Readonly<Record<string, string>>,
+): string {
+  const addon = list.find((a) => a.key === key);
+  if (addon) return locale === "ar" ? addon.nameAr || addon.nameEn : addon.nameEn;
+  return fallback[key] ?? key;
 }

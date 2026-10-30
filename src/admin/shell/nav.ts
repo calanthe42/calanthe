@@ -80,6 +80,9 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: "/admin/team", label: "nav.staff", icon: "staff" },
       { href: "/admin/website", label: "nav.website", icon: "settings", ownerOnly: true },
+      /* The "Something extra" list on every product: her prices, like the
+         discounts, so staff neither see nor change it. */
+      { href: "/admin/addons", label: "nav.addons", icon: "gift", ownerOnly: true },
       { href: "/admin/activity", label: "nav.activity", icon: "clock", ownerOnly: true },
     ],
   },

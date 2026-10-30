@@ -10,6 +10,7 @@ import { getDictionary } from "@/lib/i18n/server";
 import { getActiveOccasions } from "@backend/data/occasions";
 import { effectiveFlags, getSiteFlags } from "@backend/data/site-flags";
 import { getAvailableProducts } from "@backend/data/products";
+import { getStoreAddons } from "@backend/data/store-settings";
 import { getWelcomeVisitor } from "@backend/data/welcome";
 
 export default async function StorefrontLayout({
@@ -17,9 +18,12 @@ export default async function StorefrontLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   /* Read once, on the server, and hand down as props. The cart provider and
      the search overlay both need the catalogue, and neither may query the
-     database from the browser (docs/PROJECT-STRUCTURE.md §4). */
-  const [catalogue, occasions, { locale, t }, rawFlags, welcome] = await Promise.all([
+     database from the browser (docs/PROJECT-STRUCTURE.md §4). The add-ons
+     travel the same way: the product page and the basket show the owner's
+     list exactly as the checkout will price it. */
+  const [catalogue, addons, occasions, { locale, t }, rawFlags, welcome] = await Promise.all([
     getAvailableProducts(),
+    getStoreAddons(),
     getActiveOccasions(),
     getDictionary(),
     getSiteFlags(),
@@ -29,6 +33,7 @@ export default async function StorefrontLayout({
   return (
     <Providers
       catalogue={catalogue}
+      addons={addons}
       locale={locale}
       /* The basket asks for the gift only when it is this customer's. */
       welcome={welcome.account === "eligible" ? welcome.offer : null}

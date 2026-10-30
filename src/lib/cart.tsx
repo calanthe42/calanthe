@@ -12,16 +12,20 @@ import {
 } from "react";
 import { quoteCheckout } from "@backend/actions/checkout";
 import { welcomeAnswerOf, welcomeStateOf, type WelcomeAnswer } from "@backend/domain/checkout-order";
-import type { AddonId, ProductImage, SizeId } from "@/lib/data";
-import { addons, deliveryZones, sizes, timeSlots } from "@/lib/data";
+import type { AddonId } from "@/lib/data";
+import { deliveryZones, sizes } from "@/lib/data";
+import { itemRegularUnitFils, itemUnitFils } from "@/lib/cart-pricing";
 import {
-  cartSaleOf,
-  itemRegularUnitFils,
-  itemUnitFils,
-  type CartSale,
-} from "@/lib/cart-pricing";
+  keyOf,
+  mergeSameLines,
+  sanitizeStoredItems,
+  syncCartItems,
+  type CartItem,
+} from "@/lib/cart-lines";
 import { CODE_MAX_LENGTH, normaliseCode } from "@/lib/discounts";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { useLocale } from "@/lib/locale";
+import { addonLabel, type StoreAddon } from "@/lib/store-settings";
 import type { WelcomeGift } from "@/lib/welcome-offer";
 import type { Product } from "@/lib/data";
 
@@ -34,50 +38,28 @@ export {
   itemUnitPrice,
 } from "@/lib/cart-pricing";
 
-export type CartItem = {
-  /** productId + size + sorted addons — one line per configuration. */
-  key: string;
-  productId: string;
-  slug: string;
-  name: string;
-  image: ProductImage;
-  /** The product's REGULAR base price. A sale never changes this. */
-  basePriceAed: number;
-  /**
-   * The sale this product is on, when it is on one. ALWAYS taken from the
-   * live catalogue — on hydration and on every re-sync — never from storage,
-   * so a basket left overnight cannot keep yesterday's offer.
-   */
-  sale?: CartSale;
-  sizeId: SizeId;
-  addonIds: readonly AddonId[];
-  qty: number;
-  giftMessage?: string;
-  /** Chosen on the product page; pre-fills checkout. */
-  preferredDay?: string;
-  preferredSlot?: string;
-  recipientName?: string;
-  recipientPhone?: string;
-};
+/* What a line is, and how stored and synced lines are rebuilt, live in
+   lib/cart-lines.ts (pure, and tested on their own). */
+export type { CartItem } from "@/lib/cart-lines";
 
 /**
- * "Deluxe · Vase · Chocolates" — one description used by every cart view.
+ * "Deluxe · Vase · Balloon" — one description used by every cart view.
  *
- * The size and add-on names come from the `sizes` and `addons` tables, which
- * are configuration in code and therefore English. That put three English
- * words under every line of an Arabic cart and an Arabic order summary, so
- * the dictionary answers first and the table is the fallback — which keeps an
- * add-on introduced later visible rather than blank.
+ * The size names come from the `sizes` table, which is configuration in code
+ * and therefore English, so the dictionary answers first and the table is the
+ * fallback. Add-on names are the owner's own, in both languages: `addonName`
+ * is the cart's (`useCart().addonName`), which reads her live list in the
+ * reader's language and falls back to the dictionary for a key she no longer
+ * offers.
  */
 export function describeCartItem(
   item: Pick<CartItem, "sizeId" | "addonIds">,
   t: Dictionary,
+  addonName: (key: AddonId) => string,
 ): string {
   const parts = [
     t.sizeNames[item.sizeId] ?? sizes.find((s) => s.id === item.sizeId)?.name,
-    ...item.addonIds.map(
-      (id) => t.addonNames[id] ?? addons.find((a) => a.id === id)?.name,
-    ),
+    ...item.addonIds.map(addonName),
   ].filter((x): x is string => Boolean(x));
   return parts.join(" · ");
 }
@@ -91,67 +73,8 @@ type CartAction =
   | { type: "addAddon"; key: string; addonId: AddonId }
   | { type: "clear" }
   | { type: "hydrate"; items: CartItem[] }
-  | { type: "sync"; catalogue: readonly Product[] };
-
-function keyOf(item: Omit<CartItem, "key">): string {
-  return `${item.productId}|${item.sizeId}|${[...item.addonIds].sort().join(",")}|${item.giftMessage ?? ""}`;
-}
-
-/**
- * Rebuild stored lines against the live catalog: unknown products are
- * dropped; name, slug, image, price and sale always come from the catalog so
- * stale or tampered storage can never change what is charged.
- */
-function sanitizeStoredItems(parsed: unknown, products: readonly Product[]): CartItem[] {
-  if (!Array.isArray(parsed)) return [];
-  const items: CartItem[] = [];
-  for (const raw of parsed) {
-    if (typeof raw !== "object" || raw === null) continue;
-    const r = raw as Record<string, unknown>;
-    const product = products.find((p) => p.id === r.productId);
-    if (!product) continue;
-
-    const sizeId = sizes.some((s) => s.id === r.sizeId)
-      ? (r.sizeId as SizeId)
-      : "standard";
-    const addonIds = Array.isArray(r.addonIds)
-      ? (r.addonIds.filter((id) => addons.some((a) => a.id === id)) as AddonId[])
-      : [];
-    const qty =
-      typeof r.qty === "number" && Number.isInteger(r.qty)
-        ? Math.min(Math.max(r.qty, 1), 20)
-        : 1;
-
-    const item: Omit<CartItem, "key"> = {
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      image: product.images[0],
-      basePriceAed: product.priceAed,
-      /* From the catalogue, never from storage. */
-      sale: cartSaleOf(product.sale),
-      sizeId,
-      addonIds,
-      qty,
-      giftMessage:
-        typeof r.giftMessage === "string" && r.giftMessage.trim()
-          ? r.giftMessage.slice(0, 220)
-          : undefined,
-      preferredDay: typeof r.preferredDay === "string" ? r.preferredDay : undefined,
-      recipientName:
-        typeof r.recipientName === "string" ? r.recipientName.slice(0, 80) : undefined,
-      recipientPhone:
-        typeof r.recipientPhone === "string" ? r.recipientPhone.slice(0, 24) : undefined,
-      preferredSlot:
-        typeof r.preferredSlot === "string" &&
-        (timeSlots as readonly string[]).includes(r.preferredSlot)
-          ? r.preferredSlot
-          : undefined,
-    };
-    items.push({ ...item, key: keyOf(item) });
-  }
-  return items;
-}
+  /* A null catalogue is "not known": the products are left alone. */
+  | { type: "sync"; catalogue: readonly Product[] | null; addons: readonly StoreAddon[] };
 
 function reducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -180,15 +103,15 @@ function reducer(state: CartState, action: CartAction): CartState {
       };
     }
     case "addAddon": {
-      return {
-        items: state.items.map((i) => {
-          if (i.key !== action.key || i.addonIds.includes(action.addonId)) {
-            return i;
-          }
-          const next = { ...i, addonIds: [...i.addonIds, action.addonId] };
-          return { ...next, key: keyOf(next) };
-        }),
-      };
+      const items = state.items.map((i) => {
+        if (i.key !== action.key || i.addonIds.includes(action.addonId)) {
+          return i;
+        }
+        const added = { ...i, addonIds: [...i.addonIds, action.addonId] };
+        return { ...added, key: keyOf(added) };
+      });
+      /* It may now be the same configuration as another line: one line. */
+      return { items: mergeSameLines(items) };
     }
     case "clear":
       return { items: [] };
@@ -196,48 +119,22 @@ function reducer(state: CartState, action: CartAction): CartState {
       return { items: action.items };
     case "sync": {
       /* Name, photograph, price and sale are re-read from the catalogue the
-         server just sent; a line whose product has left is dropped. The same
-         state object is returned when nothing changed, so a refresh that
-         brought no news re-renders nothing and re-quotes nothing. */
-      let changed = false;
-      const items: CartItem[] = [];
-      for (const item of state.items) {
-        const product = action.catalogue.find((p) => p.id === item.productId);
-        if (!product) {
-          changed = true;
-          continue;
-        }
-        const sale = cartSaleOf(product.sale);
-        const same =
-          item.name === product.name &&
-          item.slug === product.slug &&
-          item.basePriceAed === product.priceAed &&
-          JSON.stringify(item.sale ?? null) === JSON.stringify(sale ?? null);
-        if (same) {
-          items.push(item);
-          continue;
-        }
-        changed = true;
-        items.push({
-          ...item,
-          name: product.name,
-          slug: product.slug,
-          image: product.images[0],
-          basePriceAed: product.priceAed,
-          sale,
-        });
-      }
-      return changed ? { items } : state;
+         server just sent, and add-ons from its list; a line whose product
+         has left is dropped (lib/cart-lines.ts). The same state object is
+         returned when nothing changed, so a refresh that brought no news
+         re-renders nothing and re-quotes nothing. */
+      const items = syncCartItems(state.items, action.catalogue, action.addons);
+      return items ? { items } : state;
     }
   }
 }
 
 /** What the basket holds, as far as its price is concerned. */
-function linesKeyOf(items: readonly CartItem[]): string {
+function linesKeyOf(items: readonly CartItem[], addons: readonly StoreAddon[]): string {
   return items
     .map(
       (i) =>
-        `${i.productId}|${i.sizeId}|${[...i.addonIds].sort().join(",")}|${i.qty}|${itemUnitFils(i)}`,
+        `${i.productId}|${i.sizeId}|${[...i.addonIds].sort().join(",")}|${i.qty}|${itemUnitFils(i, addons)}`,
     )
     .join(";");
 }
@@ -265,6 +162,14 @@ const WELCOME_RETRY_MS = 1500;
 
 type CartContextValue = {
   items: readonly CartItem[];
+  /**
+   * The add-ons a customer may choose, in the owner's order, as the layout
+   * read them (backend/data/store-settings.ts). Every price and name the
+   * basket and the product page show comes from here.
+   */
+  addons: readonly StoreAddon[];
+  /** An add-on's name in the reader's language, whether or not it is still offered. */
+  addonName: (key: AddonId) => string;
   /**
    * False until the stored cart has been read back.
    *
@@ -343,6 +248,7 @@ const CODE_STORAGE_KEY = "calanthe-code-v1";
 /* A stable empty catalogue: a fresh `[]` default on every render would look
    like a new catalogue to the re-sync effect each time. */
 const NO_CATALOGUE: readonly Product[] = [];
+const NO_ADDONS: readonly StoreAddon[] = [];
 
 /** The server's answer for one basket: applied, or refused and why. */
 type Quoted = { code: string; key: string; discountFils: number };
@@ -354,16 +260,20 @@ export function CartProvider({
      must never reach for the database itself. Defaults to empty so the
      provider still mounts in isolation (tests, storybook-style rendering). */
   catalogue = NO_CATALOGUE,
+  /* The owner's add-ons for sale, read on the server like the catalogue. */
+  addons = NO_ADDONS,
   welcome = null,
   welcomeUnsettled = false,
 }: {
   children: React.ReactNode;
   catalogue?: readonly Product[];
+  addons?: readonly StoreAddon[];
   /** The welcome gift, when the layout found it is this signed-in customer's. */
   welcome?: WelcomeGift | null;
   /** The layout could not settle the gift: see `welcomeUnsettled` on the context. */
   welcomeUnsettled?: boolean;
 }) {
+  const { locale, t } = useLocale();
   const [state, dispatch] = useReducer(reducer, { items: [] });
   const [isOpen, setIsOpen] = useState(false);
   /* Never persist until the stored cart has been read, or the initial
@@ -401,10 +311,8 @@ export function CartProvider({
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const stored = JSON.parse(raw);
-        const items = sanitizeStoredItems(stored, catalogue);
-        if (Array.isArray(stored) && stored.length > items.length) {
-          setDroppedCount(stored.length - items.length);
-        }
+        const { items, dropped } = sanitizeStoredItems(stored, catalogue, addons);
+        if (dropped > 0) setDroppedCount(dropped);
         dispatch({ type: "hydrate", items });
       }
       const storedCode = normaliseCode(localStorage.getItem(CODE_STORAGE_KEY) ?? "");
@@ -414,7 +322,7 @@ export function CartProvider({
     }
     hydrated.current = true;
     setIsHydrated(true);
-  }, [catalogue]);
+  }, [catalogue, addons]);
 
   useEffect(() => {
     if (!hydrated.current) return;
@@ -435,31 +343,37 @@ export function CartProvider({
    * catalogue, and this is what makes the basket actually take it.
    *
    * An empty catalogue is "not known" (the read failed), never "everything
-   * was removed": it must not empty a basket.
+   * was removed": it must not empty a basket. The add-ons follow too: one
+   * the owner has switched off comes off every line, so the basket never
+   * asks the server for something it would refuse.
    */
   useEffect(() => {
-    if (!hydrated.current || catalogue.length === 0) return;
-    dispatch({ type: "sync", catalogue });
-  }, [catalogue]);
+    if (!hydrated.current) return;
+    dispatch({ type: "sync", catalogue: catalogue.length > 0 ? catalogue : null, addons });
+  }, [catalogue, addons]);
 
   const subtotalFils = useMemo(
-    () => state.items.reduce((sum, i) => sum + itemUnitFils(i) * i.qty, 0),
-    [state.items],
+    () => state.items.reduce((sum, i) => sum + itemUnitFils(i, addons) * i.qty, 0),
+    [state.items, addons],
   );
   const saleSavingsFils = useMemo(
     () =>
       state.items.reduce(
-        (sum, i) => sum + Math.max(0, itemRegularUnitFils(i) - itemUnitFils(i)) * i.qty,
+        (sum, i) => sum + Math.max(0, itemRegularUnitFils(i, addons) - itemUnitFils(i, addons)) * i.qty,
         0,
       ),
-    [state.items],
+    [state.items, addons],
   );
   const subtotalAed = subtotalFils / 100;
   const count = useMemo(
     () => state.items.reduce((sum, i) => sum + i.qty, 0),
     [state.items],
   );
-  const linesKey = useMemo(() => linesKeyOf(state.items), [state.items]);
+  const linesKey = useMemo(() => linesKeyOf(state.items, addons), [state.items, addons]);
+  const addonName = useCallback(
+    (key: AddonId) => addonLabel(key, addons, locale, t.addonNames),
+    [addons, locale, t],
+  );
   const hasLines = state.items.length > 0;
 
   useEffect(() => {
@@ -687,6 +601,8 @@ export function CartProvider({
   const value = useMemo<CartContextValue>(
     () => ({
       items: state.items,
+      addons,
+      addonName,
       hydrated: isHydrated,
       droppedCount,
       subtotalAed,
@@ -718,6 +634,8 @@ export function CartProvider({
     }),
     [
       state.items,
+      addons,
+      addonName,
       isHydrated,
       droppedCount,
       subtotalAed,

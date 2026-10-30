@@ -110,9 +110,11 @@ export interface Config {
   };
   fallbackLocale: null;
   globals: {
+    settings: Setting;
     'cost-settings': CostSetting;
   };
   globalsSelect: {
+    settings: SettingsSelect<false> | SettingsSelect<true>;
     'cost-settings': CostSettingsSelect<false> | CostSettingsSelect<true>;
   };
   locale: null;
@@ -1849,6 +1851,36 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * The add-ons offered on every product. Edited from /admin → Add-ons.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings".
+ */
+export interface Setting {
+  id: number;
+  /**
+   * In the order customers see them. While this is empty the shop offers its default list. The key never changes once saved.
+   */
+  addons?:
+    | {
+        key: string;
+        nameEn: string;
+        nameAr: string;
+        /**
+         * In fils (AED × 100).
+         */
+        priceFils: number;
+        /**
+         * Shown on products.
+         */
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Target margin, florist's hourly rate, lost flowers and VAT. Edited from /admin → Costs → Settings.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1875,6 +1907,25 @@ export interface CostSetting {
   vatRatePercent?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings_select".
+ */
+export interface SettingsSelect<T extends boolean = true> {
+  addons?:
+    | T
+    | {
+        key?: T;
+        nameEn?: T;
+        nameAr?: T;
+        priceFils?: T;
+        active?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -19,10 +19,10 @@ import {
 import { uniqueProductViews } from "@/lib/catalogue";
 import { cn } from "@/lib/cn";
 import { useCart } from "@/lib/cart";
+import { liveAddonIds } from "@/lib/cart-lines";
 import { cartSaleOf, itemRegularUnitFils, itemUnitFils } from "@/lib/cart-pricing";
-import { formatFils, formatFilsInline } from "@/lib/money";
+import { formatFils, formatFilsDelta, formatFilsInline } from "@/lib/money";
 import {
-  addons,
   formatAedDelta,
   occasions as occasionNames,
   sizes,
@@ -71,7 +71,7 @@ function occasionName(slug: string, t: Dictionary): string {
 
 export function ProductDetail({ product }: ProductDetailProps) {
   const { locale, t } = useLocale();
-  const { addItem } = useCart();
+  const { addItem, addons, addonName } = useCart();
   const reduced = useReducedMotion();
 
   /**
@@ -93,7 +93,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   /* Selections */
   const [sizeId, setSizeId] = useState<SizeId>("standard");
-  const [addonIds, setAddonIds] = useState<readonly AddonId[]>([]);
+  const [picked, setPicked] = useState<readonly AddonId[]>([]);
+  /* What she ticked, less anything the owner has since switched off: the
+     page may be refreshed under her with a new list, and an add-on that is
+     no longer offered must not be priced or put in the basket. */
+  const addonIds = useMemo(() => liveAddonIds(picked, addons), [picked, addons]);
   const [giftMessage, setGiftMessage] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
@@ -106,10 +110,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const { totalFils, regularFils } = useMemo(() => {
     const selection = { basePriceAed: product.priceAed, sizeId, addonIds };
     return {
-      totalFils: itemUnitFils({ ...selection, sale: cartSaleOf(sale) }),
-      regularFils: itemRegularUnitFils(selection),
+      totalFils: itemUnitFils({ ...selection, sale: cartSaleOf(sale) }, addons),
+      regularFils: itemRegularUnitFils(selection, addons),
     };
-  }, [product.priceAed, sale, sizeId, addonIds]);
+  }, [product.priceAed, sale, sizeId, addonIds, addons]);
   const onOffer = Boolean(sale) && totalFils < regularFils;
   const total = formatFils(totalFils);
   /* The real end of the real sale, in Abu Dhabi's calendar — or nothing. */
@@ -290,7 +294,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
               {product.name}
             </h1>
             {product.description && (
-              <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-muted">
+              /* dir="auto": the owner writes in English or Arabic, and an
+                 English sentence on the Arabic page must keep its full stop
+                 at its own end. */
+              <p dir="auto" className="mt-5 max-w-md text-lg leading-relaxed text-ink-muted">
                 {product.description}
               </p>
             )}
@@ -299,7 +306,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
             {product.story && (
               <div className="mt-4 flex max-w-md flex-col gap-3 text-base leading-relaxed text-ink-muted">
                 {product.story.split(/\n{2,}/).map((paragraph, i) => (
-                  <p key={i} className="whitespace-pre-line">
+                  <p key={i} dir="auto" className="whitespace-pre-line">
                     {paragraph}
                   </p>
                 ))}
@@ -426,60 +433,64 @@ export function ProductDetail({ product }: ProductDetailProps) {
             {/* Extras — words, not pictures. The tiles used to carry
                 generated botanical art captioned "chocolates" and "teddy
                 bear", which showed the customer something that was not the
-                thing she was paying for. */}
-            <section aria-labelledby="extras-heading">
-              <OptionHeading id="extras-heading">{t.product.extras}</OptionHeading>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {addons.map((addon) => {
-                  const on = addonIds.includes(addon.id);
-                  return (
-                    <button
-                      key={addon.id}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() =>
-                        setAddonIds((prev) =>
-                          on ? prev.filter((id) => id !== addon.id) : [...prev, addon.id],
-                        )
-                      }
-                      className={cn(
-                        "flex min-h-12 items-center gap-3 rounded-sm border px-4 text-start transition-colors duration-200 ease-bloom",
-                        on
-                          ? "border-olive bg-cream"
-                          : "border-hairline hover:border-sage",
-                      )}
-                    >
-                      <span
-                        aria-hidden
+                thing she was paying for. The list is the owner's own (Admin
+                → Add-ons), in her order and her words; with every one
+                switched off, the section is not shown at all. */}
+            {addons.length > 0 && (
+              <section aria-labelledby="extras-heading">
+                <OptionHeading id="extras-heading">{t.product.extras}</OptionHeading>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {addons.map((addon) => {
+                    const on = addonIds.includes(addon.key);
+                    return (
+                      <button
+                        key={addon.key}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() =>
+                          setPicked((prev) =>
+                            on ? prev.filter((id) => id !== addon.key) : [...prev, addon.key],
+                          )
+                        }
                         className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors duration-200 ease-bloom",
-                          on ? "border-olive bg-olive text-cream" : "border-sage",
+                          "flex min-h-12 items-center gap-3 rounded-sm border px-4 text-start transition-colors duration-200 ease-bloom",
+                          on
+                            ? "border-olive bg-cream"
+                            : "border-hairline hover:border-sage",
                         )}
                       >
-                        {on && (
-                          <svg viewBox="0 0 12 12" className="h-2.5 w-2.5">
-                            <path
-                              d="M2.5 6.2 5 8.5l4.5-5"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </span>
-                      <span className="flex-1 text-base text-olive">
-                        {t.addonNames[addon.id] ?? addon.name}
-                      </span>
-                      <span className="text-sm text-ink-muted">
-                        {formatAedDelta(addon.priceAed)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border transition-colors duration-200 ease-bloom",
+                            on ? "border-olive bg-olive text-cream" : "border-sage",
+                          )}
+                        >
+                          {on && (
+                            <svg viewBox="0 0 12 12" className="h-2.5 w-2.5">
+                              <path
+                                d="M2.5 6.2 5 8.5l4.5-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </span>
+                        <span className="flex-1 text-base text-olive">
+                          {addonName(addon.key)}
+                        </span>
+                        <span className="text-sm text-ink-muted">
+                          {formatFilsDelta(addon.priceFils)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Delivery */}
             <section aria-labelledby="delivery-heading">

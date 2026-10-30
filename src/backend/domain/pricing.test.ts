@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
+import type { StoreAddon } from "@/lib/store-settings";
 import { deliveryFeeFils, priceLine, priceOrder, type OrderDiscounts } from "./pricing";
 
-/* The add-on prices these sums were written against. The shop's own list
-   is the owner's to change (the vase went to AED 150 on 2026-10-30); the
-   arithmetic under test does not change with it. */
-vi.mock("@/lib/data", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/data")>();
-  return { ...actual, addons: actual.addons.map((a) => (a.id === "vase" ? { ...a, priceAed: 60 } : a)) };
+/* The add-on prices these sums were written against: the vase at AED 60.
+   The shop's list is the owner's own now (Admin → Add-ons; the vase went to
+   AED 150 on 2026-10-30), and the engine falls back to the code defaults
+   when it is given none — so the defaults are what is pinned here, and the
+   arithmetic under test does not move with her prices. */
+vi.mock("@/lib/store-settings", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/store-settings")>();
+  return {
+    ...actual,
+    DEFAULT_ADDONS: actual.DEFAULT_ADDONS.map((a) => (a.key === "vase" ? { ...a, priceFils: 6000 } : a)),
+  };
 });
 
 /**
@@ -438,5 +444,53 @@ describe("refusals still hold with discounts present", () => {
     const order = priceOrder([tampered], catalogue(product({ priceFils: 48000 })), "abu-dhabi", discounts());
     expect(order.totalFils).toBe(48000);
     expect(order.lines[0]!.sale).toBeNull();
+  });
+});
+
+describe("the owner's add-on list", () => {
+  /* What she might have saved in Admin → Add-ons: the vase renamed and
+     repriced, the teddy switched off, a new ribbon, the balloon removed. */
+  const HER_LIST: StoreAddon[] = [
+    { key: "vase", nameEn: "Glass vase", nameAr: "مزهرية زجاجية", priceFils: 16_000, active: true },
+    { key: "teddy", nameEn: "Teddy Bear", nameAr: "دبدوب", priceFils: 9_000, active: false },
+    { key: "silk-ribbon", nameEn: "Silk ribbon", nameAr: "شريط حرير", priceFils: 1_250, active: true },
+  ];
+
+  it("prices each add-on from her list, not from the code", () => {
+    const priced = priceLine(
+      line({ addonIds: ["vase", "silk-ribbon"] }),
+      product({ priceFils: 48000 }),
+      null,
+      HER_LIST,
+    );
+    /* 480 + 160 + 12.50 */
+    expect(priced.unitPriceFils).toBe(65_250);
+    const order = priceOrder([line({ quantity: 2, addonIds: ["vase"] })], catalogue(product()), "abu-dhabi", undefined, HER_LIST);
+    expect(order.totalFils).toBe(2 * (48_000 + 16_000));
+  });
+
+  it("freezes her English name on the order, as it was sold", () => {
+    const priced = priceLine(line({ addonIds: ["vase"] }), product(), null, HER_LIST);
+    expect(priced.selectedOptions).toEqual([
+      { label: "Size", value: "Standard" },
+      { label: "Add-on", value: "Glass vase" },
+    ]);
+  });
+
+  it("refuses an add-on she has switched off, one she has removed, and one that never was", () => {
+    for (const key of ["teddy", "balloon", "chocolates", "diamond"]) {
+      expect(() => priceLine(line({ addonIds: [key] }), product(), null, HER_LIST), key).toThrow(/INVALID_OPTION/);
+      expect(
+        () => priceOrder([line({ addonIds: [key] })], catalogue(product()), "abu-dhabi", discounts(), HER_LIST),
+        key,
+      ).toThrow(/INVALID_OPTION/);
+    }
+  });
+
+  it("keeps a sale off her add-ons too", () => {
+    /* 480 → 20% → 384; + her vase 160, untouched. */
+    const priced = priceLine(line({ addonIds: ["vase"] }), product({ priceFils: 48000 }), sale(), HER_LIST);
+    expect(priced.unitPriceFils).toBe(38_400 + 16_000);
+    expect(priced.compareAtUnitPriceFils).toBe(48_000 + 16_000);
   });
 });

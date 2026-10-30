@@ -7,8 +7,9 @@ import {
   itemUnitFils,
   itemUnitPrice,
 } from "./cart-pricing";
-import { addons, sizes, type AddonId, type ProductSale, type SizeId } from "./data";
+import { sizes, type AddonId, type ProductSale, type SizeId } from "./data";
 import type { SaleRule } from "./discounts";
+import { DEFAULT_ADDONS, type StoreAddon } from "./store-settings";
 import type { Product } from "@/payload-types";
 
 /**
@@ -20,6 +21,10 @@ import type { Product } from "@/payload-types";
  * two together across every size, with and without add-ons, with each kind
  * of sale. If they ever part, checkout answers PRICE_CHANGED for every
  * customer; this fails first.
+ *
+ * Both sides are handed the SAME add-on list, as they are in the shop (the
+ * owner's list, read once by the layout and once by the checkout). It is her
+ * defaults plus one with an odd price, so a rounding difference would show.
  */
 
 const product = (priceFils: number): Product =>
@@ -58,8 +63,12 @@ const productSale = (r: SaleRule): ProductSale => ({
   priceAed: 0,
 });
 
+const LIST: StoreAddon[] = [
+  ...DEFAULT_ADDONS,
+  { key: "silk-ribbon", nameEn: "Silk ribbon", nameAr: "شريط حرير", priceFils: 1_275, active: true },
+];
 const SIZE_IDS = sizes.map((s) => s.id) as SizeId[];
-const ADDON_SETS: AddonId[][] = [[], [addons[0]!.id], addons.slice(0, 3).map((a) => a.id)];
+const ADDON_SETS: AddonId[][] = [[], [LIST[0]!.key], LIST.slice(0, 3).map((a) => a.key), ["silk-ribbon", "vase"]];
 const BASES = [48_000, 65_000, 39_050, 35_000];
 const RULES: (SaleRule | null)[] = [
   null,
@@ -85,6 +94,7 @@ describe("the basket prices a line exactly as the server does", () => {
               { productId: "7", quantity: 2, sizeId, addonIds },
               product(base),
               sale,
+              LIST,
             );
             const selection = {
               basePriceAed: base / 100,
@@ -92,12 +102,12 @@ describe("the basket prices a line exactly as the server does", () => {
               addonIds,
               sale: sale ? cartSaleOf(productSale(sale)) : undefined,
             };
-            expect(itemUnitFils(selection)).toBe(server.unitPriceFils);
+            expect(itemUnitFils(selection, LIST)).toBe(server.unitPriceFils);
             /* The struck-through price is the server's compare-at price. */
             if (server.compareAtUnitPriceFils !== null) {
-              expect(itemRegularUnitFils(selection)).toBe(server.compareAtUnitPriceFils);
+              expect(itemRegularUnitFils(selection, LIST)).toBe(server.compareAtUnitPriceFils);
             } else {
-              expect(itemRegularUnitFils(selection)).toBe(server.unitPriceFils);
+              expect(itemRegularUnitFils(selection, LIST)).toBe(server.unitPriceFils);
             }
           });
         }
@@ -109,22 +119,29 @@ describe("the basket prices a line exactly as the server does", () => {
 describe("cart pricing", () => {
   it("lowers the arrangement and the size uplift, never the add-ons", () => {
     const deluxe = sizes.find((s) => s.id === "deluxe")!;
-    const vase = addons[0]!;
+    const vase = LIST[0]!;
     const selection = {
       basePriceAed: 480,
       sizeId: "deluxe" as SizeId,
-      addonIds: [vase.id],
+      addonIds: [vase.key],
       sale: cartSaleOf(productSale(rule({ percentOff: 20 }))),
     };
     const arrangement = (480 + deluxe.priceDeltaAed) * 100;
-    expect(itemUnitFils(selection)).toBe(Math.floor((arrangement * 80) / 10000) * 100 + vase.priceAed * 100);
-    expect(itemRegularUnitFils(selection)).toBe(arrangement + vase.priceAed * 100);
+    expect(itemUnitFils(selection, LIST)).toBe(Math.floor((arrangement * 80) / 10000) * 100 + vase.priceFils);
+    expect(itemRegularUnitFils(selection, LIST)).toBe(arrangement + vase.priceFils);
+  });
+
+  it("prices an add-on at whatever the list it is given says", () => {
+    const selection = { basePriceAed: 480, sizeId: "standard" as SizeId, addonIds: ["vase"] };
+    const repriced = LIST.map((a) => (a.key === "vase" ? { ...a, priceFils: 16_000 } : a));
+    expect(itemUnitFils(selection, LIST)).toBe(48_000 + 15_000);
+    expect(itemUnitFils(selection, repriced)).toBe(48_000 + 16_000);
   });
 
   it("speaks dirhams where the page still does", () => {
     const selection = { basePriceAed: 480, sizeId: "standard" as SizeId, addonIds: [] };
-    expect(itemUnitPrice(selection)).toBe(480);
-    expect(itemRegularUnitPrice(selection)).toBe(480);
+    expect(itemUnitPrice(selection, LIST)).toBe(480);
+    expect(itemRegularUnitPrice(selection, LIST)).toBe(480);
   });
 
   it("keeps only the label and the terms of a sale — no price, no end date", () => {
