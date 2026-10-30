@@ -151,7 +151,9 @@ export type Product = {
   priceAed: number;
   /** Present only while an automatic sale applies to this product. */
   sale?: ProductSale;
-  images: readonly [ProductImage, ProductImage];
+  /** Every photograph the owner added, in her order; at least two (cards
+      crossfade the first two), padded when she has added fewer. */
+  images: readonly [ProductImage, ProductImage, ...ProductImage[]];
   occasions: readonly OccasionSlug[];
   flowers: readonly FlowerType[];
   /** The shape of the arrangement, straight from /admin. */
@@ -160,6 +162,9 @@ export type Product = {
   newArrival: boolean;
   /** The owner's short description from /admin. Absent until she writes one. */
   description?: string;
+  /** The full description from /admin, as plain paragraphs separated by a
+      blank line. Absent until she writes one. */
+  story?: string;
 };
 
 export const flowerTypes: readonly { slug: FlowerType; name: string }[] = [

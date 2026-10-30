@@ -5,6 +5,7 @@ import type { PlaceholderPalette, Product, ProductImage, ProductSale } from "@/l
 import { bestSaleFor, saleUnitFils, type SaleRule } from "@/lib/discounts";
 import { servedMediaPath } from "@backend/domain/media-option";
 import { saleTargetOf } from "@backend/domain/pricing";
+import { lexicalToPlainText } from "@backend/domain/richtext";
 import { getLiveSaleRulesForDisplay } from "./discounts";
 
 /**
@@ -74,7 +75,7 @@ function toPalette(value: unknown): PlaceholderPalette {
  * generated art when `src` is absent, so an image-less product renders as
  * designed rather than as a broken box.
  */
-function toImages(doc: PayloadProduct): readonly [ProductImage, ProductImage] {
+function toImages(doc: PayloadProduct): Product["images"] {
   const fromMedia: ProductImage[] = (doc.images ?? [])
     .map((row) => row.image)
     .filter(isMedia)
@@ -95,9 +96,11 @@ function toImages(doc: PayloadProduct): readonly [ProductImage, ProductImage] {
 
   const images = fromMedia.length > 0 ? fromMedia : fromLegacy;
 
-  /* The design renders exactly two images per product. Pad rather than crash
-     if a product has one or none — a missing photograph is a content gap, not
-     a reason to fail a page. */
+  /* Cards crossfade the first two, so there are always at least two: padded
+     rather than crashing when a product has one or none — a missing
+     photograph is a content gap, not a reason to fail a page. Every photograph
+     after those is kept too: the product page shows all of them. (It used to
+     stop at two, so an owner who added five saw only two on the website.) */
   const first: ProductImage = images[0] ?? {
     alt: doc.name,
     placeholder: { seed: doc.slug, palette: "warm" },
@@ -107,7 +110,7 @@ function toImages(doc: PayloadProduct): readonly [ProductImage, ProductImage] {
     placeholder: { seed: `${first.placeholder.seed}-b`, palette: first.placeholder.palette },
   };
 
-  return [first, second] as const;
+  return [first, second, ...images.slice(2)] as const;
 }
 
 /** Occasion relationships arrive as ids or documents depending on depth. */
@@ -151,6 +154,7 @@ function toStorefrontProduct(
   now: Date = new Date(),
 ): Product {
   const sale = toProductSale(doc, sales, now);
+  const story = lexicalToPlainText(doc.description).trim();
   return {
     id: String(doc.id),
     slug: doc.slug,
@@ -168,10 +172,12 @@ function toStorefrontProduct(
     category: doc.category as Product["category"],
     featured: Boolean(doc.featured),
     newArrival: Boolean(doc.newArrival),
-    /* The short description only — the rich-text body is not rendered on the
-       storefront yet, and a sentence the owner wrote is what a customer
-       should read before choosing a size. */
+    /* The short description leads, as the sentence a customer reads before
+       choosing a size; the full description follows it as plain paragraphs.
+       The admin tells the owner the full one is "the story on the product
+       page", and it was not shown anywhere until now. */
     ...(doc.shortDescription?.trim() ? { description: doc.shortDescription.trim() } : {}),
+    ...(story ? { story } : {}),
     ...(sale ? { sale } : {}),
   };
 }

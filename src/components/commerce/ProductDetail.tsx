@@ -257,7 +257,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               thumbnail under one image is a control that does nothing. */}
           {views.length > 1 && (
             <div
-              className="mt-3 flex gap-3"
+              className="mt-3 flex flex-wrap gap-3"
               role="group"
               aria-label={t.product.gallery.replace("{name}", product.name)}
             >
@@ -293,6 +293,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-muted">
                 {product.description}
               </p>
+            )}
+            {/* The full description: the owner's paragraphs, a blank line
+                between each, exactly as she wrote them in /admin. */}
+            {product.story && (
+              <div className="mt-4 flex max-w-md flex-col gap-3 text-base leading-relaxed text-ink-muted">
+                {product.story.split(/\n{2,}/).map((paragraph, i) => (
+                  <p key={i} className="whitespace-pre-line">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             )}
             {product.occasions.length > 0 && (
               <p className="mt-4 text-sm text-ink-muted">

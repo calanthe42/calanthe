@@ -254,7 +254,36 @@ describe("document mapping", () => {
     ).not.toHaveProperty("description");
   });
 
-  it("always yields exactly two images, even from one", () => {
+  it("carries the full description as plain paragraphs only when she has written one", () => {
+    const paragraph = (text: string) => ({
+      type: "paragraph",
+      version: 1,
+      children: [{ type: "text", version: 1, text }],
+    });
+    const description = {
+      root: { type: "root", version: 1, children: [paragraph("Peach orchids and blush hydrangeas."), paragraph("In a pink waved glass vase.")] },
+    };
+    expect(__internal.toStorefrontProduct(doc({ description } as never)).story).toBe(
+      "Peach orchids and blush hydrangeas.\n\nIn a pink waved glass vase.",
+    );
+    expect(__internal.toStorefrontProduct(doc())).not.toHaveProperty("story");
+  });
+
+  it("keeps every photograph the owner added, not only the first two", () => {
+    const photo = (id: number) => ({
+      image: {
+        id,
+        url: `/media/photo-${id}.jpg`,
+        alt: `Photo ${id}`,
+        createdAt: "2026-09-07T00:00:00.000Z",
+        updatedAt: "2026-09-07T00:00:00.000Z",
+      },
+    });
+    const mapped = __internal.toStorefrontProduct(doc({ images: [1, 2, 3, 4, 5].map(photo) }));
+    expect(mapped.images.map((image) => image.src)).toEqual([1, 2, 3, 4, 5].map((id) => `/media/photo-${id}.jpg`));
+  });
+
+  it("always yields at least two images, even from one", () => {
     const mapped = __internal.toStorefrontProduct(
       doc({
         legacyImages: [
