@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CostItems } from "./CostItems";
+import { Invoices } from "./Invoices";
 import { ProductCosts } from "./ProductCosts";
-import { CostSettings } from "@/globals/CostSettings";
+import { Suppliers } from "./Suppliers";
 
 /**
- * What the owner pays for her flowers is hers alone: every operation on the
- * costs collections and the global is the owner's, read included, and
- * nobody else sees them in /cms.
+ * What the owner pays for her flowers, and who she buys them from, is hers
+ * alone: every operation on every costs collection is the owner's, read
+ * included, and nobody else sees them in /cms.
  */
 
 const owner = { id: 1, role: "admin", accountStatus: "active" };
@@ -20,7 +21,12 @@ const people = {
 type AccessFn = (args: { req: { user: unknown } }) => unknown;
 const run = (fn: unknown, user: unknown) => (fn as AccessFn)({ req: { user } });
 
-const collections = { "cost-items": CostItems, "product-costs": ProductCosts };
+const collections = {
+  suppliers: Suppliers,
+  "cost-items": CostItems,
+  invoices: Invoices,
+  "product-costs": ProductCosts,
+};
 
 describe.each(Object.entries(collections))("%s", (_slug, collection) => {
   const ops = ["read", "create", "update", "delete"] as const;
@@ -35,24 +41,6 @@ describe.each(Object.entries(collections))("%s", (_slug, collection) => {
 
   it("is hidden in /cms from everyone but the owner", () => {
     const hidden = collection.admin?.hidden as (args: { user: unknown }) => boolean;
-    expect(hidden({ user: owner })).toBe(false);
-    for (const user of Object.values(people)) expect(hidden({ user })).toBe(true);
-  });
-});
-
-describe("cost-settings", () => {
-  it("lets the owner read and change it", () => {
-    expect(run(CostSettings.access?.read, owner)).toBe(true);
-    expect(run(CostSettings.access?.update, owner)).toBe(true);
-  });
-
-  it.each(Object.entries(people))("refuses %s, read included", (_who, user) => {
-    expect(run(CostSettings.access?.read, user)).toBe(false);
-    expect(run(CostSettings.access?.update, user)).toBe(false);
-  });
-
-  it("is hidden in /cms from everyone but the owner", () => {
-    const hidden = CostSettings.admin?.hidden as (args: { user: unknown }) => boolean;
     expect(hidden({ user: owner })).toBe(false);
     for (const user of Object.values(people)) expect(hidden({ user })).toBe(true);
   });

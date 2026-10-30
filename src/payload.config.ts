@@ -16,9 +16,10 @@ import { Users } from "@/collections/Users";
 import { EmailLog } from "@/collections/EmailLog";
 import { ActivityLog } from "@/collections/ActivityLog";
 import { CostItems } from "@/collections/CostItems";
+import { Invoices } from "@/collections/Invoices";
 import { ProductCosts } from "@/collections/ProductCosts";
-import { CostSettings } from "@/globals/CostSettings";
 import { Settings } from "@/globals/Settings";
+import { Suppliers } from "@/collections/Suppliers";
 import { calantheEmailAdapter } from "@backend/email/payload-adapter";
 import { MAX_UPLOAD_BYTES, buildStoragePlugins } from "@backend/payload/storage";
 import { env } from "@/lib/env";
@@ -70,12 +71,13 @@ export default buildConfig({
     EmailLog,
     ActivityLog,
     /* The owner's costs (backend/domain/costs.ts). Owner-only, read included. */
+    Suppliers,
     CostItems,
+    Invoices,
     ProductCosts,
   ],
-  /* The store settings the storefront reads (public read, owner-only write),
-     and the owner's costing numbers (owner only, read included). */
-  globals: [Settings, CostSettings],
+  /* The store settings the storefront reads (public read, owner-only write). */
+  globals: [Settings],
   /* Payload's own verification and reset mail goes through the same path
      as everything else: allowlisted outside production, never thrown on
      failure, and always logged with the provider's id. */

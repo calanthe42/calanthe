@@ -1,34 +1,37 @@
 import {
   COST_LIMITS,
   aedTextToFils,
-  isCostKind,
-  isUseUnit,
-  parseSwatch,
-  type CostKind,
-  type CostSettingsValues,
-  type UseUnit,
+  isCostGroup,
+  isOneUnit,
+  westernDigits,
+  type CostGroup,
+  type InvoiceInput,
+  type OneUnit,
 } from "./costs";
 
 /**
- * Reading the owner's costing forms — a flower or material, and her
- * settings — into values the server saves.
+ * Reading what the owner sends — the one-sentence form for something she
+ * buys, and an invoice — into values the server saves.
  *
  * PURE, like the rest of backend/domain: the server action does only what
  * needs a server (who is asking, saving, refreshing pages). A mistake in
- * what she typed is a `CostInputError` carrying a sentence written for her
- * and an `actions.costs.*` dictionary code, so the admin can show it in her
- * language.
+ * what she typed is a `CostInputError` carrying a sentence written for her,
+ * an `actions.costs.*` dictionary code so the admin can show it in her
+ * language, and — on an invoice — the field it is about ("lines.2.packs"),
+ * so the editor can point at it.
  */
 
 export class CostInputError extends Error {
   readonly code: string;
   readonly vars?: Record<string, string | number>;
+  readonly field?: string;
 
-  constructor(message: string, code: string, vars?: Record<string, string | number>) {
+  constructor(message: string, code: string, vars?: Record<string, string | number>, field?: string) {
     super(message);
     this.name = "CostInputError";
     this.code = `actions.costs.${code}`;
     this.vars = vars;
+    this.field = field;
   }
 }
 
@@ -39,161 +42,339 @@ const text = (form: Reader, name: string): string => {
   return typeof value === "string" ? value.trim() : "";
 };
 
+/** Trimmed, inner spaces folded, so "Peach  Avalanche " and "Peach Avalanche" are one name. */
+export const cleanName = (raw: unknown): string => (typeof raw === "string" ? raw.trim().replace(/\s+/g, " ") : "");
+
 export const NAME_MAX = 80;
 export const PACK_NAME_MAX = 40;
 export const NOTES_MAX = 1000;
-export const ALIAS_MAX = 80;
+export const PRINTED_NAME_MAX = 120;
+export const INVOICE_NUMBER_MAX = 60;
 export const ALIASES_MAX = 30;
+
+/**
+ * "20", "0.5", "1,000", "٢٠" — or a number already — as a positive number,
+ * or NaN.
+ */
+export function positiveNumber(raw: unknown): number {
+  if (typeof raw === "number") return Number.isFinite(raw) && raw > 0 ? raw : Number.NaN;
+  if (typeof raw !== "string") return Number.NaN;
+  const cleaned = westernDigits(raw).replace(/[\s,]/g, "");
+  if (!/^\d*\.?\d+$/.test(cleaned)) return Number.NaN;
+  const value = Number(cleaned);
+  return value > 0 ? value : Number.NaN;
+}
+
+/* ------------------------------------------------------------------ */
+/* "[Peach Avalanche rose] comes as a [bunch] of [20] [stems]"          */
+/* ------------------------------------------------------------------ */
 
 export type ParsedCostItem = {
   name: string;
-  kind: CostKind;
-  useUnit: UseUnit;
+  group: CostGroup;
   packName: string | null;
   unitsPerPack: number;
-  /** null when the field was left empty: the cost she already has is kept. */
-  unitCostFils: number | null;
-  swatch: string | null;
-  notes: string | null;
-  aliases: string[];
+  one: OneUnit;
+  /** "I paid AED [ ] for one": null when left empty, so the price she has is kept. */
+  priceFils: number | null;
+  archived: boolean;
 };
 
-/** "20", "0.5", "1,000" — a positive number, or NaN. */
-function positiveNumber(raw: string): number {
-  const cleaned = raw.replace(/[\s,]/g, "");
-  if (!/^\d*\.?\d+$/.test(cleaned)) return Number.NaN;
-  return Number(cleaned);
-}
-
-/** "60", "60%", "12.5" — a number, or NaN. */
-function percent(raw: string): number {
-  const cleaned = raw.replace(/%/g, "").replace(/\s/g, "");
-  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return Number.NaN;
-  return Number(cleaned);
-}
-
-export function parseCostItemForm(form: Reader): ParsedCostItem {
-  const name = text(form, "name").replace(/\s+/g, " ");
-  if (!name) throw new CostInputError("Give it a name, like “Red Naomi rose”.", "nameRequired");
+function checkName(name: string, field: string): void {
+  if (!name) throw new CostInputError("Give it a name, like “Peach Avalanche rose”.", "nameRequired", undefined, field);
   if (name.length > NAME_MAX) {
-    throw new CostInputError(`Keep the name under ${NAME_MAX} characters.`, "nameTooLong", { max: NAME_MAX });
+    throw new CostInputError(`Keep the name under ${NAME_MAX} characters.`, "nameTooLong", { max: NAME_MAX }, field);
   }
+}
 
-  const kind = text(form, "kind");
-  if (!isCostKind(kind)) throw new CostInputError("Choose what kind of thing it is.", "kindRequired");
-  const useUnit = text(form, "useUnit");
-  if (!isUseUnit(useUnit)) throw new CostInputError("Choose the unit a product uses it in.", "unitRequired");
-
-  const packName = text(form, "packName");
+function checkPack(packName: string, unitsPerPack: number, field: string): void {
   if (packName.length > PACK_NAME_MAX) {
-    throw new CostInputError(`Keep how it is bought under ${PACK_NAME_MAX} characters.`, "packNameTooLong", {
-      max: PACK_NAME_MAX,
-    });
+    throw new CostInputError(
+      `Keep how it comes under ${PACK_NAME_MAX} characters.`,
+      "packNameTooLong",
+      { max: PACK_NAME_MAX },
+      `${field}packName`,
+    );
+  }
+  if (
+    !Number.isFinite(unitsPerPack) ||
+    unitsPerPack < COST_LIMITS.unitsPerPackMin ||
+    unitsPerPack > COST_LIMITS.unitsPerPackMax
+  ) {
+    throw new CostInputError(
+      "Say how many come in one, like 20.",
+      "unitsPerPackInvalid",
+      undefined,
+      `${field}unitsPerPack`,
+    );
+  }
+}
+
+/**
+ * The one-sentence form: `name`, `group`, `packName`, `unitsPerPack`,
+ * `one`, `priceAed` and `archived` ("on" or "true" when ticked; absent is
+ * not archived, as an unticked checkbox sends nothing).
+ */
+export function parseCostItemForm(form: Reader): ParsedCostItem {
+  const name = cleanName(text(form, "name"));
+  checkName(name, "name");
+
+  const group = text(form, "group");
+  if (!isCostGroup(group)) {
+    throw new CostInputError("Choose flowers, greenery, packaging or something extra.", "groupRequired", undefined, "group");
+  }
+  const one = text(form, "one");
+  if (!isOneUnit(one)) {
+    throw new CostInputError("Choose stem, piece or metre.", "oneRequired", undefined, "one");
   }
 
+  const packName = text(form, "packName").replace(/\s+/g, " ");
   const unitsRaw = text(form, "unitsPerPack");
   const unitsPerPack = unitsRaw === "" ? 1 : positiveNumber(unitsRaw);
-  if (!Number.isFinite(unitsPerPack) || unitsPerPack < COST_LIMITS.unitsPerPackMin || unitsPerPack > 100_000) {
-    throw new CostInputError("Units per pack must be a number above 0, like 20.", "unitsPerPackInvalid");
+  checkPack(packName, unitsPerPack, "");
+
+  const priceFils = aedTextToFils(text(form, "priceAed"));
+  if (priceFils !== null && !Number.isFinite(priceFils)) {
+    throw new CostInputError("Type what one cost you in dirhams, like 3.25.", "priceInvalid", undefined, "priceAed");
+  }
+  if (priceFils !== null && priceFils > COST_LIMITS.priceForOneMaxFils) {
+    throw new CostInputError("That price looks too high — please check it.", "priceTooHigh", undefined, "priceAed");
   }
 
-  const unitCostFils = aedTextToFils(text(form, "unitCostAed"));
-  if (unitCostFils !== null && !Number.isFinite(unitCostFils)) {
-    throw new CostInputError("Enter what one unit costs you in dirhams, like 0.75.", "costInvalid");
-  }
-  if (unitCostFils !== null && unitCostFils > COST_LIMITS.maxFils) {
-    throw new CostInputError("That cost looks too high — please check it.", "costTooHigh");
-  }
-
-  const swatchRaw = text(form, "swatch");
-  const swatch = swatchRaw === "" ? null : parseSwatch(swatchRaw);
-  if (swatchRaw !== "" && swatch === null) {
-    throw new CostInputError("Use a colour like #c0392b, or leave it empty.", "swatchInvalid");
-  }
-
-  const notes = text(form, "notes");
-  if (notes.length > NOTES_MAX) {
-    throw new CostInputError(`Keep the notes under ${NOTES_MAX} characters.`, "notesTooLong", { max: NOTES_MAX });
-  }
-
-  /* One per line, as printed. The same name twice — whatever its case — is
-     one name, and the item's own name is not an alias of itself. */
-  const seen = new Set<string>([name.toLowerCase()]);
-  const aliases: string[] = [];
-  for (const line of text(form, "aliases").split(/\r?\n/)) {
-    const alias = line.trim().replace(/\s+/g, " ");
-    if (!alias) continue;
-    if (alias.length > ALIAS_MAX) {
-      throw new CostInputError(`Keep each printed name under ${ALIAS_MAX} characters.`, "aliasTooLong", {
-        max: ALIAS_MAX,
-      });
-    }
-    if (seen.has(alias.toLowerCase())) continue;
-    seen.add(alias.toLowerCase());
-    aliases.push(alias);
-  }
-  if (aliases.length > ALIASES_MAX) {
-    throw new CostInputError(`Keep to ${ALIASES_MAX} printed names or fewer.`, "tooManyAliases", {
-      max: ALIASES_MAX,
-    });
-  }
-
+  const archivedRaw = text(form, "archived").toLowerCase();
   return {
     name,
-    kind,
-    useUnit,
+    group,
     packName: packName || null,
     unitsPerPack,
-    unitCostFils,
-    swatch,
-    notes: notes || null,
-    aliases,
+    one,
+    priceFils,
+    archived: archivedRaw === "on" || archivedRaw === "true" || archivedRaw === "1",
   };
 }
 
-export function parseCostSettingsForm(form: Reader): CostSettingsValues {
-  const { targetMarginPercent: margin, wastePercent: waste, vatRatePercent: vat } = COST_LIMITS;
+/* ------------------------------------------------------------------ */
+/* An invoice                                                          */
+/* ------------------------------------------------------------------ */
 
-  const targetMarginPercent = percent(text(form, "targetMarginPercent"));
-  if (!Number.isFinite(targetMarginPercent) || targetMarginPercent < margin.min || targetMarginPercent > margin.max) {
+export type ParsedInvoiceLine = {
+  itemId: number | null;
+  /** Set when `itemId` is null: something new, created when the invoice is saved. */
+  newItem: { name: string; group: CostGroup; packName: string | null; unitsPerPack: number; one: OneUnit } | null;
+  printedName: string | null;
+  packs: number;
+  unitsPerPack: number;
+  lineTotalFils: number;
+};
+
+export type ParsedInvoice = {
+  id: number | null;
+  supplier: { id: number } | { name: string };
+  /** Trimmed, inner spaces folded; null when she typed none. */
+  invoiceNumber: string | null;
+  /** YYYY-MM-DD, checked to be a real day. */
+  invoiceDate: string;
+  deliveryFils: number;
+  vatFils: number;
+  /** As printed, or null. */
+  totalFils: number | null;
+  lines: ParsedInvoiceLine[];
+};
+
+const positiveId = (value: unknown): number | null =>
+  typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+
+/** A real calendar day, written YYYY-MM-DD. */
+export function isRealDay(day: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const [y, m, d] = day.split("-").map(Number) as [number, number, number];
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+}
+
+/** An amount typed in AED, whole fils: an invoice prints money to the fils. */
+function money(raw: unknown, field: string, opts: { required: boolean; max: number }): number | null {
+  const fils = aedTextToFils(typeof raw === "string" ? raw : typeof raw === "number" ? String(raw) : "");
+  if (fils === null) {
+    if (opts.required) {
+      throw new CostInputError("Type what this line cost, like 300.", "lineTotalRequired", undefined, field);
+    }
+    return null;
+  }
+  if (!Number.isFinite(fils)) {
+    throw new CostInputError("Type the amount in dirhams, like 300 or 41.50.", "amountInvalid", undefined, field);
+  }
+  if (fils > opts.max) {
+    throw new CostInputError("That amount looks too high — please check it.", "amountTooHigh", undefined, field);
+  }
+  return Math.round(fils);
+}
+
+/**
+ * The invoice editor's input, read defensively: it arrives from a browser,
+ * so nothing is trusted to have the shape the type says. `today` is the
+ * UAE's YYYY-MM-DD, passed in so this stays pure: an invoice may be dated
+ * up to a day ahead (a supplier's clock, an early delivery), not later.
+ */
+export function parseInvoiceInput(input: unknown, today: string): ParsedInvoice {
+  const raw = (input && typeof input === "object" ? input : {}) as Partial<Record<keyof InvoiceInput, unknown>>;
+
+  const id = raw.id === undefined || raw.id === null ? null : positiveId(raw.id);
+  if (raw.id !== undefined && raw.id !== null && id === null) {
+    throw new CostInputError("That invoice could not be found.", "invoiceNotFound");
+  }
+
+  /* Who it is from: one of her suppliers, or a new one by name. */
+  const supplierRaw = (raw.supplier && typeof raw.supplier === "object" ? raw.supplier : {}) as {
+    id?: unknown;
+    name?: unknown;
+  };
+  let supplier: ParsedInvoice["supplier"];
+  if (supplierRaw.id !== undefined && supplierRaw.id !== null) {
+    const supplierId = positiveId(supplierRaw.id);
+    if (supplierId === null) {
+      throw new CostInputError("Choose who the invoice is from.", "supplierRequired", undefined, "supplier");
+    }
+    supplier = { id: supplierId };
+  } else {
+    const name = cleanName(supplierRaw.name);
+    if (!name) throw new CostInputError("Choose who the invoice is from.", "supplierRequired", undefined, "supplier");
+    if (name.length > NAME_MAX) {
+      throw new CostInputError(
+        `Keep the supplier's name under ${NAME_MAX} characters.`,
+        "supplierTooLong",
+        { max: NAME_MAX },
+        "supplier",
+      );
+    }
+    supplier = { name };
+  }
+
+  const invoiceNumber = cleanName(typeof raw.invoiceNumber === "string" ? westernDigits(raw.invoiceNumber) : "");
+  if (invoiceNumber.length > INVOICE_NUMBER_MAX) {
     throw new CostInputError(
-      `Your target margin must be between ${margin.min}% and ${margin.max}%.`,
-      "targetInvalid",
-      { min: margin.min, max: margin.max },
+      `Keep the invoice number under ${INVOICE_NUMBER_MAX} characters.`,
+      "invoiceNumberTooLong",
+      { max: INVOICE_NUMBER_MAX },
+      "invoiceNumber",
     );
   }
 
-  const labour = aedTextToFils(text(form, "labourRatePerHourAed"));
-  if (labour === null || !Number.isFinite(labour) || labour > COST_LIMITS.maxFils) {
-    throw new CostInputError("Enter the florist's hourly rate in dirhams, like 60.", "labourInvalid");
+  const invoiceDate = typeof raw.invoiceDate === "string" ? westernDigits(raw.invoiceDate.trim()) : "";
+  if (!isRealDay(invoiceDate)) {
+    throw new CostInputError("Choose the date on the invoice.", "dateRequired", undefined, "invoiceDate");
   }
-
-  const defaultWastePercent = percent(text(form, "defaultWastePercent"));
-  if (!Number.isFinite(defaultWastePercent) || defaultWastePercent < waste.min || defaultWastePercent > waste.max) {
+  if (invoiceDate < "2020-01-01") {
+    throw new CostInputError("That date looks too far back — please check it.", "dateTooOld", undefined, "invoiceDate");
+  }
+  const tomorrow = new Date(`${today}T00:00:00Z`);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  if (invoiceDate > tomorrow.toISOString().slice(0, 10)) {
     throw new CostInputError(
-      `The allowance for lost flowers must be between ${waste.min}% and ${waste.max}%.`,
-      "wasteInvalid",
-      { min: waste.min, max: waste.max },
+      "The date on the invoice is in the future. Please check it.",
+      "dateInFuture",
+      undefined,
+      "invoiceDate",
     );
   }
 
-  const vatReclaimable = form.get("vatReclaimable") === "on" || form.get("vatReclaimable") === "true";
+  const deliveryFils = money(raw.deliveryAed, "deliveryAed", { required: false, max: COST_LIMITS.extraMaxFils }) ?? 0;
+  const vatFils = money(raw.vatAed, "vatAed", { required: false, max: COST_LIMITS.extraMaxFils }) ?? 0;
+  const totalFils = money(raw.totalAed, "totalAed", { required: false, max: COST_LIMITS.lineTotalMaxFils * 10 });
 
-  const vatRaw = text(form, "vatRatePercent");
-  const vatRatePercent = percent(vatRaw);
-  if (!Number.isFinite(vatRatePercent) || vatRatePercent < vat.min || vatRatePercent > vat.max) {
-    throw new CostInputError(`The VAT rate must be between ${vat.min}% and ${vat.max}%.`, "vatRateInvalid", {
-      min: vat.min,
-      max: vat.max,
-    });
+  if (!Array.isArray(raw.lines) || raw.lines.length === 0) {
+    throw new CostInputError("Add at least one line: what you bought.", "linesRequired", undefined, "lines");
   }
+  if (raw.lines.length > COST_LIMITS.invoiceLinesMax) {
+    throw new CostInputError(
+      `An invoice can have at most ${COST_LIMITS.invoiceLinesMax} lines.`,
+      "tooManyLines",
+      { max: COST_LIMITS.invoiceLinesMax },
+      "lines",
+    );
+  }
+
+  const lines = raw.lines.map((entry, index): ParsedInvoiceLine => {
+    const at = `lines.${index}.`;
+    /* The owner reads lines numbered from 1. */
+    const vars = { line: index + 1 };
+    const line = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
+
+    const itemId = line.itemId === null || line.itemId === undefined ? null : positiveId(line.itemId);
+    let newItem: ParsedInvoiceLine["newItem"] = null;
+    if (itemId === null) {
+      const fresh = (line.newItem && typeof line.newItem === "object" ? line.newItem : null) as Record<
+        string,
+        unknown
+      > | null;
+      if (!fresh) {
+        throw new CostInputError(`Line ${index + 1}: choose what you bought.`, "lineItemRequired", vars, `${at}item`);
+      }
+      const name = cleanName(fresh.name);
+      checkName(name, `${at}newItem.name`);
+      if (!isCostGroup(fresh.group)) {
+        throw new CostInputError(
+          `Line ${index + 1}: is it flowers, greenery, packaging or something extra?`,
+          "lineGroupRequired",
+          vars,
+          `${at}newItem.group`,
+        );
+      }
+      if (!isOneUnit(fresh.one)) {
+        throw new CostInputError(
+          `Line ${index + 1}: is one a stem, a piece or a metre?`,
+          "lineOneRequired",
+          vars,
+          `${at}newItem.one`,
+        );
+      }
+      const packName = cleanName(fresh.packName);
+      const unitsPerPack = positiveNumber(fresh.unitsPerPack);
+      checkPack(packName, unitsPerPack, `${at}newItem.`);
+      newItem = { name, group: fresh.group, packName: packName || null, unitsPerPack, one: fresh.one };
+    }
+
+    const printedName = cleanName(line.printedName).slice(0, PRINTED_NAME_MAX) || null;
+
+    const packs = positiveNumber(line.packs);
+    if (!Number.isFinite(packs) || packs < COST_LIMITS.packsMin || packs > COST_LIMITS.packsMax) {
+      throw new CostInputError(
+        `Line ${index + 1}: how many did you buy? Type a number, like 5.`,
+        "packsInvalid",
+        vars,
+        `${at}packs`,
+      );
+    }
+    const unitsPerPack = positiveNumber(line.unitsPerPack);
+    if (
+      !Number.isFinite(unitsPerPack) ||
+      unitsPerPack < COST_LIMITS.unitsPerPackMin ||
+      unitsPerPack > COST_LIMITS.unitsPerPackMax
+    ) {
+      throw new CostInputError(
+        `Line ${index + 1}: how many come in one? Type a number, like 20.`,
+        "lineUnitsPerPackInvalid",
+        vars,
+        `${at}unitsPerPack`,
+      );
+    }
+
+    const lineTotalFils = money(line.lineTotalAed, `${at}lineTotalAed`, {
+      required: true,
+      max: COST_LIMITS.lineTotalMaxFils,
+    })!;
+
+    return { itemId, newItem, printedName, packs, unitsPerPack, lineTotalFils };
+  });
 
   return {
-    targetMarginPercent,
-    /* An hourly rate in whole fils: a hundredth of a dirham is precise enough. */
-    labourRatePerHourFils: Math.round(labour),
-    defaultWastePercent,
-    vatReclaimable,
-    vatRatePercent,
+    id,
+    supplier,
+    invoiceNumber: invoiceNumber || null,
+    invoiceDate,
+    deliveryFils,
+    vatFils,
+    totalFils,
+    lines,
   };
 }

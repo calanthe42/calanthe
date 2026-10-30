@@ -11,7 +11,7 @@ import { Dialog } from "@admin/ui/Dialog";
 import { IconButton, IconLink } from "@admin/ui/IconButton";
 import { PulseBell } from "@admin/shell/AdminPulse";
 import { Icon } from "@admin/ui/icons";
-import { isActive, visibleGroups } from "./nav";
+import { activeHref, visibleGroups } from "./nav";
 import { LanguageSwitcher, ThemeSwitcher } from "./Preferences";
 
 /**
@@ -45,6 +45,10 @@ function NavLinks({ onNavigate, isOwner }: { onNavigate?: () => void; isOwner: b
   const { t } = useI18n();
   /* Staff never see an owner-only entry. The page enforces it too. */
   const groups = visibleGroups(isOwner);
+  const current = activeHref(
+    pathname,
+    groups.flatMap((group) => group.items.map((item) => item.href)),
+  );
 
   return (
     <nav aria-label={t("nav.primary")} className="px-3">
@@ -55,7 +59,7 @@ function NavLinks({ onNavigate, isOwner }: { onNavigate?: () => void; isOwner: b
           </p>
           <ul className="flex flex-col gap-0.5">
             {group.items.map((item) => {
-              const active = isActive(pathname, item.href);
+              const active = item.href === current;
               return (
                 <li key={item.href}>
                   <Link

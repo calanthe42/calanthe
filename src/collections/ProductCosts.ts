@@ -1,31 +1,33 @@
 import type { CollectionConfig } from "payload";
 import { activeRole, isAdmin } from "@backend/payload/access";
-import { COST_LIMITS, DEFAULT_COST_SETTINGS } from "@backend/domain/costs";
+import { COST_LIMITS } from "@backend/domain/costs";
 
 /**
- * What goes into a product — its cost recipe. One row per product, at most.
+ * What goes into a product (florists call it a recipe). One row per
+ * product, at most.
  *
  * WHY A SEPARATE COLLECTION, NOT FIELDS ON THE PRODUCT. Products are public:
  * the storefront and its API read them. A cost on the product row would be
  * one forgotten `select` away from a customer's browser. Here it sits behind
  * owner-only access, and the product never knows it exists.
  *
- * Edited in the product editor's Cost section and saved by the product's own
- * Save button (backend/actions/admin.ts → actions/costs-shared.ts). The cost
- * itself is never stored: it is worked out from the library's current prices
- * each time (backend/domain/costs.ts `recipeCost`), so a dearer rose shows up
- * in every product that uses it the moment its price changes.
+ * Only WHAT and HOW MANY are stored. What it costs is worked out from the
+ * current prices each time (backend/domain/costs.ts `arrangementCost`), so a
+ * dearer rose shows in every arrangement that uses it the moment an invoice
+ * says so. There is no allowance for lost flowers and no making time: waste
+ * is measured, not guessed, and her time is left out of every "you kept".
  *
- * Deleting the product deletes its recipe (the migration's ON DELETE CASCADE):
- * a recipe for nothing is meaningless.
+ * Saved by the product's own Save (backend/actions/admin.ts →
+ * actions/costs-shared.ts). Deleting the product deletes this (the
+ * migration's ON DELETE CASCADE): what goes into nothing means nothing.
  */
 export const ProductCosts: CollectionConfig = {
   slug: "product-costs",
-  labels: { singular: "Product cost", plural: "Product costs" },
+  labels: { singular: "What goes in", plural: "What goes in" },
   admin: {
     group: "Costs",
     useAsTitle: "id",
-    defaultColumns: ["product", "wastePercent", "makingMinutes", "updatedAt"],
+    defaultColumns: ["product", "updatedAt"],
     description: "What goes into each product. Edited in /admin → Products → Cost.",
     hidden: ({ user }) => activeRole(user) !== "admin",
   },
@@ -51,25 +53,9 @@ export const ProductCosts: CollectionConfig = {
           required: true,
           min: 0.001,
           max: COST_LIMITS.quantityMax,
-          admin: { description: "In the item's use-unit: stems, pieces, metres." },
+          admin: { description: "How many stems, pieces or metres." },
         },
       ],
-    },
-    {
-      name: "wastePercent",
-      type: "number",
-      defaultValue: DEFAULT_COST_SETTINGS.defaultWastePercent,
-      min: COST_LIMITS.wastePercent.min,
-      max: COST_LIMITS.wastePercent.max,
-      admin: { description: "Allowance for lost flowers, added to flowers and greenery only." },
-    },
-    {
-      name: "makingMinutes",
-      type: "number",
-      defaultValue: 0,
-      min: COST_LIMITS.makingMinutes.min,
-      max: COST_LIMITS.makingMinutes.max,
-      admin: { description: "Making time, costed at the florist's hourly rate." },
     },
     { name: "notes", type: "textarea", maxLength: 1000 },
   ],

@@ -65,14 +65,18 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [{ href: "/admin/discounts", label: "nav.discounts", icon: "tag", ownerOnly: true }],
   },
   {
-    /* What things cost her and what each product earns. The owner's
-       numbers alone: the collections refuse staff and every page under
-       /admin/costs checks the session; this only hides the door. The
-       overview, invoice scanning and purchases join here when they exist. */
+    /* What things cost her and what she keeps. The owner's numbers alone:
+       the collections refuse staff and every page under /admin/costs checks
+       the session; this only hides the door. Arrangements, the buying list
+       and the fridge join here as each one is built, not before.
+       "Supplier invoices", not "Invoices": Sales already has the invoices
+       customers receive, and two items with one name is a guess. */
     heading: "nav.sections.costs",
     items: [
-      { href: "/admin/costs/items", label: "nav.costsItems", icon: "box", ownerOnly: true },
-      { href: "/admin/costs/settings", label: "nav.costsSettings", icon: "settings", ownerOnly: true },
+      { href: "/admin/costs", label: "nav.costsMoney", icon: "trendUp", ownerOnly: true },
+      { href: "/admin/costs/invoices/new", label: "nav.costsAddInvoice", icon: "plus", ownerOnly: true },
+      { href: "/admin/costs/invoices", label: "nav.costsInvoices", icon: "receipt", ownerOnly: true },
+      { href: "/admin/costs/buy", label: "nav.costsBuy", icon: "box", ownerOnly: true },
     ],
   },
   {
@@ -91,6 +95,21 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 export function isActive(pathname: string, href: string): boolean {
   if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * The ONE item to mark as the current page: the most specific that matches.
+ *
+ * Items can nest — Money is /admin/costs, What you buy is /admin/costs/buy,
+ * and Add an invoice (/admin/costs/invoices/new) sits inside Invoices — so
+ * "does it match" alone would light up two or three items at once.
+ */
+export function activeHref(pathname: string, hrefs: readonly string[]): string | null {
+  let best: string | null = null;
+  for (const href of hrefs) {
+    if (isActive(pathname, href) && (best === null || href.length > best.length)) best = href;
+  }
+  return best;
 }
 
 /** The items this person may see. Staff never see an owner-only entry. */

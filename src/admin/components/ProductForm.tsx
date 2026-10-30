@@ -17,7 +17,6 @@ import { FormSection } from "@admin/ui/Content";
 import { Checkbox, Field, Input, PrefixInput, Select, Switch, Textarea } from "@admin/ui/Field";
 import { IconButton } from "@admin/ui/IconButton";
 import { Icon } from "@admin/ui/icons";
-import { filsToAedInput } from "./costs/cost-view";
 import { ProductCost } from "./costs/ProductCost";
 
 /**
@@ -205,7 +204,7 @@ export function ProductForm({
   /** Set only when the saved product is live, so the link never 404s. */
   viewHref?: string;
   /**
-   * The Cost section's library, settings and this product's recipe. The
+   * The Cost section: what she buys and what goes into this product. The
    * loader returns it for the owner only; without it there is no Cost
    * section and no `costRecipe` field, so a florist's save changes no cost.
    */
@@ -224,8 +223,8 @@ export function ProductForm({
   const [shortLength, setShortLength] = useState(values.shortDescription?.length ?? 0);
   const [seoTitleLength, setSeoTitleLength] = useState(values.seoTitle?.length ?? 0);
   const [seoDescriptionLength, setSeoDescriptionLength] = useState(values.seoDescription?.length ?? 0);
-  /* Controlled, so the Cost section can read the price as it is typed and
-     "Charge AED X" can write into it. */
+  /* Controlled, so the Cost section can read the price as it is typed. It
+     never writes it: the price is her decision. */
   const [priceAed, setPriceAed] = useState(values.priceAed);
 
   const canPublish = imageIds.length > 0;
@@ -338,11 +337,7 @@ export function ProductForm({
             </FormSection>
 
             {costEditor ? (
-              <ProductCost
-                editor={costEditor}
-                priceAed={priceAed}
-                onUsePrice={(fils) => setPriceAed(filsToAedInput(fils))}
-              />
+              <ProductCost editor={costEditor} priceAed={priceAed} />
             ) : null}
 
             <FormSection id="product-category" title={t("products.form.sections.category")}>

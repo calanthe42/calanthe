@@ -47,9 +47,9 @@ export function recipeFromForm(form: { get(name: string): FormDataEntryValue | n
  * Create, replace or remove the product's recipe. Throws on failure.
  *
  * An empty recipe removes it: "no cost yet" is a state the owner can return
- * to. Lines whose item has since been deleted from the library are dropped
- * rather than refusing the whole save; an ARCHIVED item stays, because the
- * product still uses it and the editor says so.
+ * to. Lines whose item has since been deleted from "What you buy" are
+ * dropped rather than refusing the whole save; something she no longer buys
+ * (archived) stays, because the product still uses it and the editor says so.
  */
 export async function saveProductRecipe(
   payload: Payload,
@@ -95,7 +95,7 @@ export async function saveProductRecipe(
       collection: "product-costs",
       itemId: product.id,
       itemLabel: product.name,
-      summary: `${product.name}: cost recipe removed`,
+      summary: `${product.name}: what goes in removed`,
     });
     revalidateCosts();
     return;
@@ -104,8 +104,6 @@ export async function saveProductRecipe(
   const data = {
     product: product.id,
     lines: lines.map((line) => ({ item: line.itemId, quantity: line.quantity })),
-    wastePercent: recipe.wastePercent,
-    makingMinutes: recipe.makingMinutes,
   };
   if (existing) {
     await payload.update({ collection: "product-costs", id: existing.id, data, ...access });
@@ -120,7 +118,7 @@ export async function saveProductRecipe(
     collection: "product-costs",
     itemId: product.id,
     itemLabel: product.name,
-    summary: `${product.name}: cost recipe saved (${lines.length} ${lines.length === 1 ? "line" : "lines"})`,
+    summary: `${product.name}: what goes in saved (${lines.length} ${lines.length === 1 ? "line" : "lines"})`,
   });
   revalidateCosts();
 }

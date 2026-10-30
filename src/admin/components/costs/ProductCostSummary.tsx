@@ -1,52 +1,77 @@
 "use client";
 
-import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@admin/i18n/client";
-import { Button } from "@admin/ui/Button";
-import { earnings, suggestedPriceFils, type CostSettingsValues } from "@backend/domain/costs";
-import { signedMoney } from "./cost-view";
+import { intlLocale } from "@admin/i18n/translate";
+import { Badge, type Tone } from "@admin/ui/Badge";
+import {
+  FLORIST_GUIDE_PER_100,
+  guideBand,
+  per100,
+  priceForGuide,
+  type GuideBand,
+} from "@backend/domain/costs";
+import { per100Number } from "./cost-view";
 
 /**
- * "What it earns": the product's price against what it costs her, live.
+ * "What it leaves you", live, in three sentences:
+ *
+ *   Costs you AED 91 to make. You keep AED 359.
+ *   AED 20 of every AED 100 goes on flowers and packaging. Florists aim for
+ *   33 or less.                                                  [Healthy]
+ *   At AED 33 of every 100 the price would be AED 280.   ← only above 33
  *
  * The price is the one in the product's own Pricing section, read as she
- * types it — there is no second price here to drift from the real one. The
- * arithmetic is the domain's (earnings, suggestedPriceFils), the same the
- * server uses, so what she reads before Save is what she gets after it.
+ * types it — there is no second price here to drift from the real one. No
+ * VAT is taken out of it: the shop is not VAT-registered (src/lib/business.ts),
+ * so the whole price is hers.
  *
- * "Charge AED X to reach N%" writes into that same price field; nothing is
- * saved until she presses the product's Save.
+ * The price at the guide is a SENTENCE, never a button that rewrites her
+ * price: the price is her decision, and a button inside a form is easy to
+ * press by mistake.
+ *
+ * A missing price is never counted as nothing in silence: the cost reads "at
+ * least", and what she keeps "at most", with the names of what has no price.
  */
 
-/** Exactly the domain's test for "reaches the target", before the margin is rounded for display. */
-function reaches(receiveFils: number, profitFils: number, targetPercent: number): boolean {
-  return receiveFils > 0 && profitFils * 100 >= targetPercent * receiveFils;
-}
+const TONE: Record<GuideBand, Tone> = { healthy: "success", watch: "warning", tooMuch: "danger" };
+const LABEL = { healthy: "costs.product.summary.healthy", watch: "costs.product.summary.watch", tooMuch: "costs.product.summary.tooMuch" } as const;
 
 export function ProductCostSummary({
   priceFils,
-  costFils,
-  settings,
-  onUsePrice,
+  cost,
+  hasLines,
 }: {
   /** null when the price field is empty or not a number. */
   priceFils: number | null;
-  costFils: number;
-  settings: CostSettingsValues;
-  onUsePrice: (priceFils: number) => void;
+  cost: { costFils: number; atLeast: boolean; missingNames: string[] };
+  hasLines: boolean;
 }) {
-  const { t, plural, money, number } = useI18n();
-  const target = settings.targetMarginPercent;
+  const { t, plural, money, number, locale } = useI18n();
   const hasPrice = priceFils !== null && priceFils > 0;
-  const hasCost = costFils > 0;
-  const result = hasPrice ? earnings(priceFils, costFils, settings.vatRatePercent) : null;
-  const suggestion = hasCost ? suggestedPriceFils(costFils, target, settings.vatRatePercent) : 0;
-  const onTarget = result ? reaches(result.receiveFils, result.profitFils, target) : false;
-  const margin = result?.marginPercent ?? null;
-  const showCharge = hasCost && suggestion > 0 && (!hasPrice || (!onTarget && suggestion > (priceFils ?? 0)));
-  const barWidth = margin === null ? 0 : Math.max(0, Math.min(100, margin));
-  const tone = !result || !hasCost ? "neutral" : result.profitFils < 0 ? "danger" : onTarget ? "success" : "warning";
+
+  if (!hasLines) {
+    return (
+      <aside className="min-w-0 rounded-md border border-line bg-sunken/50 p-4">
+        <h3 className="text-sm font-semibold text-ink">{t("costs.product.summary.title")}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-ink-3">{t("costs.product.summary.noCost")}</p>
+      </aside>
+    );
+  }
+
+  const names =
+    cost.missingNames.length > 0
+      ? new Intl.ListFormat(intlLocale(locale), { type: "conjunction" }).format(cost.missingNames)
+      : t("costs.product.unknownItem");
+  const costText = money(cost.costFils);
+  const costSentence = cost.atLeast
+    ? plural("costs.product.summary.atLeast", Math.max(1, cost.missingNames.length), { cost: costText, names })
+    : t("costs.product.summary.costs", { cost: costText });
+
+  const keepFils = hasPrice ? priceFils - cost.costFils : null;
+  const share = hasPrice ? per100(cost.costFils, priceFils) : null;
+  const band = guideBand(share);
+  const overGuide = share !== null && share > FLORIST_GUIDE_PER_100;
 
   return (
     <aside
@@ -57,113 +82,64 @@ export function ProductCostSummary({
         {t("costs.product.summary.title")}
       </h3>
 
-      <dl className="mt-3 grid gap-2 text-sm">
-        <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-ink-2">{t("costs.product.summary.price")}</dt>
-          <dd className="font-medium text-ink tabular">{hasPrice ? money(priceFils) : "—"}</dd>
-        </div>
-        {result ? (
-          <>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-ink-3">{t("costs.product.summary.vat", { rate: number(settings.vatRatePercent) })}</dt>
-              <dd className="text-ink-2 tabular">{money(result.vatFils)}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-ink-3">{t("costs.product.summary.receive")}</dt>
-              <dd className="text-ink-2 tabular">{money(result.receiveFils)}</dd>
-            </div>
-          </>
-        ) : null}
-        <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-ink-2">{t("costs.product.summary.cost")}</dt>
-          <dd className="font-medium text-ink tabular">{money(costFils)}</dd>
-        </div>
-      </dl>
+      <div aria-live="polite" className="mt-2 space-y-3 text-sm leading-relaxed">
+        <p className="text-ink">
+          {costSentence}{" "}
+          {keepFils === null ? (
+            <span className="text-ink-3">{t("costs.product.summary.noPrice")}</span>
+          ) : keepFils < 0 ? (
+            <span className="font-medium text-danger">
+              {t("costs.product.summary.loss", { amount: money(-keepFils) })}
+            </span>
+          ) : (
+            <span className="font-medium">
+              {cost.atLeast
+                ? t("costs.product.summary.keepAtMost", { amount: money(keepFils) })
+                : t("costs.product.summary.keep", { amount: money(keepFils) })}
+            </span>
+          )}
+        </p>
 
-      {result && hasCost ? (
-        <div className="mt-4 border-t border-line pt-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-sm font-medium text-ink">{t("costs.product.summary.keep")}</span>
-            <span className="flex items-baseline gap-2">
-              <span
-                className={cn(
-                  "text-xl font-semibold tabular",
-                  tone === "danger" ? "text-danger" : "text-ink",
-                )}
-              >
-                {signedMoney(money, result.profitFils)}
-              </span>
-              {margin !== null ? (
+        {share !== null && band !== null ? (
+          <div className="border-t border-line pt-3">
+            <p className="text-ink-2">
+              {t(cost.atLeast ? "costs.product.summary.shareAtLeast" : "costs.product.summary.share", {
+                amount: per100Number(number, share),
+                guide: number(FLORIST_GUIDE_PER_100),
+              })}
+            </p>
+            <div className="mt-2 flex items-center gap-3">
+              <Badge tone={TONE[band]} dot>
+                {t(LABEL[band])}
+              </Badge>
+              {/* The share as a bar, with the florists' guide as a line across it. */}
+              <span aria-hidden className="relative h-2 min-w-0 flex-1 rounded-full bg-line">
                 <span
                   className={cn(
-                    "text-sm font-medium tabular",
-                    tone === "success" && "text-success",
-                    tone === "warning" && "text-warning",
-                    tone === "danger" && "text-danger",
+                    "absolute inset-y-0 start-0 rounded-full",
+                    band === "healthy" && "bg-success",
+                    band === "watch" && "bg-warning",
+                    band === "tooMuch" && "bg-danger",
                   )}
-                >
-                  {t("costs.product.summary.margin", { percent: number(Math.round(margin)) })}
-                </span>
-              ) : null}
-            </span>
+                  style={{ width: `${Math.min(100, share)}%` }}
+                />
+                <span
+                  className="absolute -top-1 h-4 w-0.5 rounded-full bg-ink"
+                  style={{ insetInlineStart: `${FLORIST_GUIDE_PER_100}%` }}
+                />
+              </span>
+            </div>
+            {overGuide ? (
+              <p className="mt-3 text-ink-2">
+                {t("costs.product.summary.guidePrice", {
+                  guide: number(FLORIST_GUIDE_PER_100),
+                  price: money(priceForGuide(cost.costFils)),
+                })}
+              </p>
+            ) : null}
           </div>
-
-          {/* The margin as a bar, with her target as a line across it. */}
-          <div
-            role="img"
-            aria-label={t("costs.product.summary.marginBar", {
-              margin: number(Math.round(margin ?? 0)),
-              target: number(target),
-            })}
-            className="relative mt-3 h-2 rounded-full bg-line"
-          >
-            <div
-              className={cn(
-                "h-full rounded-full",
-                tone === "success" && "bg-success",
-                tone === "warning" && "bg-warning",
-                tone === "danger" && "bg-danger",
-              )}
-              style={{ width: `${barWidth}%` }}
-            />
-            <span
-              aria-hidden
-              className="absolute -top-1 h-4 w-0.5 rounded-full bg-ink"
-              style={{ insetInlineStart: `${Math.max(0, Math.min(100, target))}%` }}
-            />
-          </div>
-
-          <p aria-live="polite" className="mt-3 text-sm leading-relaxed text-ink-2">
-            {result.profitFils < 0
-              ? t("costs.product.summary.loss", { amount: money(-result.profitFils) })
-              : onTarget
-                ? t("costs.product.summary.onTarget", { target: number(target) })
-                : plural("costs.product.summary.underTarget", Math.max(1, Math.ceil(target - (margin ?? 0))), {
-                    target: number(target),
-                  })}{" "}
-            <span className="text-ink-3">{t("costs.product.summary.targetLine")}</span>
-          </p>
-        </div>
-      ) : (
-        <p className="mt-4 border-t border-line pt-4 text-sm leading-relaxed text-ink-3">
-          {hasCost ? t("costs.product.summary.noPrice") : t("costs.product.summary.noCost")}
-        </p>
-      )}
-
-      {showCharge ? (
-        <Button block className="mt-4" icon="tag" onClick={() => onUsePrice(suggestion)}>
-          {t("costs.product.summary.charge", { amount: money(suggestion), target: number(target) })}
-        </Button>
-      ) : null}
-
-      <p className="mt-3 text-xs">
-        <Link
-          href="/admin/costs/settings"
-          className="-my-3 inline-block py-3 text-ink-3 underline underline-offset-4 hover:text-ink"
-        >
-          {t("costs.product.summary.settings")}
-        </Link>
-      </p>
+        ) : null}
+      </div>
     </aside>
   );
 }

@@ -78,7 +78,9 @@ export interface Config {
     memberships: Membership;
     'email-log': EmailLog;
     'activity-log': ActivityLog;
+    suppliers: Supplier;
     'cost-items': CostItem;
+    invoices: Invoice;
     'product-costs': ProductCost;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -98,7 +100,9 @@ export interface Config {
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
     'activity-log': ActivityLogSelect<false> | ActivityLogSelect<true>;
+    suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
     'cost-items': CostItemsSelect<false> | CostItemsSelect<true>;
+    invoices: InvoicesSelect<false> | InvoicesSelect<true>;
     'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -111,11 +115,9 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     settings: Setting;
-    'cost-settings': CostSetting;
   };
   globalsSelect: {
     settings: SettingsSelect<false> | SettingsSelect<true>;
-    'cost-settings': CostSettingsSelect<false> | CostSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1116,7 +1118,21 @@ export interface ActivityLog {
   createdAt: string;
 }
 /**
- * What each flower and material costs you. Managed in /admin → Costs.
+ * Who you buy from. Added when you add an invoice in /admin → Costs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers".
+ */
+export interface Supplier {
+  id: number;
+  name: string;
+  phone?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What you buy and what one of it costs you. Managed in /admin → Costs → What you buy.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cost-items".
@@ -1124,30 +1140,31 @@ export interface ActivityLog {
 export interface CostItem {
   id: number;
   name: string;
-  kind: 'flower' | 'greenery' | 'container' | 'wrapping' | 'card' | 'other';
+  group: 'flowers' | 'greenery' | 'packaging' | 'extra';
   /**
-   * The unit a recipe counts in.
-   */
-  useUnit: 'stem' | 'piece' | 'metre' | 'sheet' | 'bunch';
-  /**
-   * How it is bought: Bunch, Carton, Roll.
+   * How it comes: bunch, box, roll, carton, single.
    */
   packName?: string | null;
   /**
-   * Use-units in one pack: 20 stems a bunch, 50 metres a roll.
+   * How many in one: the 20 in “a bunch of 20”.
    */
   unitsPerPack: number;
   /**
-   * Fils (AED × 100) for ONE use-unit, decimals allowed. Delivery included; VAT left out when you claim it back.
+   * What one is, in “AED 3.23 a stem”.
+   */
+  one: 'stem' | 'piece' | 'metre';
+  /**
+   * The price for one, in fils (AED × 100), decimals allowed. From the latest invoice; empty means no price yet.
    */
   currentUnitCostFils?: number | null;
-  costSource?: ('purchase' | 'manual') | null;
+  costSource: 'invoice' | 'typed';
   /**
-   * Optional colour shown beside the name, #rrggbb.
+   * The invoice date the price came from.
    */
-  swatch?: string | null;
+  lastPaidAt?: string | null;
+  lastSupplier?: (number | null) | Supplier;
   /**
-   * Names as suppliers print them on invoices.
+   * Names as suppliers print them, learned when an invoice is saved.
    */
   aliases?:
     | {
@@ -1155,7 +1172,60 @@ export interface CostItem {
         id?: string | null;
       }[]
     | null;
+  /**
+   * I don't buy this any more.
+   */
   archived?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What you bought, invoice by invoice. Add and change them in /admin → Costs → Invoices.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices".
+ */
+export interface Invoice {
+  id: number;
+  supplier: number | Supplier;
+  invoiceNumber?: string | null;
+  /**
+   * The day printed on the invoice (stored as midday in the UAE).
+   */
+  invoiceDate: string;
+  lines: {
+    item: number | CostItem;
+    printedName?: string | null;
+    /**
+     * How many bunches, boxes or rolls: the 5 in “5 bunches of 20”.
+     */
+    packs: number;
+    /**
+     * How many in one: the 20 in “5 bunches of 20”.
+     */
+    unitsPerPack: number;
+    /**
+     * Worked out: bunches × how many in one.
+     */
+    units: number;
+    /**
+     * The line's total as printed, in fils (AED × 100).
+     */
+    lineTotalFils: number;
+    /**
+     * Worked out: the line plus its share of delivery and VAT, for one.
+     */
+    priceForOneFils?: number | null;
+    id?: string | null;
+  }[];
+  deliveryFils?: number | null;
+  vatFils?: number | null;
+  /**
+   * The total as printed on the invoice, in fils. Empty when there was none to type.
+   */
+  totalFils?: number | null;
+  source: 'typed' | 'photo';
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1173,20 +1243,12 @@ export interface ProductCost {
     | {
         item: number | CostItem;
         /**
-         * In the item's use-unit: stems, pieces, metres.
+         * How many stems, pieces or metres.
          */
         quantity: number;
         id?: string | null;
       }[]
     | null;
-  /**
-   * Allowance for lost flowers, added to flowers and greenery only.
-   */
-  wastePercent?: number | null;
-  /**
-   * Making time, costed at the florist's hourly rate.
-   */
-  makingMinutes?: number | null;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1260,8 +1322,16 @@ export interface PayloadLockedDocument {
         value: number | ActivityLog;
       } | null)
     | ({
+        relationTo: 'suppliers';
+        value: number | Supplier;
+      } | null)
+    | ({
         relationTo: 'cost-items';
         value: number | CostItem;
+      } | null)
+    | ({
+        relationTo: 'invoices';
+        value: number | Invoice;
       } | null)
     | ({
         relationTo: 'product-costs';
@@ -1769,17 +1839,29 @@ export interface ActivityLogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers_select".
+ */
+export interface SuppliersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cost-items_select".
  */
 export interface CostItemsSelect<T extends boolean = true> {
   name?: T;
-  kind?: T;
-  useUnit?: T;
+  group?: T;
   packName?: T;
   unitsPerPack?: T;
+  one?: T;
   currentUnitCostFils?: T;
   costSource?: T;
-  swatch?: T;
+  lastPaidAt?: T;
+  lastSupplier?: T;
   aliases?:
     | T
     | {
@@ -1787,6 +1869,34 @@ export interface CostItemsSelect<T extends boolean = true> {
         id?: T;
       };
   archived?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "invoices_select".
+ */
+export interface InvoicesSelect<T extends boolean = true> {
+  supplier?: T;
+  invoiceNumber?: T;
+  invoiceDate?: T;
+  lines?:
+    | T
+    | {
+        item?: T;
+        printedName?: T;
+        packs?: T;
+        unitsPerPack?: T;
+        units?: T;
+        lineTotalFils?: T;
+        priceForOneFils?: T;
+        id?: T;
+      };
+  deliveryFils?: T;
+  vatFils?: T;
+  totalFils?: T;
+  source?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1804,8 +1914,6 @@ export interface ProductCostsSelect<T extends boolean = true> {
         quantity?: T;
         id?: T;
       };
-  wastePercent?: T;
-  makingMinutes?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1881,34 +1989,6 @@ export interface Setting {
   createdAt?: string | null;
 }
 /**
- * Target margin, florist's hourly rate, lost flowers and VAT. Edited from /admin → Costs → Settings.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cost-settings".
- */
-export interface CostSetting {
-  id: number;
-  /**
-   * The share of what you receive (after VAT) you want to keep.
-   */
-  targetMarginPercent?: number | null;
-  /**
-   * What an hour of making time costs, in fils (AED × 100).
-   */
-  labourRatePerHourFils?: number | null;
-  /**
-   * The allowance for lost flowers a new product starts with.
-   */
-  defaultWastePercent?: number | null;
-  /**
-   * You claim VAT back on what you buy, so costs are counted without it.
-   */
-  vatReclaimable?: boolean | null;
-  vatRatePercent?: number | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "settings_select".
  */
@@ -1923,20 +2003,6 @@ export interface SettingsSelect<T extends boolean = true> {
         active?: T;
         id?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cost-settings_select".
- */
-export interface CostSettingsSelect<T extends boolean = true> {
-  targetMarginPercent?: T;
-  labourRatePerHourFils?: T;
-  defaultWastePercent?: T;
-  vatReclaimable?: T;
-  vatRatePercent?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

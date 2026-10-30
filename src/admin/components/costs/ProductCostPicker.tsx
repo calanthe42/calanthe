@@ -6,27 +6,26 @@ import { useI18n } from "@admin/i18n/client";
 import { fieldClasses } from "@admin/ui/Field";
 import { Icon } from "@admin/ui/icons";
 import type { CostItemRow } from "@backend/domain/costs";
-import { perUnitText } from "./cost-view";
-import { Swatch } from "./Swatch";
+import { priceLineText } from "./cost-view";
 
 /**
- * "Add a flower or material": a search box over the owner's library that
- * puts the item she picks into the product's recipe.
+ * "Add from what you buy": a search box over What you buy that puts the
+ * thing she picks into what goes into this arrangement.
  *
  * A combobox (the WAI-ARIA pattern): typing filters, the arrow keys move
  * through the list, Enter adds, Escape closes. It lives INSIDE the product's
  * form, so two things are held back on purpose — Enter never submits the
  * product, and typing a search is not an unsaved change to the product.
  *
- * When the flower is not in her library yet, the link to add it opens in a
- * new tab, so the product she is halfway through editing stays as it is.
- * `onOpenLibrary` lets the Cost section re-read the library when she comes
- * back, so the new flower is in this list without reloading the page.
+ * When it is not in What you buy yet, the link to add it opens in a new
+ * tab, so the product she is halfway through editing stays as it is.
+ * `onOpenNew` lets the Cost section read the list again when she comes back,
+ * so the new thing is in this list without reloading the page.
  */
 
 const MAX_SHOWN = 50;
 
-/** Every word she typed appears in the name or one of its invoice names. */
+/** Every word she typed appears in the name or a name printed on one of her invoices. */
 function matches(item: CostItemRow, words: string[]): boolean {
   if (words.length === 0) return true;
   const haystack = [item.name, ...item.aliases].join(" ").toLocaleLowerCase();
@@ -37,13 +36,13 @@ export function ProductCostPicker({
   items,
   inRecipe,
   onAdd,
-  onOpenLibrary,
+  onOpenNew,
 }: {
-  /** The library, archived items already left out. */
+  /** What she still buys. */
   items: CostItemRow[];
   inRecipe: ReadonlySet<number>;
   onAdd: (item: CostItemRow) => void;
-  onOpenLibrary: () => void;
+  onOpenNew: () => void;
 }) {
   const i18n = useI18n();
   const { t, plural } = i18n;
@@ -69,7 +68,7 @@ export function ProductCostPicker({
   const activeItem = choosable[Math.min(active, choosable.length - 1)];
   const expanded = open && shown.length > 0;
   const trimmed = query.trim();
-  const newHref = `/admin/costs/items/new${trimmed ? `?name=${encodeURIComponent(trimmed)}` : ""}`;
+  const newHref = `/admin/costs/buy/new${trimmed ? `?name=${encodeURIComponent(trimmed)}` : ""}`;
 
   /* The search is not part of the product: stop its keystrokes reaching the
      form's "unsaved changes" listener. */
@@ -182,11 +181,15 @@ export function ProductCostPicker({
                   isActive && "bg-hover",
                 )}
               >
-                <Swatch color={item.swatch} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{item.name}</span>
-                  <span className="block text-xs text-ink-3 tabular">
-                    {perUnitText(i18n, item.currentUnitCostFils, item.useUnit)}
+                  <span
+                    className={cn(
+                      "block text-xs tabular",
+                      item.priceForOneFils === null ? "text-warning" : "text-ink-3",
+                    )}
+                  >
+                    {priceLineText(i18n, item)}
                   </span>
                 </span>
                 {taken ? (
@@ -212,10 +215,10 @@ export function ProductCostPicker({
           href={newHref}
           target="_blank"
           rel="noreferrer"
-          onClick={onOpenLibrary}
+          onClick={onOpenNew}
           className="-my-3 inline-flex items-center gap-1 py-3 font-medium text-ink underline underline-offset-4 hover:text-accent"
         >
-          {t("costs.product.picker.addToLibrary")}
+          {t("costs.product.picker.addNew")}
           <Icon name="external" className="h-3.5 w-3.5" />
         </a>{" "}
         {t("costs.product.picker.newTabHint")}

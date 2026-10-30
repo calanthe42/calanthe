@@ -21,6 +21,7 @@ import * as migration_20261029_000000_welcome_offer from './20261029_000000_welc
 import * as migration_20261030_000000_instant_accounts from './20261030_000000_instant_accounts';
 import * as migration_20261031_000000_costs_items from './20261031_000000_costs_items';
 import * as migration_20261101_000000_settings_addons from './20261101_000000_settings_addons';
+import * as migration_20261101_010000_costs_release1 from './20261101_010000_costs_release1';
 
 export const migrations = [
   {
@@ -137,5 +138,10 @@ export const migrations = [
     up: migration_20261101_000000_settings_addons.up,
     down: migration_20261101_000000_settings_addons.down,
     name: '20261101_000000_settings_addons',
+  },
+  {
+    up: migration_20261101_010000_costs_release1.up,
+    down: migration_20261101_010000_costs_release1.down,
+    name: '20261101_010000_costs_release1',
   },
 ];
