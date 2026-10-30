@@ -558,18 +558,16 @@ export type Addon = {
   image: ProductImage;
 };
 
+/* The client's add-ons (2026-10-30: the vase is AED 150, and chocolates are
+   no longer offered). `chocolates` stays a valid AddonId so orders that
+   carry it still read correctly; a basket that still holds it drops it on
+   load, and the server refuses it, because only this list is for sale. */
 export const addons: readonly Addon[] = [
   {
     id: "vase",
     name: "Vase",
-    priceAed: 60,
+    priceAed: 150,
     image: img("addon-vase", "olive", "A ceramic vase"),
-  },
-  {
-    id: "chocolates",
-    name: "Chocolates",
-    priceAed: 85,
-    image: img("addon-choc", "burgundy", "A box of chocolates"),
   },
   {
     id: "balloon",

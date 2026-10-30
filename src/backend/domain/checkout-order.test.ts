@@ -1,7 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Product } from "@/payload-types";
 import type { CouponRule, SaleRule } from "@/lib/discounts";
 import { validateBespokeLines, validateOrderTotals } from "@backend/payload/hooks/orderIntegrity";
+
+/* The add-on prices these sums were written against. The shop's own list
+   is the owner's to change (the vase went to AED 150 on 2026-10-30); the
+   arithmetic under test does not change with it. */
+vi.mock("@/lib/data", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/data")>();
+  return { ...actual, addons: actual.addons.map((a) => (a.id === "vase" ? { ...a, priceAed: 60 } : a)) };
+});
 import {
   WELCOME_TRIES,
   couponRefusalCode,
