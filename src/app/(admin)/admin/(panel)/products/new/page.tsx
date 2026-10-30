@@ -4,6 +4,7 @@ import { ButtonLink } from "@admin/ui/Button";
 import { PageHeader } from "@admin/ui/PageHeader";
 import { EmptyState } from "@admin/ui/States";
 import { getAdminSession } from "@backend/data/admin-session";
+import { getCostEditorData } from "@backend/data/costs";
 import { getProductFormOptions } from "@backend/data/product-form";
 
 export async function generateMetadata() {
@@ -35,7 +36,8 @@ export default async function NewProductPage() {
     );
   }
 
-  const { occasions, media } = await getProductFormOptions();
+  /* The Cost section: the library and her settings, no recipe yet. */
+  const [{ occasions, media }, costEditor] = await Promise.all([getProductFormOptions(), getCostEditorData(null)]);
 
   return (
     <>
@@ -43,6 +45,7 @@ export default async function NewProductPage() {
       <ProductForm
         occasions={occasions}
         media={media}
+        costEditor={costEditor}
         values={{
           name: "",
           priceAed: "",

@@ -9,6 +9,7 @@ import { ButtonLink } from "@admin/ui/Button";
 import { PageHeader } from "@admin/ui/PageHeader";
 import { Notice } from "@admin/ui/States";
 import { getAdminSession } from "@backend/data/admin-session";
+import { getCostEditorData } from "@backend/data/costs";
 import { getProductFormOptions } from "@backend/data/product-form";
 import { lexicalToPlainText } from "@backend/domain/richtext";
 
@@ -42,7 +43,11 @@ export default async function EditProductPage({
     .catch(() => null);
   if (!product) notFound();
 
-  const { occasions, media } = await getProductFormOptions();
+  /* The Cost section: null for anyone but the owner, and then not drawn. */
+  const [{ occasions, media }, costEditor] = await Promise.all([
+    getProductFormOptions(),
+    getCostEditorData(product.id),
+  ]);
 
   const imageIds = (product.images ?? [])
     .map((row) => (typeof row.image === "object" && row.image ? row.image.id : row.image))
@@ -88,6 +93,7 @@ export default async function EditProductPage({
         media={media}
         readOnly={!isOwner}
         viewHref={live ? storeHref : undefined}
+        costEditor={costEditor}
         values={{
           id: product.id,
           name: product.name,

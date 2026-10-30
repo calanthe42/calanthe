@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createProduct, deleteProduct, updateProduct } from "@backend/actions/admin";
+import type { CostEditorData } from "@backend/domain/costs";
 import type { MediaOption } from "@backend/domain/media-option";
 import { MAX_PRODUCT_IMAGES, PRODUCT_CATEGORIES, PRODUCT_FLOWERS } from "@backend/domain/product-form";
 import { useI18n } from "@admin/i18n/client";
@@ -16,6 +17,8 @@ import { FormSection } from "@admin/ui/Content";
 import { Checkbox, Field, Input, PrefixInput, Select, Switch, Textarea } from "@admin/ui/Field";
 import { IconButton } from "@admin/ui/IconButton";
 import { Icon } from "@admin/ui/icons";
+import { filsToAedInput } from "./costs/cost-view";
+import { ProductCost } from "./costs/ProductCost";
 
 /**
  * Add and edit a product, in business language.
@@ -193,6 +196,7 @@ export function ProductForm({
   media,
   readOnly = false,
   viewHref,
+  costEditor,
 }: {
   values: ProductFormValues;
   occasions: { label: string; value: string }[];
@@ -200,6 +204,12 @@ export function ProductForm({
   readOnly?: boolean;
   /** Set only when the saved product is live, so the link never 404s. */
   viewHref?: string;
+  /**
+   * The Cost section's library, settings and this product's recipe. The
+   * loader returns it for the owner only; without it there is no Cost
+   * section and no `costRecipe` field, so a florist's save changes no cost.
+   */
+  costEditor?: CostEditorData | null;
 }) {
   const { t, label } = useI18n();
   const router = useRouter();
@@ -214,6 +224,9 @@ export function ProductForm({
   const [shortLength, setShortLength] = useState(values.shortDescription?.length ?? 0);
   const [seoTitleLength, setSeoTitleLength] = useState(values.seoTitle?.length ?? 0);
   const [seoDescriptionLength, setSeoDescriptionLength] = useState(values.seoDescription?.length ?? 0);
+  /* Controlled, so the Cost section can read the price as it is typed and
+     "Charge AED X" can write into it. */
+  const [priceAed, setPriceAed] = useState(values.priceAed);
 
   const canPublish = imageIds.length > 0;
 
@@ -302,7 +315,8 @@ export function ProductForm({
                     withHint
                     inputMode="decimal"
                     autoComplete="off"
-                    defaultValue={values.priceAed}
+                    value={priceAed}
+                    onChange={(e) => setPriceAed(e.target.value)}
                     placeholder="480"
                     required
                     className="tabular"
@@ -322,6 +336,14 @@ export function ProductForm({
                 </Field>
               </div>
             </FormSection>
+
+            {costEditor ? (
+              <ProductCost
+                editor={costEditor}
+                priceAed={priceAed}
+                onUsePrice={(fils) => setPriceAed(filsToAedInput(fils))}
+              />
+            ) : null}
 
             <FormSection id="product-category" title={t("products.form.sections.category")}>
               <Field id="category" label={t("products.form.category")}>

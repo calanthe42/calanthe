@@ -65,6 +65,17 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [{ href: "/admin/discounts", label: "nav.discounts", icon: "tag", ownerOnly: true }],
   },
   {
+    /* What things cost her and what each product earns. The owner's
+       numbers alone: the collections refuse staff and every page under
+       /admin/costs checks the session; this only hides the door. The
+       overview, invoice scanning and purchases join here when they exist. */
+    heading: "nav.sections.costs",
+    items: [
+      { href: "/admin/costs/items", label: "nav.costsItems", icon: "box", ownerOnly: true },
+      { href: "/admin/costs/settings", label: "nav.costsSettings", icon: "settings", ownerOnly: true },
+    ],
+  },
+  {
     heading: "nav.sections.system",
     items: [
       { href: "/admin/team", label: "nav.staff", icon: "staff" },

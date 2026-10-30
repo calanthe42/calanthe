@@ -35,6 +35,7 @@ import {
   type ActionVars as SharedActionVars,
 } from "./admin-shared";
 import { cancelPaymentRequest } from "./quotes";
+import { recipeFromForm, saveProductRecipeAfterProduct } from "./costs-shared";
 
 /**
  * Every write the business admin performs.
@@ -141,8 +142,29 @@ export async function createProduct(form: FormData): Promise<ActionResult> {
       itemLabel: String(doc.name ?? "product"),
     });
 
+    /* The Cost section (owner only) travels with the product's own Save, and
+       is saved only once the product exists. A cost that will not save never
+       loses the product: it is created, and she is told the cost was not —
+       as a success, because the screen then opens the new product, where
+       pressing Save again saves the cost. */
+    const costSaved = await saveProductRecipeAfterProduct(
+      payload,
+      user,
+      { id: doc.id, name: String(doc.name ?? "") },
+      recipeFromForm(form, user),
+    );
+
     revalidatePath("/admin/products");
     revalidateStorefront();
+    if (!costSaved) {
+      return {
+        ok: true,
+        message: `“${doc.name}” created, but its cost could not be saved. Check the Cost section and press Save again.`,
+        code: "actions.costs.productCreatedCostFailed",
+        vars: { name: doc.name },
+        id: doc.id,
+      };
+    }
     return {
       ok: true,
       message: `“${doc.name}” created.`,
@@ -215,9 +237,26 @@ export async function updateProduct(id: number, form: FormData): Promise<ActionR
       ),
     });
 
+    /* After the product, never instead of it (see createProduct). Here the
+       answer is a failure, so the form stays as she left it and Save simply
+       tries again — saving the same product twice changes nothing. */
+    const costSaved = await saveProductRecipeAfterProduct(
+      payload,
+      user,
+      { id, name: String(updated.name ?? existing.name ?? id) },
+      recipeFromForm(form, user),
+    );
+
     revalidatePath("/admin/products");
     revalidatePath(`/admin/products/${id}/edit`);
     revalidateStorefront();
+    if (!costSaved) {
+      return {
+        ok: false,
+        message: "Your product changes are saved, but its cost could not be saved. Press Save again.",
+        code: "actions.costs.productSavedCostFailed",
+      };
+    }
     return { ok: true, message: "Changes saved.", code: "actions.product.saved" };
   } catch (error) {
     return failure(error, "Your changes could not be saved.", "actions.product.saveFailed", "slug");

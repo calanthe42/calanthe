@@ -78,6 +78,8 @@ export interface Config {
     memberships: Membership;
     'email-log': EmailLog;
     'activity-log': ActivityLog;
+    'cost-items': CostItem;
+    'product-costs': ProductCost;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -96,6 +98,8 @@ export interface Config {
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     'email-log': EmailLogSelect<false> | EmailLogSelect<true>;
     'activity-log': ActivityLogSelect<false> | ActivityLogSelect<true>;
+    'cost-items': CostItemsSelect<false> | CostItemsSelect<true>;
+    'product-costs': ProductCostsSelect<false> | ProductCostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -105,8 +109,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'cost-settings': CostSetting;
+  };
+  globalsSelect: {
+    'cost-settings': CostSettingsSelect<false> | CostSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -1106,6 +1114,82 @@ export interface ActivityLog {
   createdAt: string;
 }
 /**
+ * What each flower and material costs you. Managed in /admin → Costs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cost-items".
+ */
+export interface CostItem {
+  id: number;
+  name: string;
+  kind: 'flower' | 'greenery' | 'container' | 'wrapping' | 'card' | 'other';
+  /**
+   * The unit a recipe counts in.
+   */
+  useUnit: 'stem' | 'piece' | 'metre' | 'sheet' | 'bunch';
+  /**
+   * How it is bought: Bunch, Carton, Roll.
+   */
+  packName?: string | null;
+  /**
+   * Use-units in one pack: 20 stems a bunch, 50 metres a roll.
+   */
+  unitsPerPack: number;
+  /**
+   * Fils (AED × 100) for ONE use-unit, decimals allowed. Delivery included; VAT left out when you claim it back.
+   */
+  currentUnitCostFils?: number | null;
+  costSource?: ('purchase' | 'manual') | null;
+  /**
+   * Optional colour shown beside the name, #rrggbb.
+   */
+  swatch?: string | null;
+  /**
+   * Names as suppliers print them on invoices.
+   */
+  aliases?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  archived?: boolean | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What goes into each product. Edited in /admin → Products → Cost.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-costs".
+ */
+export interface ProductCost {
+  id: number;
+  product: number | Product;
+  lines?:
+    | {
+        item: number | CostItem;
+        /**
+         * In the item's use-unit: stems, pieces, metres.
+         */
+        quantity: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Allowance for lost flowers, added to flowers and greenery only.
+   */
+  wastePercent?: number | null;
+  /**
+   * Making time, costed at the florist's hourly rate.
+   */
+  makingMinutes?: number | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1172,6 +1256,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'activity-log';
         value: number | ActivityLog;
+      } | null)
+    | ({
+        relationTo: 'cost-items';
+        value: number | CostItem;
+      } | null)
+    | ({
+        relationTo: 'product-costs';
+        value: number | ProductCost;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1675,6 +1767,49 @@ export interface ActivityLogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cost-items_select".
+ */
+export interface CostItemsSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  useUnit?: T;
+  packName?: T;
+  unitsPerPack?: T;
+  currentUnitCostFils?: T;
+  costSource?: T;
+  swatch?: T;
+  aliases?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  archived?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-costs_select".
+ */
+export interface ProductCostsSelect<T extends boolean = true> {
+  product?: T;
+  lines?:
+    | T
+    | {
+        item?: T;
+        quantity?: T;
+        id?: T;
+      };
+  wastePercent?: T;
+  makingMinutes?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1712,6 +1847,48 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Target margin, florist's hourly rate, lost flowers and VAT. Edited from /admin → Costs → Settings.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cost-settings".
+ */
+export interface CostSetting {
+  id: number;
+  /**
+   * The share of what you receive (after VAT) you want to keep.
+   */
+  targetMarginPercent?: number | null;
+  /**
+   * What an hour of making time costs, in fils (AED × 100).
+   */
+  labourRatePerHourFils?: number | null;
+  /**
+   * The allowance for lost flowers a new product starts with.
+   */
+  defaultWastePercent?: number | null;
+  /**
+   * You claim VAT back on what you buy, so costs are counted without it.
+   */
+  vatReclaimable?: boolean | null;
+  vatRatePercent?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cost-settings_select".
+ */
+export interface CostSettingsSelect<T extends boolean = true> {
+  targetMarginPercent?: T;
+  labourRatePerHourFils?: T;
+  defaultWastePercent?: T;
+  vatReclaimable?: T;
+  vatRatePercent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

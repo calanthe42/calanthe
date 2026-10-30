@@ -15,6 +15,9 @@ import { Products } from "@/collections/Products";
 import { Users } from "@/collections/Users";
 import { EmailLog } from "@/collections/EmailLog";
 import { ActivityLog } from "@/collections/ActivityLog";
+import { CostItems } from "@/collections/CostItems";
+import { ProductCosts } from "@/collections/ProductCosts";
+import { CostSettings } from "@/globals/CostSettings";
 import { calantheEmailAdapter } from "@backend/email/payload-adapter";
 import { MAX_UPLOAD_BYTES, buildStoragePlugins } from "@backend/payload/storage";
 import { env } from "@/lib/env";
@@ -53,7 +56,23 @@ export default buildConfig({
       titleSuffix: " · Calanthe Admin",
     },
   },
-  collections: [Users, Media, Occasions, Products, Discounts, Orders, Events, Enquiries, Memberships, EmailLog, ActivityLog],
+  collections: [
+    Users,
+    Media,
+    Occasions,
+    Products,
+    Discounts,
+    Orders,
+    Events,
+    Enquiries,
+    Memberships,
+    EmailLog,
+    ActivityLog,
+    /* The owner's costs (backend/domain/costs.ts). Owner-only, read included. */
+    CostItems,
+    ProductCosts,
+  ],
+  globals: [CostSettings],
   /* Payload's own verification and reset mail goes through the same path
      as everything else: allowlisted outside production, never thrown on
      failure, and always logged with the provider's id. */
