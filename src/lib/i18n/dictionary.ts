@@ -264,6 +264,7 @@ export const en = {
     eyebrow: "Made to order",
     title: "Every arrangement can be made to order.",
     body: "The next collection is being composed. Until it arrives, tell us the moment, the colours and your budget, and a florist will compose it for you.",
+    bodyOpen: "Every arrangement here is composed by hand on the day. Tell us the moment, the colours and your budget, and a florist will compose one just for you.",
     messageFlorist: "Message a Florist",
   },
   /**
@@ -2009,6 +2010,7 @@ export const ar: typeof en = {
     eyebrow: "حسب الطلب",
     title: "كل باقة يمكن أن تُصنع خصيصًا لكم.",
     body: "المجموعة القادمة قيد التنسيق. وحتى تصل، أخبرونا بالمناسبة والألوان والميزانية، وينسّقها لكم منسّق الزهور.",
+    bodyOpen: "كل باقة هنا تُنسَّق يدويًا في يومها. أخبرونا بالمناسبة والألوان والميزانية، وينسّق لكم منسّق الزهور باقة خاصة بكم.",
     messageFlorist: "تواصلوا مع منسّق الزهور",
   },
   cart: {
